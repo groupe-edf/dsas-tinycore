@@ -1,7 +1,7 @@
 _pkg=busybox
 _version=1.35.0
 _uri="https://busybox.net/downloads/busybox-1.35.0.tar.bz2"
-_dep="Linux-PAM libtirpc"
+_dep="libtirpc Linux-PAM"
 _build_dep="compiletc Linux-PAM-dev sstrip curl libssh2 libtirpc-dev"
 _pkg_path="busybox-1.35.0"
 _pre_config=\
@@ -113,9 +113,7 @@ busybox_install "
 _post_build=""
 _pkgs="main{bin,sbin,usr}"
 _post_install=\
-"#!/bin/sh
-cd /lib
+"cd /lib
 ln -s /usr/local/lib/libtirpc.so.3
 ln -s /usr/local/lib/libpam.so.0
-ln -s /usr/local/lib/libpam_misc.so.0
-"
+ln -s /usr/local/lib/libpam_misc.so.0"

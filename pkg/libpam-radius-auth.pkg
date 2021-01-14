@@ -14,6 +14,11 @@ cp pam_radius_auth.so $destdir/usr/local/lib/security;
 cp pam_radius_auth.conf $destdir/usr/local/etc/security; 
 chmod 0600 $destdir/usr/local/etc/security/pam_radius_auth.conf; 
 # "
-_post_build=""
+_post_build=\
+"mkdir -p usr/local/etc/pam.d
+cat << EOF > usr/local/etc/pam.d/common-radius
+auth           sufficient                               pam_radius_auth.so localifdown
+EOF
+"
 _pkgs="main{/usr/local}"
 _post_install=""

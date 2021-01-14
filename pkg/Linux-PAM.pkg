@@ -4,31 +4,51 @@ _uri="https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-
 _dep=""
 _build_dep="compiletc isl-dev"
 _pkg_path="Linux-PAM-1.5.2"
-_conf_cmd="./configure --prefix=/usr/local --exec-prefix=/usr/local --includedir=/usr/local/include/security"
+_conf_cmd="./configure --enable-db=no --prefix=/usr/local --exec-prefix=/usr/local --includedir=/usr/local/include/security"
 _make_cmd="make"
 _install_cmd="make install DESTDIR="
 _post_build=\
 "mkdir -p usr/local/etc/pam.d
+cat << EOF > usr/local/etc/pam.d/common-auth
+auth           [success=1 default=ignore]               pam_unix.so nullok_secure
+auth           requisite                                pam_deny.so
+auth           required                                 pam_permit.so
+EOF
+cat << EOF > usr/local/etc/pam.d/common-account
+account        [success=1 new_authtok_reqd=done default=ignore] pam_unix.so
+account        requisite                                pam_deny.so
+account        required                                 pam_permit.so
+EOF
+cat << EOF > usr/local/etc/pam.d/common-password
+password       [success=1 default=ignore]               pam_unix.so obscure sha512
+password       requisite                                pam_deny.so
+password       required                                 pam_permit.so
+EOF
+cat << EOF > usr/local/etc/pam.d/common-session
+session        [default=1]                              pam_permit.so
+session        requisite                                pam_deny.so
+session        required                                 pam_permit.so
+session        required                                 pam_unix.so
+EOF
+cat << EOF > usr/local/etc/pam.d/login
+#%PAM-1.0
+auth           optional                                 pam_faildelay.so delay=3000000
+auth           [success=ok ignore=ignore user_unknown=ignore default=die]       pam_securetty.so
+auth           requisite                                pam_nologin.so
+session        required                                 pam_env.so readenv=1
+auth           include                                  common-auth
+auth           optional                                 pam_group.so
+session        required                                 pam_limits.so
+account        include                                  common-account
+password       include                                  common-password
+session        include                                  common-session
+EOF
 cat << EOF > usr/local/etc/pam.d/other
 #%PAM-1.0
 auth            required        pam_unix.so
 account         required        pam_unix.so
 password        required        pam_unix.so
 session         required        pam_unix.so
-EOF
-cat << EOF > usr/local/etc/pam.d/system-auth
-#system-authentication
-auth     required       pam_env.so
-auth     sufficient     pam_unix.so nullok
-auth     required       pam_deny.so
-
-account  required       pam_unix.so
-
-password sufficient     pam_unix.so use_authtok nullok
-password required       pam_deny.so
-
-session  required       pam_limits.so
-session  required       pam_unix.so
 EOF
 "
 _pkgs="main{/usr/local/sbin,/usr/local/etc,/usr/local/lib/*.so*,/usr/local/lib/security/*.so*,/usr/local/lib/systemd,/usr/local/share/locale};dev{/usr/local/include,/usr/local/lib/*.a,/usr/local/lib/*.la,/usr/local/lib/secutity/*.a,/usr/local/lib/secutiy/*.la,/usr/local/lib/pkgconfig};doc{/usr/local/share/doc,/usr/local/share/man}"

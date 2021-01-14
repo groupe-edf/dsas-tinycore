@@ -123,7 +123,7 @@ install_tcz() {
             unsquashfs -f -d $extract $target
             if test -s $tce_marker; then
                 msg post-install script $package
-                chroot $extract env LD_LIBRARY_PATH=/usr/local/lib /usr/local/tce.installed/$package
+                chroot $extract env LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib /usr/local/tce.installed/$package
             else
                 mkdir -p $extract/usr/local/tce.installed
                 touch $tce_marker
@@ -132,7 +132,7 @@ install_tcz() {
             if test -s $dep; then
               install_tcz $(sed -e s/.tcz$// $dep)
             fi
-        fi
+        fi  
     done
 }
 
@@ -405,6 +405,16 @@ case $1 in
     zcat $squashfs | { cd $extract; cpio -i -H newc -d; }
   fi
 
+  # FIXME
+  # We have a chicken and the egg problem with busybox. Our custom built busybox 
+  # depends en /lib/libtirpc.3 that needs to be linked to /usr/local/lib/libtirpc.3
+  # The libtirpc does do this, and it can'tcreated in the post install script of 
+  # busybox because the toolchain is broken at that point. So we need to install libtirpc
+  # first and manually created the link
+  install_tcz libtirpc
+  chroot $extract /bin/ln -s /usr/local/lib/libtirpc.so.3 /lib/libtirpc.so.3
+  
+
   # Install the needed packages
   install_tcz busybox  # Busybox with PAM and TMOUT support
   install_tcz openssl-1.1.1  # explicitly install openssl first so avail to ca-certificate
@@ -427,6 +437,7 @@ case $1 in
   install_tcz p7zip         # Needed by LiveUpdate
   install_tcz zip-unzip     # Needed to allow repacking of unsigned zip files
   install_tcz clamav
+  install_tcz Linux-PAM
   install_tcz libpam-radius-auth
 
   # Copy the pre-extracted packages to work dir. This must be after packages
@@ -531,6 +542,10 @@ EOF
   chroot $extract /tmp/create_users.sh
   rm $create_users
 
+  # Add console timeout to all .profile files
+  for file in $(find $extract -name ".profile"); do
+    echo "export TMOUT=300" >> $file
+  done
 
   # customize boot screen
   rsync -rv ./boot/ $newiso/boot/
@@ -545,7 +560,7 @@ EOF
   msg creating $dsascd.md5
   (cd $work; md5sum `basename $dsascd`; ) > $dsascd.md5
 
-  if [ "$1" != "-keep" ]; then
+  if [ "$1" != "-keep" ] && [ "$1" != "-k" ]; then
     rm -fr $image $newiso $mnt
   fi
   exit 0
