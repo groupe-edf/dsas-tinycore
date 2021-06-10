@@ -1,0 +1,83 @@
+#! /bin/sh
+
+sshdconfdir=$1
+
+masktocidr() {
+  bits=0
+  for octet in $(echo $2 | sed 's/\./ /g'); do
+    if [ "$octet" == "255" ]; then
+      bits=`echo $bits 8 + p | dc`
+    else
+      case "$octet" in
+        254) 
+          bits=`echo $bits 7 + p | dc`
+          ;;
+        252) 
+          bits=`echo $bits 6 + p | dc`
+          ;;
+        248) 
+          bits=`echo $bits 5 + p | dc`
+          ;;
+        240) 
+          bits=`echo $bits 4 + p | dc`
+          ;;
+        224) 
+          bits=`echo $bits 3 + p | dc`
+          ;;
+        192) 
+          bits=`echo $bits 2 + p | dc`
+          ;;
+        128) 
+          bits=`echo $bits 1 + p | dc`
+          ;;
+      esac
+      break
+    fi
+  done
+
+  tmp=$bits  
+  addr=""
+  for octet in $(echo $1 | sed 's/\./ /g'); do
+    if [ -n "$addr" ]; then
+      addr="$addr."
+    fi
+    if [ "$tmp" -ge "8" ]; then
+       addr="$addr$octet"
+       tmp=`echo $tmp 8 - p | dc`
+    elif [ "$tmp" -eq "0" ]; then
+       addr="${addr}0"
+    else
+      exp="1"
+      while [ "$tmp" -gt "0" ]; do
+        octet=`echo $octet $octet 2 % - 2 / p | dc`
+        exp=`echo $exp 2 \* p | dc`
+        tmp=`echo $tmp 1 - p | dc`
+      done
+      octet=`echo $octet $exp \* p | dc`
+      addr="$addr$octet"
+      tmp="0"
+    fi
+  done 
+  echo "$addr/$bits"
+}
+
+
+if [[ ! -d /sys/class/net/eth0 ]]; then
+  echo "#### DSAS eth0 not found"
+  exit 1
+fi
+TMP1=`ifconfig eth0 | sed -rn '2s/[^:]*:([.[:digit:]]*).*/\1/p'`
+TMP2=`ifconfig eth0 | sed -rn '2s/ .*:(.*)$/\1/p'`
+ETH0=$(masktocidr $TMP1 $TMP2)
+
+if [[ ! -d /sys/class/net/eth1 ]]; then
+  echo "#### DSAS eth1 not found"
+  ETH1=$ETH0
+else
+  TMP1=`ifconfig eth1 | sed -rn '2s/[^:]*:([.[:digit:]]*).*/\1/p'`
+  TMP2=`ifconfig eth1 | sed -rn '2s/ .*:(.*)$/\1/p'`
+  ETH1=$(masktocidr $TMP1 $TMP2)
+fi
+
+sed -e "s:<ETH0>:$ETH0:g" -e "s:<ETH1>:$ETH1:g" $sshdconfdir/sshd_config.dsas > $sshdconfdir/sshd_config
+

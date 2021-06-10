@@ -1,0 +1,5 @@
+_pkg=pinentry
+_version=1.1.1
+_uri=https://www.gnupg.org/ftp/gcrypt/pinentry/pinentry-1.1.1.tar.bz2
+_dep="libassuan libgpg-error"
+_build_dep="libassuan libgpg-error"

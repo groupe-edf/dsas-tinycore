@@ -1,0 +1,6 @@
+opt
+usr/local/etc/ssh
+etc/passwd
+etc/shadow
+etc/group
+etc/sudoers

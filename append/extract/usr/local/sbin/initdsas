@@ -1,0 +1,69 @@
+#! /bin/sh
+
+BAS=bas
+HAUT=haut
+VERIF=verif
+MNT=/mnt
+DSASDIR=dsas
+DSAS=
+
+for d in `find $MNT -name "$DSASDIR" -type d -mindepth 2 -maxdepth 2`; do
+  if [ -d "$d/bas" ] && [ -d "$d/haut" ]; then 
+    DSAS=$d
+    break
+  fi
+done
+
+# First time the DSAS is run
+if [ -z $DSAS ]; then
+  printf "Creating DSAS directory\n"
+  DISK=
+  # Find the largest partition that is mounted
+  for d in `find $MNT -type d -maxdepth 1 -name "sd*"`; do
+    if [ -z $DISK ]; then
+      DISK=$d
+      PART=`basename $DISK`
+      DEV=`echo $PART | sed -e "s/[[:digit:].*]$//g"`
+      SIZE=`cat /sys/block/$DEV/$PART/size`
+    else
+      PART=`basename $d`
+      DEV=`echo $PART | sed -e "s/[[:digit:].*]$//g"`
+      if [ `cat /sys/block/$DEV/$PART/size` -gt "$SIZE" ]; then
+        DISK=$d
+        SIZE=`cat /sys/block/$DEV/$PART/size`
+      fi
+    fi
+  done
+
+  if [ -z "$DISK" ]; then
+    echo "#### NO disk available for DSAS"
+    exit 1
+  fi
+
+  # Now we can setup the disk for the first time
+  mkdir -p $DISK/$DSASDIR/$BAS
+  mkdir -p $DISK/$DSASDIR/$HAUT
+  chmod -R 755 $DISK/$DSASDIR
+  mkdir -p $DISK/$DSASDIR/$VERIF
+  chmod 755 $DISK/$DSASDIR/$VERIF
+  chown $VERIF.$VERIF $DISK/$DSASDIR/$VERIF 
+
+  for d in windows centos symantec; do
+    mkdir $DISK/$DSASDIR/$BAS/$d
+    chown $BAS.$BAS $DISK/$DSASDIR/$BAS/$d
+    chmod 770 $DISK/$DSASDIR/$BAS/$d
+    mkdir $DISK/$DSASDIR/$HAUT/$d
+    chown $HAUT.$HAUT $DISK/$DSASDIR/$HAUT/$d
+    chmod 770 $DISK/$DSASDIR/$HAUT/$d
+  done
+  mkdir $DISK/$DSASDIR/$HAUT/reject
+  chown $HAUT.$HAUT $DISK/$DSASDIR/$HAUT/reject
+  chmod 770 $DISK/$DSASDIR/$HAUT/reject
+
+  DSAS=$DISK/$DSASDIR
+fi
+
+printf "Mounting $DSAS on /home/$DSASDIR\n"
+mkdir -p /home/$DSASDIR
+mount --bind $DSAS /home/$DSASDIR
+

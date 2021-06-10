@@ -1,0 +1,5 @@
+_pkg=gnupg
+_version=2.2.27
+_uri=https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.27.tar.bz2
+_dep="libassuan libgcrypt libksba npth pinentry"
+_build_dep="libassuan libgcrypt libksba npth pinentry"

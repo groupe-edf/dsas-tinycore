@@ -1,0 +1,5 @@
+_pkg=libksba
+_version=1.5.1
+_uri=https://www.gnupg.org/ftp/gcrypt/libksba/libksba-1.5.1.tar.bz2
+_dep="libgpg-error"
+_build_dep="libgpg-error"
