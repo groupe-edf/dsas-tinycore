@@ -3,20 +3,26 @@
 cd $(dirname $0)
 
 #### FIXME : Temporary directories for testing
-bas=/home/tc/ca/test/bas
-haut=/home/tc/ca/test/haut
+bas=/home/tc/dsas---tinycore/test/bas
+haut=/home/tc/dsas---tinycore/test/haut
+
+# XML Configuration file
+conf=/opt/dsas_conf.xml
+# FIXME for testing
+[ -f $conf ] || conf=/home/tc/dsas---tinycore/append/opt/dsas_conf.xml
 
 # Default options
 verbose=1
-movefiles=1
+movefiles=0
 deletebad=1
-logfile="verif_log"
+logfile="verif.log"
 logstdout=0
 dryrun=0
-rotatemax=6 
+rotatemax=6
+rotate=0
 reject=reject
-symantec_uri="ftp://noeysep3.noe.edf.fr//IntelligentUpdater/SEP14/"
-symantec_dir=symantec
+UMASK=640
+grp=share
 
 msg() {
   if [ $logstdout = "1" ]; then
@@ -27,26 +33,30 @@ msg() {
 }
 
 msgline() {
-  file=$1
-  status=$2
-  md5=$(cat $file | md5sum | sed -e "s/  -$//g")
-  _file=`echo $file | sed -e "s:^${haut}/::g"`
+  local file=$1
+  local status=$2
+  local md5=$(cat $file | md5sum | sed -e "s/  -$//g")
+  local _file=`echo $file | sed -e "s:^${haut}/::g"`
   case $status in
     0) [ $verbose == 1 ] && msg "  "  "Ok"  $md5 $_file ;;
     -1)  msg "XX"  "Unknown type"   $md5  $_file ;;
     1)   msg "**"  "Bad Sig"        $md5  $_file ;;
     2)   msg "$$"  "Checksum fail"  $md5  $_file ;;
+    3)   msg "**"  "Bad Interm Sig" $md5  $_file ;;
+    4)   msg "**"  "Fail virus chk" $md5  $_file ;;
+    5)   msg "**"  "Bad RPM Sig"    $md5  $_file ;;
     255) msg "**"  "Not signed"     $md5  $_file ;;
     *)   msg "XX"  "Unknown status" $md5  $_file ;;
   esac
 }
 
 help() {
-  echo "Usage: $(basename $0)  [Options] COMMAND"
-  echo "Verify windows signatures"
-  echo "     -v|--verbose    Log all files verified" 
+  echo "Usage: $(basename $0)  [Options] [NAME...]"
+  echo "Verify files given by NAME. Without NAME all repositories are checked "
+  echo "     -v|--verbose    Log all files verified"
   echo "     -q|--quiet      Log only files failing to verifiy"
-  echo "     -r|--dryrun     Perform no actions"
+  echo "     -r|--rotate     Rotate the log files"
+  echo "     -n|--dryrun     Perform no actions"
   echo "     -m|--move       Move files"
   echo "     -x|--link       Leave files in place and hard-link"
   echo "     -d|--delete     Delete files faling to verify"
@@ -56,32 +66,39 @@ help() {
   echo "     -o <FILE>       Log to <FILE>, default $logfile"
   echo "     --out=<FILE>    Log to <FILE>"
   echo "     -?|-h|--help    Print this help"
-  echo "Commands:"
-  echo "     rotate          Rotate the log files"
-  echo "     incoming        Treat the files in the incoming directory"
-  echo "     symantec        Download SEP signatures and verify"
-  echo "     centos          Download centos repo and verify"
-  echo "     windows         Download windows KBs and verify"
 }
 
 mv() {
-  if [ $dryrun == "0"]; then
-    /bin/mv $*
+  if [ $dryrun == "0" ]; then
+    [ -d $(dirname $2) ] || ( mkdir -m 770 -p $(dirname $2); chgrp -R bas $(dirname $2))
+    # We can't can't the owner of the file as we aren't root. So a 
+    # move must be treated as a copy and delete
+    /bin/cp $1 $2
+    chgrp bas $2
+    /bin/rm $1
   else
     echo "[DryRun] mv $*"
   fi
 }
 
 ln() {
-  if [ $dryrun == "0"]; then
-    /bin/ln $*
+  if [ $dryrun == "0" ]; then
+    [ -d $(dirname $2) ] || ( mkdir -m 770 -p $(dirname $2); chgrp -R bas $(dirname $2))
+    # This script is not running as root so can't change the owner. We
+    # first have to copy the file
+    cp $1 $1.tmp.$$
+    /bin/mv -f $1.tmp.$$ $1
+    chmod 0640 $1
+    chgrp $grp $1
+    /bin/ln -f $* 
   else
+    [ -d $(dirname $2) ] || echo "[DryRun] mkdir -p $(dirname $2)"
     echo "[DryRun] ln $*"
   fi
 }
 
 rm() {
-  if [ $dryrun == "0"]; then
+  if [ $dryrun == "0" ]; then
     /bin/rm $*
   else
     echo "[DryRun] rm $*"
@@ -89,25 +106,18 @@ rm() {
 }
 
 move() {
-  if [ $dryrun == "0"]; then
-    mkdir -p $(dirname $2)
-  fi
   if [ $movefiles == "1" ]; then
-    mv $1 $2
+    mv $*
   else
-    ln $1 $2
+    ln $*
   fi
 }
 
 treatbad() {
   if [ $deletebad == "1" ]; then
-    rm "$file"
+    rm "$*"
   else
-    if [ $movefiles == "1" ]; then
-      mv "$file" "$haut/$reject/$_file"
-    else
-      ln "$file" "$haut/$reject/$_file"
-    fi 
+    move "$*"
   fi
 }
 
@@ -121,6 +131,7 @@ rotatelogs() {
   exit 0
 }
 
+# For the moment this function is dead code. Remove ?
 iswindowsfile() {
   # FIXME Is this list complete ?
   case '$1' in
@@ -138,162 +149,235 @@ iswindowsfile() {
   return $retval
 }
 
-treatwindowsfiles() {
-  dir=$1
-  ca=$2
-  for file in `find $haut/$dir -type f`; do
-    mtype=$(file --brief --mime-type $file)
-    _file=`echo $file | sed -e "s:^${haut}/::g"`
-    if iswindowsfile $mtype; then
-      if [ -z $ca ] && osslsigncode verify $file > /dev/null 2>&1
-      if [ -z $ca ] || osslsigncode verify -CAfile $ca $file > /dev/null 2>&1
-      status=$?
-      msgline $file $status
-      case $status in
-        0) move "$file" "$bas/$_file"; ;;
-        *) treatbad "$file" "$haut/$reject/$_file"; ;;
-      esac
-    else
-      echo "Unknown file type : $mtype"
-      msgline $file -1
-      treatbad "$file" "$haut/$reject/$_file"
-    fi
+verifauthenticode(){
+  local id1=$1
+  local file=$2
+  local ca=$3
+  local id=""
+
+  if [ -z $ca ]; then
+    retossl=$(osslsigncode verify $file 2>&1) || return $?
+  else
+    retossl=$(osslsigncode verify -CAfile /tmp/tmpcert $file 2>&1) || return $?
+  fi
+
+  for _id in $(xmllint --xpath "dsas/tasks/task[@id='$id1']/cert/@id" $conf); do
+    eval $_id
+    _type=$(xmllint --xpath "string(dsas/tasks/task[@id='$id1']/cert[@id='$id']/@type)" $conf)
+    case $_type in
+      ca) continue ;;
+      intermediate)
+        fingerprint=$(xmllint --xpath "string(dsas/tasks/task[@id='$id1']/cert[@id='$id']/@fingerprint)" $conf)
+        echo $resossl | grep -q $fingerprint && return 3
+        ;;
+      gpg) 1>&2 echo "Can't use gpg certificates with authenticode"; return -1 ;;
+      *) 1>&2 echo "Unrecognized certificate type : $_type"; return -1 ;;
+    esac
   done
+  return 0
 }
 
-# For now only test the signature of windows files. What should
-# really be done here ? This is not a perfect solution 
-# (see http://attack.mitre.org/techniques/T1553/002). Perhaps
-# add a antivirus ? Verify by hand ? 
-incoming() {
-  treatwindowsfiles incoming
+antivirus() {
+  # FIXME Add something here. For now just flag everything as bad
+  return 4
 }
 
-# Use a CA with only the windows CA to limit to only
-# code signed by microsoft
-windows() {
-  # FIXME add dedicated Microsoft CAfile
-  # treatwindowsfiles windows CAFILE
-  treatwindowsfiles windows
-} 
+verifdirectory() {
+  local id=$1
+  local dir=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@dir)" $conf)
+  local check=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/check/@type)" $conf)
 
-# Symantec has an EV coding signing intermediate certificate from 
-# Digicert (who they sold there CA to in 2016). For now don't
-# clean up the ca-certificates package !!
-# Need to find a way to ensure the Symantec code signing intermediate
-# certificate is use !!
-symantec() {
-  treatwindowsfiles symantec
+  # Validate check type
+  case $check in
+    authenticode|antivirus) : ;;
+    *) 1>&2 echo "Unknown file checking type"; return 1 ;;
+  esac
+
+  # Create directory if needed
+  [ -d $bas/$dir ] || mkdir -p $bas/$dir
+
+  # Remove the files in our tree $bas and not listed in primary.xml
+  if [ "$deletebad" == "1" ]; then
+    filetable=$(ls -1 $haut/$dir)
+    for _file in $(cd $bas/$dir; find . -type f); do
+      if [[ "$filetable" != *"${_file:2}"* ]]; then
+        echo "Removing stale file ${_file:2}"
+        rm $bas/$dir/${_file:2}
+      fi
+    done
+  fi
+
+  ca=$(xmllint --xpath "string(dsas/tasks/task[@id='$id1']/cert[@type='ca'])" $conf)
+  [ -z "$ca" ] || $(echo "$ca" > /tmp/tmpcert; ca="/tmp/tmpcert")
+
+  for file in $(cd $haut; find $dir -type f); do
+    case $check in
+      authenticode) verifauthenticode $id $haut/$file $ca ;;
+      antivirus) antivirus $id $haut/$file ;;
+    esac
+    status=$?
+    msgline $haut/$file $status
+    case $status in
+      0) move "$file" "$bas/$_file"; ;;
+      *) treatbad "$file" "$haut/$reject/$_file"; ;;
+    esac
+  done
+
+  [ -z "$ca" ] || /bin/rm /tmp/tmpcert
 }
 
-# Usage : check_checksum <file> <chksum> <type>                                 
-check_checksum() {                                                              
-  _file=$1                                                                      
-  _chksum=$2                                                                    
-  _chktype=$3                                                                   
-                                                                                
-  case $_chktype in                                                             
-    sha)                                                                        
-      chk=$(cat $_file | sha1sum - | sed -e "s/ -$//g")                         
-      ;;                                                                        
-    md5)                                                                        
-      chk=$(cat $_file | md5sum - | sed -e "s/ -$//g")                          
-      ;;                                                                        
-    *)                                                                          
-     return 0                                                                   
-     ;;                                                                         
-  esac                                                                          
-                                                                                
-  if [ $chk != $_chksum ]; then                                                 
-    return 0                                                                    
-  fi                                                                            
-  return 1                                                                      
+# Usage : check_checksum <file> <chksum> <type>
+check_checksum() {
+  case $3 in
+    sha512)
+      chk=$(cat $1 | sha512sum - | sed -e "s/ -//g")
+      ;;
+    sha256)
+      chk=$(cat $1 | sha256sum - | sed -e "s/ -//g")
+      ;;
+    sha)
+      chk=$(cat $1 | sha1sum - | sed -e "s/ -$//g")
+      ;;
+    md5)
+      chk=$(cat $1 | md5sum - | sed -e "s/ -$//g")
+      ;;
+    *)
+     return 0
+     ;;
+  esac
+
+  if [ $chk != $2 ]; then
+    return 0
+  fi
+  return 1
 }
 
-verify_packages() {                                                                
-  prefix=$1
-  src=$2
-  dest=$3                                                                       
-  shift 3                                                                       
-  while [ "$#" -gt 2 ]; do                                                      
-    if [ ${1: -3} == "rpm" ]; then                                              
-      file=$1                                                                   
-      chktype=$2                                                                
-      chksum=$3                                                                 
-    else                                                                        
-     file=$3                                                                    
-     chktype=$1                                                                 
-     chksum=$2                                                                  
-    fi                                                                          
-    if [ -f "$src/$file" ]; then                                               
-      if  check_checksum $dest/$file $chksum $chktype; then                     
-        msgline $prefix/$file 1
-        treatbad $src/$file $haut/$reject/$file
-      else                                                                      
-        msgline $prefix/$file 0
-        move $src/$file $dest/$file
+verify_packages() {
+  dir=$1
+  rpm_k=$2
+  shift 2
+  while [ "$#" -gt 2 ]; do
+    if [ ${1: -3} == "rpm" ]; then
+      file=$1
+      chktype=$2
+      chksum=$3
+    else
+     file=$3
+     chktype=$1
+     chksum=$2
+    fi
+    if [ -f "$haut/$dir/$file" ]; then
+      if  check_checksum $haut/$dir/$file $chksum $chktype; then
+        msgline $haut/$dir/$file 1
+        treatbad $haut/$dir/$file $haut/$reject/$dir/$file
+      elif [ "$rpm_k" == "1" ] && rpm -K $haut/$dir/$file 2>&1 /dev/null; then
+        msgline $haut/$dir/$file 5
+        treatbad $haut/$dir/$file $haut/$reject/$dir/$file       
+      else
+        msgline $haut/$dir/$file 0
+        move $haut/$dir/$file $bas/$dir/$file
       fi
     fi  # For now ignore missing files
     shift 3
   done
 }
 
+verifrepo() {
+  id=$1
+  check=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/check/@type)" $conf)
 
-centos() {
-  for repo un $centos_repos; do
-    name=$(echo $repo | cut -d\| -f1)                                           
-    uri=$(echo $repo | cut -d\| -f2)                                            
+  # FIXME
+  # Don't have rpm binary yet so, fail for rpm tests
+  case $check in
+    rpm) echo "Check RPM files is not yet implemented"; return; ;;
+    deb) echo "Check DEB files is not yet implemented"; return; ;;
+    repomd|rpm)
+      dir=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@dir)" $conf)
+      name=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@name)" $conf)
 
-    # Verify the repomd.xml against the GPG signature repomd.xml.asc
+      gpg=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/cert/@type)" $conf)
+      fingerprint=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/cert/@fingerprint)" $conf)
+      [ -z "$gpg" ] && $(echo "No GPG key found for RPM check"; return 1)
+      gpg=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/cert)" $conf)
 
+      if [ "$check" == "rpm" ]; then
+        # FIXME Should the key be removed after use ?
+        [ "$(rpm -k)" == *"$fingerprint"i* ] || echo $gpg | rpm --import 2>&1 /dev/null
+      else
+        # FIXME Should the key be removed after use ?
+        [ "$(gpg -k)" == *"$fingerprint"* ] && echo "$gpg" | gpg --import 2>&1 /dev/null 
 
+        # Verify the repomd.xml against the GPG signature repomd.xml.asc
+        gpg --verify $haut/$dir/repodata/repomd.xml.asc \
+            $haut/$dir/repodata/repomd.xml 2>&1 /dev/null || \
+          $(echo "Failed to verify repomd.xml signature"; return 1)
+       fi
 
-    # Verify checksum of primary.xml
-    filelist=$(cat $haut/$centos_dir/$name/repodata/repomd.xml | sed -e "s:repom
-    chksum=$(cat $haut/$centos_dir/$name/repodata/repomd.xml | sed -e "s:repomd 
-    chktype=$(cat $haut/$centos_dir/$name/repodata/repomd.xml | sed -e "s:repomd
-    if  check_checksum $haut/$centos_dir/$name/$filelist $chksum $chktype; then 
-      2>1 echo "Error verifiying checksum of $filelist"                         
-      msgline $centos_dir/$name/$filelist 2
-      treatbad "$centos_dir/$name/$unzipfile" "$haut/$reject/$centos_dir/$name/$unzipfile";
-      continue                                                                  
-    fi                                                                          
-                                                                                
-    # Unzip and verify the checksum of primary.xml                              
-    chksum=$(cat $haut/$centos_dir/$name/repodata/repomd.xml | sed -e "s:repomd 
-    chktype=$(cat $haut/$centos_dir/$name/repodata/repomd.xml | sed -e "s:repomd
-    unzipfile=$(echo $filelist | sed -e "s/.gz//g")                             
-    [ -f $unzipfile ] && gunzip -k -f $haut/$centos_dir/$name/$filelist                              
-    if  check_checksum $haut/$centos_dir/$name/$unzipfile $chksum $chktype; then
-      2>1 echo "Error verifiying checksum of $unzipfile"                        
-      msgline $centos_dir/$name/$unzipfile 2                                                                 
-      treatbad "$centos_dir/$name/$unzipfile" "$haut/$reject/$centos_dir/$name/$unzipfile";
-      continue
-    fi
+       # Create the destination directory if needed
+       [ -d $bas/$dir ] || mkdir -p $bas/$dir
 
-    # Copy repomd.xml*  and primary.xml* to $bas
-    move $haut/$centos_dir/$name/$repodata/repomd.xml \ 
-          $bas/$centos_dir/$name/$repodata/repomd.xml 
-    move $haut/$centos_dir/$name/$repodata/repomd.xml.asc \
-          $bas/$centos_dir/$name/$repodata/repomd.xml.asc
-    move $haut/$centos_dir/$name/$filelist \
-          $bas/$centos_dir/$name/$filelist
-    move $haut/$centos_dir/$name/$unzipfile \
-          $bas/$centos_dir/$name/$unzipfile
+       # Identify the primary file list and download it
+       # Note that we have to ignore the xml namespace (initial cat/sed)
+       filelist=$(cat $haut/$dir/repodata/repomd.xml | \
+         sed -e "s:repomd xmlns:repomd ignore:g" | \
+         xmllint --xpath 'string(//repomd/data[@type="primary"]/location/@href)' -)
 
-    # Recover a table of the hashtype, hash and file names                      
-    filetable=$(cat $haut/$centos_dir/$name/$unzipfile | sed -e "s/xmlns=/ignore
+       # Verify its checksum
+       chksum=$(cat $haut/$dir/repodata/repomd.xml | \
+         sed -e "s:repomd xmlns:repomd ignore:g" | \
+         xmllint --xpath 'string(//repomd/data[@type="primary"]/checksum)' - )
+       chktype=$(cat $haut/$dir/repodata/repomd.xml | \
+         sed -e "s:repomd xmlns:repomd ignore:g" | \
+         xmllint --xpath 'string(//repomd/data[@type="primary"]/checksum/@type)' - )
+       if  check_checksum $haut/$dir/$filelist $chksum $chktype; then
+	         1>&2 echo "Error verifiying checksum of $filelist"
+         return
+       fi
 
-    # Remove the files in our tree $bas and not listed in primary.xml                    
-    for _file in $(cd $bas/$centos_dir/$name; find . -path ./repodata -prune -false -o -type f); do
-      if [[ "$filetable*" != *"${_file:2}"* ]]; then                            
-        echo "Removing stale file ${_file:2}"                                   
-        rm $bas/$centos_dir/$name/${_file:2}                                   
-      fi                                                                        
-    done                                                                        
+       # Unzip and verify the checksum of primary.xml
+       chksum=$(cat $haut/$dir/repodata/repomd.xml | \
+          sed -e "s:repomd xmlns:repomd ignore:g" | \
+          xmllint --xpath 'string(//repomd/data[@type="primary"]/open-checksum)' - )
+       chktype=$(cat $haut/$dir/repodata/repomd.xml | \
+          sed -e "s:repomd xmlns:repomd ignore:g" | \
+          xmllint --xpath 'string(//repomd/data[@type="primary"]/open-checksum/@type)' - )
+       unzipfile=$(echo $filelist | sed -e "s/.gz//g")
+       gunzip -k -f $haut/$dir//$filelist
+       if  check_checksum $haut/$dir/$unzipfile $chksum $chktype; then
+         1>&2 echo "Error verifiying checksum of $unzipfile"
+         return
+       fi
 
-    # Verify the packages
-    verify_packages $centos_dir/$name $haut/$centos/$name $bas/$centos_dir/$name $filetable
+       # Copy repomd.xml*  and primary.xml* to $bas
+       move $haut/$dir/repodata/repomd.xml \
+          $bas/$dir/repodata/repomd.xml
+       move $haut/$dir/repodata/repomd.xml.asc \
+          $bas/$dir/repodata/repomd.xml.asc
+       move $haut/$dir/$filelist \
+          $bas/$dir/$filelist
+       move $haut/$dir/$unzipfile \
+          $bas/$dir/$unzipfile
+
+       # Recover a table of the hashtype, hash and file names
+       filetable=$(cat $haut/$dir/$unzipfile | \
+          sed -e "s/xmlns=/ignore=/g" | \
+          xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | \
+          sed -e 's:.*href="\(.*\)"/>$:\1:g' \
+            -e 's:.*type="\([^"]*\)"[^>]*>\([0-9a-fA-F]*\)</checksum>:\1 \2:g')
+
+       # Remove the files in our tree $bas and not listed in primary.xml
+       for _file in $(cd $bas/$dir; find . -path ./repodata -prune -type f -o -type f); do
+         if [[ "$filetable" != *"${_file:2}"* ]]; then
+           echo "Removing stale file ${_file:2}"
+           rm $bas/$dir/${_file:2}
+         fi
+       done
+
+       # Verify the packages
+       [ "$check" == "rpm" ] && verify_packages $dir 1 $filetable
+       [ "$check" == "rpm" ] || verify_packages $dir 0 $filetable
+       ;;
+  esac
 }
 
 # Find the upper and lower zones
@@ -301,15 +385,17 @@ centos() {
 [ -z $bas ] && [ -d /home/bas ] && bas=/home/bas
 [ -d /home/dsas/haut ] && haut=/home/dsas/haut
 [ -z $haut ] && [ -d /home/haut ] && haut=/home/haut
-[ -z $bas ] && $(2>1 echo "Zone bas not found"; exit 1)
-[ -z $haut ] && $(2>1 echo "Zone haut not found"; exit 1)
+[ -z $bas ] && $(1>&2 echo "Zone bas not found"; exit 1)
+[ -z $haut ] && $(1>&2 echo "Zone haut not found"; exit 1)
 
 # Parse options
+names=""
 while [ "$#" -gt 0 ]; do
   case $1 in
-    -v|--verbose) verbose=1 ;; 
+    -v|--verbose) verbose=1 ;;
     -q|--quiet) verbose=0 ;;
-    -r---dryrun) dryrun=1 ;;
+    -r[--rotate) rotate=1 ;;
+    -n|--dryrun) dryrun=1 ;;
     -m|--move) movefiles=1 ;;
     -x|--link) movefiles=0 ;;
     -d|--delete) deletebad=1 ;;
@@ -319,28 +405,23 @@ while [ "$#" -gt 0 ]; do
     -o) logfile=$2; shift 1 ;;
     --out=*) logfile=${1#*=} ;;
     -?|-h|--help) help; exit 0 ;;
-    -*) 2>1 echo "Unrecognized option : $1"; help; exit 1 ;;
-    *) 
-      if [ ! -z $command ]; then
-	2>1 echo "Only a single command allowed: $command"
-        exit 1
-      fi
-      command=$1
+    -*) 1>&2 echo "Unrecognized option : $1"; help; exit 1 ;;
+    *) names="$names $1" ;;
   esac
   shift 1
 done
 
-if [ -z $command ]; then
- echo "No command given"
- exit 1
-fi
- 
-case $command in
-  rotate) rotatelogs ;;
-  incoming) incoming ;;
-  symantec) symantec ;;
-  centos) centos ;;
-  windows) windows ;;
-  *) echo "Unknown command '$command'"; exit 1 ;;
-esac
+for _id in $(xmllint --xpath 'dsas/tasks/task/@id' $conf); do
+  eval $_id
+  type=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@type)" $conf)
+  if [ "${#names}" -gt "0" ]; then
+    name=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@name)" $conf)
+    [[ "$names" == *"$name"* ]] || continue
+  fi
+  case $type in
+    linux)  verifrepo $id; ;;
+    directory) verifdirectory $id; ;;
+    *) echo "Unknown task type : $type"; ;;
+  esac
+done
 

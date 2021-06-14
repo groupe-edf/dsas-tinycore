@@ -1,19 +1,12 @@
 #! /bin/sh
 
 #### FIXME : Temporary directories for testing
-haut=/home/tc/dsas/test/haut
+haut=/home/tc/dsas---tinycore/test/haut
 
-# Default options
-symantec_uri="ftp://noeysep3.noe.edf.fr//IntelligentUpdater/SEP14/"
-symantec_dir=symantec
-
-# Can have several centos repos. The format is 
-#    "<name1>|<repo1> <name2>|<repo2>"
-# where any whitespace characters other than the one 
-# seperating, repositories must be escaped ou HTML
-# encoded
-centos_repos="7.7|http://debian.pleiade.edf.fr/sipsir/distributions/centos/7Server/x86_64/7.7/os"
-centos_dir=centos
+# XML Configuration file
+conf=/opt/dsas_conf.xml
+# FIXME for testing
+[ -f $conf ] || conf=/home/tc/dsas---tinycore/append/opt/dsas_conf.xml
 
 fileargs() {
 while [ "$#" -gt 3 ]; do
@@ -23,24 +16,35 @@ while [ "$#" -gt 3 ]; do
 done
 }
 
-symantec() {
-  # Download the directory contents of the symantec repository     
-  dirlist=$(curl $symantec_uri 2> /dev/null)
-  files=$(fileargs $dirlist) 
+getdirectory() {
+  id=$1
+  uri=$2
+  clean=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@clean)" $conf)
+  dir=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@dir)" $conf)
+  name=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@name)" $conf)
 
-  # Remove files locally that are no longer available sur le URI
-  for localfile in $(ls -1 $haut/$symantec_dir); do
-    if [[ "$files" != *"$localfile"* ]]; then
-      echo "Removing stale file: $localfile"
-      rm $haut/$symantec_dir/$localfile
-    fi
-  done
+  # Create directory if needed
+  [ -d $haut/$dir ] || mkdir -p $haut/$dir
+
+  # Download the directory contents
+  dirlist=$(curl $uri 2> /dev/null)
+  files=$(fileargs $dirlist)
+
+  if [ "$clean" == "true" ]; then
+    # Remove files locally that are no longer available sur le URI
+    for localfile in $(ls -1 $haut/$dir); do
+      if [[ "$files" != *"$localfile"* ]]; then
+        echo "Removing stale file: $localfile"
+        rm $haut/$dir/$localfile
+      fi
+    done
+  fi
 
   # Download the missing files
-  for file in $files; do                  
-    if [ ! -f "$haut/$symantec_dir/$file" ]; then
+  for file in $files; do
+    if [ ! -f "$haut/$dir/$file" ]; then
       echo "Downloading file: $file"
-      $(umask 007 && curl -o $haut/$symantec_dir/$file $symantec_uri$file 2> /dev/null)                       
+      $(umask 007 && curl -o $haut/$dir/$file $uri$file 2> /dev/null)
     fi
   done
 }
@@ -52,6 +56,12 @@ check_checksum() {
   _chktype=$3
 
   case $_chktype in
+    sha512)
+      chk=$(cat $_file | sha512sum - | sed -e "s/ -//g")
+      ;;
+    sha256)
+      chk=$(cat $_file | sha256sum - | sed -e "s/ -//g")
+      ;;
     sha)
       chk=$(cat $_file | sha1sum - | sed -e "s/ -$//g")
       ;;
@@ -64,14 +74,15 @@ check_checksum() {
   esac
 
   if [ $chk != $_chksum ]; then
-    return 0 
+    return 0
   fi
   return 1
 }
 
 get_packages() {
   dest=$1
-  shift
+  uri=$2
+  shift 2
   while [ "$#" -gt 2 ]; do
     if [ ${1: -3} == "rpm" ]; then
       file=$1
@@ -86,73 +97,116 @@ get_packages() {
       if  check_checksum $dest/$file $chksum $chktype; then
         # Checksum of file is different redownload the file
         echo "Downloading file $file [Checksum different!!]"
-        $(umask 007 && curl --create-dirs -o $dest/$file $uri/$file 2> /dev/null)  
+        $(umask 007 && curl --create-dirs -o $dest/$file $uri/$file 2> /dev/null)
       else
         echo "Skipping file $file"
       fi
     else
       echo "Downloading file $file"
-      $(umask 007 && curl --create-dirs -o $dest/$file $uri/$file 2> /dev/null)  
+      $(umask 007 && curl --create-dirs -o $dest/$file $uri/$file 2> /dev/null)
     fi
     shift 3
   done
 }
 
-centos() {
+getrepo() {
+  id=$1
+  uri=$2
+  check=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/check/@type)" $conf)
+  case $check in
+    deb) echo "Check DEB files is not yet implemented"; return; ;;
+    repomd|rpm)
+       dir=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@dir)" $conf)
+       clean=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@clean)" $conf)
+       name=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@name)" $conf)
 
-  # Download the repomd.xml file for the repo
-  for repo in $centos_repos; do
-    name=$(echo $repo | cut -d\| -f1)
-    uri=$(echo $repo | cut -d\| -f2)
-    echo "Downloading repodata/repomd.xml from Centos $name"
-    $(umask 007 && curl --create-dirs -o $haut/$centos_dir/$name/repodata/repomd.xml $uri/repodata/repomd.xml 2> /dev/null)  
-    $(umask 007 && curl --create-dirs -o $haut/$centos_dir/$name/repodata/repomd.xml.asc $uri/repodata/repomd.xml.asc 2> /dev/null)  
+       # Create the destination directory if needed
+       [ -d $haut/$dir ] && mkdir -p $haut/$dir
 
-    # Identify the primary file list and download it
-    # Note that we have to ignore the xml namespace (initial cat/sed)
-    filelist=$(cat $haut/$centos_dir/$name/repodata/repomd.xml | sed -e "s:repomd xmlns:repomd ignore:g" | xmllint --xpath 'string(//repomd/data[@type="primary"]/location/@href)' - ) 
-    echo "Downloading primary file list $filelist for Centos $name"
-    $(umask 007 && curl --create-dirs -o $haut/$centos_dir/$name/$filelist $uri/$filelist 2> /dev/null)  
+       echo "Downloading repodata/repomd.xml from $name"
+       $(umask 007 && curl --create-dirs -o $haut/$dir/repodata/repomd.xml \
+            $uri/repodata/repomd.xml 2> /dev/null)
+       [ "$check" == "rpm" ] || $(umask 007 && curl --create-dirs \
+            -o $haut/$dir/repodata/repomd.xml.asc \
+            $uri/repodata/repomd.xml.asc 2> /dev/null)
 
-    # Verify its checksum
-    chksum=$(cat $haut/$centos_dir/$name/repodata/repomd.xml | sed -e "s:repomd xmlns:repomd ignore:g" | xmllint --xpath 'string(//repomd/data[@type="primary"]/checksum)' - ) 
-    chktype=$(cat $haut/$centos_dir/$name/repodata/repomd.xml | sed -e "s:repomd xmlns:repomd ignore:g" | xmllint --xpath 'string(//repomd/data[@type="primary"]/checksum/@type)' - ) 
-    if  check_checksum $haut/$centos_dir/$name/$filelist $chksum $chktype; then
-      2>1 echo "Error verifiying checksum of $filelist"
-      continue
-    fi
+       # Identify the primary file list and download it
+       # Note that we have to ignore the xml namespace (initial cat/sed)
+       filelist=$(cat $haut/$dir/repodata/repomd.xml | \
+         sed -e "s:repomd xmlns:repomd ignore:g" | \
+         xmllint --xpath 'string(//repomd/data[@type="primary"]/location/@href)' - )
+       echo "Downloading primary file list $filelist for $name"
+       $(umask 007 && curl --create-dirs -o $haut/$dir/$filelist \
+           $uri/$filelist 2> /dev/null)
 
-    # Unzip and verify the checksum of primary.xml
-    chksum=$(cat $haut/$centos_dir/$name/repodata/repomd.xml | sed -e "s:repomd xmlns:repomd ignore:g" | xmllint --xpath 'string(//repomd/data[@type="primary"]/open-checksum)' - ) 
-    chktype=$(cat $haut/$centos_dir/$name/repodata/repomd.xml | sed -e "s:repomd xmlns:repomd ignore:g" | xmllint --xpath 'string(//repomd/data[@type="primary"]/open-checksum/@type)' - ) 
-    unzipfile=$(echo $filelist | sed -e "s/.gz//g")
-    gunzip -k -f $haut/$centos_dir/$name/$filelist
-    if  check_checksum $haut/$centos_dir/$name/$unzipfile $chksum $chktype; then 
-      2>1 echo "Error verifiying checksum of $unzipfile"                         
-      continue                                                                  
-    fi                                                                          
-    
-    # Recover a table of the hashtype, hash and file names 
-    filetable=$(cat $haut/$centos_dir/$name/$unzipfile | sed -e "s/xmlns=/ignore=/g" | xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | sed -e 's:.*href="\(.*\)"/>$:\1:g' -e 's:.*type="\([^"]*\)"[^>]*>\([0-9a-fA-F]*\)</checksum>:\1 \2:g')
+       # Verify its checksum
+       chksum=$(cat $haut/$dir/repodata/repomd.xml | \
+         sed -e "s:repomd xmlns:repomd ignore:g" | \
+         xmllint --xpath 'string(//repomd/data[@type="primary"]/checksum)' - )
+       chktype=$(cat $haut/$dir/repodata/repomd.xml | \
+         sed -e "s:repomd xmlns:repomd ignore:g" | \
+         xmllint --xpath 'string(//repomd/data[@type="primary"]/checksum/@type)' - )
+       if  check_checksum $haut/$dir/$filelist $chksum $chktype; then
+         2>1 echo "Error verifiying checksum of $filelist"
+         return
+       fi
 
-    # Remove the files in our tree not listed in primary.xml
-    for _file in $(cd $haut/$centos_dir/$name; find . -path ./repodata -prune -false -o -type f); do
-      if [[ "$filetable*" != *"${_file:2}"* ]]; then
-        echo "Removing stale file ${_file:2}" 
-        rm $haut/$centos_dir/$name/${_file:2}
-      fi
-    done
+       # Unzip and verify the checksum of primary.xml
+       chksum=$(cat $haut/$dir/repodata/repomd.xml | \
+          sed -e "s:repomd xmlns:repomd ignore:g" | \
+          xmllint --xpath 'string(//repomd/data[@type="primary"]/open-checksum)' - )
+       chktype=$(cat $haut/$dir/repodata/repomd.xml | \
+          sed -e "s:repomd xmlns:repomd ignore:g" | \
+          xmllint --xpath 'string(//repomd/data[@type="primary"]/open-checksum/@type)' - )
+       unzipfile=$(echo $filelist | sed -e "s/.gz//g")
+       gunzip -k -f $haut/$dir//$filelist
+       if  check_checksum $haut/$dir/$unzipfile $chksum $chktype; then
+         2>1 echo "Error verifiying checksum of $unzipfile"
+         return
+       fi
 
-    # Download the packages
-    get_packages $haut/$centos_dir/$name $filetable
-  done
+       # Recover a table of the hashtype, hash and file names
+       filetable=$(cat $haut/$dir/$unzipfile | \
+          sed -e "s/xmlns=/ignore=/g" | \
+          xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | \
+          sed -e 's:.*href="\(.*\)"/>$:\1:g' \
+            -e 's:.*type="\([^"]*\)"[^>]*>\([0-9a-fA-F]*\)</checksum>:\1 \2:g')
+
+       if [ "$clean" == "true" ]; then
+         # Remove the files in our tree not listed in primary.xml
+         for _file in $(cd $haut/$dir; find . -path ./repodata -prune -type f -o -type f); do
+           if [[ "$filetable" != *"${_file:2}"* ]]; then
+             echo "Removing stale file ${_file:2}"
+             rm $haut/$dir/${_file:2}
+           fi
+         done
+       fi
+
+       # Download the packages
+       get_packages $haut/$dir $uri $filetable
+       ;;
+    *) echo "Unrecognized repositiory check type $check"; ;;
+  esac
 }
 
-while [ "$#" -gt 0 ]; do
-  case $1 in
-    symantec) symantec ;;
-    centos) centos ;;
-    *) 2>1 echo "Unknown command"; exit 1 ;;
-  esac
-  shift
+[ -d /home/dsas/haut ] && haut=/home/dsas/haut
+[ -z $bas ] && [ -d /home/haut ] && haut=/home/haut
+[ -z $haut ] && $(2>1 echo "Zone haut not found"; exit 1)
+
+for _id in $(xmllint --xpath 'dsas/tasks/task/@id' $conf); do
+  eval $_id
+  type=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@type)" $conf)
+  uri=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/uri)" $conf)
+  if [ "$#" -gt "0" ]; then
+    name=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@name)" $conf)
+    [[ "$*" == *"$name"* ]] || continue
+  fi
+  if [ ! -z $uri ]; then
+    case $type in
+      linux)  getrepo $id $uri; ;;
+      directory) getdirectory $id $uri; ;;
+      *) echo "Unknown task type : $type"; ;;
+    esac
+  fi
 done
+
