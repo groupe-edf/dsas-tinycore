@@ -1,0 +1,5 @@
+_pkg=osslsigncode
+_version=2.1.0
+_uri=https://github.com/mtrojnar/osslsigncode/releases/download/2.1/osslsigncode-2.1.0.tar.gz
+_dep="curl openssl-1.1.1"
+_build_dep=""
