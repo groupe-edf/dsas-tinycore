@@ -196,7 +196,7 @@ verifdirectory() {
   # Create directory if needed
   [ -d $bas/$dir ] || mkdir -p $bas/$dir
 
-  # Remove the files in our tree $bas and not listed in primary.xml
+  # Remove the files in our tree $bas and not in $haut.
   if [ "$deletebad" == "1" ]; then
     filetable=$(ls -1 $haut/$dir)
     for _file in $(cd $bas/$dir; find . -type f); do
@@ -218,8 +218,8 @@ verifdirectory() {
     status=$?
     msgline $haut/$file $status
     case $status in
-      0) move "$file" "$bas/$_file"; ;;
-      *) treatbad "$file" "$haut/$reject/$_file"; ;;
+      0) move "$haut/$file" "$bas/$file"; ;;
+      *) treatbad "$haut/$file" "$haut/$reject/$file"; ;;
     esac
   done
 
