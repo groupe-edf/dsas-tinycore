@@ -42,14 +42,12 @@ cert_dir=$work/cert
 service_pass_len=8
 src=./src
 
-mscrtfiles="https://www.microsoft.com/pki/certs/MicRooCerAut_2010-06-23.crt \
+crtfiles="https://www.microsoft.com/pki/certs/MicRooCerAut_2010-06-23.crt \
           https://www.microsoft.com/pki/certs/MicRooCerAut2011_2011_03_22.crt \
           https://www.microsoft.com/pkiops/certs/Microsoft%20Time%20Stamp%20Root%20Certificate%20Authority%202014.crt \
           https://www.microsoft.com/pkiops/certs/Microsoft%20ECC%20Product%20Root%20Certificate%20Authority%202018.crt \
           https://www.microsoft.com/pkiops/certs/Microsoft%20ECC%20TS%20Root%20Certificate%20Authority%202018.crt"
-
-symcrtfiles=""
-
+pemfiles="http://crl-edf.edf.fr/ca/autorite_racine_groupe_edf.cer"
 
 test "$SUDO_USER" && as_user="sudo -E -u $SUDO_USER" || as_user=
 
@@ -130,10 +128,14 @@ getcrt() {
 
 crt2pem() {
     for crt0; do
-        crt=$cert_dir/`basename $crt0 | sed -e "s/%20/ /g"`
-        target=$pemdest/`basename $crt0 | sed -e "s/%20/ /g"`
-        msg create PEM file of ""`basename $crt0 | sed -e 's/%20/ /g'`
-        openssl x509 -inform DER -outform PEM -in "$crt" -out "$target"
+        if [ "${crt0: -4}" == ".crt" ]; then
+          crt=$cert_dir/`basename $crt0 | sed -e "s/%20/ /g"`
+          target=$pemdest/`basename $crt0 | sed -e "s/%20/ /g"`
+          msg create PEM file of ""`basename $crt0 | sed -e 's/%20/ /g'`
+          openssl x509 -inform DER -outform PEM -in "$crt" -out "$target"
+        else
+          cp $crt $target
+        fi
     done
 }
 
@@ -145,20 +147,10 @@ create_certs() {
     rm -fr $extract0
     unsquashfs -f -d $extract0 $tcz_dir/ca-certificates.tcz
     msg removing unwanted certificates
-    oldcerts=$extract0/usr/local/share/ca-certificates
-    # For now don't delete old certs to allow testing 
-    # with the digicert certificates used by Symantec
-    #for d in `cd $oldcerts; find . -mindepth 1 -maxdepth 1 -type d;`; do
-    #    echo $oldcerts : $d
-    #    if [ "$d" != "./files" ]; then
-    #    msg removing certificates from $d
-    #        ( cd $oldcerts; rm -fr $d )
-    #    fi
-    #done
-    getcrt $mscrtfiles  
+    getcrt $crtfiles $pemfiles 
     pemdest=$extract0/usr/local/share/ca-certificates/dsas
     cmd mkdir -pv $pemdest
-    crt2pem $mscrtfiles
+    crt2pem $mscrtfiles $pemfiles
     chroot $extract0 /usr/local/sbin/update-ca-certificates
     rm -f $tcz_dir/ca-certificates.tcz
     mksquashfs $extract0 $tcz_dir/ca-certificates.tcz
@@ -167,7 +159,7 @@ create_certs() {
 
 case $1 in
 -clean)
-  rm -fr $extract $newiso $mnt $work/tmpcert $dsascd $dsascd.md5 $work/dsas_pass.txt
+  rm -fr $extract $newiso $mnt $work/tmpcert $work/build $work/dest $dsascd $dsascd.md5 $work/dsas_pass.txt
   exit 0
   ;;
 -realclean)
@@ -194,6 +186,10 @@ if ! ls $extract/proc > /dev/null 2> /dev/null; then
   zcat $squashfs | { cd $extract; cpio -i -H newc -d; }
 fi
 
+# Build additional packages and their dependancies
+./build.sh osslsigncode
+./build.sh gnupg
+
 # Create the desired certificates
 create_certs
 
@@ -202,16 +198,19 @@ install_tcz openssl-1.1.1  # explicitly install openssl first so avail to ca-cer
 install_tcz curl
 install_tcz kmaps
 install_tcz openssh
+install_tcz coreutils     # For sha256, etc
 install_tcz osslsigncode
 install_tcz libxml2-bin   # For xmllint
+install_tcz gnupg
 
-# copy preloaded packages to work dir. This must be after packages
+# Copy the pre-extracted packages to work dir. This must be after packages
 # are installed to allow for files to be overwritten. Run as root 
 # and correct the ownership of files 
 msg append dsas files
-rsync -av $append/ $work/
+rsync -av $append/ $extract/
 chown -R root.root $extract/usr
 chown root $extract/opt/bootlocal.sh
+chown root $extract/opt/bootsync.sh
 
 # prevent autologin of tc user
 ( cd $extract/etc; cat inittab | sed -r 's/(.*getty)(.*autologin)(.*)/\1\3/g' > inittab.new; )
@@ -231,11 +230,15 @@ cat << EOF >> $create_users
 echo tc:dSaO2021cTf | chpasswd
 EOF
 
+
+# FIXME
+# User verif should be /bin/false with cron jobs, but for testing
+# give it a shell
 msg adding user 'verif'
 pwgen $service_pass_len
 echo "verif:$pass" >> $passfile
 cat << EOF >> $create_users
-adduser -s /bin/false -u 2000 -D -H verif
+adduser -s /bin/sh -u 2000 -D -H -h /home/dsas/verif verif
 echo verif:$pass | chpasswd
 EOF
 
@@ -258,6 +261,10 @@ EOF
 cat << EOF >> $create_users
 addgroup verif bas
 addgroup verif haut
+addgroup -g 2003 share
+addgroup verif share
+addgroup bas share
+addgroup haut share
 EOF
 
 chmod 755 $create_users

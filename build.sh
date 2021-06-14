@@ -1,15 +1,16 @@
 #! /bin/sh
 
 # WARNING : Very rough script to build missing packages
-# It assumes buidld machine is TinyCore and it will 
+# It assumes build machine is TinyCore and it will 
 # temporarily install packages on your machine 
 
 cd $(dirname "$0")
 pkg_dir=./pkg
-src_dir=./work/src
-destdir=./work/dest
-build_dir=./work/build
-tcz_dir=./work/tcz
+work=./work
+src_dir=$work/src
+destdir=$work/dest
+build_dir=$work/build
+tcz_dir=$work/tcz
 
 rebuild=0
 forcedownload=0
@@ -17,25 +18,15 @@ forcedownload=0
 get() {
   _src=$(basename $1)
   echo "Downloading $_src"
-  curl -o $2/$_src $1 2> /dev/null  
+  curl -L -o $2/$_src $1 2> /dev/null  
 }
 
 download() {
   if [ $forcedownload -eq 0 ]; then
     if [ ! -f "$1" ]; then
       case $(echo $1 | sed -e "s/.*\(\..*\)$/\1/g") in
-        .tgz|.tbz|.tar) get $*; ;;
-        .gz) 
-          _f=$(basename $1 .gz)
-          [ -f "$src_dir/$_f" ] && get $1 $2
-          ;;
-        .bz2) 
-          _f=$(basename $1 .bz2)
-          [ -f "$src_dir/$_f" ] || get $1 $2
-          ;;
-        *)
-          echo "Unknown file extension $1"
-          ;;
+        .tgz|.tbz|.tar|.gz|.bz2) get $*; ;;
+        *) echo "Unknown file extension $1"; ;;
       esac
     fi
   else
@@ -49,13 +40,19 @@ unpack() {
     .tgz) tar xvzCf $2 $1; ;;
     .tbz) tar xvjCf $2 $1; ;;
     .tar) tar xvCf $2 $1; ;;
-    .gz) 
-      [ -f "$1" ] && gunzip $1
-      [ -f "$(dirname $1)/$(basename $1 .gz)" ] && tar xvCf $2 "($dirname $1)/$(basename $1 .gz)"
+    .gz)
+      if [ "${1: -7}" == ".tar.gz" ]; then
+        tar xvzCf $2 $1;
+      else
+        echo "An archive can not be a gzip"
+      fi
       ;;
     .bz2) 
-      [ -f "$1" ] && bunzip2 $1
-      [ -f "$(dirname $1)/$(basename $1 .bz2)" ] && tar xvCf $2 "$(dirname $1)/$(basename $1 .bz2)"
+      if [ "${1: -8}" == ".tar.bz2" ]; then
+        tar xvjCf $2 $1;
+      else
+        echo "An archive can not be a bzip2"
+      fi
       ;;
     *)
       echo "Unknown file extension $1"
@@ -100,9 +97,9 @@ build_pkg() {
       unpack $src_dir/$_src $build_dir
       build_tcz $build_dir $_pkg $_version $(realpath $destdir) $tcz_dir
       cat $tcz_dir/$_pkg.tcz | md5sum | sed -e "s/ -$//g" > $tcz_dir/$_pkg.tcz.md5.txt
-      [ -f $tcz_dir/$_pkg.dep ] && rm $tcz_dir/$_pkg.dep
+      [ -f $tcz_dir/$_pkg.tcz.dep ] && rm $tcz_dir/$_pkg.tcz.dep
       for dep in $_dep; do
-        echo $dep >> $tcz_dir/$_pkg.dep
+        echo $dep >> $tcz_dir/$_pkg.tcz.dep
       done
     fi
   done
@@ -119,6 +116,8 @@ while [ "$#" -gt 0 ]; do
   shift
 done
 
+[ -d $build_dir ] || mkdir -p $build_dir
+[ -d $destdir ] || mkdir -p $destdir
 [ -z $pkgs ] && $(echo "No package to build given"; exit 1) 
 build_pkg $pkgs
 
