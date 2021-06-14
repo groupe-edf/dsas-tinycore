@@ -9,25 +9,25 @@ masktocidr() {
       bits=`echo $bits 8 + p | dc`
     else
       case "$octet" in
-        254) 
+        254)
           bits=`echo $bits 7 + p | dc`
           ;;
-        252) 
+        252)
           bits=`echo $bits 6 + p | dc`
           ;;
-        248) 
+        248)
           bits=`echo $bits 5 + p | dc`
           ;;
-        240) 
+        240)
           bits=`echo $bits 4 + p | dc`
           ;;
-        224) 
+        224)
           bits=`echo $bits 3 + p | dc`
           ;;
-        192) 
+        192)
           bits=`echo $bits 2 + p | dc`
           ;;
-        128) 
+        128)
           bits=`echo $bits 1 + p | dc`
           ;;
       esac
@@ -35,7 +35,7 @@ masktocidr() {
     fi
   done
 
-  tmp=$bits  
+  tmp=$bits
   addr=""
   for octet in $(echo $1 | sed 's/\./ /g'); do
     if [ -n "$addr" ]; then
@@ -57,7 +57,7 @@ masktocidr() {
       addr="$addr$octet"
       tmp="0"
     fi
-  done 
+  done
   echo "$addr/$bits"
 }
 

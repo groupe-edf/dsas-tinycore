@@ -24,15 +24,15 @@ for i in `find /sys/block/*/ -mindepth 1 -maxdepth 1 -name dev`; do
   [ "$DEVMAJOR" != '8' ] && continue
   if [ -z $FSTYPE ]; then
     for PART in $FDISKL; do
-      case "$PART" in 
-        *"$DEVROOT/$DEVNAME"*) 
+      case "$PART" in
+        *"$DEVROOT/$DEVNAME"*)
           FSTYPE="$(fstype $PART)"
           MOUNTPOINT=`echo $PART | sed -e "s:.*\($DEVNAME.*\):/mnt/\1:g"`
           [ -d $MOUNTPOINT ] || mkdir $MOUNTPOINT
-          [ $(mount | grep -q $PART) ] || mount $PART $MOUNTPOINT 
+          [ $(mount | grep -q $PART) ] || mount $PART $MOUNTPOINT
           break
           ;;
-      esac 
+      esac
     done
   fi
   [ -n "$FSTYPE" ] && continue

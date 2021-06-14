@@ -8,7 +8,7 @@ DSASDIR=dsas
 DSAS=
 
 for d in `find $MNT -name "$DSASDIR" -type d -mindepth 2 -maxdepth 2`; do
-  if [ -d "$d/bas" ] && [ -d "$d/haut" ]; then 
+  if [ -d "$d/bas" ] && [ -d "$d/haut" ]; then
     DSAS=$d
     break
   fi
@@ -46,9 +46,11 @@ if [ -z $DSAS ]; then
   chmod -R 755 $DISK/$DSASDIR
   mkdir -p $DISK/$DSASDIR/$VERIF
   chmod 755 $DISK/$DSASDIR/$VERIF
-  chown $VERIF.$VERIF $DISK/$DSASDIR/$VERIF 
+  ln -s /usr/local/sbin/getfiles $DISK/$DSASDIR/$VERIF/getfiles
+  ln -s /usr/local/sbin/checkfiles $DISK/$DSASDIR/$VERIF/checkfiles
+  chown -R $VERIF.$VERIF $DISK/$DSASDIR/$VERIF
 
-  for d in windows centos symantec; do
+  for d in windows linux symantec; do
     mkdir $DISK/$DSASDIR/$BAS/$d
     chown $BAS.$BAS $DISK/$DSASDIR/$BAS/$d
     chmod 770 $DISK/$DSASDIR/$BAS/$d
