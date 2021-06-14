@@ -1,11 +1,12 @@
 <dsas>
   <tasks>
-    <task type="linux" name="CentOs" dir="linux/centos/7" clean="true">
+    <task id="1" type="linux" name="Centos7" dir="linux/centos/7" clean="true">
       <uri>http://debian.pleiade.edf.fr/centos/7/os/x86_64</uri>
       <check type="repomd" />
-      <cert type="gpg" fingerprint="6341AB2753D78A78A7C27BB124C6A8A7F4A80EB5">
+      <cert id="1" type="gpg" fingerprint="6341AB2753D78A78A7C27BB124C6A8A7F4A80EB5">
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: GnuPG v1.4.5 (GNU/Linux)
+
 
 mQINBFOn/0sBEADLDyZ+DQHkcTHDQSE0a0B2iYAEXwpPvs67cJ4tmhe/iMOyVMh9
 Yw/vBIF8scm6T/vPN5fopsKiW9UsAhGKg0epC6y5ed+NAUHTEa6pSOdo7CyFDwtn
@@ -33,10 +34,11 @@ YSMiW5r/5xwQk7xEcKlbZdmUJp3ZDTQBXT06vavvp3jlkqqH9QOE8ViZZ6aKQLqv
 pL+4bs52jzuGwTMT7gOR5MzD+vT0fVS7Xm8MjOxvZgbHsAgzyFGlI1ggUQmU7lu3
 uPNL0eRx4S1G4Jn5
 =OGYX
+
 -----END PGP PUBLIC KEY BLOCK-----
       </cert>
     </task>
-    <task type="windows" name="Symantec" dir="symantec" clean="true">
+    <task id="2" type="directory" name="Symantec" dir="symantec" clean="true">
       <uri>ftp://noeysep3.noe.edf.fr//IntelligentUpdater/SEP14/</uri>
       <check type="authenticode" />
       <!--
@@ -44,9 +46,9 @@ uPNL0eRx4S1G4Jn5
       "Symantec Class 3 SHA256 Code Signing CA" which is signed
       by a VeriSign CA in the certificate store
       -->
-      <cert type="intermediate" fingerprint="0414963B53F0793397AF7D83EF2E2BCCCAB7861E7266" />
+      <cert id="1" type="intermediate" fingerprint="0414963B53F0793397AF7D83EF2E2BCCCAB7861E7266" />
     </task> 
-    <task type="windows" name="Windows" dir="windows" clean="true">
+    <task id="3" type="directory" name="Windows" dir="windows" clean="true">
       <check type="authenticode" />
       <!-- 
       For MS KBs signed by the intermediate certificate
@@ -54,10 +56,9 @@ uPNL0eRx4S1G4Jn5
       by the CA "Microsoft Root Certificate Authority 2010"
       Assume the CA is in the certificate store
       -->
-      <cert type="intermediate" fingerprint="04145D73BB91C27AF65D1ED94EC82D2FE003ABA6DC12" />
+      <cert id="1" type="intermediate" fingerprint="04145D73BB91C27AF65D1ED94EC82D2FE003ABA6DC12" />
     </task>
-    <task type="incoming" name="Incoming" dir="incoming" clean="false">
-      <check type="authenicode" required="no" />
+    <task id="4" type="directory" name="Incoming" dir="incoming" clean="false">
       <check type="antivirus" />
     </task>
   </tasks>
