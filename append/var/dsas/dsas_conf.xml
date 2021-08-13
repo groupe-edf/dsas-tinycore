@@ -1,0 +1,48 @@
+<dsas>
+  <config>
+    <users>
+      <hash>sha512</hash>
+      <first>true</first>
+      <user>tc</user>
+      <user>bas</user>
+      <user>haut</user>
+      <user>verif</user>
+    </users>
+    <network>
+      <interfaces />
+      <bas />
+      <haut />
+    </network>
+    <web>
+      <ssl>
+        <countryName></countryName>
+        <stateOrProvinceName></stateOrProvinceName> 
+        <localityName></localityName>
+        <organizationName></organizationName>
+        <organizationalUnitName></organizationalUnitName>
+        <commonName></commonName>
+        <emailAddress></emailAddress>
+        <validity></validity>
+      </ssl>
+      <repo>false</repo>
+    </web>
+    <ssh>
+      <active>false</active>
+      <user_tc></user_tc>
+      <user_bas></user_bas>
+      <user_haut></user_haut>
+    </ssh>
+    <ntp>
+      <active>false</active>
+      <server></server>
+    </ntp>
+    <syslog>
+      <active>false</active>
+      <server></server>
+    </syslog>
+  </config>
+  <tasks>
+  </tasks>
+  <certificates>
+  </certificates>
+</dsas>
