@@ -1,0 +1,294 @@
+#!/bin/sh
+
+RED="$(echo -e '\033[1;31m')"
+GREEN="$(echo -e '\033[1;32m')"
+YELLOW="$(echo -e '\033[1;33m')"
+NORMAL="$(echo -e '\033[1;39m')"
+MNT=/mnt
+VAR=/var/dsas
+as_tc="sudo -E -u tc"
+as_bas="sudo -E -u bas"
+
+mounted(){
+  grep $1 /etc/mtab > /dev/null 2>&1
+  if [ $? == 0 ]; then return 0; fi
+  return 1
+}
+
+mount_dsas(){
+  if [ ! `mounted /home/dsas` ]; then
+    echo "Mounting ${GREEN}$DSAS${NORMAL} on ${GREEN}/home/dsas${NORMAL}"
+    mkdir -p /home/dsas
+    mount --noexec --nobind $DSAS /home/dsas
+  fi
+}
+
+get_dsas(){
+  for d in `find $MNT -name "dsas" -type d -mindepth 2 -maxdepth 2`; do
+    if [ -d "$d/bas" ] && [ -d "$d/haut" ]; then
+      DSAS=$d
+      return 0
+    fi
+  done
+
+  # First time the DSAS is run
+  if [ -z $DSAS ]; then
+    echo "Looking for disk to use for the ${GREEN}DSAS${NORMAL}"
+    DISK=
+    # Find the largest partition that is mounted
+    for d in `find $MNT -type d -maxdepth 1 -name "sd*"`; do
+      if [ -z $DISK ]; then
+        DISK=$d
+        PART=`basename $DISK`
+        DEV=`echo $PART | sed -e "s/[[:digit:].*]$//g"`
+        SIZE=`cat /sys/block/$DEV/$PART/size`
+      else
+        PART=`basename $d`
+        DEV=`echo $PART | sed -e "s/[[:digit:].*]$//g"`
+        if [ `cat /sys/block/$DEV/$PART/size` -gt "$SIZE" ]; then
+          DISK=$d
+          SIZE=`cat /sys/block/$DEV/$PART/size`
+        fi
+      fi
+    done
+
+    if [ -z "$DISK" ]; then
+      echo "${RED}No disk available for the DSAS. Aborting${NORMAL}"
+      return 1
+    fi
+
+    # Now we can setup the disk for the first time
+    echo "Creating DSAS directories in ${GREEN}$DISK/dsas${NORMAL}"
+    mkdir -p $DISK/dsas/bas
+    mkdir -p $DISK/dsas/haut
+    chmod -R 755 $DISK/dsas
+    mkdir -p $DISK/dsas/verif
+    chmod 755 $DISK/dsas/verif
+    chown -R verif.verif $DISK/dsas/verif
+    DSAS=$DISK/dsas
+  fi
+
+  return 0
+}
+
+have_config(){
+  test -f /opt/dsas_conf.xml || return 1
+  return 0
+}
+
+start_network(){
+  # If there is no configuration file return immediately
+  [ have_config ] || return 1
+
+  # Setup loopback
+  ip address add 127.0.0.1/8 dev lo
+  ip route add 127.0.0.0/32 dev lo
+
+  ndev=$(xmllint --xpath 'dsas/config/network/interfaces/interface' /opt/dsas_conf.xml | wc -l)
+
+  NETDEVICES="$(awk -F: '/eth.:|tr.:/{print $1}' /proc/net/dev 2>/dev/null)"
+  for DEVICE in $NETDEVICES; do
+    ok=0
+    for ((i=1; i<=$ndev; i++)) do
+     dev=$(xmllint --xpath 'string(dsas/config/network/interfaces/interface[$i]/device)' /opt/dsas_conf.xml)
+     [ "$dev" == "$DEVICE" ] && ok=1
+    done
+    if [ $ok -eq 1 ]; then
+      for  ((i=1; i<=$ndev; i++)) do
+        dhcp=$(xmllint --xpath 'string(dsas/config/network/interfaces/interface[$i]/dhcp)' /opt/dsas_conf.xml)    
+        if [ "$dhcp" == "true" ]; then
+          echo -n "Using DHCP broadcast for ${GREEN}$dev${NORMAL]..."
+          /sbin/udhcpc -b -i $dev -x hostname:$(/bin/hostname) -p /var/run/udhcpc.$dev.pid > /dev/null 2>&1 &
+          CNT=0
+          until ping -c 1 $SERVER >/dev/null 2>&1; do
+            [ $((CNT++)) -gt 60 ] && break || sleep 1
+          done
+          [ $CNT -gt 60 ] && echo "${RED}Fail${NORMAL}"
+          [ $CNT -le 60 ] && echo "${GREEN}Ok${NORMAL}"          
+        else
+          echo "Using static IP for ${GREEN}$dev${NORMAL]."
+
+
+        fi      
+    else
+      echo "${YELLOW}Interface $DEVICE will be unconfigured${NORMAL}
+    fi
+
+
+
+
+
+    fi
+  done
+}
+
+stop_network(){
+  ip route flush all
+  pkill udhcpc
+}
+
+start_web_admin(){
+  cp $VAR/admin.conf.dsas $VAR/admin.conf
+  if [ have_config ]; then
+    bas=$(xmllint --xpath "string(dsas/config/network/bas)" /opt/dsas_conf.xml)
+    ip=${ip addr show $bas | awk '/inet /{split($2,a,"/"); print a[1]}')
+    echo "Binding webserver to ${GREEN}$bas${NORMAL} and address ${GREEN}$ip${NORMAL}." 
+    echo 'server.bind = "$ip"' >> $VAR/admin.conf
+  fi 
+  echo "Starting administration web server"
+  $as_tc lighttpd -Df $VAR/admin.conf &
+}
+
+stop_web_admin(){
+  pkill -u tc lighttpd
+}
+
+start_sshd(){
+  [ $(xmllint --xpath "string(dsas/config/ssh/active)" /opt/dsas_conf.xml) ] || return 0
+  USER_TC=$(xmllint --xpath "string(dsas/config/ssh/user_tc)" /opt/dsas_conf.xml) 
+  USER_BAS=$(xmllint --xpath "string(dsas/config/ssh/user_bas)" /opt/dsas_conf.xml) 
+  USER_HAUT=$(xmllint --xpath "string(dsas/config/ssh/user_haut)" /opt/dsas_conf.xml)    
+  [ -z $USER_TC ] && [ -z $USER_BAS ] && [ -z $USER_HAUT ] && return 0
+
+  cp -f /usr/local/etc/ssh/sshd_config.dsas /etc/local/etc/sshd_config
+  if [ ! -z $USER_TC ]; then
+    cat << EOF >> /usr/local/etc/ssh/sshd_config
+Match User tc Address $USER_TC
+	PasswordAuthentication yes
+	PubkeyAuthentication yes
+
+EOF
+  fi
+
+  if [ ! -z $USER_BAS ]; then
+    cat << EOF >> /usr/local/etc/ssh/sshd_config
+Match User bas Address $USER_BAS
+	PasswordAuthentication yes
+	PubkeyAuthentication yes
+	ChrootDirectory /home/dsas/bas
+        X11Forwarding no
+	AllowTcpForwarding no
+	AllowAgentForwarding no
+	ForceCommand internal-sftp
+
+EOF
+  fi
+
+  # FIXME. With two network namespaces, will this work ? Or will it need two sshd deamons ?
+  if [ ! -z $USER_HAUT ]; then
+    cat << EOF >> /usr/local/etc/ssh/sshd_config
+Match User bas Address $USER_HAUT
+	PasswordAuthentication yes
+	PubkeyAuthentication yes
+	ChrootDirectory /home/dsas/haut
+        X11Forwarding no
+	AllowTcpForwarding no
+	AllowAgentForwarding no
+	ForceCommand internal-sftp
+
+EOF
+  fi
+
+  echo "Starting the ${GREEN}openssh${NORMAL} server"
+  /usr/local/etc/init.d/openssh start >> /var/log/sshd.log 2>&1
+}
+
+stop_sshd(){
+  /usr/local/etc/init.d/openssh stop
+}
+
+start_repo(){
+  repo=$(xmllint --xpath "string(dsas/config/web/repo)" /opt/dsas_conf.xml)
+  if [ "$repo" != "true" ]; then return 0; fi
+
+  cp $VAR/repo.conf.dsas $VAR/repo.conf
+  if [ have_config ]; then
+    bas=$(xmllint --xpath "string(dsas/config/network/bas)" /opt/dsas_conf.xml)
+    ip=${ip addr show $bas | awk '/inet /{split($2,a,"/"); print a[1]}')
+    echo "Binding repo to ${GREEN}$bas${NORMAL} and address ${GREEN}$ip${NORMAL}." 
+    echo 'server.bind = "$ip"' >> $VAR/repo.conf
+  fi 
+  echo "Starting administration web server"
+  $as_bas lighttpd -Df $VAR/repo.conf &
+}
+
+stop_repo(){
+  pkill -u bas lighttpd
+}
+
+start_syslog(){
+  syslog=$(xmllint --xpath "string(dsas/config/syslog/active)" /opt/dsas_conf.xml)
+  server=(xmllint --xpath "string(dsas/config/syslog/server)" /opt/dsas_conf.xml)
+
+  if [ "$syslog" == "true" ]; then
+    [ -z $server ) || opts=" -R $server -L "
+    /sbin/syslogd ${opts} && echo "${GREEN}syslogd started.${NORMAL}"
+    /bin/klogd && echo "${GREEN}klogd started.${NORMAL}"
+  fi
+}
+
+stop_syslog(){
+  pkill klog
+  pkill syslog
+}
+
+start_ntp(){
+  # FIXME Use "-S" option of busybox ntpd to get information from service
+  ntp=$(xmllint --xpath "string(dsas/config/ntp/active)" /opt/dsas_conf.xml)
+  last=$(xmllint --xpath "string(dsas/config/ntp/server[last()])" /opt/dsas_conf.xml)
+
+  if [[ "$ntp" == "true" ] && [ "$last" != "" ]]; then
+    i=1
+    opts=""
+    while [ "$last" != "$next" ]; do
+      next=$(xmllint --xpath "string(dsas/config/ntp/server[$i])" /opt/dsas_conf.xml)
+      opts="$opts -p $next"
+      i=$((i+1))
+    done
+    /sbin/syslogd ${opts} && echo "${GREEN}ntpd started.${NORMAL}"
+    /usr/sbin/ntpd $opts
+  fi
+}
+
+stop_ntp(){
+  pkill ntpd
+}
+
+case "${1}" in
+  start)
+    start_network
+
+    # Start the web server first!! It needs to be available
+    start_web_admin
+
+    [ get_dsas ] || exit 1
+    mount_dsas
+
+    # If no configuration file can't do anything else
+    [ have_config ] || exit 1
+
+    start_sshd
+    start_repo
+    start_syslog
+    start_ntp
+    ;;
+
+  stop)
+    stop_ntp
+    stop_syslog
+    stop_repo
+    stop_sshd
+    stop_web_admin
+    stop_network
+    ;;
+
+  retart)
+    $0 stop
+    sleep 1
+    $0 start
+    ;;
+
+  *)
+    exit 1
+    ;;
+esac   
