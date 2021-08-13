@@ -3,6 +3,5 @@
 # Use bootlocal.sh for system startup commands that can run in the background 
 # and therefore not slow down the boot process.
 /usr/bin/sethostname box
-/usr/local/sbin/initdisk
-/usr/local/sbin/initdsas
+/etc/init.d/services/dsas start
 /opt/bootlocal.sh &
