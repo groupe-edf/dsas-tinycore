@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Password</title>
+    <link rel="stylesheet" type="text/css" href="bootstrap-5.0.2.min.css" />
+    <script src="bootstrap-5.0.2.bundle.min.js"></script>
+    <script src="jquery-3.6.0.min.js"></script>
+    <script src="dsas.js"></script>
+    <link rel="stylesheet" type="text/css" href="dsas.css" />
+</head>
+<body>
+
+<dsas-header></dsas-header>
+<span id="Warnings"></span>
+<div class="container p-3 my-3 border" id="Passwords"></div>
+<script>
+  dsas_loggedin();
+  dsas_check_warnings(true);
+  dsas_display_passwd();
+</script>
+
+</body>
+</html>
+
+

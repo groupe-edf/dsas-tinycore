@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Main</title>
+    <link rel="stylesheet" type="text/css" href="bootstrap-5.0.2.min.css" />
+    <script src="bootstrap-5.0.2.bundle.min.js"></script>
+    <script src="jquery-3.6.0.min.js"></script>
+    <script src="dsas.js"></script>
+    <link rel="stylesheet" type="text/css" href="dsas.css" />
+</head>
+<body>
+
+<dsas-header></dsas-header>
+<span id="Warnings"></span>
+<script>
+  dsas_loggedin();
+  dsas_check_init();
+  dsas_check_warnings();
+</script>
+
+<div class="container p-3 -my-3 border" id="SpaceProgressBar"></div>
+<script>dsas_disk_bar();</script>
+
+<div class="container p-3 my-3 border">
+   <div class="row"><div class="col-md-8">
+   <h5>Fichiers filtr&eacute:</h5></div>
+   <div class="col-md-4 text-end">
+     <input type="button" class="btn btn-primary" id="loghide" value="tous les logs" onclick="dsas_togglelogs('all');">
+   </div></div>
+   <span id="VerifLogs"></span>
+   <script>dsas_display_logs('all')</script>
+</div>
+
+</body>
+</html>
+

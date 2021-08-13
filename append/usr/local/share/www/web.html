@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Web</title>
+    <link rel="stylesheet" type="text/css" href="bootstrap-5.0.2.min.css" />
+    <script src="bootstrap-5.0.2.bundle.min.js"></script>
+    <script src="jquery-3.6.0.min.js"></script>
+    <script src="dsas.js"></script>
+    <link rel="stylesheet" type="text/css" href="dsas.css" />
+</head>
+<body>
+
+<dsas-header></dsas-header>
+<span id="Warnings"></span>
+<span id="WebErrors"></span>
+<script>
+  dsas_loggedin();
+  dsas_check_warnings();
+  dsas_display_web("all");
+</script>
+
+<div class="container p-3 my-3 border">
+  <h5><a class="text-toggle" data-bs-toggle="collapse" href="#csr"
+    role="button" aria-controls="csr" aria-expanded="false">
+    <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded">
+    <img src="caret-down.svg"/></i></a>Certificate Signing Request
+    <a id="getcsr" download="dsas.csr"><img src="save.svg"></a></h5>
+  <div class="collapse" id="csr">
+    <div class="card card-body">
+    <pre id="csr_body" style="height : 300px"></pre>
+      <form id="crtupload">
+        <label for="upload" data-toggle="tooltip" title="Fichier CSR sign&eacute; par un CA">Upload CRT</label>
+        <input type="file" name="crtfile" id="crtfile" style="display: none"
+           accept="text/plain,application/x-x509-user-cert" onchange="dsas_upload_crt();">
+        <input type="submit" class="btn btn-primary btn-sm" name="upload" 
+           onclick="document.getElementById('crtfile').click(); return false;">
+       </form>
+    </div>
+  </div> 
+</div>	
+
+<div class="container p-3 my-3 border">
+  <h5><a class="text-toggle" data-bs-toggle="collapse" href="#cert"
+    role="button" aria-controls="cert" aria-expanded="false">
+    <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded">
+    <img src="caret-down.svg"/></i></a>Certificate Publique
+    <a id="getpem" download="dsas.crt"><img src="save.svg"></a></h5>
+  <div class="collapse" id="cert">
+    <div class="card card-body">
+      <pre id="pem_body" style="height : 300px"></pre>
+    </div>
+  </div>
+</div>
+
+<div class="container p-3 my-3 border">
+  <h5><a class="text-toggle" data-bs-toggle="collapse" href="#attr"
+    role="button" aria-controls="attr" aria-expanded="false">
+    <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded"><img src="caret-down.svg"/></i></a>Renouvellement de la certificate</h5>
+  <div class="collapse" id="attr">
+    <div class="card card-body">
+      <form>
+        <div class="row gy-2">
+          <label class="col-md-1" for="countryName" data-toggle="tooltip" title="countryName">C</label>
+          <input class="col-md-5" type="text" name="countryName" id="countryName" value=""> 
+          <label class="col-md-1" for="stateOrProvinceName" data-toggle="tooltip" title="stateOrProvinceName">S</label>
+          <input class="col-md-5" type="text" name="stateOrProvinceName" id="stateOrProvinceName" value=""> 
+          <label class="col-md-1" for="localityName" data-toggle="tooltip" title="localityName">L</label>
+          <input class="col-md-5" type="text" name="localityName" id="localityName" value=""> 
+          <label class="col-md-1" for="commonName" data-toggle="tooltip" title="commonName">CN</label>
+          <input class="col-md-5" type="text" name="commonName" id="commonName" value=""> 
+          <label class="col-md-1" for="organizationName" data-toggle="tooltip" title="organizationName">O</label>
+          <input class="col-md-5" type="text" name="organizationName" id="organizationName" value=""> 
+          <label class="col-md-1" for="organizationalUnitName" data-toggle="tooltip" title="organizationalUnitName">OU</label>
+          <input class="col-md-5" type="text" name="organizationalUnitName" id="organizationalUnitName" value=""> 
+          <label class="col-md-1" for="emailAddress" data-toggle="tooltip" title="emailAddress">email</label>
+          <input class="col-md-5" type="email" name="emailAddress" id="emailAddress" value=""> 
+          <label class="col-md-1" for="validity">Validit&eacute;</label>
+          <div class="col-md-5">
+            <select class="form-select" name="validity" id="validity">
+              <option id="valid0" value="0" selected>Ann&eacute;es</option>
+              <option id="valid1" value="1">Un an</option>
+              <option id="valid2" value="2">Deux ans</option>
+              <option id="valid3" value="3">Trois ans</option>
+              <option id="valid4" value="4">Quarte ans</option>
+              <option id="valid5" value="5">Cinq ans</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <input type="submit" class="btn btn-primary btn-sm" value="Renouvellement certificate" onclick="dsas_renew_cert(); return false;"> 
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="container p-3 my-3 border">
+  <h5>Publication des r&eacute;positoires</h5>
+  <form>
+    <label id="repolabel" for="repo"></label>
+    <input type="submit" class="btn btn-primary btn-sm" id="reposubmit" value="" onclick="dsas_toggle_repo(); return false;">
+  </form>
+</div>
+</body>
+</html>

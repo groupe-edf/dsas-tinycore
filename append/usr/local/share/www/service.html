@@ -1,0 +1,85 @@
+<!DOCTYPE .html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Service</title>
+    <link rel="stylesheet" type="text/css" href="bootstrap-5.0.2.min.css" />
+    <script src="bootstrap-5.0.2.bundle.min.js"></script>
+    <script src="jquery-3.6.0.min.js"></script>
+    <script src="dsas.js"></script>
+    <link rel="stylesheet" type="text/css" href="dsas.css" />
+</head>
+<body>
+
+<dsas-header></dsas-header>
+<span id="Warnings"></span>
+<span id="ServiceErrors"></span>
+<script>
+  dsas_loggedin();
+  dsas_check_warnings();
+</script>
+
+<div class="container p-3 my-3 border">
+  <h5>Configuration des services :</h5>
+  <form class="g-2">
+    <div class="row">
+      <div class="col-6">
+        <div class="row">
+          <div class="col-12">
+            <input class="form-check-input" type="checkbox" value="" id="ssh" onchange="dsas_change_service('ssh');">
+            <label class="form-check-label" for="ssh">Serveur SSH active</label>
+          </div>
+          <div class="col-12">
+            <label data-toggle="tooltip" title="Les adresses d'&eacute;coute empeche des connexions ailleurs qu'&agrave; partir de ces adresses. L'utilisateur 'tc' peut faire ssh et sftp, et les autres utilisateurs sont limité à sftp. Avec un valeur vide le service est d&eacute;sactiv&eacute;. Un exemple complexe pourrait être '10.0.2.1,10.0.2.128/25,!10.0.2.129'">Adresse d'&eacute;coute :</label>
+          </div>
+          <div class="col-12">
+            <label for="user_tc">Utilisateur tc</label>
+            <input type="text" id="user_tc" value="" class="form-control">
+            <div class="invalid-feedback" id="feed_user_tc"></div>
+          </div>
+          <div class="col-12">
+            <label for="user_bas">Utilisateur bas</label>
+            <input type="text" id="user_bas" value="" class="form-control">
+            <div class="invalid-feedback" id="feed_user_bas"></div>
+          </div>
+          <div class="col-12">
+            <label for="user_haut">Utilisateur haut</label>
+            <input type="text" id="user_haut" value="" class="form-control">
+            <div class="invalid-feedback" id="feed_user_haut"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="row">
+          <div class="col-12">
+            <input class="form-check-input" type="checkbox" value="" id="syslog" onchange="dsas_change_service('syslog');">
+            <label class="form-check-label" for="syslog">Rsyslogd</label>
+          </div>
+          <div class="col-12">
+            <label for="syslog_server">Rsyslogd server</label>
+            <input type="text" id="syslog_server" value="" class="form-control">
+            <div class="invalid-feedback" id="feed_syslog_server"></div>
+          </div>
+          <div class="col-12">
+            <input class="form-check-input" type="checkbox" value="" id="ntp" onchange="dsas_change_service('ntp');">
+            <label class="form-check-label" for="ntp">Service NTP aux hosts sur l'interface bas</label>
+          </div>
+          <div class="form-check col-12">
+            <label for="ntp_pool">NTP pool serveurs :</label>     
+            <textarea name="ntp_pool" rows="3" id="ntp_pool" value="" class="form-control"></textarea>
+            <div class="invalid-feedback" id="feed_ntp_pool"></div>
+          </div>     
+        </div>
+      </div>
+      <div class="form-group">
+        <input type="submit" class="btn btn-primary" value="Sauvegarder des changements" onclick="dsas_change_service(); return false;">
+      </div>
+    </div>
+  </form>
+  <script>dsas_display_service("all");</script>
+</div>
+
+
+</body>
+</html>

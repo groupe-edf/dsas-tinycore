@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Certificates</title>
+    <link rel="stylesheet" type="text/css" href="bootstrap-5.0.2.min.css" />
+    <script src="bootstrap-5.0.2.bundle.min.js"></script>
+    <script src="jquery-3.6.0.min.js"></script>
+    <script src="dsas.js"></script>
+    <link rel="stylesheet" type="text/css" href="dsas.css" />
+</head>
+<body>
+
+<dsas-header></dsas-header>
+<span id="Warnings"></span>
+<span id="CertErrors"></span>
+<script>
+  dsas_loggedin();
+  dsas_check_warnings();
+</script>
+
+<!-- hidden form for file upload -->
+<form id ="x509upload">
+  <input type="file" name="x509file" id="x509file" style="display: none"
+         accept="text/plain,application/x-x509-user-cert,application/x-x509-ca-cert" onchange="dsas_upload_cert();">
+</form>
+<div class="container p-3 my-3 border">
+    <div class="row"><div class="col-md-10"><h5><a class="text-toggle" data-bs-toggle="collapse" href="#cert"
+    role="button" aria-controls="cert" aria-expanded="false">
+    <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded">
+    <img src="caret-down.svg"/></i></a>Certificates X509 ajout&eacute;</h5></div>
+    <div class="col-md-2 text-end"><img src="plus-lg.svg" onclick="document.getElementById('x509file').click();"></div></div>
+    <div class="collapse" id="cert"></div>
+</div>
+
+<form id ="gpgupload">
+  <input type="file" name="gpgfile" id="gpgfile" style="display: none"
+         accept="text/plain,application/pgp-keys" onchange="dsas_upload_cert('gpg');">
+</form>
+<div class="container p-3 my-3 border">
+    <div class="row"><div class="col-md-6"><h5><a class="text-toggle" data-bs-toggle="collapse" href="#gpg"
+    role="button" aria-controls="gpg" aria-expanded="false">
+    <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded">
+    <img src="caret-down.svg"/></i></a>Certificates GPG ajout&eacute;</h5></div>
+    <div class="col-md-6 text-end"><img src="plus-lg.svg"  onclick="document.getElementById('gpgfile').click();"></div></div>
+    <div class="collapse" id="gpg"></div></div>
+</div>
+
+<div class="container p-3 my-3 border">
+  <h5><a class="text-toggle" data-bs-toggle="collapse" href="#ca"
+    role="button" aria-controls="ca" aria-expanded="false">
+    <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded">
+     <img src="caret-down.svg"/></i></a>Autorit&eacute;s de Certification be base</h5>
+    <div class="collapse" id="ca"></div> 
+</div>
+
+<div class="container p-3 my-3 border">
+  <h5>Legende : <span class="text">Certificate CA</span> - <span class="text-info">Certificate Intermediate</span> - <span class="text-warning">Moins de 6mois &agrave; l'&eacute;xpiration</span> - <span class="text-danger">&Eacute;xpir&eacute;</span></h5>
+</div>
+
+<script>dsas_display_cert();</script>
+
+</body>
+</html>

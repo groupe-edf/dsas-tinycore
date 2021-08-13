@@ -1,0 +1,37 @@
+<!DOCTYPE .html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Net</title>
+    <link rel="stylesheet" type="text/css" href="bootstrap-5.0.2.min.css" />
+    <script src="bootstrap-5.0.2.bundle.min.js"></script>
+    <script src="jquery-3.6.0.min.js"></script>
+    <script src="dsas.js"></script>
+    <link rel="stylesheet" type="text/css" href="dsas.css" />
+</head>
+<body>
+
+<dsas-header></dsas-header>
+<span id="Warnings"></span>
+<span id="NetErrors"></span>
+<script>
+  dsas_loggedin();
+  dsas_check_warnings();
+</script>
+
+<div class="container p-3 my-3 border">
+  <h5>Configuration r&eacute;seau et service</h5>
+  <form class="row g-2">
+    <div class="container p-3 my-3 border" id="IFaces"></div>
+    <div class="col-6" id="IFaceBas"></div>
+    <div class="col-6" id="IFaceHaut"></div>
+    <div class="form-group">
+      <input type="submit" class="btn btn-primary" value="Sauvegarder des changements" onclick="dsas_change_net(); return false;">
+    </div>
+  </form>
+  <script>dsas_display_net("all");</script>
+</div>
+
+</body>
+</html>
