@@ -1,0 +1,10 @@
+server.document-root="/home/dsas/bas/"
+server.modules += ( "mod_openssl" "mod_sentenv" )
+server.port=443
+ssl.engine="enable"
+ssl.pemfile="/usr/local/share/www/dsas.pem"
+dir-listing.activate="enable"
+setenv.add-reponse-header += (
+    "Cache-Control" => "must-revalidate"
+)
+
