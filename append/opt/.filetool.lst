@@ -1,6 +1,8 @@
-opt
 usr/local/etc/ssh
 etc/passwd
 etc/shadow
 etc/group
 etc/sudoers
+var/dsas
+home/tc
+opt
