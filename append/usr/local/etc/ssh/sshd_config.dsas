@@ -115,25 +115,3 @@ Subsystem	sftp	internal-sftp
 #	PermitTTY no
 #	ForceCommand cvs server
 
-Match User tc Address <ETH0>
-	PasswordAuthentication yes
-	PubkeyAuthentication yes
-
-Match User bas Address <ETH0>
-	PasswordAuthentication yes
-	PubkeyAuthentication yes
-	ChrootDirectory /home/dsas/bas
-	X11Forwarding no
-	AllowTcpForwarding no
-	AllowAgentForwarding no
-	ForceCommand internal-sftp
-
-Match User haut Address <ETH1>
-	PasswordAuthentication yes
-	PubkeyAuthentication yes
-	ChrootDirectory /home/dsas/haut
-	X11Forwarding no
-	AllowTcpForwarding no
-	AllowAgentForwarding no
-	ForceCommand internal-sftp
-
