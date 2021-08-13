@@ -1,5 +1,10 @@
 _pkg=pinentry
 _version=1.1.1
 _uri=https://www.gnupg.org/ftp/gcrypt/pinentry/pinentry-1.1.1.tar.bz2
-_dep="libassuan libgpg-error"
-_build_dep="libassuan libgpg-error"
+_dep="libcap libassuan libgpg-error"
+_build_dep="compiletc coreutils libcap-dev ncursesw-dev libassuan libgpg-error"
+_pkg_path=pinentry-1.1.1
+_conf_cmd="./configure"
+_make_cmd="make"
+_install_cmd="make install DESTDIR=" 
+_pkgs='main{/usr}'

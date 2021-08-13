@@ -3,3 +3,9 @@ _version=1.9.3
 _uri=https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.9.3.tar.bz2
 _dep="libgpg-error"
 _build_dep="libgpg-error"
+_build_dep="compiletc coreutils libgpg-error"
+_pkg_path=libgcrypt-1.9.3
+_conf_cmd="./configure"
+_make_cmd="make"
+_install_cmd="make install DESTDIR=" 
+_pkgs='main{/usr}'
