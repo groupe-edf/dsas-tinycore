@@ -9,9 +9,24 @@
       <user>verif</user>
     </users>
     <network>
-      <interfaces />
-      <bas />
-      <haut />
+      <bas>
+        <dhcp>true</dhcp>
+        <cidr />
+        <gateway />
+        <dns>
+          <domain />
+          <nameserver />
+        </dns>
+      </bas>
+      <haut>
+        <dhcp>true</dhcp>
+        <cidr />
+        <gateway />
+        <dns>
+          <domain />
+          <nameserver />
+        </dns>
+      </haut>
     </network>
     <web>
       <ssl>

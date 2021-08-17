@@ -38,11 +38,7 @@ function dsas_loggedin() {
 }
 
 function dsas_dir() {
-  $d = "";
-  $tmp = file_get_contents(_DSAS_ROOT . "/etc/sysconfig/tcedir");
-  if ($tmp !== "/tmp/tce")
-    $d = dirname($tmp) . "/dsas";
-  return $d;
+  return "/home/dsas";
 }
 
 function dsas_has_dir(){
@@ -52,16 +48,6 @@ function dsas_has_dir(){
 
 function dsas_has_xml() {
   return is_file(_DSAS_XML); 
-}
-
-function dsas_has_tce(){
-  $tmp = file_get_contents(_DSAS_ROOT . "/etc/sysconfig/tcedir");
-  return ($tmp !== "/tmp/tce");
-}
-
-function dsas_tce(){
-  $tmp = file_get_contents(_DSAS_ROOT . "/etc/sysconfig/tcedir");
-  return $tmp;
 }
 
 function sasl_checkpass($user, $pass){
@@ -263,7 +249,6 @@ function dsas_get_logs() {
   }
   return $logs;
 }
-
 
 function format_dsas_log($log, $hide){
   $fp = fopen($log, "r");

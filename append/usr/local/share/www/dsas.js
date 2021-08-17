@@ -91,89 +91,6 @@ function dsas_login(){
     });
 }
 
-function dsas_check_init(){
-
-  $.get("api/dsas-init.php").fail(function(xhdr, error, status){
-    if (! fail_loggedin(status))
-      modal_message( "Erreur pendant la detection des disques !");
-  }).done(function(obj){
-    if (! obj.disks) {
-      // No disks
-      modal_message("Aucun disque trouv&eacute;. Arr&ecirc;ter ce\n" +
-                    " machine et ajouter un disque avant countinuer ?",
-                    "dsas_shutdown();");
-    } else {
-      var nodisk = true;
-      var part = null;
-      for (const disk of obj.disks) {
-        if (disk.type) {
-          nodisk = false;
-          part = disk.device;
-          break;
-        }
-      }
-
-      if (nodisk) {
-        var body = '';
-        var i = 0;
-        for (const disk of obj.disks) {
-          body = body + '<div class="form-check">\n  <input class="form-check-input" type="radio" ' +
-                 'name="disk" value="' + disk.device + '" id="' + disk.device +'"' +
-                 (i === 0 ? '' : ' checked') + '>\n  ' +
-                 '<label class="form-check-label" for="' + disk.device + '">' + disk.space + 
-                 '</label>\n</div>';
-        }
-
-        // Don't use modal_message here
-        modalDone.setAttribute("action", "dsas_format_disk(dsas_select_disk(obj.disks));");
-        modalDone.setAttribute("body", body);
-        modalDone.setAttribute("title", "Choisir un disque &agrave; formatter et r&eacute;demarrer.");
-        modalDone.show();
-      } else if (! obj.has_tce) {
-        // TCE not detected
-        modal_message("Un disque " + part + " est configur&eacute; mais pas " +
-                      "d&eacute;tect&eacute; pour usage par le DSAS. Essayer de r&eacute;demarrer ?",
-                      "dsas_reboot();");
-      } else if (obj.first) {
-        modal_message("Premiere usage. Tous les mots de passe doit-&ecirc;tre changer",
-                       "window.location='passwd.html';");
-      }
-    }
-  });
-}
-
-function dsas_select_disk(disks) {
-  for (const disk of disks) {
-    if (document.getElementById(disk.device).checked)
-      return disk.device;
-  }
-}
-
-function dsas_format_disk(disk) {
-  modalDone.setAttribute("body", "<span class='spinner-border spinner-border-sm'></span> &nbsp;" +
-                          "Formattage de " + disk + " en cours.");
-  modalDone.setAttribute("disable", true);
-
-  $.post("api/dsas-format-disk.php", { device: disk }).fail(function(xhr, error, status){
-    if (! fail_loggedin(status))
-      modal_message("Erreur pendant la changement des mots de passe");
-    else 
-      modal_message("Erreur prendant la formattage de la disque");
-  }).done(function(errors){
-    if (errors) {
-      body = "";
-      for (err of errors) {
-        key = Object.keys(err)[0];
-        if (key == "retval")
-           continue;
-        body = body + "<p>" + err[key] + "</p>";
-      }
-      modal_message(body);
-    } else
-      modal_message("La disque " + disk + " a &eacute;t&eacute; formatte&eacute;. Arr&ecirc;tter ?", "dsas_shutdoxn();");
-  });
-}
-
 function format_space(bytes) {
   symbols = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
   exp = Math.floor(Math.log(bytes)/Math.log(1024));
@@ -457,14 +374,13 @@ function dsas_display_net(what = "all"){
      if (what === "ifaces" || what === "all") {
        var i = 0;
        var body = "";
-
-       for (iface2 of (net.interfaces.constructor === Object ? [net.interfaces] : net.interfaces)) { 
-         iface = iface2.interface;
+       for (iface2 of ["bas", "haut"]) {
+         iface = net[iface2];
          body = body +
             '<p class="my-0"><a class="text-toggle" data-bs-toggle="collapse" href="#iface' + i +
             '" role="button"' + 'aria-controls="iface' + i + '" aria-expanded="false">' +
             '<i class="text-collapsed"><img src="caret-right.svg"/></i>' +
-            '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + iface.device;
+            '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + iface2;
          body = body + 
             '</p><div class="collapse" id="iface' + i + '"><div class="card card-body">' +
             iface_body(iface, i) + '</div></div>\n';
@@ -474,30 +390,13 @@ function dsas_display_net(what = "all"){
 
        // Why can't I include this in the declaration of the body ?
        i = 0; 
-       for (iface of (net.interfaces.constructor === Object ? [net.interfaces] : net.interfaces)) { 
+       for (iface of [net.bas, net.haut]) { 
          var dns_servers = "";
-          for (let j = 0; j < iface.interface.dns.nameserver.length; j++)
-            dns_servers = dns_servers + iface.interface.dns.nameserver[j] + "\n";
+          for (let j = 0; j < iface.dns.nameserver.length; j++)
+            dns_servers = dns_servers + iface.dns.nameserver[j] + "\n";
          document.getElementById("iface_nameserver" + i).value = dns_servers;
          i++;
        }
-
-       body = '<label for="bas">Interface bas :</label>\n<select class="form-select" name="bas" id="bas">\n';
-       for (iface of (net.interfaces.constructor === Object ? [net.interfaces] : net.interfaces)) { 
-         let dev = iface.interface.device; 
-         body = body + '<option id="bas_' + dev + '" value="' + dev + '"' + (net.bas == dev ? ' selected' : '') + '>' + dev + '</option>\n';
-       }
-       body = body + '</select>\n<div class="invalid-feedback" id="feed_bas"></div>';
-       document.getElementById("IFaceBas").innerHTML = body;      
-
-       body = '<label for="haut">Interface haut :</label>\n<select class="form-select" name="haut" id="haut">\n';
-       for (iface of (net.interfaces.constructor === Object ? [net.interfaces] : net.interfaces)) {
-         let dev = iface.interface.device; 
-         body = body + '<option id="haut_' + dev + '" value="' + dev + '"' + (net.haut == dev ? ' selected' : '') + '>' + dev + '</option>\n';
-       }
-       body = body + '</select>\n<div class="invalid-feedback" id="feed_haut"></div>';
-       document.getElementById("IFaceHaut").innerHTML = body;
-
      }
   }).fail(function(xhdr, error, status){
       fail_loggedin(status);
