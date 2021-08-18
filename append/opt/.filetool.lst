@@ -4,5 +4,6 @@ etc/shadow
 etc/group
 etc/sudoers
 var/dsas
+var/log
 home/tc
 opt
