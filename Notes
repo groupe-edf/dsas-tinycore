@@ -19,3 +19,6 @@
   Currently hardcoded in dsas service et common.php only
 * Add htaccess to repo and the ability to set the password (username?) of 
   the access
+* Should "filetool.sh -b" be run periodically for the backups ? dsas_conf.xml 
+  be excluded in that case, so that a reboot before an apply can recover the
+  xml from the backup ? 
