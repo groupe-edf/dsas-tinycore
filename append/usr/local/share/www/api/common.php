@@ -3,8 +3,8 @@
 // FIXME : Lots of dead code here to clean up
 
 // Setting _DSAS_ROOT allows put dsas files elsewhere for testing
-define ("_DSAS_ROOT", "/home/tc/dsas");
-//define("_DSAS_ROOT", "");
+//define ("_DSAS_ROOT", "/home/tc/dsas");
+define("_DSAS_ROOT", "");
 define("_DSAS_XML", _DSAS_ROOT . "/var/dsas/dsas_conf.xml");
 
 function dsas_ca_file() {
@@ -521,7 +521,7 @@ function append_simplexml(&$to, $from) {
 }
 
 function is_valid_domain($d){
-  return (preg_match("/^([a-z\d](-*[a-z\d])*)(\.([a-z\d](-*[a-z\d])*))*$/i", $d)
+  return (preg_match("/^([a-z\d](-*[a-z\d])*)(\.([a-z\d](-*[a-z\d])*))*$/", $d)
     && preg_match("/^.{1,253}$/", $d)
     && preg_match("/^[^\.]{1,63}(\.[^\.]{1,63})*$/", $d));
 }
