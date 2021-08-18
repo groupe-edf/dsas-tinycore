@@ -72,7 +72,7 @@ pwgen() {
 }
 
 get_tcz() {
-  $as_user mkdir -pv $tcz_dir
+  mkdir -pv $tcz_dir
   for package; do
     target=$tcz_dir/$package.tcz
     dep=$target.dep
@@ -119,6 +119,7 @@ install_tcz() {
                 msg post-install script $package
                 chroot $extract env LD_LIBRARY_PATH=/usr/local/lib /usr/local/tce.installed/$package
             else
+                mkdir -p $extract/usr/local/tce.installed
                 touch $tce_marker
             fi
         fi
@@ -179,80 +180,86 @@ build_pkg() {
   for pkg in $1; do
     pkg_file=$pkg_dir/$pkg.pkg
     if [ $rebuild -eq "1" ] || [ ! -f "$tcz_dir/$pkg.tcz" ]; then
-      msg "Building $pkg_file"
-      . $pkg_file
-      _src=$(basename $_uri)
-      for dep in $_build_dep; do
-        # () needed to create new environment 
-        (build_pkg $dep) 
-        [ $? -eq 0 ] || exit -1
-      done
-      msg "Creating build image"
-      if [ -d $extract ]; then
-        rm -fr $extract
-      fi
-      cmd mkdir -p $extract
-      zcat $squashfs | { cd $extract; cpio -i -H newc -d; }
-      for dep in $_build_dep; do
-        install_tcz $dep     
-      done
-      msg "Building $_pkg.tcz"
-      download $_uri $src_dir
-      $as_user mkdir -p $extract/$builddir
-      mkdir -p $destdir
-      unpack $src_dir/$_src $extract/$builddir
-      chown -R $SUDO_USER $extract/$builddir
-      msg "Configuring $_pkg"
-      cat << EOF > $extract/tmp/script
+      if [ -f "$pkg_file" ]; then
+        msg "Building $pkg_file"
+        . $pkg_file
+        _src=$(basename $_uri)
+        for dep in $_build_dep; do
+          # () needed to create new environment 
+          (build_pkg $dep) 
+          [ $? -eq 0 ] || exit -1
+        done
+        msg "Creating build image"
+        if [ -d $extract ]; then
+          rm -fr $extract
+        fi
+        cmd mkdir -p $extract
+        zcat $squashfs | { cd $extract; cpio -i -H newc -d; }
+        for dep in $_build_dep; do
+          install_tcz $dep
+        done
+        msg "Building $_pkg.tcz"
+        mkdir -p $src_dir
+        download $_uri $src_dir
+        $as_user mkdir -p $extract/$builddir
+        mkdir -p $destdir
+        unpack $src_dir/$_src $extract/$builddir
+        chown -R $SUDO_USER $extract/$builddir
+        msg "Configuring $_pkg"
+        cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 cd $builddir/$_pkg_path
 echo \$*
 \$*
 exit $?
 EOF
-      chmod a+x $extract/tmp/script
-      [ -z $_conf_cmd ] || chroot --userspec=$SUDO_USER $extract /tmp/script $_conf_cmd 
-      [ $? -eq 0 ] ||  exit -1
-      msg "Building $_pkg"
-      [ -z $_make_cmd ] || chroot --userspec=$SUDO_USER $extract /tmp/script $_make_cmd 
-      [ $? -eq 0 ] || exit -1
-      msg "Installing $_pkg"
-      echo $_install_cmd$destdir
-      [  -z $_install_cmd ] || chroot $extract /tmp/script "$_install_cmd$destdir" 
-      [ $? -eq 0 ] || exit -1
-      # Create the pkgname et shell escaped list of directories/files and then make TCZ 
-      OIFS=$IFS
-      IFS=";"
-      for arg in $_pkgs; do
-        pkg=$(echo $arg | sed -e "s/{.*$//" | awk '{$1=$1};1')
-        IFS=","
-        dirs=""
-        for _dir in $(echo $arg | sed -e "s/^.*{\(.*\)}$/\1/");  do
-          dirs="$dirs '$_dir'"
-        done
+        chmod a+x $extract/tmp/script
+        [ -z $_conf_cmd ] || chroot --userspec=$SUDO_USER $extract /tmp/script $_conf_cmd 
+        [ $? -eq 0 ] ||  exit -1
+        msg "Building $_pkg"
+        [ -z $_make_cmd ] || chroot --userspec=$SUDO_USER $extract /tmp/script $_make_cmd 
+        [ $? -eq 0 ] || exit -1
+        msg "Installing $_pkg"
+        echo $_install_cmd$destdir
+        [  -z $_install_cmd ] || chroot $extract /tmp/script "$_install_cmd$destdir" 
+        [ $? -eq 0 ] || exit -1
+        # Create the pkgname et shell escaped list of directories/files and then make TCZ 
+        OIFS=$IFS
         IFS=";"
-        if [ "$pkg" == "main" ]; then
-          tcz=$_pkg.tcz
-        else
-          tcz=$_pkg-$pkg.tcz
-        fi
-        msg "Creating $tcz"
-        [ -f $tcz_dir/$tcz ] && rm $tcz_dir/$tcz
-        mksquashfs $extract/$destdir $tcz_dir/$tcz
-        cat $tcz_dir/$tcz | md5sum | sed -e "s/ -$//g" > $tcz_dir/$tcz.md5.txt
-        if [ "$pkg" == "main" ]; then
-          echo -n "" > $tcz_dir/$tcz.dep
-          for dep in $_dep; do
-            echo $dep >> $tcz_dir/$tcz.dep
+        for arg in $_pkgs; do
+          pkg=$(echo $arg | sed -e "s/{.*$//" | awk '{$1=$1};1')
+          IFS=","
+          dirs=""
+          for _dir in $(echo $arg | sed -e "s/^.*{\(.*\)}$/\1/");  do
+            dirs="$dirs '$_dir'"
           done
-        else
-          echo "$_pkg" > $tcz_dir/$tcz.dep
+          IFS=";"
+          if [ "$pkg" == "main" ]; then
+            tcz=$_pkg.tcz
+          else
+            tcz=$_pkg-$pkg.tcz
+          fi
+          msg "Creating $tcz"
+          [ -f $tcz_dir/$tcz ] && rm $tcz_dir/$tcz
+          mksquashfs $extract/$destdir $tcz_dir/$tcz
+          cat $tcz_dir/$tcz | md5sum | sed -e "s/ -$//g" > $tcz_dir/$tcz.md5.txt
+          if [ "$pkg" == "main" ]; then
+            echo -n "" > $tcz_dir/$tcz.dep
+            for dep in $_dep; do
+              echo $dep >> $tcz_dir/$tcz.dep
+            done
+          else
+            echo "$_pkg" > $tcz_dir/$tcz.dep
+          fi
+        done
+        IFS=$OIFS
+        msg "Removing build image"
+        if [ -d $extract ]; then 
+          rm -fr $extract
         fi
-      done
-      IFS=$OIFS
-      msg "Removing build image"
-      if [ -d $extract ]; then 
-        rm -fr $extract
+      else
+        # Can't rebuild package try getting the tcz
+        get_tcz $pkg
       fi
     fi
   done
@@ -323,9 +330,13 @@ case $1 in
   install_tcz osslsigncode
   install_tcz libxml2-bin   # For xmllint
   install_tcz gnupg
-  install_tcz rsyslog
+  install_tcz gdbm          # Needed for sasl
   install_tcz cyrus-sasl-lite
   install_tcz lighttpd
+  install_tcz php-8.0-cgi
+  install_tcz php-8.0-ext
+  install_tcz pcre2
+  install_tcz dialog
 
   # Copy the pre-extracted packages to work dir. This must be after packages
   # are installed to allow for files to be overwritten. Run as root 
@@ -333,9 +344,9 @@ case $1 in
   msg append dsas files
   rsync -av $append/ $extract/
   chown -R root.root $extract/usr
+  mkdir -p $extract/home/tc
   chown -R tc.staff $extract/home/tc
-  chown -R tc.staff $extract/var/dsas
-  chown tc.repo $extract/var/dsas/*.csr $extract/var/dsas/*.pem
+  chown tc.staff $extract/var/dsas
   chmod 640 $extract/var/dsas/*.csr $extract/var/dsas/*.pem
   chown root $extract/opt/bootsync.sh
 
@@ -394,7 +405,8 @@ addgroup bas share
 addgroup haut share
 addgroup -g 2004 repo
 addgroup bas repo
-addgrpup tc repo
+addgroup tc repo
+chown tc.repo /var/dsas/*.csr /var/dsas/*.pem
 EOF
 
   chmod 755 $create_users
