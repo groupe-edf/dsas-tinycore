@@ -199,7 +199,7 @@ function dsas_display_passwd(){
       divPasswd.innerHTML = '<div class="alert alert-danger">Aucun utilisateur trouvé !</div>';
     } else {
       body = '<form>\n<dsas-user user="' + users[0] + '" label="' + users[0] + 
-             ' (mot de pass existant)"></dsas-user>\n'
+             ' (mot de pass existant)" old="old"></dsas-user>\n'
       for (user of Object.values(users))
          body = body + '<dsas-user user="' + user + '"></dsas-user>\n'
       body = body + '<div class="form-group">\n' +
@@ -416,12 +416,12 @@ function iface_body(iface, i) {
     '      </div>\n' +
     '      <div class="col-12">\n' +
     '        <label for="iface_cidr' + i + '">Adresse IP/Mask (format CIDR)</label>\n' +
-    '        <input type="text" id="iface_cidr' + i + '"' + (dhcp ? ' disabled=""' : '') + ' value="' + iface.cidr + '" class="form-control">\n' +
+    '        <input type="text" id="iface_cidr' + i + '"' + (dhcp ? ' disabled=""' : '') + ' value="' + print_obj(iface.cidr) + '" class="form-control">\n' +
     '        <div class="invalid-feedback" id="feed_iface_cidr' + i + '"></div>\n' +
     '      </div>\n' +
     '      <div class="col-12">\n' +
     '        <label for="iface_gateway' + i + '">Passerelle </label>\n' +
-    '        <input type="text" id="iface_gateway' + i + '"' + (dhcp ? ' disabled=""' : '') + ' value="' + iface.gateway + '" class="form-control">\n' +
+    '        <input type="text" id="iface_gateway' + i + '"' + (dhcp ? ' disabled=""' : '') + ' value="' + print_obj(iface.gateway) + '" class="form-control">\n' +
     '        <div class="invalid-feedback" id="feed_iface_gateway' + i + '"></div>\n' +
     '      </div>\n' +
     '    </div>\n' +
@@ -430,7 +430,7 @@ function iface_body(iface, i) {
     '    <div class="row">\n' +
     '      <div class="col-12">\n' +
     '        <label for="iface_dns_domain' + i + '">DNS Domain</label>\n' +
-    '        <input type="text" id="iface_dns_domain' + i + '"' + (dhcp ? ' disabled=""' : '') + ' value="' + iface.dns.domain + '" class="form-control">\n' +
+    '        <input type="text" id="iface_dns_domain' + i + '"' + (dhcp ? ' disabled=""' : '') + ' value="' + print_obj(iface.dns.domain) + '" class="form-control">\n' +
     '        <div class="invalid-feedback" id="feed_iface_dns_domain' + i + '"></div>\n' +
     '      </div>\n' +
     '      <div class="form-check col-12">\n' +
@@ -454,17 +454,12 @@ function dsas_change_net(what= "all", i = 0) {
     $.get("api/dsas-net.php").done(function(net){
        op = "all";
        j = 0;
-       for (iface2 of (net.interfaces.constructor === Object ? [net.interfaces] : net.interfaces)) {
-         let iface = iface2.interface;
-         let dev = iface.device;
-         if (document.getElementById("bas_" + dev).checked)
-           net.bas = dev;
-         if (document.getElementById("haut_" + dev).checked)
-           net.haut = dev;
+       for (iface2 of ["bas", "haut"]) {
+         iface = net[iface2];
          iface.dhcp = (document.getElementById("iface_dhcp" + j).checked ? "true" : "false");
-         iface.cidr = document.getElementById("iface_cidr" + j).value
-         iface.gateway = document.getElementById("iface_gateway" + j).value
-         iface.dns.domain = document.getElementById("iface_dns_domain" + j).value
+         iface.cidr = document.getElementById("iface_cidr" + j).value;
+         iface.gateway = document.getElementById("iface_gateway" + j).value;
+         iface.dns.domain = document.getElementById("iface_dns_domain" + j).value;
          server = [];
          for (s of document.getElementById("iface_nameserver" + j).value.split(/((\r?\n)|(\r\n?))/)) {
            s = (s ? s.trim() : "");
@@ -473,6 +468,7 @@ function dsas_change_net(what= "all", i = 0) {
            }
          }
          iface.dns.nameserver = server;
+         j++;
        }
        $.post("api/dsas-net.php", 
          { op: op,
@@ -516,22 +512,24 @@ function dsas_display_service(what = "all"){
   $.get("api/dsas-service.php").done(function(serv){
      if (what === "ssh" || what === "all") {
        document.getElementById("ssh").checked = (serv.ssh.active === "true");
-       document.getElementById("user_tc").value = serv.ssh.user_tc;
+       document.getElementById("user_tc").value = print_obj(serv.ssh.user_tc);
        document.getElementById("user_tc").disabled = (serv.ssh.active !== "true");
-       document.getElementById("user_bas").value = serv.ssh.user_bas;
+       document.getElementById("user_bas").value = print_obj(serv.ssh.user_bas);
        document.getElementById("user_bas").disabled = (serv.ssh.active !== "true");
-       document.getElementById("user_haut").value = serv.ssh.user_haut;
+       document.getElementById("user_haut").value = print_obj(serv.ssh.user_haut);
        document.getElementById("user_haut").disabled = (serv.ssh.active !== "true");
      }
      if (what === "syslog" || what === "all") {
        document.getElementById("syslog").checked = (serv.syslog.active === "true");
-       document.getElementById("syslog_server").value = serv.syslog.server;
+       document.getElementById("syslog_server").value = print_obj(serv.syslog.server);
        document.getElementById("syslog_server").disabled = (serv.syslog.active !== "true");
      }
      if (what === "ntp" || what === "all") {
        var pool = "";
-       for (let i = 0; i < serv.ntp.server.length; i++)
-         pool = pool + serv.ntp.server[i] + "\n";
+       if (! empty_obj(serv.ntp.server)) {
+         for (let i = 0; i < serv.ntp.server.length; i++)
+           pool = pool + serv.ntp.server[i] + "\n";
+       }
        document.getElementById("ntp").checked = (serv.ntp.active === "true");
        document.getElementById("ntp_pool").value = pool;
        document.getElementById("ntp_pool").disabled = (serv.ntp.active !== "true");
@@ -665,7 +663,7 @@ function time_t_to_date(t) {
   }
 }
 
-function treat_x509_certs(certs, del = false) {
+function treat_x509_certs(certs, added = false) {
   body = "";
   i = 0;
   for (cert of certs) {
@@ -675,17 +673,17 @@ function treat_x509_certs(certs, del = false) {
     cls = (cert_expired(cert) ? "text-danger" : (cert_expiring(cert) ? "text-warning" : (cert_is_ca(cert) ? "text" : "text-info")));
 
     body = body +
-      '<p class="my-0 ' + cls + '"><a class="text-toggle" data-bs-toggle="collapse" href="#ca' + i + '" role="button"' + 
+      '<p class="my-0 ' + cls + '"><a class="text-toggle" data-bs-toggle="collapse" href="#' + (added ? 'add' : 'ca') + i + '" role="button"' + 
       'aria-controls="ca' + i + '" aria-expanded="false">' +
       '<i class="text-collapsed"><img src="caret-right.svg"/></i>' +
       '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + name + 
       '&nbsp;<a href="' + url + '" download="' + name.replace(/ /g,"_") + '.crt">' + 
       '<img src="save.svg"></a>';
-    if (del)
+    if (added)
       body = body + '&nbsp;<a onclick="dsas_cert_delete(\'' + name + '\',\'' + 
         cert_finger(cert) + '\');"><img src="x-lg.svg"></a>';
     body = body + 
-      '</p><div class="collapse" id="ca' + i + '"><div class="card card-body">' +
+      '</p><div class="collapse" id="' + (added ? 'add' : 'ca') + i + '"><div class="card card-body">' +
       '<pre style="height : 300px">' + cert_body(cert) + '</pre></div></div>\n';
     i++;
   }
@@ -878,11 +876,15 @@ function dsas_display_tasks(what = "all") {
   }
 }
 
+function print_obj(obj) {
+  return (empty_obj(obj) ? "" : obj);
+}
+
 function empty_obj(obj) {
   if (! obj || Object.keys(obj).length === 0 || obj === "undefined")
     return true;
   else
-    return false; 
+    return false;
 }
 
 function task_body(task) {
@@ -892,10 +894,10 @@ function task_body(task) {
     '<div class="container">' +
     '<div class="row">' +
     '<div class="col-6 overflow-hidden">' +
-    '<p class="my-0">Directory : ' + (empty_obj(task.directory) ? '' : task.directory) + '</p>' +
-    '<p class="my-0">URI : ' + (empty_obj(task.uri) ? '' : task.uri) + '</p>' +
-    '<p class="my-0">Type : ' + (empty_obj(task.type) ? '' : task.type) + '</p>' +
-    '<p class="my-0">Run : ' + (empty_obj(task.run) ? '' : task.run) + '</p>' +
+    '<p class="my-0">Directory : ' + print_obj(task.directory) + '</p>' +
+    '<p class="my-0">URI : ' + print_obj(task.uri) + '</p>' +
+    '<p class="my-0">Type : ' + print_obj(task.type) + '</p>' +
+    '<p class="my-0">Run : ' + print_obj(task.run) + '</p>' +
     '</div>' +
     '<div class="col-6  overflow-hidden">' +
     '<p class="my-1">Certificates:</p>' +
@@ -947,9 +949,9 @@ function dsas_task_modify(name) {
       document.getElementById('TaskCert').innerHTML = "";
       for (task of (tasks.task.constructor === Object ? [tasks.task] : tasks.task)) {
         if (name === task.name) {
-          document.getElementById('TaskName').value = (empty_obj(task.name) ? '' : task.name);
-          document.getElementById('TaskDirectory').value = (empty_obj(task.directory) ? '' : task.directory);
-          document.getElementById('TaskURI').value = (empty_obj(task.uri) ? '' : task.uri);
+          document.getElementById('TaskName').value = print_obj(task.name);
+          document.getElementById('TaskDirectory').value = print_obj(task.directory);
+          document.getElementById('TaskURI').value = print_obj(task.uri);
           for (opt of document.getElementsByTagName("option")) {
             if (opt.id.substr(0,8) === "TaskType") {
               if (opt.value === task.type)
@@ -1425,17 +1427,18 @@ class DSASUser extends HTMLElement {
     var user = this.getAttribute("user");
     var label = this.getAttribute("label");
     var feedback = this.getAttribute("feedback");
-
+    var old = this.getAttribute("old");
+    var key = (old === null ? user : old)
     this.innerHTML = '<div class="form-group">\n' +
            '  <label>' + (label ? label : user) + ' :</label>\n' +
-           '  <input type="password" id="inp_' + user + '" class="form-control' + 
+           '  <input type="password" id="inp_' + key + '" class="form-control' + 
            (feedback ? ' is-invalid' : '') + '">\n' +
-           '  <div id="feed_' + user + '" class="invalid-feedback">' + feedback + '</div>\n' +
+           '  <div id="feed_' + key + '" class="invalid-feedback">' + feedback + '</div>\n' +
            '</div>';
   }
 
   static get observedAttributes() {
-    return ["user", "feedback", "label"];
+    return ["user", "feedback", "label", "old"];
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
