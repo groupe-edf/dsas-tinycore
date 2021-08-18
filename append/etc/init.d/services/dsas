@@ -5,6 +5,13 @@ GREEN="$(echo -e '\033[1;32m')"
 YELLOW="$(echo -e '\033[1;33m')"
 NORMAL="$(echo -e '\033[1;39m')"
 MNT=/mnt
+
+# FIXME : Make this configurable ?
+INTERCO="192.168.192.0"
+INTERCO_MASK="255.255.255.0"
+INTERCO_BAS="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 1)) )"
+INTERCO_HAUT="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 2)) )"
+
 # FIXME temp change to VAR for testing !!
 #VAR=/home/tc/dsas/var/dsas
 VAR=/var/dsas
@@ -279,7 +286,7 @@ start_network(){
   ETH0=$(echo $NETDEVICES | cut -d" " -f1)
   ETH1=$(echo $NETDEVICES | cut -d" " -f2)
 
-  dhcp=$(xmllint --xpath 'string(dsas/config/network/'${TYP}'/dhcp)' $VAR/dsas_conf.xml)
+  dhcp=$(xmllint --xpath "string(dsas/config/network/${TYP}/dhcp)" $VAR/dsas_conf.xml)
   if [ "$dhcp" == "true" ]; then
     echo -n "Using DHCP broadcast for ${GREEN}$ETH0${NORMAL}..."
     /sbin/udhcpc -b -i $ETH0 -x hostname:$(/bin/hostname) -p /var/run/udhcpc.$ETH0.pid > /dev/null 2>&1 &
@@ -292,43 +299,55 @@ start_network(){
     [ $CNT -le 60 ] && echo "${GREEN}Ok${NORMAL}"          
   else
     echo "Using static IP for ${GREEN}$ETH0${NORMAL}."
-    cidr=$(xmllint --xpath 'string(dsas/config/network/'${TYP}'/cidr)' $VAR/dsas_conf.xml)
-    IP=$(echo $1 | sed -e "s:^\(.*\)/.*$:\1:")
-    mask=$(echo $1 | sed -e "s:^.*/\(.*\)$:\1:")
+    cidr=$(xmllint --xpath "string(dsas/config/network/${TYP}/cidr)" $VAR/dsas_conf.xml)
+    IP=$(echo $cidr | sed -e "s:^\(.*\)/.*$:\1:")
+    mask=$(echo $cidr | sed -e "s:^.*/\(.*\)$:\1:")
     value=$(( 0xffffffff ^ ((1 << (32 - $mask)) - 1) ))
     NET="$(( (value >> 24) & 0xff )).$(( (value >> 16) & 0xff )).$(( (value >> 8) & 0xff )).$(( value & 0xff ))"
-    GWAY=$(xmllint --xpath 'string(dsas/config/network/'${TYP}'/gateway)' $VAR/dsas_conf.xml)
-    DOMAIN=$(xmllint --xpath 'string(dsas/config/network/'${TYP}'/dns/domain)' $VAR/dsas_conf.xml)
+    GWAY=$(xmllint --xpath "string(dsas/config/network/${TYP}/gateway)" $VAR/dsas_conf.xml)
+    DOMAIN=$(xmllint --xpath "string(dsas/config/network/${TYP}/dns/domain)" $VAR/dsas_conf.xml)
 
     /sbin/ifconfig $ETH0 $IP netmask $NET up
     /sbin/route add default gw $GWAY &
-    echo -e "domain $DOMAIN\n" > /etc/resolv.conf
-    NS=$(xmllint --xpath 'string(dsas/config/network/'${TYP}'/dns/nameserver)' $VAR/dsas_conf.xml)
+    echo -e "search $DOMAIN" > /etc/resolv.conf
+    NS=$(xmllint --xpath "string(dsas/config/network/${TYP}/dns/nameserver)" $VAR/dsas_conf.xml)
     i=2
     while :; do
       [ -z "${NS// }" ] && break
-      echo -e "nameserver $NS\n" >> /etc/resolv.conf
-      NS=$(xmllint --xpath 'string(dsas/config/network/'${TYP}'/dns/nameserver[$i])' $VAR/dsas_conf.xml)
-      $((i++))
+      echo -e "nameserver $NS" >> /etc/resolv.conf
+      NS=$(xmllint --xpath "string(dsas/config/network/${TYP}/dns/nameserver[$i])" $VAR/dsas_conf.xml)
+      i=$((i + 1))
     done
   fi
 
-  echo "Using static IP for ${GREEN}$ETH1${NORMAL}."
-  if [ "$TYP" == "bas" ]; then
-    /sbin/ifconfig $ETH1 192.168.192.1 netmask 255.255.255.0 up
-    /sbin/route add 192.168.192.2 $ETH1 &
-  else
-    /sbin/ifconfig $ETH1 192.168.192.2 netmask 255.255.255.0 up
-    /sbin/route add 192.168.192.1 $ETH1 &
+  if [ -z "$NO_INTERCO" ]; then
+    echo "Using static IP for ${GREEN}$ETH1${NORMAL}."
+    if [ "$TYP" == "bas" ]; then
+      /sbin/ifconfig $ETH1 $INTERCO_BAS netmask $INTERCO_MASK up
+      /sbin/route add $INTERCO_HAUT $ETH1 &
+    else
+      /sbin/ifconfig $ETH1 $INTERCO_HAUT netmask $INTERCO_MASK up
+      /sbin/route add $INTERCO_BAS $ETH1 &
+    fi
   fi
 }
 
 stop_network(){
+  NETDEVICES="$(awk -F: '/eth.:|tr.:/{print $1}' /proc/net/dev 2>/dev/null)"
+  ETH0=$(echo $NETDEVICES | cut -d" " -f1)
+  ETH1=$(echo $NETDEVICES | cut -d" " -f2)
   GWAY=$(xmllint --xpath 'string(dsas/config/network/'${TYP}'/gateway)' $VAR/dsas_conf.xml.active)
   /sbin/route del default gw $GWAY
-  [ "$TYP" == "bas" ] && /sbin/route del 192.168.2.2
-  [ "$TYP" == "haut" ] && /sbin/route del 192.168.2.1
   pkill udhcpc
+  /sbin/ifconfig $ETH0 down
+
+  if [ -z "$NO_INTERCO" ]; then
+    [ "$TYP" == "bas" ] && /sbin/route del $INTERCO_HAUT
+    [ "$TYP" == "haut" ] && /sbin/route del $INTERCO_BAS
+
+    /sbin/ifconfig $ETH1 down
+  fi
+  /sbin/ifconfig lo down
 }
 
 start_web_admin(){
@@ -357,10 +376,10 @@ start_sshd(){
     ETH0=$(echo $NETDEVICES | cut -d" " -f1)
     LISTEN=$(ifconfig $ETH0 | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
   else
-    USER_TC="192.168.192.1"
+    USER_TC="$INTERCO_BAS"
     USER=$(xmllint --xpath "string(dsas/config/ssh/user_haut)" $VAR/dsas_conf.xml)
     if [ -z "$USER" ]; then
-      LISTEN="192.168.192.2"
+      LISTEN="$INTERCO_HAUT"
     else
       LISTEN="0.0.0.0"
     fi
@@ -394,8 +413,19 @@ Match User $TYP Address $USER
 EOF
   fi
 
-  echo "Starting the ${GREEN}openssh${NORMAL} server"
-  /usr/local/etc/init.d/openssh start >> /var/log/sshd.log 2>&1
+  if [ -n "$SSHD_SIGHUP" ] && [ -f /var/run/sshd.pid]; then
+    PID=$(cat /var/run/sshd.pid)
+    if [ -d "/proc/$PID" ]; then
+      echo "Sending ${GREEN}SIGHUP${NORMAL} to the ${GREEN}openssh${NORMAL} server"
+      kill -HUP $PID
+    else
+      echo "Starting the ${GREEN}openssh${NORMAL} server"
+      /usr/local/etc/init.d/openssh start >> /var/log/sshd.log 2>&1
+    fi
+  else
+    echo "Starting the ${GREEN}openssh${NORMAL} server"
+    /usr/local/etc/init.d/openssh start >> /var/log/sshd.log 2>&1
+  fi
 }
 
 config_sshd(){
@@ -418,7 +448,7 @@ config_sshd(){
           echo -ne "\b/"
           ;;
       esac 
-      ping -W 1 -c 1 192.168.192.2 > /dev/null  2>&1 && break
+      ping -W 1 -c 1 $INTERCO_HAUT > /dev/null  2>&1 && break
     done
     echo -e "\b"
     echo "SSH server on machine haut available"
@@ -427,10 +457,10 @@ config_sshd(){
     $as_tc ssh-keygen -b 4096 -t rsa -f /home/tc/.ssh/id_rsa -q -N ''
 
     echo "Copying public key to machine haut"
-    $as_tc ssh-copy-id -i /home/tc/.ssh/id_rsa.pub -f tc@192.168.192.2
+    $as_tc ssh-copy-id -i /home/tc/.ssh/id_rsa.pub -f tc@$INTERCO_HAUT
 
     echo "Backing up authorized keys on machine haut"
-    $as_tc ssh -i /home/tc/.ssh/id_rsa tc@192.168.192.2 filetool.sh -b
+    $as_tc ssh -i /home/tc/.ssh/id_rsa tc@$INTERCO_HAUT filetool.sh -b
   fi
 }
 
@@ -574,10 +604,16 @@ case "${1}" in
     ;;
 
   apply)
+    if [ -f $VAR/dsas_typ ]; then
+      TYP="$(cat $VAR/dsas_typ)"
+    else
+      TYP="haut"
+    fi
     # Only restart network et ssh if changed to avoid interuptting transfers
     OLD=$(xmllint --xpath "dsas/config/network" $VAR/dsas_conf.xml.active)
     NEW=$(xmllint --xpath "dsas/config/network" $VAR/dsas_conf.xml)
     if [ "$OLD" != "$NEW" ]; then
+      NO_INTERCO="true"
       stop_network
       start_network
     fi
@@ -585,7 +621,7 @@ case "${1}" in
     OLD=$(xmllint --xpath "dsas/config/ssh" $VAR/dsas_conf.xml.active)
     NEW=$(xmllint --xpath "dsas/config/ssh" $VAR/dsas_conf.xml)
     if [ "$OLD" != "$NEW" ]; then
-      stop_sshd
+      SSHD_SIGHUP="true"
       start_sshd
     fi
 
@@ -603,4 +639,3 @@ case "${1}" in
     exit 1
     ;;
 esac
-
