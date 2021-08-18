@@ -22,7 +22,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
     if (force_passwd()) {
       foreach ($dsas->config->users->user as $duser) {
         foreach ($_POST["users"] as $user) {
-           if (trim($user) == $duser)
+           if ((trim($user["username"]) == $duser) && (! empty($user["password"])))
              continue 2;
         }
         $nempty++;
@@ -30,17 +30,11 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
     }
     if ($nempty != 0) {
       $errors[] = ["error" => "Premiere usage. Tous les mots de passe doit-&ecirc;tre changer"];
-    } else if (sasl_checkpass($_POST["users"][$i]["username"], $_POST["users"][$i]["password"])) {
+    } else if (sasl_checkpass($_POST["users"][$old]["username"], $_POST["users"][$old]["password"])) {
       $errors[] = ["old" => "Mot de passe ancien incorrect"];
     } else {
       $count = 0;
       $hash = $dsas->config->users->hash;
-      $cwd ="/tmp";
-      $descriptorspec = array(
-           0 => array("pipe", "r"), // stdin
-           1 => array("pipe", "w"), // stdout
-           2 => array("pipe", "w") //stderr
-      );      
 
       foreach ($_POST["users"] as $user) {
          if ($user["old"] == "true") continue;
@@ -49,27 +43,16 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
          if (!empty($passwd)){
            if (! complexity_test($passwd))
              $errors[] = [$name => "Mot de passe pas suffisament complexe"];
+           else if ($passwd != str_replace("/\s+/", "", $passwd))
+             $errors[] = [$name => "Mot de passe ne peut pas contenir des espaces blancs"];
            else {
-             // User proc_open with a command array to avoid spawning
-             // a shell that can be attacked 
-             $process = proc_open(["sudo", "/usr/sbin/chpasswd", "-c", $hash], $descriptorspec, $pipes, $cwd);
-             $cmdarg = $name . ":" . $passwd;
-             // password and username can't have be used to attack here as
-             // there is no shell to attack. At this point its also too late
-             // to pass args to chpasswd like "-c md5" to force a weak hash
-             // So this is safe. 
-             fwrite($pipes[0], escapeshellarg($name . ":" . $passwd) . PHP_EOL);
-             fclose($pipes[0]);
-             fclose($pipes[1]);
-             $stderr = fgets($pipes[2]);
-             fclose($pipes[2]);
-             $retval = proc_close($process);
+             $ret = change_passwd($name, $passwd, $hash);
 
-             if ($retval != 0) 
-               $errors[] = [$name => $stderr];
+             if ($ret["retval"] != 0) 
+               $errors[] = [$name => $ret["stderr"]];
              else {
                foreach ($dsas->config->users->user as $duser) {
-                 if (trim($user) == $duser)
+                 if ((trim($user["username"]) == $duser) && (! empty($user["password"])))
                    unset($user->first); 
                }
                $count++;

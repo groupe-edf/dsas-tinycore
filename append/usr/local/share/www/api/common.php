@@ -100,9 +100,24 @@ function dsas_init(){
       <user>verif</user>
     </users>
     <network>
-      <interfaces />
-      <bas />
-      <haut />
+      <bas>
+        <dhcp>true</dhcp>
+        <cidr />
+        <gateway />
+        <dns>
+          <domain />
+          <nameserver />
+        </dns>
+      </bas>
+      <haut>
+        <dhcp>true</dhcp>
+        <cidr />
+        <gateway />
+        <dns>
+          <domain />
+          <nameserver />
+        </dns>
+      </haut>
     </network>
     <web>
       <ssl>
@@ -144,11 +159,60 @@ XML;
   }
 }
 
+function interco_haut(){
+  // FIXME Make it configurable ?
+  return "192.168.192.2";
+}
+
 function force_passwd(){
   $dsas = simplexml_load_file(_DSAS_XML);
   if ($dsas->config->users->first == 'true')
     return true;
   return false;
+}
+
+function change_passwd($name, $passwd, $hash = "sha512"){
+ // Remove all white space to avoid RCE. Space illegal in username and password
+ $name=preg_replace("/\s+/", "", $name);
+ $passwd=str_replace("/\s+/", "", $passwd);
+
+  $descriptorspec = array(
+    0 => array("pipe", "r"), // stdin
+    1 => array("pipe", "w"), // stdout
+    2 => array("pipe", "w") //stderr
+  );
+  $cwd="/tmp";
+  
+  // User proc_open with a command array to avoid spawning
+  // a shell that can be attacked 
+  $process = proc_open(["sudo", "/usr/sbin/chpasswd", "-c", $hash], $descriptorspec, $pipes, $cwd);
+  // password and username can't be used to attack here as
+  // there is no shell to attack. At this point its also too late
+  // to pass args to chpasswd like "-c md5" to force a weak hash
+  // So this is safe. 
+  fwrite($pipes[0], $name . ":" . $passwd . PHP_EOL);
+  fclose($pipes[0]);
+  fclose($pipes[1]);
+  $stderr = fgets($pipes[2]);
+  fclose($pipes[2]);
+  $retval = proc_close($process);
+  if (! empty($retval)) {
+    $ret["retval"] = $retval;
+    $ret["stderr"] = $stderr;
+    return $ret;
+  }
+
+  // Now set the password on the machine "haut"
+  $process = proc_open(["ssh", "tc@" . interco_haut(), "sudo", "/usr/sbin/chpasswd", "-c", $hash], $descriptorspec, $pipes, $cwd);
+  fwrite($pipes[0], $name . ":" . $passwd . PHP_EOL);
+  fclose($pipes[0]);
+  fclose($pipes[1]);
+  $stderr = fgets($pipes[2]);
+  fclose($pipes[2]);
+  $retval = proc_close($process); 
+  $ret["retval"] = $retval;
+  $ret["stderr"] = $stderr;
+  return $ret;
 }
 
 function mask2cidr($mask){
@@ -297,117 +361,6 @@ function dsas_space() {
   } else {
     return sprintf("Dir : %20s, does not exist", $d);
   }
-}
-
-function dsas_detect_disks(){
-
-  // This use of exec is ok as no user parameters
-  if (! exec("/sbin/fdisk -l | /usr/bin/awk '$1 ~ /dev/{printf \" %s \", $1}'", $fdiskl)){
-    $fdiskl = array();
-  }
-
-  $devices = scandir("/sys/block/");
-
-  $fstype = "";
-
-  $disks = array();
-  $i = $j = 0;
-  foreach ($devices as $device) {
-    if (($device === ".") || ($device === "..")) continue;
-
-    if ( ! file_exists("/sys/block/" . $device ."/dev")) continue;
-
-    $dev = file_get_contents("/sys/block/" . $device . "/dev");
-    $major = substr($dev, 0, strpos($dev, ":"));
-    if ($major !== "8") continue;
-
-    foreach ($fdiskl as $part){
-      if (str_contains($part, "/dev/" . $device)){
-        // This use of exec is ok as no user parameters
-        if (! exec("/usr/sbin/fstype " . $part, $fstype)) continue;
-        if (! empty($fstype)) {
-          $disks[$i]["device"] = trim($part);
-          $disks[$i]["type"] = $fstype[0];
-          $disks[$i]["space"] = dsas_disk_space($part);
-          $i++;
-        }
-      }
-    }
-
-    if ($i === $j){
-      $disks[$i]["device"] = "/dev/$device1";
-      $disks[$i]["type"] = "";
-      $disks[$i]["space"] = dsas_disk_space("/dev/$device1");
-      $i++;
-      $j++;
-    }
-  }
-
-  return $disks;
-}
-
-function dsas_format_disk($device){
-  // Ok, we have an uninitialised disk. Partition and format it
-  $descriptorspec = array(
-    0 => array("pipe", "r"), // stdin
-    1 => array("pipe", "w"), // stdout
-    2 => array("pipe", "w") //stderr
-  );
-
-  $cwd = "/tmp";
-  // Call command as an array to avoid creating a shell
-  $process = proc_open(["/sbin/fdisk", $device], $descriptorspec, $pipes, $cwd);
-
-  if (is_resource($process)) {
-    fwrite($pipes[0], 'n\n');
-    fwrite($pipes[0], 'p\n');
-    fwrite($pipes[0], '1\n');
-    fwrite($pipes[0], '\n');
-    fwrite($pipes[0], '\n');
-    fwrite($pipes[0], 'w\n');
-    fclose($pipes[0]);
-    //echo stream_get_contents($pipes[1]);
-    fclose($pipes[1]);
-    $stderr = fgets($pipes[2]);
-    fclose($pipes[2]);
-
-    $retval = proc_close($process);
-    if ($retval === 0){
-      $ret = array();
-    } else {
-      $ret["retval"] = $retval;
-      $ret["stderr"] = $stderr;
-    }
-  } else {
-    $ret["retval"] = -1;
-    $ret["stderr"] = "Erreur inconnu pendant la partionnement";
-  }
-
-  if (!empty($ret))
-    return $ret;
-  
-  // even though the $device should have been checked that it corresponds to a real
-  // device, there is user input here, so use proc_open with an array to avoid
-  // creating a shell that could be attacked 
-  $process = proc_open(["/sbin/mkfs.ext4", $device], $descriptorspec, $pipes, $cwd);
-  if (is_resource($process)) {
-    fclose($pipes[0]);
-    fclose($pipes[1]);
-    $stderr = fgets($pipes[2]);
-    fclose($pipes[2]);
-    $retval = proc_close($process);
-    if ($retval === 0)
-      $ret = array();
-    else {
-      $ret["retval"] = $retval;
-      $ret["stderr"] = $stderr;
-    }
-  } else {
-    $ret["retval"] = -1;
-    $ret["stderr"] = "Erreur inconnu pendant la formattage";
-  }
-
-  return $ret;
 }
 
 function renew_web_cert($options, $days){
