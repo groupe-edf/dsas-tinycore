@@ -1,14 +1,14 @@
-* start "/usr/local/sbin/saslauthd -a shadow" in iso
 * Add the ability to upload SSH keys
 * Check $value === htmlspecialchars($value) everywhere in php and fail if not
 * static ip
 * documentation in MD
 * dump dead code in common.php
 * add memory and cpu status to index.html
-* User server.bind to limit lighttpd to the interface bas. Or use virtual network
-  namespaces for this
 * In dsas.js lots of duplicate code in the *_error function could easily rationalize
   this code
-*  Don't allow certificates to be deleted uf a task that depends on them exists
-
-
+* Don't allow certificates to be deleted if a task that depends on them exists
+* Backup the two /mnt/sda1/tce/mydata.tgz files as a means of keeping the 
+  configuration
+* FIXME permissions of mydata.tgz file !! readable/modifiable by user tc and  
+  group staff ok. But shouldn't be readbaable by everyone
+* Use JS "fetch" etc in dsas.js and eliminate completely JQUERY
