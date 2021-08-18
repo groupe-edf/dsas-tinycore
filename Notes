@@ -12,3 +12,10 @@
 * FIXME permissions of mydata.tgz file !! readable/modifiable by user tc and  
   group staff ok. But shouldn't be readbaable by everyone
 * Use JS "fetch" etc in dsas.js and eliminate completely JQUERY
+* In common.php add more tests to complexity_test (LUDS?). Longer passwords ?
+* Make the network 192.168.192.0/24 between the two machine configurable. 
+  Danger, changing it and having a synchronisation problem will probably
+  cut all communications between the two servers. So need to be really careful.
+  Currently hardcoded in dsas service et common.php only
+* Add htaccess to repo and the ability to set the password (username?) of 
+  the access
