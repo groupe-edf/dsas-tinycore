@@ -4,4 +4,5 @@
 # and therefore not slow down the boot process.
 /usr/bin/sethostname box
 /etc/init.d/services/dsas start
+/usr/local/sbin/saslauthd -a shadow &
 /opt/bootlocal.sh &
