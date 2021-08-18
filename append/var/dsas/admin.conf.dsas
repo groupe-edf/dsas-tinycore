@@ -1,10 +1,10 @@
-server.document-root="/usr/local/share/www/www-data/"
+server.document-root="/usr/local/share/www/"
 server.errorlog="/var/log/web.errorlog"
 accesslog.filename = "/var/log/web.accesslog"
 server.modules += ( "mod_openssl", "mod_fastcgi", "mod_accesslog" )
 server.port=5000
 ssl.engine="enable"
-ssl.pemfile="/usr/local/share/www/dsas.pem"
+ssl.pemfile="/var/dsas/dsas.pem"
 index-file.names=("index.html")
 mimetype.assign = (".html" => "text/html",
                    ".js" => "application/javascript",
