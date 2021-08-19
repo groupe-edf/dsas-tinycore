@@ -1,48 +1,57 @@
-# DSAS - Sas de docontamination
-## Introduction
+# DSAS - Sas de dÃ©contamination
 
-A faire
+Tous les outils nÃ©cessaire a crÃ©er des ISO de la DSAS sont basÃ© sur TinyCore
+Linux. L'iso de CorePlus peut Ãªtre utilisÃ© pour la build, mais apriori n'importe
+laquel souche linux pourrait Ãªtre utilisÃ©. Personellement je fais des builds en
+32bit car TinyCore est plus complet en 32bit, mais des builds en 64bit devrait Ãªtre
+possible
 
-## Usage des hardlink linux
+## Outils nÃ©cessaire
 
-Un hardlink sous linux est exactement le même fichier dupliqué à un autre endroit. 
-L'usage des hardlink entre les fichier du gichet haut du sas et le guichet bas 
-pourrait permettre un simplication des l'architecture, car aucun moyen de tracer les
-ficheirs téléchargé sera necessaire et ça sans augmentation de l'espace disque.
+Vous avez besoins les outils ci-joint
 
-En revanche les hardlink doit réspecter les exigences d'acces entre les guichet haut
-et bas. Quand un fichier existe dans les deux zones, il faut que
+* Un souche linux (32bit de prÃ©fÃ©rence) avec un accÃ¨s root en sudo
+* make, gcc et l'ensemble des outils du souche de compilation
+* rsync
+* genisoimage ou mkisofs
+* squashfs-tools
+* curl
 
-- L'utilisateur haut ne peut pas modifier le fichier visible dans le guichet bas
-- L'utilisateur haut ne peut pas supprimer l'existance de la fichier dans le 
-  guichet bas
-- Que l'utilisateur haut pourrait supprimer l'existence de la fichier dans le 
-  guichet haut
+## Le process de build
 
-Avec les permissions suivante
-
-| Perms      |  UID   | GID   |  Chemin
-|------------|--------|-------|-------------------
-| drwxrwx--- |  haut  | haut  |  dsas/haut
-| -rw-r----- |  verif | share |  dsas/haut/fichier
-| drwxrwx--- |  bas   | bas   |  dsas/bas
-| -rw-r----- |  verif | share |  disas/bas/fichier
-
-et un fichier /etc/group centenant 
+Premierement est-ce que vous Ãªtes derriere un proxy HTTP ? Par exemple sur
+la RIN a EDF il faut utilisre la faire
 
 ```
-verif:x:2000:
-bas:x:2001:verif
-haut:x:2002:verif
-share:x:2003:verif,bas,haut
+export http_proxy=http://vip-users.proxy.edf.fr:3131
+export https_proxy=http://vip-users.proxy.edf.fr:3131
 ```
 
-les exigences voulu sont respecté. Les script de verification DSAS ont été adapté
-afin d'assurer ces coditions
+afin de permettre la build a avoir un accÃ¨s Ã  l'internet. AprÃ¨s le build est
+fait avec le commande
 
+```
+./make.sh
+```
 
+Nous pourrait garder les fichiers temporaires avec option "-keep" et faire
+la build d'un package (voir pkg/*.pkg) Ã  partir des sources avec
 
+```
+./make.sh -build gnupg
+```
 
+## Nettoyage de la build
 
+Afin de nÃ©ttoyer les fichiers utilisÃ© pendant le build vous pouvez faire
 
+```
+./make.sh -clean
+```
 
+Les ISOs du DSAS sont gardÃ©s, mais l'ensemble des fichiers intermediaire 
+sont dÃ©truit. Afin de completement nettoyer le build utiliser le commande
+
+```
+./make.sh realclean
+```
