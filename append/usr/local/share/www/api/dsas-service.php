@@ -20,7 +20,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           foreach (explode(",",$user_tc) as $inet) {
             if (substr($inet,0,1) === "!")
               $inet = substr($inet,1,strlen($inet)-1); 
-            if ($user_tc_err = inet_valid($inet, false))
+            if ($user_tc_err = ip_valid($inet, false))
               break;
           }
         }
@@ -35,7 +35,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           foreach (explode(",",$user_bas) as $inet) {
             if (substr($inet,0,1) === "!")
               $inet = substr($inet,1,strlen($inet)-1); 
-            if ($user_bas_err = inet_valid($inet, false))
+            if ($user_bas_err = ip_valid($inet, false))
               break;
           }
         }
@@ -50,7 +50,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           foreach (explode(",",$user_haut) as $inet) {
             if (substr($inet,0,1) === "!")
               $inet = substr($inet,1,strlen($inet)-1); 
-            if ($user_haut_err = inet_valid($inet, false))
+            if ($user_haut_err = ip_valid($inet, false))
               break;
           }
         }
@@ -64,14 +64,14 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
 
         $syslog_server = htmlspecialchars(trim($data["syslog"]["server"]));
         if (! empty($syslog_server))
-          $syslog_err = inet_valid($syslog_server, true);
+          $syslog_err = inet_valid($syslog_server);
         if (empty($syslog_err))
           $dsas->config->syslog->server = $syslog_server;
         else
           $errors[] = ["syslog_server" => $syslog_err];
 
         foreach ($data["ntp"]["server"] as $server) {
-          if (!empty($pool_err = inet_valid($server, true)))
+          if (!empty($pool_err = inet_valid($server)))
             break;
         }
         if (empty($pool_err)) {
