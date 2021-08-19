@@ -471,14 +471,16 @@ stop_sshd(){
 start_repo(){
   repo="$(xmllint --xpath 'string(dsas/config/web/repo)' $VAR/dsas_conf.xml)"
   if [ "$repo" != "true" ]; then return 0; fi
-
   cp $VAR/repo.conf.dsas $VAR/repo.conf
-  bas=$(xmllint --xpath "string(dsas/config/network/bas)" $VAR/dsas_conf.xml)
-  ip=${ip addr show $bas | awk '/inet /{split($2,a,"/"); print a[1]}'}
-  echo "Binding repo to ${GREEN}$bas${NORMAL} and address ${GREEN}$ip${NORMAL}." 
-  echo 'server.bind = "$ip"' >> $VAR/repo.confq
+  NETDEVICES="$(awk -F: '/eth.:|tr.:/{print $1}' /proc/net/dev 2>/dev/null)"
+  ETH0=$(echo $NETDEVICES | cut -d" " -f1)
+  ip=$(ifconfig $ETH0 | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
+  echo "Binding repo to ${GREEN}$ETH0${NORMAL} and address ${GREEN}$ip${NORMAL}." 
+  echo "server.bind = \"$ip"\" >> $VAR/repo.conf
   echo "Starting administration web server"
-  $as_bas lighttpd -Df $VAR/repo.conf &
+  # Start as root to allow use of port 443. But after change to user bas.repo
+  # via options in repo.conf
+  lighttpd -Df $VAR/repo.conf &
 }
 
 stop_repo(){

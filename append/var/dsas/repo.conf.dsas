@@ -1,10 +1,12 @@
 server.document-root="/home/dsas/bas/"
-server.modules += ( "mod_openssl" "mod_sentenv" )
+server.modules += ( "mod_openssl", "mod_setenv" )
 server.port=443
+server.username="bas"
+server.groupname="repo"
 ssl.engine="enable"
 ssl.pemfile="/var/dsas/dsas.pem"
 dir-listing.activate="enable"
-setenv.add-reponse-header += (
+setenv.add-response-header += (
     "Cache-Control" => "must-revalidate"
 )
 
