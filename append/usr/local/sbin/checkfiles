@@ -1,66 +1,32 @@
 #! /bin/sh
 
-cd $(dirname $0)
+if [ -f "usr/local/sbin/dsas_common.sh" ]; then
+  . /usr/local/share/sbin/dsas_common.sh
+elif [ -f "/home/tc/dsas---tinycore/append/usr/local/sbin/dsas_common.sh" ]; then
+  # FIXME For testing purposes. Delete ?
+  . /home/tc/dsas---tinycore/append/usr/local/sbin/dsas_common.sh
+else
+  echo "Common functions not found !!"
+  exit -1
+fi
 
-#### FIXME : Temporary directories for testing
-bas=/home/tc/dsas---tinycore/test/bas
-haut=/home/tc/dsas---tinycore/test/haut
-
-# XML Configuration file
-conf=/opt/dsas_conf.xml
-# FIXME for testing
-[ -f $conf ] || conf=/home/tc/dsas---tinycore/append/opt/dsas_conf.xml
 
 # Default options
-verbose=1
-movefiles=0
-deletebad=1
+
 logfile="verif.log"
-logstdout=0
-dryrun=0
 rotatemax=6
 rotate=0
 reject=reject
 UMASK=640
-grp=share
 
-msg() {
-  if [ $logstdout = "1" ]; then
-    printf "%-3s %-15s %-32s %s\n" "$1" "$2" "$3" "$4"
-  else
-    printf "%-3s %-15s %-32s %s\n" "$1" "$2" "$3" "$4" >> $logfile
-  fi
-}
-
-msgline() {
-  local file=$1
-  local status=$2
-  local md5=$(cat $file | md5sum | sed -e "s/  -$//g")
-  local _file=`echo $file | sed -e "s:^${haut}/::g"`
-  case $status in
-    0) [ $verbose == 1 ] && msg "  "  "Ok"  $md5 $_file ;;
-    -1)  msg "XX"  "Unknown type"   $md5  $_file ;;
-    1)   msg "**"  "Bad Sig"        $md5  $_file ;;
-    2)   msg "$$"  "Checksum fail"  $md5  $_file ;;
-    3)   msg "**"  "Bad Interm Sig" $md5  $_file ;;
-    4)   msg "**"  "Fail virus chk" $md5  $_file ;;
-    5)   msg "**"  "Bad RPM Sig"    $md5  $_file ;;
-    255) msg "**"  "Not signed"     $md5  $_file ;;
-    *)   msg "XX"  "Unknown status" $md5  $_file ;;
-  esac
-}
 
 help() {
-  echo "Usage: $(basename $0)  [Options] [NAME...]"
-  echo "Verify files given by NAME. Without NAME all repositories are checked "
+  echo "Usage: $(basename $0)  [Options] ID [ID...]"
+  echo "Verify files given by the task ID."
   echo "     -v|--verbose    Log all files verified"
   echo "     -q|--quiet      Log only files failing to verifiy"
   echo "     -r|--rotate     Rotate the log files"
   echo "     -n|--dryrun     Perform no actions"
-  echo "     -m|--move       Move files"
-  echo "     -x|--link       Leave files in place and hard-link"
-  echo "     -d|--delete     Delete files faling to verify"
-  echo "     -k|--keep       Keep all files"
   echo "     -s|--stdout     Send logs to stdout"
   echo "     -l|--log        Send the logs to a file"
   echo "     -o <FILE>       Log to <FILE>, default $logfile"
@@ -68,64 +34,10 @@ help() {
   echo "     -?|-h|--help    Print this help"
 }
 
-mv() {
-  if [ $dryrun == "0" ]; then
-    [ -d $(dirname $2) ] || ( mkdir -m 770 -p $(dirname $2); chgrp -R bas $(dirname $2))
-    # We can't can't the owner of the file as we aren't root. So a 
-    # move must be treated as a copy and delete
-    /bin/cp $1 $2
-    chgrp bas $2
-    /bin/rm $1
-  else
-    echo "[DryRun] mv $*"
-  fi
-}
-
-ln() {
-  if [ $dryrun == "0" ]; then
-    [ -d $(dirname $2) ] || ( mkdir -m 770 -p $(dirname $2); chgrp -R bas $(dirname $2))
-    # This script is not running as root so can't change the owner. We
-    # first have to copy the file
-    cp $1 $1.tmp.$$
-    /bin/mv -f $1.tmp.$$ $1
-    chmod 0640 $1
-    chgrp $grp $1
-    /bin/ln -f $* 
-  else
-    [ -d $(dirname $2) ] || echo "[DryRun] mkdir -p $(dirname $2)"
-    echo "[DryRun] ln $*"
-  fi
-}
-
-rm() {
-  if [ $dryrun == "0" ]; then
-    /bin/rm $*
-  else
-    echo "[DryRun] rm $*"
-  fi
-}
-
-move() {
-  if [ $movefiles == "1" ]; then
-    mv $*
-  else
-    ln $*
-  fi
-}
-
-treatbad() {
-  if [ $deletebad == "1" ]; then
-    rm "$*"
-  else
-    move "$*"
-  fi
-}
-
 rotatelogs() {
   [ -f "${logfile}.$rotatemax" ] && rm "${logfile}.$rotatemax"
   for i in $(seq $rotatemax -1 2); do
-    i1=$(echo "$i 1 - p" | dc)
-    [ -f "${logfile}.$i1" ] && mv "${logfile}.$i1" "${logfile}.$i"
+    [ -f "${logfile}.$((i-1))" ] && mv "${logfile}.$((i-1))" "${logfile}.$i"
   done
   [ -f "${logfile}" ] && mv "${logfile}" "${logfile}.1"
   exit 0
@@ -184,8 +96,8 @@ antivirus() {
 
 verifdirectory() {
   local id=$1
-  local dir=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@dir)" $conf)
-  local check=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/check/@type)" $conf)
+  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $conf)
+  local check=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" $conf)
 
   # Validate check type
   case $check in
@@ -197,15 +109,13 @@ verifdirectory() {
   [ -d $bas/$dir ] || mkdir -p $bas/$dir
 
   # Remove the files in our tree $bas and not in $haut.
-  if [ "$deletebad" == "1" ]; then
-    filetable=$(ls -1 $haut/$dir)
-    for _file in $(cd $bas/$dir; find . -type f); do
-      if [[ "$filetable" != *"${_file:2}"* ]]; then
-        echo "Removing stale file ${_file:2}"
-        rm $bas/$dir/${_file:2}
-      fi
-    done
-  fi
+  filetable=$(ls -1 $haut/$dir)
+  for _file in $(cd $bas/$dir; find . -type f); do
+    if [[ "$filetable" != *"${_file:2}"* ]]; then
+      echo "Removing stale file ${_file:2}"
+      rm $bas/$dir/${_file:2}
+    fi
+  done
 
   ca=$(xmllint --xpath "string(dsas/tasks/task[@id='$id1']/cert[@type='ca'])" $conf)
   [ -z "$ca" ] || $(echo "$ca" > /tmp/tmpcert; ca="/tmp/tmpcert")
@@ -218,38 +128,12 @@ verifdirectory() {
     status=$?
     msgline $haut/$file $status
     case $status in
-      0) move "$haut/$file" "$bas/$file"; ;;
-      *) treatbad "$haut/$file" "$haut/$reject/$file"; ;;
+      0) ln "$haut/$file" "$bas/$file"; ;;
+      *) ln "$haut/$file" "$haut/$reject/$file"; ;;
     esac
   done
 
   [ -z "$ca" ] || /bin/rm /tmp/tmpcert
-}
-
-# Usage : check_checksum <file> <chksum> <type>
-check_checksum() {
-  case $3 in
-    sha512)
-      chk=$(cat $1 | sha512sum - | sed -e "s/ -//g")
-      ;;
-    sha256)
-      chk=$(cat $1 | sha256sum - | sed -e "s/ -//g")
-      ;;
-    sha)
-      chk=$(cat $1 | sha1sum - | sed -e "s/ -$//g")
-      ;;
-    md5)
-      chk=$(cat $1 | md5sum - | sed -e "s/ -$//g")
-      ;;
-    *)
-     return 0
-     ;;
-  esac
-
-  if [ $chk != $2 ]; then
-    return 0
-  fi
-  return 1
 }
 
 verify_packages() {
@@ -269,13 +153,13 @@ verify_packages() {
     if [ -f "$haut/$dir/$file" ]; then
       if  check_checksum $haut/$dir/$file $chksum $chktype; then
         msgline $haut/$dir/$file 1
-        treatbad $haut/$dir/$file $haut/$reject/$dir/$file
+        ln $haut/$dir/$file $haut/$reject/$dir/$file
       elif [ "$rpm_k" == "1" ] && rpm -K $haut/$dir/$file 2>&1 /dev/null; then
         msgline $haut/$dir/$file 5
-        treatbad $haut/$dir/$file $haut/$reject/$dir/$file       
+        ln $haut/$dir/$file $haut/$reject/$dir/$file       
       else
         msgline $haut/$dir/$file 0
-        move $haut/$dir/$file $bas/$dir/$file
+        ln $haut/$dir/$file $bas/$dir/$file
       fi
     fi  # For now ignore missing files
     shift 3
@@ -349,13 +233,13 @@ verifrepo() {
        fi
 
        # Copy repomd.xml*  and primary.xml* to $bas
-       move $haut/$dir/repodata/repomd.xml \
+       ln $haut/$dir/repodata/repomd.xml \
           $bas/$dir/repodata/repomd.xml
-       move $haut/$dir/repodata/repomd.xml.asc \
+       ln $haut/$dir/repodata/repomd.xml.asc \
           $bas/$dir/repodata/repomd.xml.asc
-       move $haut/$dir/$filelist \
+       ln $haut/$dir/$filelist \
           $bas/$dir/$filelist
-       move $haut/$dir/$unzipfile \
+       ln $haut/$dir/$unzipfile \
           $bas/$dir/$unzipfile
 
        # Recover a table of the hashtype, hash and file names
@@ -380,48 +264,45 @@ verifrepo() {
   esac
 }
 
-# Find the upper and lower zones
-[ -d /home/dsas/bas ] && bas=/home/dsas/bas
-[ -z $bas ] && [ -d /home/bas ] && bas=/home/bas
-[ -d /home/dsas/haut ] && haut=/home/dsas/haut
-[ -z $haut ] && [ -d /home/haut ] && haut=/home/haut
-[ -z $bas ] && $(1>&2 echo "Zone bas not found"; exit 1)
-[ -z $haut ] && $(1>&2 echo "Zone haut not found"; exit 1)
+check_dsas
 
 # Parse options
-names=""
+ids=""
 while [ "$#" -gt 0 ]; do
   case $1 in
     -v|--verbose) verbose=1 ;;
     -q|--quiet) verbose=0 ;;
     -r[--rotate) rotate=1 ;;
     -n|--dryrun) dryrun=1 ;;
-    -m|--move) movefiles=1 ;;
-    -x|--link) movefiles=0 ;;
-    -d|--delete) deletebad=1 ;;
-    -k|--keep) deletebad=0 ;;
     -s|--stdout) logstdout=1 ;;
     -l|--log) logstdout=0 ;;
     -o) logfile=$2; shift 1 ;;
     --out=*) logfile=${1#*=} ;;
     -?|-h|--help) help; exit 0 ;;
     -*) 1>&2 echo "Unrecognized option : $1"; help; exit 1 ;;
-    *) names="$names $1" ;;
+    *) ids="$ids $1" ;;
   esac
   shift 1
 done
 
-for _id in $(xmllint --xpath 'dsas/tasks/task/@id' $conf); do
-  eval $_id
-  type=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@type)" $conf)
-  if [ "${#names}" -gt "0" ]; then
-    name=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@name)" $conf)
-    [[ "$names" == *"$name"* ]] || continue
-  fi
+# If dryrun, force verbose
+[ $dryrun -ne 0 ] && verbose=1
+
+# Check that all ids are valid before doing anything
+idx=""
+for _id in $ids; do
+  task_id_to_idx $_id
+  _idx=$?
+  [ $_idx -lt 1 ] && (echo "Task id ($_id) does not exist"; exit -1)
+  idx="$idx $_idx"
+done
+
+for _id in idx; do
+  type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" $conf)
   case $type in
-    linux)  verifrepo $id; ;;
-    directory) verifdirectory $id; ;;
+    rpm|repomd) verifrepo $id; ;;
+    deb) echo "DEB files are  are not yet implemented"; continue; ;;
+    authenticode|openssl|gpg) verifdirectory $id; ;; 
     *) echo "Unknown task type : $type"; ;;
   esac
 done
-

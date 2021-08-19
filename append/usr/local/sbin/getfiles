@@ -1,87 +1,65 @@
 #! /bin/sh
 
-#### FIXME : Temporary directories for testing
-haut=/home/tc/dsas---tinycore/test/haut
+if [ -f "usr/local/sbin/dsas_common.sh" ]; then
+  . /usr/local/share/sbin/dsas_common.sh
+elif [ -f "/home/tc/dsas---tinycore/append/usr/local/sbin/dsas_common.sh" ]; then
+  # FIXME For testing purposes. Delete ?
+  . /home/tc/dsas---tinycore/append/usr/local/sbin/dsas_common.sh
+else
+  echo "Common functions not found !!"
+  exit -1
+fi
 
-# XML Configuration file
-conf=/opt/dsas_conf.xml
-# FIXME for testing
-[ -f $conf ] || conf=/home/tc/dsas---tinycore/append/opt/dsas_conf.xml
-
-fileargs() {
-while [ "$#" -gt 3 ]; do
-  shift 3
-  echo $1
-  shift 1
-done
-}
 
 getdirectory() {
-  id=$1
-  uri=$2
-  clean=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@clean)" $conf)
-  dir=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@dir)" $conf)
-  name=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@name)" $conf)
+  local dirlist files file
+  local id=$1
+  local uri=$(get_uri)
+  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
+  local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" $CONF)
 
+
+  if [ -z "$uri" ]; then
+    myecho "Empty Uri for task $name"
+    return
+  fi
   # Create directory if needed
-  [ -d $haut/$dir ] || mkdir -p $haut/$dir
+  [ -d ${DSAS_HAUT}/$dir ] || mkdir -p ${DSAS_HAUT}/$dir
 
-  # Download the directory contents
-  dirlist=$(curl $uri 2> /dev/null)
-  files=$(fileargs $dirlist)
+  # Special case for scp, because it can only have one file
+  if [ "${uri:0:4}" == "scp:" ]; then
+    myecho "Downloading file: $(basename $uri)"
+    get "${uri}" "${DSAS_HAUT}/${dir}/${basename $uri}"
+  else
+    files=$(get_dirlist $uri)
 
-  if [ "$clean" == "true" ]; then
     # Remove files locally that are no longer available sur le URI
-    for localfile in $(ls -1 $haut/$dir); do
-      if [[ "$files" != *"$localfile"* ]]; then
-        echo "Removing stale file: $localfile"
-        rm $haut/$dir/$localfile
+    for file in $(ls -1 $DSAS_HAUT/$dir); do
+      # Ignore directories for now
+      [ "${file: -1}" == "/" ] && continue
+      
+      if [[ "$files" != *"$file"* ]]; then
+        myecho "Removing stale file: $file"
+        rm $DSAS_HAUT/$dir/$file
+      fi
+    done
+
+    # Download the missing files
+    for file in $files; do
+      # Ignore directories for now
+      [ "${file: -1}" == "/" ] && continue
+      if [ ! -f "$DSAS_HAUT/$dir/$file" ]; then
+        myecho "Downloading file: $file"
+        get "${uri}${file}" "${DSAS_HAUT}/${dir}/${file}"
       fi
     done
   fi
-
-  # Download the missing files
-  for file in $files; do
-    if [ ! -f "$haut/$dir/$file" ]; then
-      echo "Downloading file: $file"
-      $(umask 007 && curl -o $haut/$dir/$file $uri$file 2> /dev/null)
-    fi
-  done
-}
-
-# Usage : check_checksum <file> <chksum> <type>
-check_checksum() {
-  _file=$1
-  _chksum=$2
-  _chktype=$3
-
-  case $_chktype in
-    sha512)
-      chk=$(cat $_file | sha512sum - | sed -e "s/ -//g")
-      ;;
-    sha256)
-      chk=$(cat $_file | sha256sum - | sed -e "s/ -//g")
-      ;;
-    sha)
-      chk=$(cat $_file | sha1sum - | sed -e "s/ -$//g")
-      ;;
-    md5)
-      chk=$(cat $_file | md5sum - | sed -e "s/ -$//g")
-      ;;
-    *)
-     return 0
-     ;;
-  esac
-
-  if [ $chk != $_chksum ]; then
-    return 0
-  fi
-  return 1
 }
 
 get_packages() {
-  dest=$1
-  uri=$2
+  local file chktype chksum
+  local dest=$1
+  local uri=$2
   shift 2
   while [ "$#" -gt 2 ]; do
     if [ ${1: -3} == "rpm" ]; then
@@ -94,119 +72,142 @@ get_packages() {
      chksum=$2
     fi
     if [ -f "$dest/$file" ]; then
-      if  check_checksum $dest/$file $chksum $chktype; then
+      if check_checksum $dest/$file $chksum $chktype; then
         # Checksum of file is different redownload the file
-        echo "Downloading file $file [Checksum different!!]"
-        $(umask 007 && curl --create-dirs -o $dest/$file $uri/$file 2> /dev/null)
+        myecho "Downloading file $file [Checksum different!!]"
+        [ -d "$(dirname $dest/$file)" ] || mkdir -p $(dirname $dest/$file)
+        get $uri/$file $dest/$file
       else
-        echo "Skipping file $file"
+        myecho "Skipping file $file"
       fi
     else
-      echo "Downloading file $file"
-      $(umask 007 && curl --create-dirs -o $dest/$file $uri/$file 2> /dev/null)
+      myecho "Downloading file $file"
+      [ -d "$(dirname $dest/$file)" ] || mkdir -p $(dirname $dest/$file)
+      get $uri/$file $dest/$file
     fi
     shift 3
   done
 }
 
 getrepo() {
-  id=$1
-  uri=$2
-  check=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/check/@type)" $conf)
-  case $check in
-    deb) echo "Check DEB files is not yet implemented"; return; ;;
+  local filelist chksum chktype unzipfile filetable _file
+  local id=$1
+  local uri=$(get_uri)
+  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
+  local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" $CONF)
+  local type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" $CONF)
+
+  case $type in
     repomd|rpm)
-       dir=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@dir)" $conf)
-       clean=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@clean)" $conf)
-       name=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@name)" $conf)
-
        # Create the destination directory if needed
-       [ -d $haut/$dir ] && mkdir -p $haut/$dir
+       [ -d "$DSAS_HAUT/$dir" ] || mkdir -p $DSAS_HAUT/$dir
 
-       echo "Downloading repodata/repomd.xml from $name"
-       $(umask 007 && curl --create-dirs -o $haut/$dir/repodata/repomd.xml \
-            $uri/repodata/repomd.xml 2> /dev/null)
-       [ "$check" == "rpm" ] || $(umask 007 && curl --create-dirs \
-            -o $haut/$dir/repodata/repomd.xml.asc \
-            $uri/repodata/repomd.xml.asc 2> /dev/null)
+       myecho "Downloading repodata/repomd.xml from $name"
+       [ -d $DSAS_HAUT/$dir/repodata ] || mkdir -p $DSAS_HAUT/$dir/repodata
+
+       get -force "$uri/repodata/repomd.xml" "$DSAS_HAUT/$dir/repodata/repomd.xml" 
+       [ "$type" == "rpm" ] || get -force "$uri/repodata/repomd.xml.asc" "$DSAS_HAUT/$dir/repodata/repomd.xml.asc" 
 
        # Identify the primary file list and download it
        # Note that we have to ignore the xml namespace (initial cat/sed)
-       filelist=$(cat $haut/$dir/repodata/repomd.xml | \
+       filelist=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
          sed -e "s:repomd xmlns:repomd ignore:g" | \
          xmllint --xpath 'string(//repomd/data[@type="primary"]/location/@href)' - )
-       echo "Downloading primary file list $filelist for $name"
-       $(umask 007 && curl --create-dirs -o $haut/$dir/$filelist \
-           $uri/$filelist 2> /dev/null)
+       myecho "Downloading primary file list $filelist for $name"
+       get -force "$uri/$filelist" "$DSAS_HAUT/$dir/$filelist"
 
        # Verify its checksum
-       chksum=$(cat $haut/$dir/repodata/repomd.xml | \
+       chksum=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
          sed -e "s:repomd xmlns:repomd ignore:g" | \
          xmllint --xpath 'string(//repomd/data[@type="primary"]/checksum)' - )
-       chktype=$(cat $haut/$dir/repodata/repomd.xml | \
+       chktype=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
          sed -e "s:repomd xmlns:repomd ignore:g" | \
          xmllint --xpath 'string(//repomd/data[@type="primary"]/checksum/@type)' - )
-       if  check_checksum $haut/$dir/$filelist $chksum $chktype; then
-         2>1 echo "Error verifiying checksum of $filelist"
+       if  check_checksum $DSAS_HAUT/$dir/$filelist $chksum $chktype; then
+         2>1 echo "Error verifying checksum of $filelist"
          return
        fi
 
        # Unzip and verify the checksum of primary.xml
-       chksum=$(cat $haut/$dir/repodata/repomd.xml | \
+       chksum=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
           sed -e "s:repomd xmlns:repomd ignore:g" | \
           xmllint --xpath 'string(//repomd/data[@type="primary"]/open-checksum)' - )
-       chktype=$(cat $haut/$dir/repodata/repomd.xml | \
+       chktype=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
           sed -e "s:repomd xmlns:repomd ignore:g" | \
           xmllint --xpath 'string(//repomd/data[@type="primary"]/open-checksum/@type)' - )
        unzipfile=$(echo $filelist | sed -e "s/.gz//g")
-       gunzip -k -f $haut/$dir//$filelist
-       if  check_checksum $haut/$dir/$unzipfile $chksum $chktype; then
-         2>1 echo "Error verifiying checksum of $unzipfile"
+       gunzip -k -f $DSAS_HAUT/$dir/$filelist
+       if  check_checksum $DSAS_HAUT/$dir/$unzipfile $chksum $chktype; then
+         2>1 echo "Error verifying checksum of $unzipfile"
          return
        fi
 
        # Recover a table of the hashtype, hash and file names
-       filetable=$(cat $haut/$dir/$unzipfile | \
+       filetable=$(cat $DSAS_HAUT/$dir/$unzipfile | \
           sed -e "s/xmlns=/ignore=/g" | \
           xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | \
           sed -e 's:.*href="\(.*\)"/>$:\1:g' \
             -e 's:.*type="\([^"]*\)"[^>]*>\([0-9a-fA-F]*\)</checksum>:\1 \2:g')
 
-       if [ "$clean" == "true" ]; then
-         # Remove the files in our tree not listed in primary.xml
-         for _file in $(cd $haut/$dir; find . -path ./repodata -prune -type f -o -type f); do
-           if [[ "$filetable" != *"${_file:2}"* ]]; then
-             echo "Removing stale file ${_file:2}"
-             rm $haut/$dir/${_file:2}
-           fi
-         done
-       fi
+       # Remove the files in our tree not listed in primary.xml
+       for _file in $(cd $DSAS_HAUT/$dir; find . -path ./repodata -prune -type f -o -type f); do
+         if [[ "$filetable" != *"${_file:2}"* ]]; then
+           myecho "Removing stale file ${_file:2}"
+           rm $DSAS_HAUT/$dir/${_file:2}
+         fi
+       done
 
        # Download the packages
-       get_packages $haut/$dir $uri $filetable
+       get_packages "$DSAS_HAUT/$dir" $uri $filetable
        ;;
     *) echo "Unrecognized repositiory check type $check"; ;;
   esac
 }
 
-[ -d /home/dsas/haut ] && haut=/home/dsas/haut
-[ -z $bas ] && [ -d /home/haut ] && haut=/home/haut
-[ -z $haut ] && $(2>1 echo "Zone haut not found"; exit 1)
+help() {
+  echo "Usage: $(basename $0)  [Options] ID [ID...]"
+  echo "Get files given by the task ID(s)"
+  echo "     -v|--verbose    Log all files verified"
+  echo "     -q|--quiet      Log only files failing to verifiy"
+  echo "     -n|--dryrun     Perform no actions"
+  echo "     -?|-h|--help    Print this help"
+}
 
-for _id in $(xmllint --xpath 'dsas/tasks/task/@id' $conf); do
-  eval $_id
-  type=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@type)" $conf)
-  uri=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/uri)" $conf)
-  if [ "$#" -gt "0" ]; then
-    name=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@name)" $conf)
-    [[ "$*" == *"$name"* ]] || continue
-  fi
-  if [ ! -z $uri ]; then
-    case $type in
-      linux)  getrepo $id $uri; ;;
-      directory) getdirectory $id $uri; ;;
-      *) echo "Unknown task type : $type"; ;;
-    esac
-  fi
+check_dsas
+
+# Parse options
+ids=""
+while [ "$#" -gt 0 ]; do
+  case $1 in
+    -v|--verbose) verbose=1 ;;
+    -q|--quiet) verbose=0 ;;
+    -n|--dryrun) dryrun=1 ;;
+    -?|-h|--help) help; exit 0 ;;
+    -*) 1>&2 echo "Unrecognized option : $1"; help; exit 1 ;;
+    *) ids="$ids $1" ;;
+  esac
+  shift 1
+done
+
+# If dryrun, force verbose
+[ $dryrun -ne 0 ] && verbose=1
+
+# Check that all ids are valid before doing anything
+idx=""
+for _id in $ids; do
+  task_id_to_idx $_id
+  _idx=$?
+  [ $_idx -lt 1 ] && (echo "Task id ($_id) does not exist"; exit -1)
+  idx="$idx $_idx"
+done
+
+for _idx in $idx; do
+  type=$(xmllint --xpath "string(dsas/tasks/task[$_idx]/type)" $CONF)
+  case $type in
+    rpm|repomd) getrepo $_idx; ;;
+    deb) echo "DEB files are not yet implemented"; continue; ;;
+    authenticode|openssl|gpg) getdirectory $_idx; ;;
+    *) echo "Unknown task type : $type"; ;;
+  esac
 done
 

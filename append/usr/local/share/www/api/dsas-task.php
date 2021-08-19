@@ -20,7 +20,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         $uri =  htmlspecialchars($data["uri"]);
         $type = $data["type"];
         if ($type !== "rpm" && $type !== "repomd" && $type !== "deb" && $type !== "authenticode" &&
-            $type !== "openssl" && $type !== "gpg" && $type != "pass")
+            $type !== "openssl" && $type !== "gpg")
           $errors[] = ["error" => "Le type de tache est illegale"];
         $run = $data["run"];
         if ($run !== "never" && $run !== "hourly" && $run !== "daily" && $run !== "weekly" && $run !== "monthly")

@@ -148,10 +148,13 @@ get_dsas(){
     echo "Creating DSAS directories in ${GREEN}$DISK/dsas${NORMAL}"
 
     mkdir -p $DISK/dsas/bas
+    chmod -R 770 $DISK/dsas/bas
+    chown -R bas.bas $DISK/dsas/bas
     mkdir -p $DISK/dsas/haut
-    chmod -R 755 $DISK/dsas
+    chmod -R 770 $DISK/dsas/haut
+    chown -R haut.haut $DISK/dsas/haut
     mkdir -p $DISK/dsas/verif
-    chmod 755 $DISK/dsas/verif
+    chmod -R 750 $DISK/dsas/verif
     chown -R verif.verif $DISK/dsas/verif
     DSAS=$DISK/dsas
   fi
