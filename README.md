@@ -53,5 +53,5 @@ Les ISOs du DSAS sont gardés, mais l'ensemble des fichiers intermediaire
 sont détruit. Afin de completement nettoyer le build utiliser le commande
 
 ```
-./make.sh realclean
+./make.sh -realclean
 ```
