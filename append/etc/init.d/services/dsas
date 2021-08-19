@@ -477,7 +477,7 @@ start_repo(){
   ip=$(ifconfig $ETH0 | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
   echo "Binding repo to ${GREEN}$ETH0${NORMAL} and address ${GREEN}$ip${NORMAL}." 
   echo "server.bind = \"$ip"\" >> $VAR/repo.conf
-  echo "Starting administration web server"
+  echo "Starting repository web server"
   # Start as root to allow use of port 443. But after change to user bas.repo
   # via options in repo.conf
   lighttpd -Df $VAR/repo.conf &
@@ -509,16 +509,15 @@ start_ntp(){
   ntp=$(xmllint --xpath "string(dsas/config/ntp/active)" $VAR/dsas_conf.xml)
   next=$(xmllint --xpath "string(dsas/config/ntp/server[last()])" $VAR/dsas_conf.xml)
 
-  if [ "$ntp" == "true" ] && [ "$last" != "" ]; then
-    i=1
+  if [ "$ntp" == "true" ] && [ "$next" != "" ]; then
+    i=2
     opts=""
     while [ -n "$next" ]; do
       opts="$opts -p $next"
       next=$(xmllint --xpath "string(dsas/config/ntp/server[$i])" $VAR/dsas_conf.xml)
       i=$((i+1))
     done
-    /sbin/syslogd ${opts} && echo "${GREEN}ntpd started.${NORMAL}"
-    /usr/sbin/ntpd $opts
+    /usr/sbin/ntpd ${opts} && echo "${GREEN}ntpd started.${NORMAL}"
   fi
 }
 
@@ -628,12 +627,15 @@ case "${1}" in
     fi
 
     # The other services can be restarted without risk
-    stop_ntp
-    start_ntp
-    stop_syslog
-    start_syslog
-    stop_repo
-    start_repo
+    if [ "$TYP" == "bas" ]; then    
+      stop_ntp
+      start_ntp
+      stop_syslog
+      start_syslog
+      stop_repo
+      start_repo
+    fi
+
     save_config
     ;;
 
