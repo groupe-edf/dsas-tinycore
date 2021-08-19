@@ -96,6 +96,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           }
           $newtask = $dsas->tasks->addChild("task");
           $newtask->name = $name;
+          $newtask->id = dsasid();
           $newtask->directory = $directory;
           $newtask->uri = $uri;
           $newtask->type = $type;
@@ -110,11 +111,11 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
  
      case "delete":   
         $data = $_POST["data"];
-        $name = htmlspecialchars($data["name"]);
+        $id = htmlspecialchars($data["id"]);
         $deltask = false;
         $i = 0;
         foreach ($dsas->tasks->task as $task) {
-          if ($task->name == $name) {
+          if ($task->id == $id) {
             $deltask = true;
             unset($dsas->tasks->task[$i]);
             break;

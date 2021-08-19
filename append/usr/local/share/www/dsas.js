@@ -859,11 +859,11 @@ function dsas_display_tasks(what = "all") {
               'aria-controls="task' + i + '" aria-expanded="false">' +
               '<i class="text-collapsed"><img src="caret-right.svg"/></i>' +
               '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + task.name +
-              '&nbsp;<a onclick="dsas_task_modify(\'' + task.name + '\');">' + 
+              '&nbsp;<a onclick="dsas_task_modify(\'' + task.id + '\');">' + 
               '<img src="pencil-square.svg"></a>';
-          body = body + '&nbsp;<a onclick="dsas_task_delete(\'' + task.name + 
+          body = body + '&nbsp;<a onclick="dsas_task_delete(\'' + task.id + 
               '\');"><img src="x-lg.svg"></a>';
-          body = body + '&nbsp;<a onclick="dsas_task_run(\'' + task.name + 
+          body = body + '&nbsp;<a onclick="dsas_task_run(\'' + task.id + 
               '\');"><img src="play.svg" width="20" height="20"></a>';
           body = body + 
               '</p><div class="collapse" id="task' + i + '"><div class="card card-body">' +
@@ -917,10 +917,10 @@ function task_body(task) {
   return body;
 }
 
-function dsas_task_delete(name) {
+function dsas_task_delete(id) {
   $.post("api/dsas-task.php", 
     { op: "delete",
-      data: {name: name}
+      data: {id: id}
   }).done(function(errors){
      dsas_task_errors(errors);
   }).always(function(data){
@@ -944,13 +944,13 @@ function dsas_task_new() {
    document.getElementById('modalTask').show()
 }
 
-function dsas_task_modify(name) {
+function dsas_task_modify(id) {
 
   $.get("api/dsas-task.php").done(function(tasks){
     if (tasks.task) {
       document.getElementById('TaskCert').innerHTML = "";
       for (task of (tasks.task.constructor === Object ? [tasks.task] : tasks.task)) {
-        if (name === task.name) {
+        if (id === task.id) {
           document.getElementById('TaskName').value = print_obj(task.name);
           document.getElementById('TaskDirectory').value = print_obj(task.directory);
           document.getElementById('TaskURI').value = print_obj(task.uri);
@@ -996,9 +996,9 @@ function dsas_task_modify(name) {
   });
 }
 
-function dsas_task_run(name) {
+function dsas_task_run(id) {
   $.post("api/dsas-task.php", 
-    { op: "run", data: {name: name}
+    { op: "run", data: {id: id}
   }).done(function(errors){
      dsas_task_errors(errors);
   }).always(function(data){

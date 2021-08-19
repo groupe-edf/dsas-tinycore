@@ -487,4 +487,16 @@ function is_valid_domain($d){
     && preg_match("/^[^\.]{1,63}(\.[^\.]{1,63})*$/", $d));
 }
 
+dsasid($len = 24){
+  if (function_exists("random_bytes")) {
+    $bytes = random_bytes(ceil($len/2));
+  } elseif (function_exists("openssl_random_pseudo_bytes")) {
+    $bytes = openssl_random_pseudo_bytes(ceil($len/2));
+  } else {
+    throw new Exception("no cryptographically secure random function available");
+  }
+  return substr(bin2hex($bytes), 0, $len);
+}
+
+
 ?>
