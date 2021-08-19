@@ -392,8 +392,9 @@ function dsas_display_net(what = "all"){
        i = 0; 
        for (iface of [net.bas, net.haut]) { 
          var dns_servers = "";
-          for (let j = 0; j < iface.dns.nameserver.length; j++)
-            dns_servers = dns_servers + iface.dns.nameserver[j] + "\n";
+         for (ns of (iface.dns.nameserver.constructor === Array ? 
+             iface.dns.nameserver : [iface.dns.nameserver]))
+           dns_servers = dns_servers + ns + "\n";
          document.getElementById("iface_nameserver" + i).value = dns_servers;
          i++;
        }
@@ -527,8 +528,9 @@ function dsas_display_service(what = "all"){
      if (what === "ntp" || what === "all") {
        var pool = "";
        if (! empty_obj(serv.ntp.server)) {
-         for (let i = 0; i < serv.ntp.server.length; i++)
-           pool = pool + serv.ntp.server[i] + "\n";
+         for (s of (serv.ntp.server.constructor === Array ? 
+             serv.ntp.server : [serv.ntp.server]))
+           pool = pool + s + "\n";
        }
        document.getElementById("ntp").checked = (serv.ntp.active === "true");
        document.getElementById("ntp_pool").value = pool;

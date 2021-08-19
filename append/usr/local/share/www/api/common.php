@@ -261,7 +261,7 @@ function get_ifaces(){
   return $ifaces;                                                               
 }                                                                               
 
-function inet_valid($addr, $nomask){
+function ip_valid($addr, $nomask){
   $addr = trim($addr);
   if ($nomask || empty(strpos($addr, "/"))){
     $net = $addr;
@@ -292,6 +292,14 @@ function inet_valid($addr, $nomask){
     }
   }
   return "";
+}
+
+function inet_valid($addr){
+  # If it starts in a number, it's an IP address
+  if (is_numeric($addr[0]))
+    return ip_valid($addr, true);
+  else
+    return (is_valid_domain($addr) ? "" : "Address est invalid");
 }
 
 function dsas_get_logs() {
