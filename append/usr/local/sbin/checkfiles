@@ -97,10 +97,10 @@ antivirus() {
 verifdirectory() {
   local id=$1
   local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $conf)
-  local check=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" $conf)
+  local type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" $conf)
 
   # Validate check type
-  case $check in
+  case $type in
     authenticode|antivirus) : ;;
     *) 1>&2 echo "Unknown file checking type"; return 1 ;;
   esac
@@ -121,7 +121,7 @@ verifdirectory() {
   [ -z "$ca" ] || $(echo "$ca" > /tmp/tmpcert; ca="/tmp/tmpcert")
 
   for file in $(cd $haut; find $dir -type f); do
-    case $check in
+    case $type in
       authenticode) verifauthenticode $id $haut/$file $ca ;;
       antivirus) antivirus $id $haut/$file ;;
     esac
