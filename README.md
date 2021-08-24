@@ -17,6 +17,19 @@ Vous avez besoins les outils ci-joint
 * squashfs-tools
 * curl
 
+Si le machine de build est un TinyCore CorePlus, les commandes a faire sont
+
+```
+tce-load -wi compiletc
+tce-load -wi rsync
+tce-load -wi coreutils
+tce-load -wi mkisofs-tools
+tce-load -wi squashfs-tools
+tce-load -wi git
+tce-load -wi rsync
+tce-load -wi curl
+```
+
 ## Le process de build
 
 Premierement est-ce que vous êtes derriere un proxy HTTP ? Par exemple sur
