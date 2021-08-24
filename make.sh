@@ -202,7 +202,7 @@ build_pkg() {
         mkdir -p $src_dir
         download $_uri $src_dir
         $as_user mkdir -p $extract/$builddir
-        mkdir -p $destdir
+        mkdir -p $extract/$destdir
         unpack $src_dir/$_src $extract/$builddir
         chown -R $SUDO_USER $extract/$builddir
         msg "Configuring $_pkg"
