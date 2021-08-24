@@ -28,6 +28,8 @@ tce-load -wi squashfs-tools
 tce-load -wi git
 tce-load -wi rsync
 tce-load -wi curl
+tce-load -wi ncursesw-dev
+
 ```
 
 ## Le process de build
