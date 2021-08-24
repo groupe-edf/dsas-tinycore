@@ -109,7 +109,7 @@ get_tcz() {
 install_tcz() {
     get_tcz $@
     exit_if_nonroot
-    for package; do
+    for package; do 
         target=$tcz_dir/$package.tcz
         tce_marker=$extract/usr/local/tce.installed/$package
         if ! test -f $tce_marker; then
@@ -122,10 +122,10 @@ install_tcz() {
                 mkdir -p $extract/usr/local/tce.installed
                 touch $tce_marker
             fi
-        fi
-        dep=$target.dep
-        if test -s $dep; then
-            install_tcz $(sed -e s/.tcz$// $dep)
+            dep=$target.dep
+            if test -s $dep; then
+              install_tcz $(sed -e s/.tcz$// $dep)
+            fi
         fi
     done
 }
