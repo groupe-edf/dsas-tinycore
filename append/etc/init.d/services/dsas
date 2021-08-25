@@ -12,11 +12,10 @@ INTERCO_MASK="255.255.255.0"
 INTERCO_BAS="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 1)) )"
 INTERCO_HAUT="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 2)) )"
 
-# FIXME temp change to VAR for testing !!
-#VAR=/home/tc/dsas/var/dsas
 VAR=/var/dsas
 as_tc="sudo -E -u tc"
 as_bas="sudo -E -u bas"
+as_haut="sudo -E -u haut"
 
 mounted(){
   grep $1 /etc/mtab > /dev/null 2>&1
@@ -28,6 +27,8 @@ mount_dsas(){
   if [ ! $(mounted /home/dsas) ]; then
     echo "Mounting ${GREEN}$DSAS${NORMAL} on ${GREEN}/home/dsas${NORMAL}"
     mkdir -p /home/dsas
+    chown root.staff /home/dsas
+    chmod 755 /home/dsas
     mount --noexec --nobind $DSAS /home/dsas
   fi
 }
@@ -147,15 +148,15 @@ get_dsas(){
     # Now we can setup the disk for the first time
     echo "Creating DSAS directories in ${GREEN}$DISK/dsas${NORMAL}"
 
-    mkdir -p $DISK/dsas/bas
-    chmod -R 770 $DISK/dsas/bas
-    chown -R bas.bas $DISK/dsas/bas
-    mkdir -p $DISK/dsas/haut
-    chmod -R 770 $DISK/dsas/haut
-    chown -R haut.haut $DISK/dsas/haut
-    mkdir -p $DISK/dsas/verif
-    chmod -R 750 $DISK/dsas/verif
-    chown -R verif.verif $DISK/dsas/verif
+    for _user in bas haut; do
+      mkdir -p $DISK/dsas/$_user
+      chmod -R 750 $DISK/dsas/$_user
+      chown -R root.$_user $DISK/dsas/$_user
+
+      mkdir -p $DISK/dsas/$_user/share
+      chmod -R 770 $DISK/dsas/$_user/share
+      chown -R $_user.$_user $DISK/dsas/$_user/share
+    done
     DSAS=$DISK/dsas
   fi
 
@@ -340,7 +341,7 @@ stop_network(){
   ETH0=$(echo $NETDEVICES | cut -d" " -f1)
   ETH1=$(echo $NETDEVICES | cut -d" " -f2)
   GWAY=$(xmllint --xpath 'string(dsas/config/network/'${TYP}'/gateway)' $VAR/dsas_conf.xml.active)
-  /sbin/route del default gw $GWAY
+  [ -n "$GWAY" ] && /sbin/route del default gw $GWAY
   pkill udhcpc
   /sbin/ifconfig $ETH0 down
 
@@ -407,11 +408,25 @@ EOF
 Match User $TYP Address $USER
 	PasswordAuthentication yes
 	PubkeyAuthentication yes
-	ChrootDirectory /home/dsas/bas
-        X11Forwarding no
+	ChrootDirectory /home/dsas/$TYP
+	X11Forwarding no
 	AllowTcpForwarding no
 	AllowAgentForwarding no
-	ForceCommand internal-sftp
+	ForceCommand internal-sftp -u 0007 -d /share
+
+EOF
+  fi
+
+  if [ "$TYP" == "haut" ]; then
+    cat << EOF >> /usr/local/etc/ssh/sshd_config
+Match User bas Address $INTERCO_BAS
+	PasswordAuthentication yes
+	PubkeyAuthentication yes
+	ChrootDirectory /home/dsas/bas
+	X11Forwarding no
+	AllowTcpForwarding no
+	AllowAgentForwarding no
+	ForceCommand internal-sftp -u 0007 -d /share
 
 EOF
   fi
@@ -456,11 +471,28 @@ config_sshd(){
     echo -e "\b"
     echo "SSH server on machine haut available"
  
-    echo "Generating admin user SSH keys"
+    echo "Generating user SSH keys"
     $as_tc ssh-keygen -b 4096 -t rsa -f /home/tc/.ssh/id_rsa -q -N ''
+    $as_haut ssh-keygen -b 4096 -t rsa -f /home/haut/.ssh/id_rsa -q -N ''
 
-    echo "Copying public key to machine haut"
-    $as_tc ssh-copy-id -i /home/tc/.ssh/id_rsa.pub -f tc@$INTERCO_HAUT
+    echo "Copying public keys to machine haut"
+    $as_tc ssh-keyscan -t rsa -H $INTERCO_HAUT >> /home/tc/.ssh/known_hosts
+    chown tc.staff /home/tc/.ssh/known_hosts
+
+    while :; do
+      PASSWD="$(dialog --stdout --insecure --passwordbox 'Password user tc:' 0 0)"
+      $as_tc sshpass -p $PASSWD ssh-copy-id -i /home/tc/.ssh/id_rsa.pub -f tc@$INTERCO_HAUT && break
+    done
+
+    cp /home/haut/.ssh/id_rsa.pub /tmp/authorized_keys
+    $as_tc scp /tmp/authorized_keys tc@$INTERCO_HAUT:/tmp/authorized_keys
+    rm /tmp/authorized_keys
+    $as_tc ssh tc@$INTERCO_HAUT << EOF
+sudo mkdir -p /home/bas/.ssh
+sudo mv /tmp/authorized_keys /home/bas/.ssh/authorized_keys
+sudo chown -R bas.bas /home/bas/.ssh
+sudo chmod -R 700 /home/bas/.ssh
+EOF
 
     echo "Backing up authorized keys on machine haut"
     $as_tc ssh -i /home/tc/.ssh/id_rsa tc@$INTERCO_HAUT filetool.sh -b
