@@ -87,7 +87,7 @@ get_tcz() {
         fi
       else
         msg fetching package $package ...
-        $as_user curl -o $target $tcz_url/$package.tcz
+        curl -o $target $tcz_url/$package.tcz
       fi
     fi
 
@@ -96,7 +96,7 @@ get_tcz() {
       if test -f $tce_dir/$package.tcz.dep; then
         cp $tce_dir/$package.tcz.dep $dep
       else
-         $as_user curl -o $dep $tcz_url/$package.tcz.dep || touch $dep
+         curl -o $dep $tcz_url/$package.tcz.dep || touch $dep
       fi
       grep -q 404 $dep && >$dep
       if test -s $dep; then
@@ -211,7 +211,7 @@ export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 cd $builddir/$_pkg_path
 echo \$*
 \$*
-exit $?
+exit \$?
 EOF
         chmod a+x $extract/tmp/script
         [ -z $_conf_cmd ] || chroot --userspec=$SUDO_USER $extract /tmp/script $_conf_cmd 
@@ -233,7 +233,7 @@ EOF
           for _dir in $(echo $arg | sed -e "s/^.*{\(.*\)}$/\1/");  do
             dirs="$dirs '$_dir'"
           done
-          IFS=";"
+          IFS=$OIFS
           if [ "$pkg" == "main" ]; then
             tcz=$_pkg.tcz
           else
@@ -246,11 +246,12 @@ EOF
           if [ "$pkg" == "main" ]; then
             echo -n "" > $tcz_dir/$tcz.dep
             for dep in $_dep; do
-              echo $dep >> $tcz_dir/$tcz.dep
+              echo -n -e "$dep\n" >> $tcz_dir/$tcz.dep
             done
           else
             echo "$_pkg" > $tcz_dir/$tcz.dep
           fi
+          IFS=";"
         done
         IFS=$OIFS
         msg "Removing build image"
@@ -337,6 +338,7 @@ case $1 in
   install_tcz php-8.0-ext
   install_tcz pcre2
   install_tcz dialog
+  install_tcz rpm
 
   # Copy the pre-extracted packages to work dir. This must be after packages
   # are installed to allow for files to be overwritten. Run as root 
