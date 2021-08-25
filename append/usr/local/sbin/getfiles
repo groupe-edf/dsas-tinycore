@@ -7,7 +7,6 @@ else
   exit -1
 fi
 
-
 getdirectory() {
   local dirlist files file
   local id=$1
@@ -21,7 +20,7 @@ getdirectory() {
     return
   fi
   # Create directory if needed
-  [ -d ${DSAS_HAUT}/$dir ] || mkdir -p ${DSAS_HAUT}/$dir
+  [ -d ${DSAS_HAUT}/$dir ] || $(umask 007 && mkdir -p ${DSAS_HAUT}/$dir)
 
   # Special case for scp, because it can only have one file
   if [ "${uri:0:4}" == "scp:" ]; then
@@ -72,14 +71,14 @@ get_packages() {
       if check_checksum $dest/$file $chksum $chktype; then
         # Checksum of file is different redownload the file
         myecho "Downloading file $file [Checksum different!!]"
-        [ -d "$(dirname $dest/$file)" ] || mkdir -p $(dirname $dest/$file)
+        [ -d "$(dirname $dest/$file)" ] || $(umask 007 && mkdir -p $(dirname $dest/$file))
         get $uri/$file $dest/$file
       else
         myecho "Skipping file $file"
       fi
     else
       myecho "Downloading file $file"
-      [ -d "$(dirname $dest/$file)" ] || mkdir -p $(dirname $dest/$file)
+      [ -d "$(dirname $dest/$file)" ] || $(umask 007 && mkdir -p $(dirname $dest/$file))
       get $uri/$file $dest/$file
     fi
     shift 3
@@ -97,10 +96,10 @@ getrepo() {
   case $type in
     repomd|rpm)
        # Create the destination directory if needed
-       [ -d "$DSAS_HAUT/$dir" ] || mkdir -p $DSAS_HAUT/$dir
+       [ -d "$DSAS_HAUT/$dir" ] || $(umask 007 && mkdir -p $DSAS_HAUT/$dir)
 
        myecho "Downloading repodata/repomd.xml from $name"
-       [ -d $DSAS_HAUT/$dir/repodata ] || mkdir -p $DSAS_HAUT/$dir/repodata
+       [ -d $DSAS_HAUT/$dir/repodata ] || $(umask 007 && mkdir -p $DSAS_HAUT/$dir/repodata)
 
        get -force "$uri/repodata/repomd.xml" "$DSAS_HAUT/$dir/repodata/repomd.xml" 
        [ "$type" == "rpm" ] || get -force "$uri/repodata/repomd.xml.asc" "$DSAS_HAUT/$dir/repodata/repomd.xml.asc" 

@@ -107,7 +107,7 @@ verifdirectory() {
   fi
 
   # Create directory if needed
-  [ -d $DSAS_BAS/$dir ] || mkdir -p $DSAS_BAS/$dir
+  [ -d $DSAS_BAS/$dir ] || $(umask 007 && mkdir -p $DSAS_BAS/$dir && chgrp $grp $DSAS_BAS/$dir )
 
   # Remove the files in our tree bas and not in haut.
   filetable=$(ls -1 $DSAS_HAUT/$dir)
@@ -208,7 +208,8 @@ verifrepo() {
   fi 
 
   # Create the destination directory if needed
-  [ -d $DSAS_BAS/$dir ] || mkdir -p $DSAS_BAS/$dir
+  [ -d $DSAS_BAS/$dir ] || $(umask 007 && mkdir -p $DSAS_BAS/$dir && chgrp $grp $DSAS_BAS/$dir)
+
 
   # Identify the primary file list
   # Note that we have to ignore the xml namespace (initial cat/sed)
@@ -279,7 +280,7 @@ passdirectory(){
   local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
 
   # Create directory if needed
-  [ -d $DSAS_BAS/$dir ] || mkdir -p $DSAS_BAS/$dir
+  [ -d $DSAS_BAS/$dir ] ||  $(umask 007 && mkdir -p $DSAS_BAS/$dir && chgrp $grp $DSAS_BAS/$dir)
 
   # Remove the files in our tree bas and not in haut.
   filetable=$(ls -1 $DSAS_HAUT/$dir)

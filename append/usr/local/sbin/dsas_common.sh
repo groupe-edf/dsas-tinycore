@@ -1,20 +1,16 @@
 #! /bin/sh
 
-# VAR=/var/dsas
-# CONF=$VAR/dsas_conf.xml.active
-# DSAS_HOME=/home/dsas
-VAR=/home/tc/dsas/var/dsas
-CONF=/home/tc/dsas/var/dsas/dsas_conf.xml.active
-DSAS_HOME=/home/tc/dsas/home/dsas
-
+VAR=/var/dsas
+CONF=$VAR/dsas_conf.xml.active
+DSAS_HOME=/home/dsas
+/
 INTERCO="192.168.192.0"
 INTERCO_MASK="255.255.255.0"
 INTERCO_BAS="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 1)) )"
 INTERCO_HAUT="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 2)) )"
 
-DSAS_HAUT=$DSAS_HOME/haut
-DSAS_BAS=$DSAS_HOME/bas
-DSAS_VERIF=$DSAS_HOME/verif
+DSAS_HAUT=$DSAS_HOME/haut/share
+DSAS_BAS=$DSAS_HOME/bas/share
 
 if [ -f $VAR/dsas_typ ]; then
   TYP="$(cat $VAR/dsas_typ)"
@@ -182,7 +178,7 @@ get_uri(){
     echo $(xmllint --xpath "string(dsas/tasks/task[$id]/uri)" $CONF)
   else
     local _dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/dir)" $CONF)
-    echo "scp:tc\@$INTERCO_HAUT:/$DSAS_BAS/$_dir/"
+    echo "scp:tc@$INTERCO_HAUT:$DSAS_BAS/$_dir"
   fi
 }
 
