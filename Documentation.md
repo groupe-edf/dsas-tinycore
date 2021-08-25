@@ -93,8 +93,19 @@ sont dans des fichiers terminant comme <file>.gpg
 
 ### Verification - openssl
 
-A faire
+L'utilisateur doit avoir déja generé des clefs publique et privé pour la signature avec 
 
+```
+openssl genrsa -out key.pem 4096
+openssl rsa -in key.pem -pubout > key.pub
+```
 
+Et le clef publique dans le fichier key.pub doit être associé avec le tache dans le DSAS. Les fichiers
+sont signés comme
 
+```
+openssl dgst -sign key.pem -keyform PEM -sha256 -out <file>.sig -binaru <file>
+```
 
+Les signatures sont toujours stockés dans des fichiers séparé, et le DSAS assume que les signature
+sont dans un fichier avec un extension .sig 
