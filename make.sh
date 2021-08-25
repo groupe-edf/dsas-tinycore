@@ -346,6 +346,7 @@ case $1 in
   msg append dsas files
   rsync -av $append/ $extract/
   chown -R root.root $extract/usr
+  chown -R root.root $extract/etc
   mkdir -p $extract/home/tc
   chown -R tc.staff $extract/home/tc
   chown tc.staff $extract/var/dsas
