@@ -1,0 +1,32 @@
+#! /bin/sh
+
+if [ -f "usr/local/sbin/dsas_common.sh" ]; then
+  . /usr/local/share/sbin/dsas_common.sh
+elif [ -f "/home/tc/dsas---tinycore/append/usr/local/sbin/dsas_common.sh" ]; then
+  # FIXME For testing purposes. Delete ?
+  . /home/tc/dsas---tinycore/append/usr/local/sbin/dsas_common.sh
+else
+  echo "Common functions not found !!"
+  exit -1
+fi
+
+rotatemax=6
+
+rotate_logs() {
+  [ -f "${1}.$rotatemax" ] && rm "${1}.$rotatemax"
+  for i in $(seq $rotatemax -1 2); do
+    [ -f "${1}.$((i-1))" ] && /bin/mv "${1}.$((i-1))" "${1}.$i"
+  done
+  [ -f "${1}" ] && /bin/mv "${1}" "${1}.1"
+  exit 0
+}
+
+if [ "$#" -gt 0 ]; then
+  for logfile in $*; do
+    rotate_logs $logfile
+  done
+else
+  for logfile in find $(dirname $CONF) -name "*.log"; do
+    rotate_logs $logfile
+  done
+fi

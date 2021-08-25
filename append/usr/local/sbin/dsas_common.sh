@@ -1,8 +1,10 @@
 #! /bin/sh
 
-# CONF=/var/dsas/dsas_conf.xml
+# VAR=/var/dsas
+# CONF=$VAR/dsas_conf.xml.active
 # DSAS_HOME=/home/dsas
-CONF=/home/tc/dsas/var/dsas/dsas_conf.xml
+VAR=/home/tc/dsas/var/dsas
+CONF=/home/tc/dsas/var/dsas/dsas_conf.xml.active
 DSAS_HOME=/home/tc/dsas/home/dsas
 
 INTERCO="192.168.192.0"

@@ -1,19 +1,14 @@
 #! /bin/sh
 
-if [ -f "usr/local/sbin/dsas_common.sh" ]; then
-  . /usr/local/share/sbin/dsas_common.sh
-elif [ -f "/home/tc/dsas---tinycore/append/usr/local/sbin/dsas_common.sh" ]; then
-  # FIXME For testing purposes. Delete ?
-  . /home/tc/dsas---tinycore/append/usr/local/sbin/dsas_common.sh
+if [ -f "$(dirname $0)/dsas_common.sh" ]; then
+  . $(dirname $0)/dsas_common.sh
 else
   echo "Common functions not found !!"
   exit -1
 fi
 
 # Default options
-logfile="verif.log"
-rotatemax=6
-rotate=0
+logfile="$(dirname $CONF)/verif.log"
 UMASK=640
 
 help() {
@@ -21,22 +16,12 @@ help() {
   echo "Verify files given by the task ID."
   echo "     -v|--verbose    Log all files verified"
   echo "     -q|--quiet      Log only files failing to verifiy"
-  echo "     -r|--rotate     Rotate the log files"
   echo "     -n|--dryrun     Perform no actions"
   echo "     -s|--stdout     Send logs to stdout"
   echo "     -l|--log        Send the logs to a file"
   echo "     -o <FILE>       Log to <FILE>, default $logfile"
   echo "     --out=<FILE>    Log to <FILE>"
   echo "     -?|-h|--help    Print this help"
-}
-
-rotatelogs() {
-  [ -f "${logfile}.$rotatemax" ] && rm "${logfile}.$rotatemax"
-  for i in $(seq $rotatemax -1 2); do
-    [ -f "${logfile}.$((i-1))" ] && mv "${logfile}.$((i-1))" "${logfile}.$i"
-  done
-  [ -f "${logfile}" ] && mv "${logfile}" "${logfile}.1"
-  exit 0
 }
 
 verifauthenticode(){
@@ -288,6 +273,33 @@ verifrepo() {
   /bin/rm -fr $tempdir
 }
 
+passdirectory(){
+  local filetable file status i j fprint tempdir idx auth
+  local id=$1
+  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
+
+  # Create directory if needed
+  [ -d $DSAS_BAS/$dir ] || mkdir -p $DSAS_BAS/$dir
+
+  # Remove the files in our tree bas and not in haut.
+  filetable=$(ls -1 $DSAS_HAUT/$dir)
+  for file in $(cd $DSAS_BAS/$dir; find . -type f); do
+    if [[ "$filetable" != *"${file:2}"* ]]; then
+      echo "Removing stale file ${file:2}"
+      rm $DSAS_BAS/$dir/${file:2}
+    fi
+  done
+
+  for file in $(cd $DSAS_HAUT; find $dir -type f); do
+    # If file exists in bas skip. Hardlinked, so test is fast
+    [ $DSAS_HAUT/$file -ef $DSAS_BAS/$file ] && continue
+
+    # Don't log the transfers with msgline for the mache haut as
+    # the logs aren't yet used
+    ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
+  done
+}
+
 check_dsas
 
 # Parse options
@@ -322,11 +334,16 @@ for _id in $ids; do
 done
 
 for _id in $idx; do
-  type=$(xmllint --xpath "string(dsas/tasks/task[$_id]/type)" $CONF)
-  case $type in
-    rpm|repomd) verifrepo $_id; ;;
-    deb) echo "DEB files are  are not yet implemented"; continue; ;;
-    authenticode|openssl|gpg) verifdirectory $_id; ;; 
-    *) echo "Unknown task type : $type"; ;;
-  esac
+  if [ "$TYP" == "haut" ]; then
+    # No verification on the machine haut
+    passdirectory $_id
+  else
+    type=$(xmllint --xpath "string(dsas/tasks/task[$_id]/type)" $CONF)
+    case $type in
+      rpm|repomd) verifrepo $_id; ;;
+      deb) echo "DEB files are  are not yet implemented"; continue; ;;
+      authenticode|openssl|gpg) verifdirectory $_id; ;; 
+      *) echo "Unknown task type : $type"; ;;
+    esac
+  fi
 done
