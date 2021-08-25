@@ -6,4 +6,7 @@ etc/sudoers
 var/dsas
 var/log
 home/tc
+home/bas
+home/haut
+home/verif
 opt
