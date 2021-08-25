@@ -10,15 +10,11 @@ else
   exit -1
 fi
 
-
 # Default options
-
 logfile="verif.log"
 rotatemax=6
 rotate=0
-reject=reject
 UMASK=640
-
 
 help() {
   echo "Usage: $(basename $0)  [Options] ID [ID...]"
@@ -43,102 +39,130 @@ rotatelogs() {
   exit 0
 }
 
-# For the moment this function is dead code. Remove ?
-iswindowsfile() {
-  # FIXME Is this list complete ?
-  case '$1' in
-    application/x-dosexec | \
-    application/vnd.ms-cab-compressed | \
-    application/x-ms-application | \
-    application/x-ms-installer | \
-    application/x-windows-installer | \
-    application/x-msi | \
-    application/vnd.microsoft.portable-executable)
-      retval=1
-      ;;
-    *) retval=0 ;;
-  esac
-  return $retval
-}
-
 verifauthenticode(){
-  local id1=$1
-  local file=$2
-  local ca=$3
-  local id=""
+  local fingerprint
+  local id=$1
+  local tempdir=$2
+  local file=$3
 
-  if [ -z $ca ]; then
-    retossl=$(osslsigncode verify $file 2>&1) || return $?
+  if [ -f "$tempdir/cert.0" ]; then
+    retossl=$(osslsigncode verify -CAfile $tempdir/cert.0 $file 2>&1) || return $?
   else
-    retossl=$(osslsigncode verify -CAfile /tmp/tmpcert $file 2>&1) || return $?
+    retossl=$(osslsigncode verify $file 2>&1) || return $?
   fi
 
-  for _id in $(xmllint --xpath "dsas/tasks/task[@id='$id1']/cert/@id" $conf); do
-    eval $_id
-    _type=$(xmllint --xpath "string(dsas/tasks/task[@id='$id1']/cert[@id='$id']/@type)" $conf)
-    case $_type in
-      ca) continue ;;
-      intermediate)
-        fingerprint=$(xmllint --xpath "string(dsas/tasks/task[@id='$id1']/cert[@id='$id']/@fingerprint)" $conf)
-        echo $resossl | grep -q $fingerprint && return 3
-        ;;
-      gpg) 1>&2 echo "Can't use gpg certificates with authenticode"; return -1 ;;
-      *) 1>&2 echo "Unrecognized certificate type : $_type"; return -1 ;;
-    esac
+  for file in $(ls $tempdir); do
+    [ "$(basename $file)" == "cert.0" ] && continue
+    fingerprint=$(openssl x509 -in $tempdir/$file -noout -text | grep -A1 "Subject Key Identifier" | sed -n 2p | xargs)
+    echo $resossl | grep -q $fingerprint && return 3
   done
   return 0
 }
 
-antivirus() {
-  # FIXME Add something here. For now just flag everything as bad
-  return 4
+verifgpg(){
+  local id=$1
+  local tempdir=$2
+  local file=$3
+  if [ "${file##.*}" == "gpg" ]; then
+    gpg --no-default-keyring --keyring $tempdir/cert.0.gpg --verify $file
+  else
+    gpg --no-default-keyring --keyring $tempdir/cert.0.gpg --verify $file.sig $file
+  fi
+  return $?
+}
+
+verifopenssl(){
+  local id=$1
+  local tempdir=$2
+  local file=$3
+  openssl dgst -verify $tempdir/cert.0.gpg -keyform PEM -sha256 -signature $file.sig -binary $file
+  return $?
 }
 
 verifdirectory() {
+  local filetable file status i j fprint tempdir idx auth
   local id=$1
-  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $conf)
-  local type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" $conf)
+  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
+  local type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" $CONF)
 
   # Validate check type
   case $type in
-    authenticode|antivirus) : ;;
+    authenticode|openssl|gpg) : ;;
     *) 1>&2 echo "Unknown file checking type"; return 1 ;;
   esac
 
-  # Create directory if needed
-  [ -d $bas/$dir ] || mkdir -p $bas/$dir
+  tempdir=$(mktemp -d)
+  i=1
+  j=1
+  while :; do
+    fprint=$(xmllint --xpath "string(dsas/tasks/task[$id]/cert[$j]/fingerprint)" $CONF)
+    [ -z "$fprint" ] && break;
+    idx=$(get_certificate $fprint)
+    if [ -z "$idx" ]; then
+      echo "Certificate used by task($id) not found !!"
+      return
+    fi
+    if [ $idx -eq 0 ]; then
+      [ -f "$tempdir/cert.0" ] && myecho "Multiple authority certificates defined" 
+      /bin/mv /tmp/cert.$$ $tempdir/cert.0
+    else
+      auth=$(xmllint --xpath "string(dsas/certificates/certificate[$idx]/authority)" $CONF)
+      if [ "$auth" == "true" ]; then
+        [ -f "$tempdir/cert.0" ] && myecho "Multiple authority certificates defined"
+        /bin/mv /tmp/cert.$$ $tempdir/cert.0
+      else
+        /bin/mv -f /tmp/cert.$$ $tempdir/cert.$((i++))
+      fi
+    fi
+    j=$((j + 1))
+  done
+  if [ "$type" == "gpg" ]; then
+    # Need to dearmor gpg certificate before use
+    gpg --dearmor $tempdir/cert.0
+  fi
 
-  # Remove the files in our tree $bas and not in $haut.
-  filetable=$(ls -1 $haut/$dir)
-  for _file in $(cd $bas/$dir; find . -type f); do
-    if [[ "$filetable" != *"${_file:2}"* ]]; then
-      echo "Removing stale file ${_file:2}"
-      rm $bas/$dir/${_file:2}
+  # Create directory if needed
+  [ -d $DSAS_BAS/$dir ] || mkdir -p $DSAS_BAS/$dir
+
+  # Remove the files in our tree bas and not in haut.
+  filetable=$(ls -1 $DSAS_HAUT/$dir)
+  for file in $(cd $DSAS_BAS/$dir; find . -type f); do
+    if [[ "$filetable" != *"${file:2}"* ]]; then
+      echo "Removing stale file ${file:2}"
+      rm $DSAS_BAS/$dir/${file:2}
     fi
   done
 
-  ca=$(xmllint --xpath "string(dsas/tasks/task[@id='$id1']/cert[@type='ca'])" $conf)
-  [ -z "$ca" ] || $(echo "$ca" > /tmp/tmpcert; ca="/tmp/tmpcert")
+  for file in $(cd $DSAS_HAUT; find $dir -type f); do
+    # If file exists in bas skip. Hardlinked, so test is fast
+    [ $DSAS_HAUT/$file -ef $DSAS_BAS/$file ] && continue
 
-  for file in $(cd $haut; find $dir -type f); do
     case $type in
-      authenticode) verifauthenticode $id $haut/$file $ca ;;
-      antivirus) antivirus $id $haut/$file ;;
+      authenticode) verifauthenticode $id $tempdir $DSAS_HAUT/$file ;;
+      openssl) 
+        [ "${file##.*}" == "asc" ]  && continue 
+        verifopenssl $id $tempdir $DSAS_HAUT/$file
+        ;;
+      gpg)
+        [ "${file##.*}" == "sig" ]  && continue 
+        verifgpg $id $tempdir $DSAS_HAUT/$file
+        ;;
     esac
     status=$?
-    msgline $haut/$file $status
-    case $status in
-      0) ln "$haut/$file" "$bas/$file"; ;;
-      *) ln "$haut/$file" "$haut/$reject/$file"; ;;
-    esac
+    msgline $DSAS_HAUT/$file $status
+    if [ $status -eq 0 ]; then
+      ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
+      [ "$type" == "gpg" ] && [ "${file##.*}" != "gpg" ] && ln "$DSAS_HAUT/$file.sig" "$DSAS_BAS/$file.sig"
+      [ "$type" == "openssl" ] && ln "$DSAS_HAUT/$file.asc" "$DSAS_BAS/$file.asc"
+    fi
   done
-
-  [ -z "$ca" ] || /bin/rm /tmp/tmpcert
+  /bin/rm -fr $tempdir
 }
 
 verify_packages() {
-  dir=$1
-  rpm_k=$2
+  local file chktype chksum
+  local dir=$1
+  local rpm_k=$2
   shift 2
   while [ "$#" -gt 2 ]; do
     if [ ${1: -3} == "rpm" ]; then
@@ -150,118 +174,118 @@ verify_packages() {
      chktype=$1
      chksum=$2
     fi
-    if [ -f "$haut/$dir/$file" ]; then
-      if  check_checksum $haut/$dir/$file $chksum $chktype; then
-        msgline $haut/$dir/$file 1
-        ln $haut/$dir/$file $haut/$reject/$dir/$file
-      elif [ "$rpm_k" == "1" ] && rpm -K $haut/$dir/$file 2>&1 /dev/null; then
-        msgline $haut/$dir/$file 5
-        ln $haut/$dir/$file $haut/$reject/$dir/$file       
+    shift 3
+
+    # If file exists in bas skip. Hardlinked, so test is fast
+    [ $DSAS_HAUT/$dir/$file -ef $DSAS_BAS/$dir/$file ] && continue
+
+    if [ -f "$DSAS_HAUT/$dir/$file" ]; then
+      if  check_checksum $DSAS_HAUT/$dir/$file $chksum $chktype; then
+        msgline $DSAS_HAUT/$dir/$file 1
+      elif [ "$rpm_k" == "1" ] && ! rpm -K $DSAS_HAUT/$dir/$file 2>&1 1> /dev/null; then
+        msgline $DSAS_HAUT/$dir/$file 5      
       else
-        msgline $haut/$dir/$file 0
-        ln $haut/$dir/$file $bas/$dir/$file
+        msgline $DSAS_HAUT/$dir/$file 0
+        ln $DSAS_HAUT/$dir/$file $DSAS_BAS/$dir/$file
       fi
     fi  # For now ignore missing files
-    shift 3
   done
 }
 
 verifrepo() {
-  id=$1
-  check=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/check/@type)" $conf)
+  local tempdir fprint idx filelist chksum chktype unzipfile filetable
+  local id=$1
+  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
+  local type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" $CONF)
 
-  # FIXME
-  # Don't have rpm binary yet so, fail for rpm tests
-  case $check in
-    rpm) echo "Check RPM files is not yet implemented"; return; ;;
-    deb) echo "Check DEB files is not yet implemented"; return; ;;
-    repomd|rpm)
-      dir=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@dir)" $conf)
-      name=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/@name)" $conf)
+  tempdir=$(mktemp -d)
+  fprint=$(xmllint --xpath "string(dsas/tasks/task[$id]/cert[1]/fingerprint)" $CONF)
+  idx=$(get_certificate $fprint)
+  if [ -z "$idx" ]; then
+    echo "Certificate used by task($id) not found !!"
+    return
+  fi
+  /bin/mv /tmp/cert.$$ $tempdir/cert.0
+  gpg --dearmor $tempdir/cert.0
 
-      gpg=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/cert/@type)" $conf)
-      fingerprint=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/cert/@fingerprint)" $conf)
-      [ -z "$gpg" ] && $(echo "No GPG key found for RPM check"; return 1)
-      gpg=$(xmllint --xpath "string(dsas/tasks/task[@id='$id']/cert)" $conf)
+  if [ "$type" == "repomd" ]; then
+    # Verify the repomd.xml against the GPG signature repomd.xml.asc
+    # FIXME Why does this still print something !!
+    if ! gpg --no-default-keyring --keyring $tempdir/cert.0.gpg  \
+          --verify $DSAS_HAUT/$dir/repodata/repomd.xml.asc \
+          $DSAS_HAUT/$dir/repodata/repomd.xml 2>&1 1> /dev/null; then
+      echo "Failed to verify repomd.xml signature"
+      return 1
+    fi
+  else
+    # For rpm signature verification need to import GPG key
+    sudo rpm --import $tempdir/cert.0 2>&1 1> /dev/null
+  fi 
 
-      if [ "$check" == "rpm" ]; then
-        # FIXME Should the key be removed after use ?
-        [ "$(rpm -k)" == *"$fingerprint"i* ] || echo $gpg | rpm --import 2>&1 /dev/null
-      else
-        # FIXME Should the key be removed after use ?
-        [ "$(gpg -k)" == *"$fingerprint"* ] && echo "$gpg" | gpg --import 2>&1 /dev/null 
+  # Create the destination directory if needed
+  [ -d $DSAS_BAS/$dir ] || mkdir -p $DSAS_BAS/$dir
 
-        # Verify the repomd.xml against the GPG signature repomd.xml.asc
-        gpg --verify $haut/$dir/repodata/repomd.xml.asc \
-            $haut/$dir/repodata/repomd.xml 2>&1 /dev/null || \
-          $(echo "Failed to verify repomd.xml signature"; return 1)
-       fi
-
-       # Create the destination directory if needed
-       [ -d $bas/$dir ] || mkdir -p $bas/$dir
-
-       # Identify the primary file list and download it
-       # Note that we have to ignore the xml namespace (initial cat/sed)
-       filelist=$(cat $haut/$dir/repodata/repomd.xml | \
+  # Identify the primary file list
+  # Note that we have to ignore the xml namespace (initial cat/sed)
+  filelist=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
          sed -e "s:repomd xmlns:repomd ignore:g" | \
          xmllint --xpath 'string(//repomd/data[@type="primary"]/location/@href)' -)
 
-       # Verify its checksum
-       chksum=$(cat $haut/$dir/repodata/repomd.xml | \
+  # Verify its checksum
+  chksum=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
          sed -e "s:repomd xmlns:repomd ignore:g" | \
          xmllint --xpath 'string(//repomd/data[@type="primary"]/checksum)' - )
-       chktype=$(cat $haut/$dir/repodata/repomd.xml | \
+  chktype=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
          sed -e "s:repomd xmlns:repomd ignore:g" | \
          xmllint --xpath 'string(//repomd/data[@type="primary"]/checksum/@type)' - )
-       if  check_checksum $haut/$dir/$filelist $chksum $chktype; then
-	         1>&2 echo "Error verifiying checksum of $filelist"
-         return
-       fi
+  if  check_checksum $DSAS_HAUT/$dir/$filelist $chksum $chktype; then
+    1>&2 echo "Error verifiying checksum of $filelist"
+    return
+  fi
 
-       # Unzip and verify the checksum of primary.xml
-       chksum=$(cat $haut/$dir/repodata/repomd.xml | \
+  # Unzip and verify the checksum of primary.xml
+  chksum=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
           sed -e "s:repomd xmlns:repomd ignore:g" | \
           xmllint --xpath 'string(//repomd/data[@type="primary"]/open-checksum)' - )
-       chktype=$(cat $haut/$dir/repodata/repomd.xml | \
+  chktype=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
           sed -e "s:repomd xmlns:repomd ignore:g" | \
           xmllint --xpath 'string(//repomd/data[@type="primary"]/open-checksum/@type)' - )
-       unzipfile=$(echo $filelist | sed -e "s/.gz//g")
-       gunzip -k -f $haut/$dir//$filelist
-       if  check_checksum $haut/$dir/$unzipfile $chksum $chktype; then
-         1>&2 echo "Error verifiying checksum of $unzipfile"
-         return
-       fi
+  unzipfile=$(echo $filelist | sed -e "s/.gz//g")
+  gunzip -k -f $DSAS_HAUT/$dir//$filelist
+  if  check_checksum $DSAS_HAUT/$dir/$unzipfile $chksum $chktype; then
+    1>&2 echo "Error verifiying checksum of $unzipfile"
+    return
+  fi
 
-       # Copy repomd.xml*  and primary.xml* to $bas
-       ln $haut/$dir/repodata/repomd.xml \
-          $bas/$dir/repodata/repomd.xml
-       ln $haut/$dir/repodata/repomd.xml.asc \
-          $bas/$dir/repodata/repomd.xml.asc
-       ln $haut/$dir/$filelist \
-          $bas/$dir/$filelist
-       ln $haut/$dir/$unzipfile \
-          $bas/$dir/$unzipfile
+  # Copy repomd.xml*  and primary.xml* to $bas
+  ln $DSAS_HAUT/$dir/repodata/repomd.xml $DSAS_BAS/$dir/repodata/repomd.xml
+  [ -f "$DSAS_HAUT/$dir/repodata/repomd.xml.asc" ] && ln $DSAS_HAUT/$dir/repodata/repomd.xml.asc $DSAS_BAS/$dir/repodata/repomd.xml.asc
+  ln $DSAS_HAUT/$dir/$filelist $DSAS_BAS/$dir/$filelist
+  ln $DSAS_HAUT/$dir/$unzipfile $DSAS_BAS/$dir/$unzipfile
 
-       # Recover a table of the hashtype, hash and file names
-       filetable=$(cat $haut/$dir/$unzipfile | \
+  # Recover a table of the hashtype, hash and file names
+  filetable=$(cat $DSAS_HAUT/$dir/$unzipfile | \
           sed -e "s/xmlns=/ignore=/g" | \
           xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | \
           sed -e 's:.*href="\(.*\)"/>$:\1:g' \
             -e 's:.*type="\([^"]*\)"[^>]*>\([0-9a-fA-F]*\)</checksum>:\1 \2:g')
 
-       # Remove the files in our tree $bas and not listed in primary.xml
-       for _file in $(cd $bas/$dir; find . -path ./repodata -prune -type f -o -type f); do
-         if [[ "$filetable" != *"${_file:2}"* ]]; then
-           echo "Removing stale file ${_file:2}"
-           rm $bas/$dir/${_file:2}
-         fi
-       done
+  # Remove the files in $DSAS_BAS and not listed in primary.xml
+  for _file in $(cd $DSAS_BAS/$dir; find . -path ./repodata -prune -type f -o -type f); do
+    if [[ "$filetable" != *"${_file:2}"* ]]; then
+      echo "Removing stale file ${_file:2}"
+      rm $DSAS_BAS/$dir/${_file:2}
+    fi
+  done
 
-       # Verify the packages
-       [ "$check" == "rpm" ] && verify_packages $dir 1 $filetable
-       [ "$check" == "rpm" ] || verify_packages $dir 0 $filetable
-       ;;
-  esac
+  # Verify the packages
+  [ "$type" == "rpm" ] && verify_packages $dir 1 $filetable
+  [ "$type" == "rpm" ] || verify_packages $dir 0 $filetable
+  
+  # Remove all RPM signature keys    
+  [ "$type" == "rpm" ] && sudo rpm -e $(rpm -qa)
+
+  /bin/rm -fr $tempdir
 }
 
 check_dsas
@@ -297,12 +321,12 @@ for _id in $ids; do
   idx="$idx $_idx"
 done
 
-for _id in idx; do
-  type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" $conf)
+for _id in $idx; do
+  type=$(xmllint --xpath "string(dsas/tasks/task[$_id]/type)" $CONF)
   case $type in
-    rpm|repomd) verifrepo $id; ;;
+    rpm|repomd) verifrepo $_id; ;;
     deb) echo "DEB files are  are not yet implemented"; continue; ;;
-    authenticode|openssl|gpg) verifdirectory $id; ;; 
+    authenticode|openssl|gpg) verifdirectory $_id; ;; 
     *) echo "Unknown task type : $type"; ;;
   esac
 done

@@ -52,10 +52,10 @@ msgline() {
   local file=$1
   local status=$2
   local md5=$(cat $file | md5sum | sed -e "s/  -$//g")
-  local _file=`echo $file | sed -e "s:^${haut}/::g"`
-  local d=utc_date
+  local _file=`echo $file | sed -e "s:^${DSAS_HAUT}/::g"`
+  local d=$(utc_date)
   case $status in
-    0) [ $verbose == 1 ] && msg "  "  "Ok"  $md5 $_file ;;
+    0) [ $verbose == 1 ] && msg "  "  "Ok"  $md5 $d $_file ;;
     -1)  msg "XX"  "Unknown type"   $md5  $d $_file ;;
     1)   msg "**"  "Bad Sig"        $md5  $d $_file ;;
     2)   msg "$$"  "Checksum fail"  $md5  $d $_file ;;
@@ -192,13 +192,84 @@ while [ "$#" -gt 3 ]; do
 done
 }
 
+# FIXME : There seems to be heaps of ways the directory list can be returned. This function
+# will need work to ensure it works in all cases
 get_dirlist(){
   if [ "${1:0:5}" == "sftp:" ]; then
     echo "$(echo 'ls' | sftp ${1:5})"
   elif [ "${1:0:4}" == "ftp:" ]; then
     echo $(fileargs $(curl $1 2> /dev/null))
   else
-    #$(curl $1 2> /dev/null |grep -o '<a .*href=.*>' | sed -e 's/<a /\n<a /g' | sed -e 's/<a .*href=['"'"'"]//' -e 's/["'"'"'].*$//' -e '/^$/d' -e/^?/d' -e '/^\?.*/d') 
-    :
+    $(curl $1 2> /dev/null | grep -o '<a .*href=.*>' | sed -e 's/<a /\n<a /g' | sed -e 's/<a .*href=['"'"'"]//' -e 's/["'"'"'].*$//' -e '/^$/d' -e '/^?/d' -e '/^\?.*/d')
   fi
+}
+
+# Usage getcertificate fingerprint
+get_certificate(){
+  local cert type
+  local i=1
+  local incert="false"
+  while :; do
+    cert=$(xmllint --xpath "string(dsas/certificates/certificate[$i]/pem)" $CONF)
+    [ -z "$cert" ] && break
+    type=$(xmllint --xpath "string(dsas/certificates/certificate[$i]/type)" $CONF)
+    echo "$cert" > /tmp/cert.$$
+
+    case $type in
+      x509)
+        openssl x509 -in /tmp/cert.$$ -noout -text | grep -A1 "Subject Key Identifier" | grep -q $1
+        ;;
+      gpg)
+        gpg -v < /tmp/cert.$$ 2>&1 | grep -q $1
+        ;;
+      *)
+        echo "Unknown certificate type"
+        ;;
+    esac
+    if [ $? -eq 0 ]; then 
+      echo $i
+      return
+    fi
+    /bin/rm /tmp/cert.$$
+    i=$((i + 1))
+  done
+
+  # Not one of the added certificates. Is it in the certificate store ?
+  while IFS= read -r line; do
+    if [ "$line" == "-----BEGIN CERTIFICATE-----" ]; then
+      if "$incert" == "true" ]; then
+        echo "error parsing ca-bundle.crt"
+      else
+        incert="true"
+        cert="$line"
+      fi
+    elif [ "$line" == "-----END CERTIFICATE-----" ]; then
+      if [ "$incert" == "false" ]; then
+        echo "error parsing ca-bundle.crt"
+      else
+        cert="$cert\n$line"
+        incert="false"
+        echo -e "$cert" > /tmp/cert.$$
+        openssl x509 -in /tmp/cert.$$ -noout -text | grep -A1 "Subject Key Identifier" | grep -q $1
+        
+        if [ $? -eq 0 ]; then 
+          echo 0
+          return
+        fi 
+        /bin/rm /tmp/cert.$$
+      fi
+    else
+      cert="$cert\n$line"
+    fi
+  done < "$(dsas_ca_file)"
+
+}
+
+dsas_ca_file() {
+  for f in "/etc/ssl/ca-bundle.crt" "/etc/ssl/ca-certificates.crt" "/usr/local/etc/ssl/ca-bundle.crt" "/ust/local/etc/ssl/ca-certificates.crt"; do
+    if [ -f "$f" ]; then
+      echo $f
+      return
+    fi
+  done
 }
