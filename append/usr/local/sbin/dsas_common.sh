@@ -3,7 +3,7 @@
 VAR=/var/dsas
 CONF=$VAR/dsas_conf.xml.active
 DSAS_HOME=/home/dsas
-/
+
 INTERCO="192.168.192.0"
 INTERCO_MASK="255.255.255.0"
 INTERCO_BAS="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 1)) )"
