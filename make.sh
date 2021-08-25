@@ -327,6 +327,7 @@ case $1 in
   install_tcz curl
   install_tcz kmaps
   install_tcz openssh
+  install_tcz sshpass
   install_tcz coreutils     # For sha256, etc
   install_tcz osslsigncode
   install_tcz libxml2-bin   # For xmllint
@@ -343,15 +344,18 @@ case $1 in
   # Copy the pre-extracted packages to work dir. This must be after packages
   # are installed to allow for files to be overwritten. Run as root 
   # and correct the ownership of files 
+
   msg append dsas files
-  rsync -av $append/ $extract/
-  chown -R root.root $extract/usr
-  chown -R root.root $extract/etc
+  rsync -rlptv $append/ $extract/
   mkdir -p $extract/home/tc
+  chown root.root $extract
+  chmod 755 $extract/home
   chown -R tc.staff $extract/home/tc
   chown tc.staff $extract/var/dsas
   chmod 640 $extract/var/dsas/*.csr $extract/var/dsas/*.pem
-  chown root $extract/opt/bootsync.sh
+  chown -R root.staff $extract/opt
+  chmod 770 $extract/opt
+  chmod 770 $extract/opt/.filetool.lst
 
   # prevent autologin of tc user
   ( cd $extract/etc; cat inittab | sed -r 's/(.*getty)(.*autologin)(.*)/\1\3/g' > inittab.new; )
@@ -372,14 +376,11 @@ echo tc:dSaO2021cTf | chpasswd -c sha512
 EOF
 
 
-  # FIXME
-  # User verif should be /bin/false with cron jobs, but for testing
-  # give it a shell
   msg adding user 'verif'
   pwgen $service_pass_len
   echo "verif:$pass" >> $passfile
   cat << EOF >> $create_users
-adduser -s /bin/sh -u 2000 -D -H -h /home/dsas/verif verif
+adduser -s /bin/false -u 2000 -D -h /home/verif verif
 echo verif:$pass | chpasswd -c sha512
 EOF
 
@@ -387,7 +388,7 @@ EOF
   pwgen $service_pass_len
   echo "bas:$pass" >> $passfile
   cat << EOF >> $create_users
-adduser -s /bin/false -u 2001 -D -H -h / bas
+adduser -s /bin/false -u 2001 -D -h /home/bas bas
 echo bas:$pass | chpasswd -c sha512
 EOF
 
@@ -395,7 +396,7 @@ EOF
   pwgen $service_pass_len
   echo "haut:$pass" >> $passfile
   cat << EOF >> $create_users
-adduser -s /bin/false -u 2002 -D -H -h / haut
+adduser -s /bin/false -u 2002 -D -h /home/haut haut
 echo bas:$pass | chpasswd -c sha512
 EOF
 
