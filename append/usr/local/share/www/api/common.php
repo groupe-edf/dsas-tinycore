@@ -450,7 +450,7 @@ function parse_gpg($cert){
   $data = [];
   // This use of exec is ok as there are no user parameters, the user data is passed
   // as a file $tmp
-  if (exec(escapeshellcmd("/usr/local/bin/gpg -vv " . $tmp) . " 2>&1", $text, $retval)) {
+  if (exec(escapeshellcmd("/usr/local/bin/gpg -no-default-keyring -vv " . $tmp) . " 2>&1", $text, $retval)) {
     $text = implode(PHP_EOL, $text);                                                
     preg_match("/uid\s+([^$]+)" . PHP_EOL . "/", $text, $matches); 
     $data["uid"] = $matches[1]; 
