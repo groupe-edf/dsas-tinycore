@@ -10,7 +10,7 @@ fi
 getdirectory() {
   local dirlist files file
   local id=$1
-  local uri=$(get_uri)
+  local uri=$(get_uri $id)
   local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
   local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" $CONF)
 
@@ -19,11 +19,13 @@ getdirectory() {
     myecho "Empty Uri for task $name"
     return
   fi
+
   # Create directory if needed
   [ -d ${DSAS_HAUT}/$dir ] || $(umask 007 && mkdir -p ${DSAS_HAUT}/$dir)
 
+  # If no trailing "/" or "\" assume we have a file and not a directory
   # Special case for scp, because it can only have one file
-  if [ "${uri:0:4}" == "scp:" ]; then
+  if [ "${uri:0:4}" == "scp:" ] || ([ "${uri: -1}" != "/" ] &&  [ "${uri: -1}" == "\\" ]); then
     myecho "Downloading file: $(basename $uri)"
     get "${uri}" "${DSAS_HAUT}/${dir}/${basename $uri}"
   else

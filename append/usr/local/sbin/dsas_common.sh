@@ -26,8 +26,8 @@ grp="share"
 
 check_dsas(){
   [ -d $DSAS_HOME ] || (echo "DSAS home directory missing"; exit -1)
-  [ -d $DSAS_HAUT ] || (echo "DSAS haut directory missing"; exit -1)
-  [ -d $DSAS_BAS ] || (echo "DSAS bas directory missing"; exit -1)
+  [ "$(whomai)" == "bas" ] || [ -d $DSAS_HAUT ] || (echo "DSAS haut directory missing"; exit -1)
+  [ "$(whoami)" == "haut" ] || [ -d $DSAS_BAS ] || (echo "DSAS bas directory missing"; exit -1)
 }
 
 myecho(){
@@ -113,10 +113,10 @@ get(){
   if [ "${1:0:4}" == "scp:" ]; then
     # Curl not built with scp support
     if [ $force -eq 0 ] && [ $dryrun -ne 0  ]; then
-      echo "[DryRun] scp ${1:4} 21"
+      echo "[DryRun] scp ${1:4} $2"
     else
       [ $verbose -ne 0 ] && echo "scp ${1:4} $2"
-      $(umask 007 && scp ${1:4} $2)
+      $(umask 007 && scp ${1:4} $2 2> /dev/null)
     fi
   elif  [ "${1:0:5}" == "sftp:" ]; then
     # Curl not built with sftp support
@@ -124,7 +124,7 @@ get(){
       echo "[DryRun] sftp ${1:5} $2"
     else
       [ $verbose -ne 0 ] && echo "sftp ${1:5} $2"
-      $(umask 007 && sftp ${1:5} $2)
+      $(umask 007 && sftp ${1:5} $2 2> /dev/null)
     fi
   else
     if [ $force -eq 0 ] && [ $dryrun -ne 0  ]; then
@@ -175,10 +175,12 @@ rm() {
 
 get_uri(){
   if [ "$TYP" == "haut" ]; then
-    echo $(xmllint --xpath "string(dsas/tasks/task[$id]/uri)" $CONF)
+    echo $(xmllint --xpath "string(dsas/tasks/task[$1]/uri)" $CONF) 
   else
-    local _dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/dir)" $CONF)
-    echo "scp:tc@$INTERCO_HAUT:$DSAS_BAS/$_dir"
+    local _dir=$(xmllint --xpath "string(dsas/tasks/task[$1]/directory" $CONF)
+    local _uri="$DSAS_HOME/bas"
+    _uri=${DSAS_BAS:${#_uri}}
+    echo "sftp:bas@$INTERCO_HAUT:$_uri/$_dir/"
   fi
 }
 
@@ -194,7 +196,7 @@ done
 # will need work to ensure it works in all cases
 get_dirlist(){
   if [ "${1:0:5}" == "sftp:" ]; then
-    echo "$(echo 'ls' | sftp ${1:5})"
+    echo "$(echo 'ls' | sftp -q ${1:5} 2> /dev/null | sed 1d)"
   elif [ "${1:0:4}" == "ftp:" ]; then
     echo $(fileargs $(curl $1 2> /dev/null))
   else
