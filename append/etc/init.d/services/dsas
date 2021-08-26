@@ -150,7 +150,7 @@ get_dsas(){
 
     for _user in bas haut; do
       mkdir -p $DISK/dsas/$_user
-      chmod -R 750 $DISK/dsas/$_user
+      chmod -R 755 $DISK/dsas/$_user
       chown -R root.$_user $DISK/dsas/$_user
 
       mkdir -p $DISK/dsas/$_user/share
@@ -477,7 +477,9 @@ config_sshd(){
 
     echo "Copying public keys to machine haut"
     $as_tc ssh-keyscan -t rsa -H $INTERCO_HAUT >> /home/tc/.ssh/known_hosts
+    cp /home/tc/.ssh/known_hosts /home/haut/.ssh/known_hosts
     chown tc.staff /home/tc/.ssh/known_hosts
+    chown haut.haut /home/haut/.ssh/known_hosts
 
     while :; do
       PASSWD="$(dialog --stdout --insecure --passwordbox 'Password user tc:' 0 0)"

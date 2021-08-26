@@ -351,8 +351,9 @@ case $1 in
   chown root.root $extract
   chmod 755 $extract/home
   chown -R tc.staff $extract/home/tc
-  chown tc.staff $extract/var/dsas
-  chmod 640 $extract/var/dsas/*.csr $extract/var/dsas/*.pem
+  chown -R tc.verif $extract/var/dsas
+  chmod 775 
+  chmod 600 $extract/var/dsas/*.csr $extract/var/dsas/*.pem
   chown -R root.staff $extract/opt
   chmod 770 $extract/opt
   chmod 770 $extract/opt/.filetool.lst
@@ -403,6 +404,7 @@ EOF
   cat << EOF >> $create_users
 addgroup verif bas
 addgroup verif haut
+addgroup tc verif
 addgroup -g 2003 share
 addgroup verif share
 addgroup bas share
