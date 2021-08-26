@@ -2,10 +2,8 @@
 
 // FIXME : Lots of dead code here to clean up
 
-// Setting _DSAS_ROOT allows put dsas files elsewhere for testing
-//define ("_DSAS_ROOT", "/home/tc/dsas");
-define("_DSAS_ROOT", "");
-define("_DSAS_XML", _DSAS_ROOT . "/var/dsas/dsas_conf.xml");
+define("_DSAS_VAR", "/var/dsas");
+define("_DSAS_XML", _DSAS_VAR . "/dsas_conf.xml");
 
 function dsas_ca_file() {
   foreach (["/etc/ssl/ca-bundle.crt", "/etc/ssl/ca-certificates.crt",
@@ -305,8 +303,8 @@ function inet_valid($addr){
 function dsas_get_logs() {
   $logs = array();
   foreach (["", ".0", ".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9"] as $ext) {
-    if (is_file(_DSAS_ROOT . "/home/dsas/verif/verif.log" . $ext)) {
-      if ($fp = fopen(_DSAS_ROOT . "/home/dsas/verif/verif.log" .$ext, "r")) {
+    if (is_file(_DSAS_VAR . "/verif.log" . $ext)) {
+      if ($fp = fopen(_DSAS_VAR . "/verif.log" .$ext, "r")) {
         $log = array();
         while (($line = fgets($fp)) !== false){
           if (substr($line,0,2) === "  ")
@@ -336,7 +334,6 @@ function format_dsas_log($log, $hide){
     return $out;
   } else
     return '<div class="alert alert-warning">Journal ' . $log . ' de DSAS pas trouv&eacute;.';
-
 }
 
 function format_space($bytes) {

@@ -1,9 +1,7 @@
 <?php
 require_once "common.php";
 
-// If the certificates are ever moved this will need to be changed
-//$WWW_ROOT = dirname($_SERVER["SCRIPT_FILENAME"],3); 
-$WWW_ROOT = _DSAS_ROOT . "/var/dsas";
+// If the certificates are ever moved from _DSAS_VAR, this code will need to be changed
 
 if (! dsas_loggedin())
   die(header("HTTP/1.0 403 Forbidden"));
@@ -52,18 +50,18 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         if (empty($csr) || empty($cert) || empty($priv))
           $errors[] =  ["renew" => "Erreur pendant la generation des certificates"];
         else {
-          $retval = file_put_contents($WWW_ROOT . "/dsas.csr", $csr);
-          chmod ($WWW_ROOT . "/dsas.csr", 0640);
-          chgrp ($WWW_ROOT . "/dsas.csr", "repo");
-          if ($retval !== 0 && $retval !== false) $retval = file_put_contents($WWW_ROOT . "/dsas_pub.pem", $cert);
-          chmod ($WWW_ROOT . "/dsas_pub.pem", 0640);
-          chgrp ($WWW_ROOT . "/dsas.csr", "repo");
-          if ($retval !== 0 && $retval !== false) $retval = file_put_contents($WWW_ROOT . "/dsas_priv.pem", $priv);
-          chmod ($WWW_ROOT . "/dsas_priv.pem", 0640);
-          chgrp ($WWW_ROOT . "/dsas.csr", "repo");
-          if ($retval !== 0 && $retval !== false) $retval = file_put_contents($WWW_ROOT . "/dsas.pem", $priv . PHP_EOL . $cert);
-          chmod ($WWW_ROOT . "/dsas.pem", 0640);
-          chgrp ($WWW_ROOT . "/dsas.csr", "repo");
+          $retval = file_put_contents(_DSAS_VAR . "/dsas.csr", $csr);
+          chmod (_DSAS_VAR . "/dsas.csr", 0640);
+          chgrp (_DSAS_VAR . "/dsas.csr", "repo");
+          if ($retval !== 0 && $retval !== false) $retval = file_put_contents(_DSAS_VAR . "/dsas_pub.pem", $cert);
+          chmod (_DSAS_VAR . "/dsas_pub.pem", 0640);
+          chgrp (_DSAS_VAR . "/dsas.csr", "repo");
+          if ($retval !== 0 && $retval !== false) $retval = file_put_contents(_DSAS_VAR . "/dsas_priv.pem", $priv);
+          chmod (_DSAS_VAR . "/dsas_priv.pem", 0640);
+          chgrp (_DSAS_VAR . "/dsas.csr", "repo");
+          if ($retval !== 0 && $retval !== false) $retval = file_put_contents(_DSAS_VAR . "/dsas.pem", $priv . PHP_EOL . $cert);
+          chmod (_DSAS_VAR . "/dsas.pem", 0640);
+          chgrp (_DSAS_VAR . "/dsas.csr", "repo");
           if ($retval === 0 || $retval === false) 
             $errors[] = ["renew" => "Erreur pendant la sauvegarde des certificates"];  
           else
@@ -86,12 +84,12 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             if (!openssl_x509_parse($crt))
               $errors[] = ["upload" => "Fichier CRT doit-&ecirc;tre en format PEM"];
             else {
-              $priv = file_get_contents($WWW_ROOT . "/dsas_priv.pem");
-              $retval = file_put_contents($WWW_ROOT . "/dsas_pub.pem", $crt);
-              chmod ($WWW_ROOT . "/dsas_pub.pem", 0600);
+              $priv = file_get_contents(_DSAS_VAR . "/dsas_priv.pem");
+              $retval = file_put_contents(_DSAS_VAR . "/dsas_pub.pem", $crt);
+              chmod (_DSAS_VAR . "/dsas_pub.pem", 0600);
               if ($retval !== 0 && $retval !== false) 
-                $retval = file_put_contents($WWW_ROOT . "/dsas.pem", $priv . PHP_EOL . $crt);
-              chmod ($WWW_ROOT . "/dsas.pem", 0600);
+                $retval = file_put_contents(_DSAS_VAR . "/dsas.pem", $priv . PHP_EOL . $crt);
+              chmod (_DSAS_VAR . "/dsas.pem", 0600);
               if ($retval === 0 || $retval === false) 
                 $errors[] = ["upload" => "Erreur pendant la sauvegarde du CRT"];
             }
@@ -118,8 +116,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
 } else {
   $dsas = simplexml_load_file(_DSAS_XML);
   $web = $dsas->config->web;
-  $web->ssl->csr = file_get_contents($WWW_ROOT . "/dsas.csr");
-  $web->ssl->pem = file_get_contents($WWW_ROOT . "/dsas_pub.pem");
+  $web->ssl->csr = file_get_contents(_DSAS_VAR . "/dsas.csr");
+  $web->ssl->pem = file_get_contents(_DSAS_VAR . "/dsas_pub.pem");
   header("Content-Type: application/json");
   echo json_encode($web);
 }

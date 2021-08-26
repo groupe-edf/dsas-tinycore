@@ -37,9 +37,9 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
 		$newcert = $dsas->certificates->addChild("certificate");
                 $newcert->type = "x509";
                 $newcert->pem = trim($x509);
-                $newcert->authority = (empty($cert["extensions"]["authorityKeyIdentifier"]) || 
-                  str_contains($cert["extensions"]["authorityKeyIdentifier"],
-                  $cert["extensions"]["subjectKeyIdentifier"]) ? "true" : "false");
+                $newcert->authority = (empty($parse["extensions"]["authorityKeyIdentifier"]) || 
+                  str_contains($parse["extensions"]["authorityKeyIdentifier"],
+                  $parse["extensions"]["subjectKeyIdentifier"]) ? "true" : "false");
               }
             }
           }
@@ -136,10 +136,12 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
     if ($certificate->type == "x509") {
       $cert =  utf8ize(openssl_x509_parse(trim($certificate->pem)));
       $cert["pem"] = trim($certificate->pem[0]);
+      $cert["authority"] = trim($certificate->authority);
       $dsas_x509[] = $cert;
     } else if ($certificate->type == "gpg") {
       $cert = utf8ize(parse_gpg($certificate->pem));
       $cert["pem"] = trim($certificate->pem[0]);
+      $cert["authority"] = trim($certificate->authority);
       $dsas_gpg[] = $cert;
     }
   }
