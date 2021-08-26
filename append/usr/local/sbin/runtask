@@ -1,0 +1,24 @@
+#! /bin/sh
+
+# if root rerun as user tc
+if [ $(id -u) == 0 ]; then
+  sudo -E -u tc $0 $*
+  exit $?
+fi
+
+# if not user tc, quit
+if [ "$(whoami)" != "tc" ]; then
+ 1>&2 echo "$0: Must e run as user 'tc'"
+fi
+
+if [ -f "$(dirname $0)/dsas_common.sh" ]; then
+  . $(dirname $0)/dsas_common.sh
+else
+  echo "Common functions not found !!"
+  exit -1
+fi
+
+ssh tc@$INTERCO_HAUT sudo sudo -u haut $(dirname $0)/getfiles $*
+ssh tc@$INTERCO_HAUT sudo sudo -u verif $(dirname $0)/checkfiles $*
+sudo sudo -u haut $(dirname $0)/getfiles $*
+sudo sudo -u verif $(dirname $0)/checkfiles $*
