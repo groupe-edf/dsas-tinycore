@@ -636,9 +636,9 @@ function treat_gpg_certs(certs) {
       'aria-controls="gpg' + i + '" aria-expanded="false">' +
       '<i class="text-collapsed"><img src="caret-right.svg"/></i>' +
       '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + name + 
-      '&nbsp;<a href="' + url + '" download="' + name.replace(/ /g,"_") + '.gpg">' + 
+      '&nbsp;<a data-toggle="tooltip" title="T&eacute;l&eacute;charger" href="' + url + '" download="' + name.replace(/ /g,"_") + '.gpg">' + 
       '<img src="save.svg"></a>';
-    body = body + '&nbsp;<a onclick="dsas_cert_delete(\'' + name + '\',\'' + 
+    body = body + '&nbsp;<a data-toggle="tooltip" title="Supprimer" onclick="dsas_cert_delete(\'' + name + '\',\'' + 
         cert.fingerprint + '\');"><img src="x-lg.svg"></a>';
     body = body + 
       '</p><div class="collapse" id="gpg' + i + '"><div class="card card-body">' +
@@ -679,10 +679,10 @@ function treat_x509_certs(certs, added = false) {
       'aria-controls="ca' + i + '" aria-expanded="false">' +
       '<i class="text-collapsed"><img src="caret-right.svg"/></i>' +
       '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + name + 
-      '&nbsp;<a href="' + url + '" download="' + name.replace(/ /g,"_") + '.crt">' + 
+      '&nbsp;<a data-toggle="tooltip" title="T&eacute;l&eacute;charger" href="' + url + '" download="' + name.replace(/ /g,"_") + '.crt">' + 
       '<img src="save.svg"></a>';
     if (added)
-      body = body + '&nbsp;<a onclick="dsas_cert_delete(\'' + name + '\',\'' + 
+      body = body + '&nbsp;<a data-toggle="tooltip" title="Supprimer" onclick="dsas_cert_delete(\'' + name + '\',\'' + 
         cert_finger(cert) + '\');"><img src="x-lg.svg"></a>';
     body = body + 
       '</p><div class="collapse" id="' + (added ? 'add' : 'ca') + i + '"><div class="card card-body">' +
@@ -859,12 +859,12 @@ function dsas_display_tasks(what = "all") {
               'aria-controls="task' + i + '" aria-expanded="false">' +
               '<i class="text-collapsed"><img src="caret-right.svg"/></i>' +
               '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + task.name +
-              '&nbsp;<a onclick="dsas_task_modify(\'' + task.id + '\');">' + 
+              '&nbsp;<a data-toggle="tooltip" title="Modifier" onclick="dsas_task_modify(\'' + task.id + '\');">' + 
               '<img src="pencil-square.svg"></a>';
-          body = body + '&nbsp;<a onclick="dsas_task_delete(\'' + task.id + 
-              '\');"><img src="x-lg.svg"></a>';
-          body = body + '&nbsp;<a onclick="dsas_task_run(\'' + task.id + 
-              '\');"><img src="play.svg" width="20" height="20"></a>';
+          body = body + '&nbsp;<a data-toggle="tooltip" title="Supprimer" onclick="dsas_task_delete(\'' + task.id + 
+              '\', \'' + task.name + '\');"><img src="x-lg.svg"></a>';
+          body = body + '&nbsp;<a data-toogle="tooltip" title="Ex&eacute;cuter" onclick="dsas_task_run(\'' + task.id + 
+              '\', \'' + task.name + '\');"><img src="play.svg" width="20" height="20"></a>';
           body = body + 
               '</p><div class="collapse" id="task' + i + '"><div class="card card-body">' +
               '<pre>' + task_body(task) + '</pre></div></div>\n';
@@ -917,7 +917,12 @@ function task_body(task) {
   return body;
 }
 
-function dsas_task_delete(id) {
+function dsas_task_delete(id, name){
+  modal_action("Delete le tache ?<br><small>&nbsp;&nbsp;Nom : " + name + "<br>&nbsp;&nbsp;ID : " + id,
+     "dsas_task_real_delete('" + id + "');", true);
+}
+
+function dsas_task_real_delete(id) {
   $.post("api/dsas-task.php", 
     { op: "delete",
       data: {id: id}
@@ -996,7 +1001,12 @@ function dsas_task_modify(id) {
   });
 }
 
-function dsas_task_run(id) {
+function dsas_task_run(id, name){
+  modal_action("Exécuter le tache ?<br><small>&nbsp;&nbsp;Nom : " + name + "<br>&nbsp;&nbsp;ID : " + id,
+     "dsas_task_real_run('" + id + "');", true);
+}
+
+function dsas_task_real_run(id) {
   $.post("api/dsas-task.php", 
     { op: "run", data: {id: id}
   }).done(function(errors){
