@@ -854,8 +854,9 @@ function dsas_display_tasks(what = "all") {
 
       if (tasks.task) {
         for (task of (tasks.task.constructor === Object ? [tasks.task] : tasks.task)) { 
+          cls = (task.last == "never" ? "text-info" : (task.status != 0 ? "text-danger" : "text-success"));
           body = body + 
-              '<p class="my-0"><a class="text-toggle" data-bs-toggle="collapse" href="#task' + i + '" role="button"' + 
+              '<p class="my-0 ' + cls + '"><a class="text-toggle" data-bs-toggle="collapse" href="#task' + i + '" role="button"' + 
               'aria-controls="task' + i + '" aria-expanded="false">' +
               '<i class="text-collapsed"><img src="caret-right.svg"/></i>' +
               '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + task.name +
@@ -889,6 +890,13 @@ function empty_obj(obj) {
     return false;
 }
 
+function date_to_locale(d){
+  if (d == "never")
+    return "Jamais"
+  var l = new Date(d.substr(0,4) + "-" + d.substr(4,2) + "-" + d.substr(6,2) + "T" + d.substr(8,2) + ":" + d.substr(10,2) + ":" + d.substr(12,2) + "Z");
+  return l.toString() 
+}
+
 function task_body(task) {
   var body = "";
 
@@ -900,6 +908,8 @@ function task_body(task) {
     '<p class="my-0">URI : ' + print_obj(task.uri) + '</p>' +
     '<p class="my-0">Type : ' + print_obj(task.type) + '</p>' +
     '<p class="my-0">Run : ' + print_obj(task.run) + '</p>' +
+    '<p class="my-0">Last : ' + date_to_locale(task.last) + '</p>' +
+    '<p class="my-0">Status : ' + print_obj(task.status) + '</p>' +
     '</div>' +
     '<div class="col-6  overflow-hidden">' +
     '<p class="my-1">Certificates:</p>' +

@@ -303,8 +303,8 @@ function inet_valid($addr){
 function dsas_get_logs() {
   $logs = array();
   foreach (["", ".0", ".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9"] as $ext) {
-    if (is_file(_DSAS_VAR . "/verif.log" . $ext)) {
-      if ($fp = fopen(_DSAS_VAR . "/verif.log" .$ext, "r")) {
+    if (is_file(_DSAS_VAR . "/dsas_verif.log" . $ext)) {
+      if ($fp = fopen(_DSAS_VAR . "/dsas_verif.log" .$ext, "r")) {
         $log = array();
         while (($line = fgets($fp)) !== false){
           if (substr($line,0,2) === "  ")
@@ -495,5 +495,21 @@ function dsasid($len = 24){
   return substr(bin2hex($bytes), 0, $len);
 }
 
+function dsas_run_log($id){
+ if (is_file(_DSAS_VAR . "/dsas_runlog")) {
+    if ($fp = fopen(_DSAS_VAR . "/dsas_runlog", "r")) {
+      while (($line = fgets($fp)) !== false) {
+        if ($id == substr($line,0,strlen($id))) {
+           $tmp = preg_split("/\s+/", $line);
+           if (count($tmp) > 2)
+             return array("last" => $tmp[1], "status" => $tmp[2]);
+           else
+             break;
+        }
+      }
+    }
+  }
+  return array("last" => "never", "status" => "0");
+}
 
 ?>

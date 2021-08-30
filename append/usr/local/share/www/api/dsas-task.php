@@ -133,7 +133,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $errors[] = ["error" => "ID de la tache invalide;"];
         } else {
           // Force the execution of the task with the "-f" flag
-          exec("runtask -f " . esapeshellcmdarg($id), $output, $retval);
+          exec("runtask -f " . escapeshellarg($id), $output, $retval);
           if ($retval != 0)
             $errors[] = ["error" => "Execution de la tache (" . $id . ") a &eacute;chouch&eacute;"];
         }
@@ -157,6 +157,13 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
   }
 } else {
   $dsas = simplexml_load_file(_DSAS_XML);
+  $i=1;
+  foreach ($dsas->tasks->task as $task) {
+    $tmp = dsas_run_log($id);
+    $task->last = $tmp["last"];
+    $task->status = $tmp["status"];
+    $i++;
+  }
   header("Content-Type: application/json");
   echo json_encode($dsas->tasks);
 }
