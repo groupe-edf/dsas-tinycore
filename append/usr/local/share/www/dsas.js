@@ -115,7 +115,6 @@ function dsas_status(){
 }
 
 function machine_status(obj){
-    console.log(obj);
   var p = 100. - (100. * obj.disk_free) / obj.disk_total;
   var disk = '<div class="d-flex justify-content-between">' +
     '<div>Disque : ' + obj.disk + '</div>\n' +
@@ -138,14 +137,15 @@ function machine_status(obj){
   if (obj.loadavg < 0.01)
     p = 0;
   else {
-    p = (Math.log10(obj.loadavg) + 2) * 25;
+    # Scale by the number of cores
+    p = (Math.log10(obj.loadavg) + 2) * 25 / obj.cores ;
     p = (p > 100 ? 100 : p);
   }
   var load = '<div class="d-flex justify-content-between">' +
     '<div>Loadavg :</div>\n<div>' + obj.loadavg + '</div></div>' +
     '  <div class="col-12 progress">\n' +
     '    <div class="progress-bar" role="progressbar" style="width: ' + p.toFixed() +
-    '%" aria-valuenow="' + p.toFixed() + '" aria-valuemin="0" aria-valuemax="100">' + p.toFixed(1) + ' %</div>\n' +
+    '%" aria-valuenow="' + p.toFixed() + '" aria-valuemin="0" aria-valuemax="100">' + obj.loadavg + '</div>\n' +
     '  </div>\n';
 
   return disk + memory + load;
