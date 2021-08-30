@@ -97,21 +97,58 @@ function format_space(bytes) {
   return (bytes/Math.pow(1024, Math.floor(exp))).toFixed(2)  + " " + symbols[exp];
 }
 
-function dsas_disk_bar(){
-  $.get("api/dsas-disk-space.php").fail(function(xhdr, error, status){
+function dsas_status(){
+  $.get("api/dsas-status.php").fail(function(xhdr, error, status){
     if (! fail_loggedin(status))
       modal_message( "Erreur pendant la detection de l'espace de disque !");
   }).done(function(obj){
-    var p = 100. - (100. * obj.free) / obj.total;
-    document.getElementById("SpaceProgressBar"). innerHTML =
-      '<h5>Espace de disque : ' + obj.disk + '</h5>\n' +
-      '  <div class="progress">\n' +
-      '    <div class="progress-bar" role="progressbar" style="width: ' + p.toFixed() +
-      '%" aria-valuenow="' + p.toFixed() + '" aria-valuemin="0" aria-valuemax="100">' + p.toFixed(1) + ' %</div>\n' +
-      '  </div>\n' +
-      '  <p class="text-end">Espace libre : ' + format_space(obj.free) + 
-      ' / ' + format_space(obj.total) + '</p>';
+    var body = '<div class="row"><div class="col-6 container p-3 border">' +
+      '<h5>Machine bas:</h5>' + machine_status(obj.bas);
+    if (obj.haut.status == "down")
+      body = body + '</div><div class="col-6 container p-3 border text-muted">' +
+         '<h5>Machine haut: INDISPONIBLE</h5>' + machine_status(obj.bas) + '</div></div>';
+    else
+      body = body + '</div><div class="col-6 container p-3 border">' +
+         '<h5>Machine haut:</h5>' + machine_status(obj.bas) + '</div></div>';
+    document.getElementById("StatusBar").innerHTML = body;
   });
+}
+
+function machine_status(obj){
+    console.log(obj);
+  var p = 100. - (100. * obj.disk_free) / obj.disk_total;
+  var disk = '<div class="d-flex justify-content-between">' +
+    '<div>Disque : ' + obj.disk + '</div>\n' +
+    '<div>' + format_space(obj.disk_total - obj.disk_free) + 
+    ' / ' + format_space(obj.disk_total) + '</div></div>' +
+    '  <div class="col-12 progress">\n' +
+    '    <div class="progress-bar" role="progressbar" style="width: ' + p.toFixed() +
+    '%" aria-valuenow="' + p.toFixed() + '" aria-valuemin="0" aria-valuemax="100">' + p.toFixed(1) + ' %</div>\n' +
+    '  </div>\n';
+  p = (100. * obj.memory_used) / obj.memory_total;
+  var memory = '<div class="d-flex justify-content-between">' +
+    '<div>M&eacute;moire :</div>\n' +
+    '<div>' + format_space(obj.memory_used) + 
+    ' / ' + format_space(obj.memory_total) + '</div></div>' +
+    '  <div class="col-12 progress">\n' +
+    '    <div class="progress-bar" role="progressbar" style="width: ' + p.toFixed() +
+    '%" aria-valuenow="' + p.toFixed() + '" aria-valuemin="0" aria-valuemax="100">' + p.toFixed(1) + ' %</div>\n' +
+    '  </div>\n';
+
+  if (obj.loadavg < 0.01)
+    p = 0;
+  else {
+    p = (Math.log10(obj.loadavg) + 2) * 25;
+    p = (p > 100 ? 100 : p);
+  }
+  var load = '<div class="d-flex justify-content-between">' +
+    '<div>Loadavg :</div>\n<div>' + obj.loadavg + '</div></div>' +
+    '  <div class="col-12 progress">\n' +
+    '    <div class="progress-bar" role="progressbar" style="width: ' + p.toFixed() +
+    '%" aria-valuenow="' + p.toFixed() + '" aria-valuemin="0" aria-valuemax="100">' + p.toFixed(1) + ' %</div>\n' +
+    '  </div>\n';
+
+  return disk + memory + load;
 }
 
 function dsas_check_warnings(disablenav = false){
