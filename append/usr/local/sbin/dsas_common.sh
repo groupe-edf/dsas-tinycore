@@ -33,6 +33,8 @@ check_dsas(){
 
 myecho(){
   [ $verbose -ne 0 ] && echo $@
+  # If not verbose the status will be 1. explicitly return 0
+  return 0
 }
 
 utc_date(){
