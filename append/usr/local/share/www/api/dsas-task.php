@@ -132,7 +132,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         if (! ctype_xdigit($id)) {
           $errors[] = ["error" => "ID de la tache invalide;"];
         } else {
-          exec("runtask " . esapesheelcmdarg($id), $output, $retval);
+          // Force the execution of the task with the "-f" flag
+          exec("runtask -f " . esapeshellcmdarg($id), $output, $retval);
           if ($retval != 0)
             $errors[] = ["error" => "Execution de la tache (" . $id . ") a &eacute;chouch&eacute;"];
         }
