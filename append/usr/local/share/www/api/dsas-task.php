@@ -159,7 +159,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
   $dsas = simplexml_load_file(_DSAS_XML);
   $i=1;
   foreach ($dsas->tasks->task as $task) {
-    $tmp = dsas_run_log($id);
+    $tmp = dsas_run_log($task->id);
     $task->last = $tmp["last"];
     $task->status = $tmp["status"];
     $i++;
