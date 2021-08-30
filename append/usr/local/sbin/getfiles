@@ -91,7 +91,7 @@ get_packages() {
 getrepo() {
   local filelist chksum chktype unzipfile filetable _file
   local id=$1
-  local uri=$(get_uri)
+  local uri=$(get_uri $id)
   local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
   local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" $CONF)
   local type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" $CONF)
