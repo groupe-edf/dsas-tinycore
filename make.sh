@@ -4,7 +4,7 @@ cd $(dirname $0)
 
 # Force to run as root
 if [ $(id -u) != 0 ]; then
-  sudo -E $0 $* 
+  sudo $0 $* 
   exit $?
 fi
 
@@ -46,6 +46,9 @@ dsascd=$work/dsas.iso
 service_pass_len=24
 rebuild=0
 forcedownload=0
+
+# Force the umask
+umask 0022
 
 test "$SUDO_USER" && as_user="sudo -E -u $SUDO_USER" || as_user=
 
