@@ -3,7 +3,7 @@
 if [ -f "$(dirname $0)/dsas_common.sh" ]; then
   . $(dirname $0)/dsas_common.sh
 else
-  echo "Common functions not found !!"
+  1>&2 echo "Common functions not found !!"
   exit -1
 fi
 
@@ -14,8 +14,8 @@ getdirectory() {
   local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
   local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" $CONF)
 
-
   if [ -z "$uri" ]; then
+    # The URI can be empty. gracefully exit
     myecho "Empty Uri for task $name"
     return
   fi
@@ -29,7 +29,8 @@ getdirectory() {
     myecho "Downloading file: $(basename $uri)"
     get "${uri}" "${DSAS_HAUT}/${dir}/${basename $uri}"
   else
-    files=$(get_dirlist $uri)
+    myecho "Downloading directory listing : $uri"
+    files=$(get_dirlist $uri) || { 1>&2 echo "error fetching directory listing"; exit 1; }
 
     # Remove files locally that are no longer available sur le URI
     for file in $(ls -1 $DSAS_HAUT/$dir); do
@@ -38,7 +39,7 @@ getdirectory() {
       
       if [[ "$files" != *"$file"* ]]; then
         myecho "Removing stale file: $file"
-        rm $DSAS_HAUT/$dir/$file
+        /bin/rm -f $DSAS_HAUT/$dir/$file
       fi
     done
 
@@ -122,8 +123,8 @@ getrepo() {
          sed -e "s:repomd xmlns:repomd ignore:g" | \
          xmllint --xpath 'string(//repomd/data[@type="primary"]/checksum/@type)' - )
        if  check_checksum $DSAS_HAUT/$dir/$filelist $chksum $chktype; then
-         2>1 echo "Error verifying checksum of $filelist"
-         return
+         1>&2 echo "Error verifying checksum of $filelist"
+         exit 1
        fi
 
        # Unzip and verify the checksum of primary.xml
@@ -136,8 +137,8 @@ getrepo() {
        unzipfile=$(echo $filelist | sed -e "s/.gz//g")
        gunzip -k -f $DSAS_HAUT/$dir/$filelist
        if  check_checksum $DSAS_HAUT/$dir/$unzipfile $chksum $chktype; then
-         2>1 echo "Error verifying checksum of $unzipfile"
-         return
+         1>&2 echo "Error verifying checksum of $unzipfile"
+         exit 1
        fi
 
        # Recover a table of the hashtype, hash and file names
@@ -151,20 +152,20 @@ getrepo() {
        for _file in $(cd $DSAS_HAUT/$dir; find . -path ./repodata -prune -type f -o -type f); do
          if [[ "$filetable" != *"${_file:2}"* ]]; then
            myecho "Removing stale file ${_file:2}"
-           rm $DSAS_HAUT/$dir/${_file:2}
+           /bin/rm -f $DSAS_HAUT/$dir/${_file:2}
          fi
        done
 
        # Download the packages
        get_packages "$DSAS_HAUT/$dir" $uri $filetable
        ;;
-    *) echo "Unrecognized repositiory check type $check"; ;;
+    *) 1>&2 echo "Unrecognized repositiory check type $check"; exit 1; ;;
   esac
 }
 
 help() {
-  echo "Usage: $(basename $0)  [Options] ID [ID...]"
-  echo "Get files given by the task ID(s)"
+  echo "Usage: $(basename $0)  [Options] ID"
+  echo "Get files given by the task ID"
   echo "     -v|--verbose    Log all files verified"
   echo "     -q|--quiet      Log only files failing to verifiy"
   echo "     -n|--dryrun     Perform no actions"
@@ -182,7 +183,10 @@ while [ "$#" -gt 0 ]; do
     -n|--dryrun) dryrun=1 ;;
     -?|-h|--help) help; exit 0 ;;
     -*) 1>&2 echo "Unrecognized option : $1"; help; exit 1 ;;
-    *) ids="$ids $1" ;;
+     *)
+       # Only allow a single task to be able to exit en error correctly 
+       [ -n "$ids" ] && 1>&2 ecdo "Only a single task is allowed" && exit 1
+       ids="$ids $1" ;;
   esac
   shift 1
 done
@@ -193,9 +197,8 @@ done
 # Check that all ids are valid before doing anything
 idx=""
 for _id in $ids; do
-  task_id_to_idx $_id
-  _idx=$?
-  [ $_idx -lt 1 ] && (echo "Task id ($_id) does not exist"; exit -1)
+  _idx=$(task_id_to_idx $_id)
+  [ $? -ne 0 ] && { 1>&2 echo "Task id ($_id) does not exist"; exit 1; }
   idx="$idx $_idx"
 done
 
@@ -203,9 +206,9 @@ for _idx in $idx; do
   type=$(xmllint --xpath "string(dsas/tasks/task[$_idx]/type)" $CONF)
   case $type in
     rpm|repomd) getrepo $_idx; ;;
-    deb) echo "DEB files are not yet implemented"; continue; ;;
+    deb) 1>&2 echo "DEB files are not yet implemented"; exit 1; ;;
     authenticode|openssl|gpg) getdirectory $_idx; ;;
-    *) echo "Unknown task type : $type"; ;;
+    *) 1>&2 echo "Unknown task type : $type"; exit 1; ;;
   esac
 done
 

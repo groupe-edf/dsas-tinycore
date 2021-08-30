@@ -2,6 +2,7 @@
 
 VAR=/var/dsas
 CONF=$VAR/dsas_conf.xml.active
+RUNLOG=$VAR/dsas_runlog
 DSAS_HOME=/home/dsas
 
 INTERCO="192.168.192.0"
@@ -26,7 +27,7 @@ grp="share"
 
 check_dsas(){
   [ -d $DSAS_HOME ] || (echo "DSAS home directory missing"; exit -1)
-  [ "$(whomai)" == "bas" ] || [ -d $DSAS_HAUT ] || (echo "DSAS haut directory missing"; exit -1)
+  [ "$(whoami)" == "bas" ] || [ -d $DSAS_HAUT ] || (echo "DSAS haut directory missing"; exit -1)
   [ "$(whoami)" == "haut" ] || [ -d $DSAS_BAS ] || (echo "DSAS bas directory missing"; exit -1)
 }
 
@@ -38,6 +39,23 @@ utc_date(){
   date --utc '+%Y%m%d%H%M%S'
 }
 
+fixdate(){
+  printf "$1" | sed -E -e 's/(....)(..)(..)(..)(..)(..)/\1-\2-\3 \4:\5:\6/'
+}
+
+should_run(){
+ _dif=$(($(date -d "$(fixdate $(utc_date) )" '+%s') - $(date -d "$(fixdate $1)" '+%s') ))
+  case "$2" in
+    never) return 1; ;;
+    hourly) [ $_dif -lt 3600 ] && return 1;  ;;
+    daily) [ $_dif -lt 86400 ] && return 1; ;;
+    weekly) [ $_dif -gt 604800 ] && return 1; ;;
+    monthly) [ $_dif -gt 18144000 ] && return 1; ;;
+    *) return 1; ;;
+  esac
+  return 0
+}
+
 msg() {
   if [ $logstdout -eq 1 ]; then
     printf "%-3s %-15s %-32s %s %s\n" "$1" "$2" "$3" "$4" "$5"
@@ -46,6 +64,7 @@ msg() {
   fi
 }
 
+
 msgline() {
   local file=$1
   local status=$2
@@ -53,7 +72,7 @@ msgline() {
   local _file=`echo $file | sed -e "s:^${DSAS_HAUT}/::g"`
   local d=$(utc_date)
   case $status in
-    0) [ $verbose == 1 ] && msg "  "  "Ok"  $md5 $d $_file ;;
+    0)   msg "  "  "Ok"              $md5 $d $_file ;;
     -1)  msg "XX"  "Unknown type"   $md5  $d $_file ;;
     1)   msg "**"  "Bad Sig"        $md5  $d $_file ;;
     2)   msg "$$"  "Checksum fail"  $md5  $d $_file ;;
@@ -98,8 +117,8 @@ task_id_to_idx(){
   local i=1
   while :; do
     _task_id=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" $CONF)
-    [ -z "$_task_id" ] && return -1;
-    [ "$1" == "$_task_id" ] && return $i
+    [ -z "$_task_id" ] && return 1;
+    [ "$1" == "$_task_id" ] && echo $i && return 
     i=$(($i + 1))
   done
 }
@@ -116,7 +135,7 @@ get(){
       echo "[DryRun] scp ${1:4} $2"
     else
       [ $verbose -ne 0 ] && echo "scp ${1:4} $2"
-      $(umask 007 && scp ${1:4} $2 2> /dev/null)
+      umask 007 && scp ${1:4} $2 2> /dev/null
     fi
   elif  [ "${1:0:5}" == "sftp:" ]; then
     # Curl not built with sftp support
@@ -124,14 +143,14 @@ get(){
       echo "[DryRun] sftp ${1:5} $2"
     else
       [ $verbose -ne 0 ] && echo "sftp ${1:5} $2"
-      $(umask 007 && sftp ${1:5} $2 2> /dev/null)
+      umask 007 && sftp ${1:5} $2 2> /dev/null
     fi
   else
     if [ $force -eq 0 ] && [ $dryrun -ne 0  ]; then
       echo "[DryRun] curl -o $2 $1"
     else
       [ $verbose -ne 0 ] && echo "curl -o $2 $1"
-      $(umask 007 && curl -o $2 $1 2> /dev/null)
+      umask 007 && curl -o $2 $1 2> /dev/null
     fi
   fi
 }
@@ -177,7 +196,7 @@ get_uri(){
   if [ "$TYP" == "haut" ]; then
     echo $(xmllint --xpath "string(dsas/tasks/task[$1]/uri)" $CONF) 
   else
-    local _dir=$(xmllint --xpath "string(dsas/tasks/task[$1]/directory" $CONF)
+    local _dir=$(xmllint --xpath "string(dsas/tasks/task[$1]/directory)" $CONF)
     local _uri="$DSAS_HOME/bas"
     _uri=${DSAS_BAS:${#_uri}}
     echo "sftp:bas@$INTERCO_HAUT:$_uri/$_dir/"

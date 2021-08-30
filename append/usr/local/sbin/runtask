@@ -8,17 +8,90 @@ fi
 
 # if not user tc, quit
 if [ "$(whoami)" != "tc" ]; then
- 1>&2 echo "$0: Must e run as user 'tc'"
+ 1>&2 echo "$0: Must be run as user 'tc'"
 fi
 
 if [ -f "$(dirname $0)/dsas_common.sh" ]; then
   . $(dirname $0)/dsas_common.sh
 else
-  echo "Common functions not found !!"
+  1>&2 echo "Common functions not found !!"
   exit -1
 fi
 
-ssh tc@$INTERCO_HAUT sudo sudo -u haut $(dirname $0)/getfiles $*
-ssh tc@$INTERCO_HAUT sudo sudo -u verif $(dirname $0)/checkfiles $*
-sudo sudo -u haut $(dirname $0)/getfiles $*
-sudo sudo -u verif $(dirname $0)/checkfiles $*
+# Créate run log file if it doesn't exist
+[ -f "$RUNLOG" ] || touch $RUNLOG
+
+# Parse options
+ids=""
+opts=""
+force=""
+while [ "$#" -gt 0 ]; do
+  case $1 in
+    -f|--force) force="true"; ;;
+    -v|--verbose) verbose=1; opts="$opts -v"; ;;
+    -q|--quiet) verbose=0; opts="$opts -q"; ;;
+    -*) opts="$opts $1"; ;;
+     *) ids="$ids $1" ;;
+  esac
+  shift 1
+done
+
+if [ -z $ids ]; then
+  # No tasks sepcified. Get a list of all tasks
+  i=1
+  while :; do
+    _id=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" $CONF)
+    [ -z "$_id" ] && break
+    # Is the task scheduled to run ? Is the run forced ?
+    if [ -z "$force" ]; then
+      _run=$(xmllint --xpath "string(dsas/tasks/task[$i]/run)" $CONF)
+      _last=$(cat $RUNLOG | grep $_id | cut -d' ' -f2) 
+      [ -z "$_last" ] || should_run $_last $_run && ids="$ids $_id"    
+    else
+      ids="$ids $_id"
+    fi
+    i=$((i + 1))
+  done
+elif [ -z "$force" ]; then
+  # Delete the tasks not scheduled to run from the list
+  newids=""
+  for _id in $ids; do
+    i=1
+    while :; do
+      _idx=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" $CONF)
+      [ -z "$_idx" ] && break
+      [ "$_id" == "$_idx" ] && break     
+      i=$((i + 1))
+    done
+    [ -z "$_idx" ] && 1>&2 echo "Task $_id not found" && continue
+    _run=$(xmllint --xpath "string(dsas/tasks/task[$i]/run)" $CONF)
+    _last=$(cat $RUNLOG | grep $_id | cut -d' ' -f2)
+    [ -z "$_last" ] || should_run $_last $_run && newids="$newids $_id" 
+  done
+  ids=$newids
+fi
+
+LOG="$(dirname $CONF)/dsas_verif.log"
+[ -f "$LOG" ] || (umask 0007; touch $LOG; )
+chgrp verif $LOG
+
+[ -z "$ids" ] && myecho "No tasks to run !!"
+
+for _id in $ids; do
+  # Check if task is already running and skip if not 
+  _pid=$(pgrep $_id)
+  [ -n "$_pid" ] && 2>&1 echo "task $_id is running" && continue
+
+  myecho "#### Tasks on machine HAUT ####"
+  ssh tc@$INTERCO_HAUT sudo sudo -u haut $(dirname $0)/getfiles $opts $_id
+  [ $? -eq 0 ] && ssh tc@$INTERCO_HAUT sudo sudo -u verif $(dirname $0)/checkfiles $opts $_id
+  [ $? -eq 0 ] && myecho "#### Tasks on machine BAS ####"
+  [ $? -eq 0 ] && sudo sudo -u haut $(dirname $0)/getfiles $opts $_id
+  [ $? -eq 0 ] && sudo sudo -u verif $(dirname $0)/checkfiles $opts -o $LOG $_id
+
+  # Log the run date and exit status of the task
+  _str=$(printf "%-26s %-16s %d" "$_id" "$(utc_date)" $?)
+  grep -q $_id $RUNLOG && sed -e "s/^$_id.*$/$_str/" $RUNLOG > $RUNLOG 
+  grep -q $_id $RUNLOG || echo $_str >> $RUNLOG
+
+done

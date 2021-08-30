@@ -3,12 +3,12 @@
 if [ -f "$(dirname $0)/dsas_common.sh" ]; then
   . $(dirname $0)/dsas_common.sh
 else
-  echo "Common functions not found !!"
+  1>&2 echo "Common functions not found !!"
   exit -1
 fi
 
 # Default options
-logfile="$(dirname $CONF)/verif.log"
+logfile="$(dirname $CONF)/dsas_verif.log"
 UMASK=640
 
 help() {
@@ -73,7 +73,7 @@ verifdirectory() {
   # Validate check type
   case $type in
     authenticode|openssl|gpg) : ;;
-    *) 1>&2 echo "Unknown file checking type"; return 1 ;;
+    *) 1>&2 echo "Unknown file checking type"; exit 1 ;;
   esac
 
   tempdir=$(mktemp -d)
@@ -83,10 +83,7 @@ verifdirectory() {
     fprint=$(xmllint --xpath "string(dsas/tasks/task[$id]/cert[$j]/fingerprint)" $CONF)
     [ -z "$fprint" ] && break;
     idx=$(get_certificate $fprint)
-    if [ -z "$idx" ]; then
-      echo "Certificate used by task($id) not found !!"
-      return
-    fi
+    [ -z "$idx" ] && { 1>&2 echo "Certificate used by task($id) not found !!"; exit 1; }
     if [ $idx -eq 0 ]; then
       [ -f "$tempdir/cert.0" ] && myecho "Multiple authority certificates defined" 
       /bin/mv /tmp/cert.$$ $tempdir/cert.0
@@ -113,8 +110,8 @@ verifdirectory() {
   filetable=$(ls -1 $DSAS_HAUT/$dir)
   for file in $(cd $DSAS_BAS/$dir; find . -type f); do
     if [[ "$filetable" != *"${file:2}"* ]]; then
-      echo "Removing stale file ${file:2}"
-      rm $DSAS_BAS/$dir/${file:2}
+      myecho "Removing stale file ${file:2}"
+      /bin/rm -f $DSAS_BAS/$dir/${file:2}
     fi
   done
 
@@ -186,10 +183,7 @@ verifrepo() {
   tempdir=$(mktemp -d)
   fprint=$(xmllint --xpath "string(dsas/tasks/task[$id]/cert[1]/fingerprint)" $CONF)
   idx=$(get_certificate $fprint)
-  if [ -z "$idx" ]; then
-    echo "Certificate used by task($id) not found !!"
-    return
-  fi
+  [ -z "$idx" ] && { 1>&2 echo "Certificate used by task($id) not found !!"; exit 1; }
   /bin/mv /tmp/cert.$$ $tempdir/cert.0
   gpg --dearmor $tempdir/cert.0
 
@@ -199,8 +193,8 @@ verifrepo() {
     if ! gpg --no-default-keyring --keyring $tempdir/cert.0.gpg  \
           --verify $DSAS_HAUT/$dir/repodata/repomd.xml.asc \
           $DSAS_HAUT/$dir/repodata/repomd.xml 2>&1 1> /dev/null; then
-      echo "Failed to verify repomd.xml signature"
-      return 1
+      1>&2 echo "Failed to verify repomd.xml signature"
+      exit 1
     fi
   else
     # For rpm signature verification need to import GPG key
@@ -226,7 +220,7 @@ verifrepo() {
          xmllint --xpath 'string(//repomd/data[@type="primary"]/checksum/@type)' - )
   if  check_checksum $DSAS_HAUT/$dir/$filelist $chksum $chktype; then
     1>&2 echo "Error verifiying checksum of $filelist"
-    return
+    exit 1
   fi
 
   # Unzip and verify the checksum of primary.xml
@@ -240,7 +234,7 @@ verifrepo() {
   gunzip -k -f $DSAS_HAUT/$dir//$filelist
   if  check_checksum $DSAS_HAUT/$dir/$unzipfile $chksum $chktype; then
     1>&2 echo "Error verifiying checksum of $unzipfile"
-    return
+    exit 1
   fi
 
   # Copy repomd.xml*  and primary.xml* to $bas
@@ -259,8 +253,8 @@ verifrepo() {
   # Remove the files in $DSAS_BAS and not listed in primary.xml
   for _file in $(cd $DSAS_BAS/$dir; find . -path ./repodata -prune -type f -o -type f); do
     if [[ "$filetable" != *"${_file:2}"* ]]; then
-      echo "Removing stale file ${_file:2}"
-      rm $DSAS_BAS/$dir/${_file:2}
+      myecho "Removing stale file ${_file:2}"
+      /bin/rm -f $DSAS_BAS/$dir/${_file:2}
     fi
   done
 
@@ -286,8 +280,8 @@ passdirectory(){
   filetable=$(ls -1 $DSAS_HAUT/$dir)
   for file in $(cd $DSAS_BAS/$dir; find . -type f); do
     if [[ "$filetable" != *"${file:2}"* ]]; then
-      echo "Removing stale file ${file:2}"
-      rm $DSAS_BAS/$dir/${file:2}
+      myecho "Removing stale file ${file:2}"
+      /bin/rm -f $DSAS_BAS/$dir/${file:2}
     fi
   done
 
@@ -317,7 +311,10 @@ while [ "$#" -gt 0 ]; do
     --out=*) logfile=${1#*=} ;;
     -?|-h|--help) help; exit 0 ;;
     -*) 1>&2 echo "Unrecognized option : $1"; help; exit 1 ;;
-    *) ids="$ids $1" ;;
+    *) 
+      [ -n "$ids" ] && { 1>&2 echo "Only a single task is allowed"; exit 1; }
+      ids="$ids $1" 
+      ;;
   esac
   shift 1
 done
@@ -328,9 +325,8 @@ done
 # Check that all ids are valid before doing anything
 idx=""
 for _id in $ids; do
-  task_id_to_idx $_id
-  _idx=$?
-  [ $_idx -lt 1 ] && (echo "Task id ($_id) does not exist"; exit -1)
+  _idx=$(task_id_to_idx $_id)
+  [ $? -ne 0 ] && { 1>&2 echo "Task id ($_id) does not exist"; exit 1; }
   idx="$idx $_idx"
 done
 
@@ -342,9 +338,9 @@ for _id in $idx; do
     type=$(xmllint --xpath "string(dsas/tasks/task[$_id]/type)" $CONF)
     case $type in
       rpm|repomd) verifrepo $_id; ;;
-      deb) echo "DEB files are  are not yet implemented"; continue; ;;
+      deb) 1>&2 echo "DEB files are  are not yet implemented"; exit 1; ;;
       authenticode|openssl|gpg) verifdirectory $_id; ;; 
-      *) echo "Unknown task type : $type"; ;;
+      *) 1>&2 echo "Unknown task type : $type"; exit 1 ;;
     esac
   fi
 done
