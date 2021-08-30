@@ -127,7 +127,16 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
 
      case "run" :
-        $errors[] = ["error" => "Execution immediate, pas implement&eacute;"];
+        $data = $_POST["data"];;
+        $id = $data["id"];
+        if (! ctype_xdigit($id)) {
+          $errors[] = ["error" => "ID de la tache invalide;"];
+        } else {
+          exec("runtask " . esapesheelcmdarg($id), $output, $retval);
+          if ($retval != 0)
+            $errors[] = ["error" => "Execution de la tache (" . $id . ") a &eacute;chouch&eacute;"];
+        }
+
         break;
 
       default:

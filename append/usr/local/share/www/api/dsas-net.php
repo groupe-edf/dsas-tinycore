@@ -12,13 +12,14 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
       case "all":
         $data = $_POST["data"];
         $ifaces = get_ifaces();
-
+        $j=0;
         foreach (["bas", "haut"] as $iface) {
           $net = $data[$iface];
 
-          if ($net["dhcp"] == "true")
+          if ($net["dhcp"] == "true") {
             $dsas->config->network->{$iface}->dhcp = "true";
-          else
+            continue;
+          } else
             $dsas->config->network->{$iface}->dhcp = "false";
 
           $cidr = htmlspecialchars(trim($net["cidr"]));
@@ -27,7 +28,6 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $dsas->config->network->{$iface}->cidr = $cidr;
           else
             $errors[] = [ "iface_cidr" . $j => $cidr_err];
-
 
           $gateway = htmlspecialchars(trim($net["gateway"]));
           $gateway_err = ip_valid($gateway, true);
@@ -52,8 +52,9 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
               $dsas->config->network->{$iface}->dns->nameserver[] = $server;
           } else
             $errors[] = ["iface_nameserver" .$j => $dns_err];
-          }
 
+          $j++;
+        }
         break;
 
       default:

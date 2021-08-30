@@ -436,7 +436,7 @@ function iface_body(iface, i) {
     '      </div>\n' +
     '      <div class="form-check col-12">\n' +
     '        <label for="iface_nameserver' + i + '">Serveur de nom (DNS) :</label>\n' +
-    '        <textarea name="iface_nameserver' + i + '"' + (dhcp ? ' disabled=""' : '') + ' rows="3" id="iface_nameserver' + i + '" value="" class="form-control"></textarea>\n' +
+    '        <textarea name="iface_nameserver' + i + '"' + (dhcp ? ' disabled=""' : '') + ' rows="3" id="iface_nameserver' + i + '" class="form-control"></textarea>\n' +
     '        <div class="invalid-feedback" id="feed_iface_nameserver' + i + '"></div>\n' +
     '      </div>\n' +
     '    </div>\n' +
@@ -1105,8 +1105,7 @@ function dsas_apply(){
   $.get("api/save.php").done(function(data){
     modalApply.setAttribute("body", "<span class='spinner-border spinner-border-sm'></span> &nbsp; Application de la configuration en cours.");
     $.get("api/apply.php").done(function(data){
-    
-  modalApply.removeAttribute("disable");
+      modalApply.removeAttribute("disable");
       modalApply.removeAttribute("body");  
       modalApply.hide();
       modal_message("Configuration appliqu&eacute;");
