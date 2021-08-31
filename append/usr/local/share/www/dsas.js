@@ -278,7 +278,7 @@ function dsas_set_passwd(){
     if (! fail_loggedin(status))
       modal_message("Erreur pendant la changement des mots de passe");
   }).done(function(errors){
-    if (errors) {
+    if (errors && errors != "Ok") {
       for (err of errors) {
         if (typeof err.old !== "undefined") {
           document.getElementsByClassName("form-control")[0].setAttribute("class", "form-control is-invalid");
@@ -292,7 +292,8 @@ function dsas_set_passwd(){
         }
       }
     } else
-      modal_message("Les mots de passe ont &eacute;t&eacute; chang&eacute;.");
+      // Reload page to clear errors 
+      modal_message("Les mots de passe ont &eacute;t&eacute; chang&eacute;.", "window.location='passwd.html'"));
   });
 }
 

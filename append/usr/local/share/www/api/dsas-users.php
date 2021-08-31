@@ -51,10 +51,6 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
              if ($ret["retval"] != 0) 
                $errors[] = [$name => $ret["stderr"]];
              else {
-               foreach ($dsas->config->users->user as $duser) {
-                 if ((trim($user["username"]) == $duser) && (! empty($user["password"])))
-                   unset($user->first); 
-               }
                $count++;
              }
            }
@@ -63,8 +59,10 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
 
       if ($count == 0)
         $errors[] = ["error" => "Aucun mot de passe chang&eacute;."];
-      else
+      else {
+        unset($dsas->config->users->first);
         $dsas->asXml(_DSAS_XML);
+      }
     }
   }
   if ($errors == [])
