@@ -76,7 +76,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
 } else {
   $dsas = simplexml_load_file(_DSAS_XML);
   header("Content-Type: application/json");
-  echo json_encode($dsas->config->users->user);
+  echo json_encode($dsas->config->users);
 }
 
 ?>

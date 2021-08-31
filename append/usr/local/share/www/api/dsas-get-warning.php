@@ -9,7 +9,7 @@ else {
    
   if (force_passwd()) $warn[] =
      ["type" => "error", "msg" => "Premiere utilisation. Tous les mots de passe sont &agrave; changer."];
-  if ($dsas->tasks[0]->count == 0) $warn[] = 
+  if ($dsas->tasks->task->count() == 0) $warn[] = 
      ["type" => "warn", "msg" => "Aucun tache configur&eacute;."];
 
   header("Content-Type: application/json");

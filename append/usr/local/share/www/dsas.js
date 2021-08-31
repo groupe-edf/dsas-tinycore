@@ -151,7 +151,14 @@ function machine_status(obj){
   return disk + memory + load;
 }
 
-function dsas_check_warnings(disablenav = false){
+function dsas_check_warnings(disablenav = false, redirect = true){
+  $.get("api/dsas-users.php").fail(function(xhdr, error, status){
+    fail_loggedin(status)
+  }).done(function(obj){
+    if ((obj.first == "true") && redirect)
+      window.location = "/passwd.html";
+  });
+
   $.get("api/dsas-get-warning.php").fail(function(xhdr, error, status){
     fail_loggedin(status)
   }).done(function(obj){
@@ -168,13 +175,13 @@ function dsas_check_warnings(disablenav = false){
       }
       if (error) {
         if (disablenav)
-          document.getElementsByTagName("dsas-header")[0].setAttribute("disablenav", true)
+          document.getElementsByTagName("dsas-header")[0].setAttribute("disablenav", "disabled")
         body = body + '<div class="alert alert-danger">' + error + '</div>';
       }
       if (warn)
          body = body + '<div class="alert alert-warning">' + warn + '</div>';
       if (body)
-         divWarn.interHTML = body;
+         divWarn.innerHTML = body;
     }
   });
 }
@@ -231,7 +238,8 @@ function dsas_display_logs(all = false){
 
 function dsas_display_passwd(){
    var divPasswd = document.getElementById("Passwords");
-   $.get("api/dsas-users.php").done(function(users){
+   $.get("api/dsas-users.php").done(function(obj){
+    users=obj.user;
     if (!users) {
       divPasswd.innerHTML = '<div class="alert alert-danger">Aucun utilisateur trouvé !</div>';
     } else {
