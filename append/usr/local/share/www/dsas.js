@@ -109,7 +109,7 @@ function dsas_status(){
          '<h5>Machine haut: INDISPONIBLE</h5>' + machine_status(obj.bas) + '</div></div>';
     else
       body = body + '</div><div class="col-6 container p-3 border">' +
-         '<h5>Machine haut:</h5>' + machine_status(obj.bas) + '</div></div>';
+         '<h5>Machine haut:</h5>' + machine_status(obj.haut) + '</div></div>';
     document.getElementById("StatusBar").innerHTML = body;
   });
 }
