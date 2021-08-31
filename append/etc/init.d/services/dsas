@@ -544,7 +544,7 @@ stop_syslog(){
 start_ntp(){
   # FIXME Use "-S" option of busybox ntpd to get information from service
   ntp=$(xmllint --xpath "string(dsas/config/ntp/active)" $VAR/dsas_conf.xml)
-  next=$(xmllint --xpath "string(dsas/config/ntp/server[last()])" $VAR/dsas_conf.xml)
+  next=$(xmllint --xpath "string(dsas/config/ntp/server[1])" $VAR/dsas_conf.xml)
 
   if [ "$ntp" == "true" ] && [ "$next" != "" ]; then
     i=2
