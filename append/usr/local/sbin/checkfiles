@@ -204,7 +204,6 @@ verifrepo() {
   # Create the destination directory if needed
   [ -d $DSAS_BAS/$dir ] || $(umask 007 && mkdir -p $DSAS_BAS/$dir && chgrp $grp $DSAS_BAS/$dir)
 
-
   # Identify the primary file list
   # Note that we have to ignore the xml namespace (initial cat/sed)
   filelist=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \

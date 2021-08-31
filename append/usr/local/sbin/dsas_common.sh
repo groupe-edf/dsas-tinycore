@@ -159,7 +159,7 @@ get(){
 
 mv() {
   if [ $dryrun == "0" ]; then
-    [ -d $(dirname $2) ] || ( mkdir -m 770 -p $(dirname $2); chgrp -R bas $(dirname $2))
+    [ -d $(dirname $2) ] || ( mkdir -m 770 -p $(dirname $2); chgrp -R $grp $(dirname $2))
     # We can't change the owner of the file as we aren't root. So a 
     # move must be treated as a copy and delete
     /bin/cp $1 $2
@@ -172,7 +172,7 @@ mv() {
 
 ln() {
   if [ $dryrun == "0" ]; then
-    [ -d $(dirname $2) ] || ( mkdir -m 770 -p $(dirname $2); chgrp -R bas $(dirname $2))
+    [ -d $(dirname $2) ] || ( mkdir -m 770 -p $(dirname $2); chgrp -R $grp $(dirname $2))
     # This script is not running as root so can't change the owner. We
     # first have to copy the file
     cp $1 $1.tmp.$$
