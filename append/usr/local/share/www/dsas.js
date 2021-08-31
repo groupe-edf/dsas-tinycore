@@ -438,9 +438,10 @@ function dsas_display_net(what = "all"){
        i = 0; 
        for (iface of [net.bas, net.haut]) { 
          var dns_servers = "";
-         for (ns of (iface.dns.nameserver.constructor === Array ? 
-             iface.dns.nameserver : [iface.dns.nameserver]))
-           dns_servers = dns_servers + ns + "\n";
+         if (! empty_obj(iface.dns.naeserver))
+           for (ns of (iface.dns.nameserver.constructor === Array ? 
+               iface.dns.nameserver : [iface.dns.nameserver]))
+             dns_servers = dns_servers + ns + "\n";
          document.getElementById("iface_nameserver" + i).value = dns_servers;
          i++;
        }
