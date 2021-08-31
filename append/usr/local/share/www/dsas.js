@@ -137,7 +137,7 @@ function machine_status(obj){
   if (obj.loadavg < 0.01)
     p = 0;
   else {
-    # Scale by the number of cores
+    // Scale by the number of cores
     p = (Math.log10(obj.loadavg) + 2) * 25 / obj.cores ;
     p = (p > 100 ? 100 : p);
   }
@@ -162,7 +162,7 @@ function dsas_check_warnings(disablenav = false, redirect = true){
   $.get("api/dsas-get-warning.php").fail(function(xhdr, error, status){
     fail_loggedin(status)
   }).done(function(obj){
-    if (obj !== null) {
+    if (! empty_obj(obj)) {
       var divWarn = document.getElementById("Warnings");
       var warn = "";
       var error = "";
@@ -293,7 +293,7 @@ function dsas_set_passwd(){
       }
     } else
       // Reload page to clear errors 
-      modal_message("Les mots de passe ont &eacute;t&eacute; chang&eacute;.", "window.location='passwd.html'"));
+      modal_message("Les mots de passe ont &eacute;t&eacute; chang&eacute;.", "window.location='passwd.html'");
   });
 }
 
