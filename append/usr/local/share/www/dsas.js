@@ -663,7 +663,13 @@ function dsas_net_errors(errors) {
 }
 
 function dsas_display_service(what = "all"){
-  $.get("api/dsas-service.php").done(function(serv){
+  fetch("api/dsas-service.php").then(response => {
+    if (response.ok) 
+      return response.json();
+    else
+      return Promise.reject({status: response.status, 
+          statusText: response.statusText});
+    }).then(serv => {
      if (what === "ssh" || what === "all") {
        document.getElementById("ssh").checked = (serv.ssh.active === "true");
        document.getElementById("user_tc").value = print_obj(serv.ssh.user_tc);
@@ -689,8 +695,8 @@ function dsas_display_service(what = "all"){
        document.getElementById("ntp_pool").value = pool;
        document.getElementById("ntp_pool").disabled = (serv.ntp.active !== "true");
      }
-  }).fail(function(xhdr, error, status){
-      fail_loggedin(status);
+  }).catch(error => {
+      fail_loggedin(error.statusText);
   });
 }
 
@@ -704,7 +710,13 @@ function dsas_change_service(what) {
   } else if (what === "ntp") {
     document.getElementById("ntp_pool").disabled = ! document.getElementById("ntp").checked;
   } else {
-    $.get("api/dsas-service.php").done(function(serv){
+    fetch("api/dsas-service.php").then(response => {
+      if (response.ok) 
+        return response.json();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+      }).then(serv => {
        op = "all";
        serv.ssh.active = (document.getElementById("ssh").checked ? "true" : "false");
        serv.ssh.user_tc = document.getElementById("user_tc").value;
@@ -730,8 +742,8 @@ function dsas_change_service(what) {
            if (! dsas_service_errors(errors))
              dsas_display_service(what);
          });
-     }).fail(function(xhdr, error, status){
-       fail_loggedin(status);
+     }).catch(error => {
+       fail_loggedin(error.statusText);
      });
   }
 }
@@ -762,17 +774,23 @@ function dsas_service_errors(errors) {
 }
 
 function dsas_display_cert(what = "all"){
-  $.get("api/dsas-cert.php").done(function(certs){
-    if (what === "all" || what === "ca")
-      document.getElementById("ca").innerHTML = treat_x509_certs(certs[0].ca);
-    if (what === "all" || what === "cert")
-      document.getElementById("cert").innerHTML = treat_x509_certs(certs[0].dsas.x509, true);
-    if (what === "all" || what === "gpg")
-      document.getElementById("gpg").innerHTML = treat_gpg_certs(certs[0].dsas.gpg);
+  fetch("api/dsas-cert.php").then(response => {
+      if (response.ok) 
+        return response.json();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(certs => {
+      if (what === "all" || what === "ca")
+        document.getElementById("ca").innerHTML = treat_x509_certs(certs[0].ca);
+      if (what === "all" || what === "cert")
+        document.getElementById("cert").innerHTML = treat_x509_certs(certs[0].dsas.x509, true);
+      if (what === "all" || what === "gpg")
+        document.getElementById("gpg").innerHTML = treat_gpg_certs(certs[0].dsas.gpg);
   
-  }).fail(function(xhdr, error, status){
-      fail_loggedin(status);
-  });
+    }).catch(error => {
+      fail_loggedin(error.statusText);
+    });
 }
 
 function treat_gpg_certs(certs) {
@@ -975,7 +993,13 @@ function dsas_cert_errors(errors){
 
 function dsas_display_tasks(what = "all") {
   if (what === "all" || what === "cert") {
-    $.get("api/dsas-cert.php").done(function(certs){
+    fetch("api/dsas-cert.php").then(response => {
+      if (response.ok) 
+        return response.json();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(certs => {
       var taskAddCert = document.getElementById("TaskAddCert");
       var i = 1;
       var body = '<option id="TaskAddCert0" value="" selected>Selectionner une certificate</option>\n';
@@ -996,12 +1020,18 @@ function dsas_display_tasks(what = "all") {
       }
       taskAddCert.innerHTML = body;
       
-    }).fail(function(xhdr, error, status){
-      fail_loggedin(status);
+    }).catch(error => {
+      fail_loggedin(error.statusText);
     });
   }
   if (what === "all" || what === "tasks") {
-    $.get("api/dsas-task.php").done(function(tasks){
+    fetch("api/dsas-task.php").then(response => {
+      if (response.ok) 
+        return response.json();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(tasks => {
       var i = 0;
       var body = "";
 
@@ -1026,8 +1056,8 @@ function dsas_display_tasks(what = "all") {
         }
       }
       document.getElementById("Tasks").innerHTML = body;
-    }).fail(function(xhdr, error, status){
-      fail_loggedin(status);
+    }).catch(error => {
+      fail_loggedin(error.statusText);
     });
   }
 }
@@ -1113,8 +1143,13 @@ function dsas_task_new() {
 }
 
 function dsas_task_modify(id) {
-
-  $.get("api/dsas-task.php").done(function(tasks){
+  fetch("api/dsas-task.php").then(response => {
+    if (response.ok) 
+      return response.json();
+    else
+      return Promise.reject({status: response.status, 
+          statusText: response.statusText});
+  }).then(tasks => {
     if (tasks.task) {
       document.getElementById('TaskCert').innerHTML = "";
       for (task of (tasks.task.constructor === Object ? [tasks.task] : tasks.task)) {
@@ -1159,8 +1194,8 @@ function dsas_task_modify(id) {
         }
       }
     }
-  }).fail(function(xhdr, error, status){
-    fail_loggedin(status);
+  }).catch(error => {
+    fail_loggedin(error.statusText);
   });
 }
 
@@ -1275,24 +1310,36 @@ function dsas_apply(){
   modalApply.setAttribute("disable", true);
   modalApply.setAttribute("body", "<span class='spinner-border spinner-border-sm'></span> &nbsp; Sauvegarde de la configuration en cours.");
 
-  $.get("api/save.php").done(function(data){
+  fetch("api/save.php").then(response => {
+    if (response.ok) 
+      return response.text();
+    else
+      return Promise.reject({status: response.status, 
+          statusText: response.statusText});
+  }).then(data => {
     modalApply.setAttribute("body", "<span class='spinner-border spinner-border-sm'></span> &nbsp; Application de la configuration en cours.");
-    $.get("api/apply.php").done(function(data){
+    fetch("api/apply.php").then(response => {
+      if (response.ok) 
+        return response.text();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(data => {
       modalApply.removeAttribute("disable");
       modalApply.removeAttribute("body");  
       modalApply.hide();
       modal_message("Configuration appliqu&eacute;");
-    }).fail(function(error){
+    }).catch(error => {
       modalApply.removeAttribute("disable");
       modalApply.removeAttribute("body");  
       modalApply.hide();
       modal_message("Erreur pendant application de la configuration");
     });
-  }).fail(function(xhdr, error, status){
+  }).catch(error => {
     modalApply.removeAttribute("disable");
     modalApply.removeAttribute("body");  
     modalApply.hide();
-    if (!fail_loggedin(status))
+    if (!fail_loggedin(error.statusText))
       modal_message("Erreur pendant la sauvegarde de la configuration");
   });
 }
@@ -1324,10 +1371,14 @@ function dsas_reboot(){
                  '    </div>\n' +
                  '  </div>');
 
-  $.get("api/reboot.php").done(function(data){
-    setTimeout(waitreboot, 1000);
-  }).fail(function(xhdr, error, status){
-    if (! fail_loggedin(status))
+  fetch("api/reboot.php").then(response => {
+    if (response.ok) 
+      setTimeout(waitreboot, 1000);
+    else
+      return Promise.reject({status: response.status, 
+          statusText: response.statusText});
+  }).catch( error => {
+    if (! fail_loggedin(error.statusText))
       modal_message("Erreur pendant la r&eacute;demarrage");
     modalReboot.removeAttribute("disable");
     modalReboot.hide();
@@ -1372,10 +1423,14 @@ function dsas_shutdown(){
                  '    </div>\n' +
                  '  </div>');
 
-  $.get("api/shutdown.php").done(function(data){
-    setTimeout(waitshutdown, 1000);
-  }).fail(function(xhdr, error, status){
-    if (! fail_loggedin(status))
+  fetch("api/shutdown.php").then(response => {
+    if (response.ok) 
+      setTimeout(waitshutdown, 1000);
+    else
+      return Promise.reject({status: response.status, 
+          statusText: response.statusText});
+  }).catch( error => {
+    if (! fail_loggedin(error.statusText))
       modal_message("Erreur pendant l'arr&ecirc;t !");
     modalShutdown.removeAttribute("disable");
     modalShutdown.hide();
@@ -1413,9 +1468,9 @@ function waitshutdown(counter = 0, wait = 0) {
 
 function dsas_logout(){
   // No error checking because, only possible error is that already logged out
-  $.get("api/logout.php").always(function(data){
+  fetch("api/logout.php").then(response => {
     location.href = "login.html";
-  });
+  }).catch(error => { location.href = "login.html"; });
 }
 
 class DSASModal extends HTMLElement {
