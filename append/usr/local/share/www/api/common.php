@@ -379,7 +379,7 @@ function renew_web_cert($options, $days){
   }
 
   $privkey = openssl_pkey_new(array(
-      "private_key_bits" => 2038,
+      "private_key_bits" => 2048,
       "private_key_type" => OPENSSL_KEYTYPE_RSA,
   ));
 

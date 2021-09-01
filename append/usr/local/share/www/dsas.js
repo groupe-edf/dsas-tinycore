@@ -35,7 +35,11 @@ function modal_action(text, action = null, hide = false){
 }
 
 function dsas_loggedin(){
-  $.get("api/login.php").fail(function(error){
+  fetch("api/login.php").then(response => {
+    if (! response.ok)
+      return Promise.reject({status: response.status, 
+          statusText: response.statusText});
+  }).catch(error => {
     modal_message("Vous n'&ecirc;tes pas connect&eacute;.\nCliquer 'Ok' afin de reconnecter",
         "window.location='login.html'");
   });
@@ -51,8 +55,9 @@ function fail_loggedin(status){
 }
 
 function dsas_init_loggedin(){
-  $.get("api/login.php").done(function(data){
-    window.location = "/";
+  fetch("api/login.php").then(reponse => {
+    if (reponse.ok)
+      window.location = "/";
   });
 }
 
@@ -78,16 +83,20 @@ function dsas_login(){
     return;
   }
 
-  $.post("api/login.php",
-    {
-      username: username,
-      password: password
-    }).fail(function(xhr, status, error){
+  var formData = new FormData();
+  formData.append("username", username);
+  formData.append("password", password);
+  fetch("api/login.php", {method: "POST", body: formData 
+    }).then(response => {
+      if (response.ok)
+        window.location = "/";
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).catch(error => {
       document.getElementById("inp_user").setAttribute("class", "form-control is-invalid");
       document.getElementById("inp_pass").setAttribute("class", "form-control is-invalid");
       document.getElementById("feed_pass").innerHTML = "Utilisateur ou mot de passe invalide.";
-    }).done(function(data){
-      window.location = "/"
     });
 }
 
@@ -98,20 +107,26 @@ function format_space(bytes) {
 }
 
 function dsas_status(){
-  $.get("api/dsas-status.php").fail(function(xhdr, error, status){
-    if (! fail_loggedin(status))
-      modal_message( "Erreur pendant la detection de l'espace de disque !");
-  }).done(function(obj){
-    var body = '<div class="row"><div class="col-6 container p-3 border">' +
-      '<h5>Machine bas:</h5>' + machine_status(obj.bas);
-    if (obj.haut.status == "down")
-      body = body + '</div><div class="col-6 container p-3 border text-muted">' +
-         '<h5>Machine haut: INDISPONIBLE</h5>' + machine_status(obj.bas) + '</div></div>';
-    else
-      body = body + '</div><div class="col-6 container p-3 border">' +
-         '<h5>Machine haut:</h5>' + machine_status(obj.haut) + '</div></div>';
-    document.getElementById("StatusBar").innerHTML = body;
-  });
+  fetch("api/dsas-status.php").then(response => {
+      if (response.ok) 
+        return response.json();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(obj => {
+      var body = '<div class="row"><div class="col-6 container p-3 border">' +
+        '<h5>Machine bas:</h5>' + machine_status(obj.bas);
+      if (obj.haut.status == "down")
+        body = body + '</div><div class="col-6 container p-3 border text-muted">' +
+           '<h5>Machine haut: INDISPONIBLE</h5>' + machine_status(obj.bas) + '</div></div>';
+      else
+        body = body + '</div><div class="col-6 container p-3 border">' +
+           '<h5>Machine haut:</h5>' + machine_status(obj.haut) + '</div></div>';
+      document.getElementById("StatusBar").innerHTML = body;
+    }).catch(error => {
+      if (! fail_loggedin(error.statusText))
+        modal_message("Erreur (" + error.status + ") pendant la detection des machine :\n" + error.status);
+    });
 }
 
 function machine_status(obj){
@@ -152,38 +167,50 @@ function machine_status(obj){
 }
 
 function dsas_check_warnings(disablenav = false, redirect = true){
-  $.get("api/dsas-users.php").fail(function(xhdr, error, status){
-    fail_loggedin(status)
-  }).done(function(obj){
-    if ((obj.first == "true") && redirect)
-      window.location = "/passwd.html";
-  });
+  fetch("api/dsas-users.php").then(response => {
+      if (response.ok) 
+        return response.json();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(obj => {
+      if ((obj.first == "true") && redirect)
+        window.location = "/passwd.html";
+    }).catch(error => {
+      fail_loggedin(error.statusText);
+    });
 
-  $.get("api/dsas-get-warning.php").fail(function(xhdr, error, status){
-    fail_loggedin(status)
-  }).done(function(obj){
-    if (! empty_obj(obj)) {
-      var divWarn = document.getElementById("Warnings");
-      var warn = "";
-      var error = "";
-      var body = "";
-      for (const line of obj) {
-        if (line["type"] === "warn")
-          warn = warn + "<p>" + line["msg"];
-        else 
-          error = error + "<p>" + line["msg"] + "</p>\n";
+  fetch("api/dsas-get-warning.php").then(response => {
+      if (response.ok) 
+        return response.json();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(obj => {
+      if (obj !== null) {
+        var divWarn = document.getElementById("Warnings");
+        var warn = "";
+        var error = "";
+        var body = "";
+        for (const line of obj) {
+          if (line["type"] === "warn")
+            warn = warn + "<p>" + line["msg"];
+          else 
+            error = error + "<p>" + line["msg"] + "</p>\n";
+        }
+        if (error) {
+          if (disablenav)
+            document.getElementsByTagName("dsas-header")[0].setAttribute("disablenav", "disabled")
+          body = body + '<div class="alert alert-danger">' + error + '</div>';
+        }
+        if (warn)
+          body = body + '<div class="alert alert-warning">' + warn + '</div>';
+        if (body)
+          divWarn.innerHTML = body;
       }
-      if (error) {
-        if (disablenav)
-          document.getElementsByTagName("dsas-header")[0].setAttribute("disablenav", "disabled")
-        body = body + '<div class="alert alert-danger">' + error + '</div>';
-      }
-      if (warn)
-         body = body + '<div class="alert alert-warning">' + warn + '</div>';
-      if (body)
-         divWarn.innerHTML = body;
-    }
-  });
+    }).catch(error => {
+      fail_loggedin(error.statusText);
+    });
 }
 
 function dsas_togglelogs(all = false){
@@ -197,65 +224,77 @@ function dsas_togglelogs(all = false){
 
 function dsas_display_logs(all = false){
   var preLog = document.getElementById("VerifLogs");
-  $.get("api/dsas-verif-logs.php").done(function(logs){
-    var showall =  (document.getElementById("loghide").value === "tous les logs");
-    var body = "";
-    if (logs) {
-      if (!all || logs.length == 1) {
-        for (const log of logs[0]) {
-          if (log["type"] === "normal") {
-            if (showall) 
-              body = body + '<span class="text-muted">' + log["line"] + "</span>\n";
-          } else
-            body = body + '<span class="text-danger">' + log["line"] + "</span>\n";
-        }
-      } else {
-        body = body + '<ul class="nav nav-tabs" id="logs" role="tablist">\n';
-        for (let i = 0; i < logs.length; i++) 
-          body = body + '  <li class="nav-item"><a class="nav-link' + (i === 0 ? ' active' : '') + '" data-bs-toggle="tab" href="#log' + i + '">' + i + '</a></li>\n';
-        body = body + '</ul>\n<div class="tab-content overflow-auto" style="height: 500px">';
-        for (let i = 0; i < logs.length; i++) {
-          body = body + '<div id="log' + i + '" class="container tab-pane ' + (i === 0 ? 'active' : 'fade') + '">';
-          for (const log of logs[i]) {
+  fetch("api/dsas-verif-logs.php").then(response => {
+      if (response.ok) 
+        return response.json();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(logs => {
+      var showall =  (document.getElementById("loghide").value === "tous les logs");
+      var body = "";
+      if (logs) {
+        if (!all || logs.length == 1) {
+          for (const log of logs[0]) {
             if (log["type"] === "normal") {
               if (showall) 
-                body = body + '<pre class="my-0 text-muted overflow-hidden">' + log["line"] + "</pre>\n";
+                body = body + '<span class="text-muted">' + log["line"] + "</span>\n";
             } else
-              body = body + '<pre class="my-0 text-danger overflow-hidden">' + log["line"] + "</pre>\n";
+              body = body + '<span class="text-danger">' + log["line"] + "</span>\n";
+          }
+        } else {
+          body = body + '<ul class="nav nav-tabs" id="logs" role="tablist">\n';
+          for (let i = 0; i < logs.length; i++) 
+            body = body + '  <li class="nav-item"><a class="nav-link' + (i === 0 ? ' active' : '') + '" data-bs-toggle="tab" href="#log' + i + '">' + i + '</a></li>\n';
+          body = body + '</ul>\n<div class="tab-content overflow-auto" style="height: 500px">';
+          for (let i = 0; i < logs.length; i++) {
+            body = body + '<div id="log' + i + '" class="container tab-pane ' + (i === 0 ? 'active' : 'fade') + '">';
+            for (const log of logs[i]) {
+              if (log["type"] === "normal") {
+                if (showall) 
+                  body = body + '<pre class="my-0 text-muted overflow-hidden">' + log["line"] + "</pre>\n";
+              } else
+                body = body + '<pre class="my-0 text-danger overflow-hidden">' + log["line"] + "</pre>\n";
+            }
+            body = body + '</div>';
           }
           body = body + '</div>';
         }
-        body = body + '</div>';
-      }
-      preLog.innerHTML = body;
-    } else
-      preLog.innerHTML = '<span class="text-danger">Aucun log rétourné par le DSAS</span>\n';
-  }).fail(function(xhdr, error, status){
-      fail_loggedin(status);
+        preLog.innerHTML = body;
+      } else
+        preLog.innerHTML = '<span class="text-danger">Aucun log rétourné par le DSAS</span>\n';
+    }).catch(error => {
+      fail_loggedin(error.statusText);
       preLog.innerHTML = '<span class="text-danger">Erreur pendant la chargement des logs du DSAS</span>\n';
-  });
+    });
 }
 
 function dsas_display_passwd(){
-   var divPasswd = document.getElementById("Passwords");
-   $.get("api/dsas-users.php").done(function(obj){
-    users=obj.user;
-    if (!users) {
-      divPasswd.innerHTML = '<div class="alert alert-danger">Aucun utilisateur trouvé !</div>';
-    } else {
-      body = '<form>\n<dsas-user user="' + users[0] + '" label="' + users[0] + 
-             ' (mot de pass existant)" old="old"></dsas-user>\n'
-      for (user of Object.values(users))
-         body = body + '<dsas-user user="' + user + '"></dsas-user>\n'
-      body = body + '<div class="form-group">\n' +
-            '<input type="submit" class="btn btn-primary" value="Modifier les mots de passe"' +
-            ' onclick="dsas_set_passwd(); return false;">\n</div>';     
-      divPasswd.innerHTML = body;
-    }
-  }).fail(function(xhdr, error, status){
-    fail_loggedin(status)
-    divPasswd.innerHTML = '<div class="alert alert-danger">Erreur pendant la chargement des utilisateurs !</div>';
-  });
+  var divPasswd = document.getElementById("Passwords");
+  fetch("api/dsas-users.php").then(response => {
+      if (response.ok) 
+        return response.json();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(obj => {
+      users=obj.user;
+      if (!users) {
+        divPasswd.innerHTML = '<div class="alert alert-danger">Aucun utilisateur trouvé !</div>';
+      } else {
+        body = '<form>\n<dsas-user user="' + users[0] + '" label="' + users[0] + 
+               ' (mot de pass existant)" old="old"></dsas-user>\n'
+        for (user of Object.values(users))
+           body = body + '<dsas-user user="' + user + '"></dsas-user>\n'
+        body = body + '<div class="form-group">\n' +
+              '<input type="submit" class="btn btn-primary" value="Modifier les mots de passe"' +
+              ' onclick="dsas_set_passwd(); return false;">\n</div>';     
+        divPasswd.innerHTML = body;
+      }
+    }).catch(error => {
+      fail_loggedin(error.statusText);
+      divPasswd.innerHTML = '<div class="alert alert-danger">Erreur pendant la chargement des utilisateurs !</div>';
+    });
 }
 
 function dsas_set_passwd(){
@@ -274,78 +313,99 @@ function dsas_set_passwd(){
   for (feed of document.getElementsByClassName("form-control")) 
      feed.setAttribute("class", "form-control");
 
-  $.post("api/dsas-users.php", { users: data }).fail(function(xhr, error, status){
-    if (! fail_loggedin(status))
-      modal_message("Erreur pendant la changement des mots de passe");
-  }).done(function(errors){
-    if (errors && errors != "Ok") {
-      for (err of errors) {
-        if (typeof err.old !== "undefined") {
-          document.getElementsByClassName("form-control")[0].setAttribute("class", "form-control is-invalid");
-          document.getElementsByClassName("invalid-feedback")[0].innerHTML = err.old;
-        } else if (typeof err.error !== "undefined") {
-          modal_message(err.error);
-        } else {
-          key = Object.keys(err)[0];
-          document.getElementById("inp_" + key).setAttribute("class", "form-control is-invalid");
-          document.getElementById("feed_" + key).innerHTML = err[key];
+  var formData = new FormData();
+  formData.append("data", data);
+  fetch("api/login.php", {method: "POST", body: formData 
+    }).then(response => {
+      if (response.ok)
+        return response.json();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(errors => {
+      if (errors && errors != "Ok") {
+        for (err of errors) {
+          if (typeof err.old !== "undefined") {
+            document.getElementsByClassName("form-control")[0].setAttribute("class", "form-control is-invalid");
+            document.getElementsByClassName("invalid-feedback")[0].innerHTML = err.old;
+          } else if (typeof err.error !== "undefined") {
+            modal_message(err.error);
+          } else {
+            key = Object.keys(err)[0];
+            document.getElementById("inp_" + key).setAttribute("class", "form-control is-invalid");
+            document.getElementById("feed_" + key).innerHTML = err[key];
+          }
         }
-      }
-    } else
-      // Reload page to clear errors 
-      modal_message("Les mots de passe ont &eacute;t&eacute; chang&eacute;.", "window.location='passwd.html'");
-  });
+      } else
+        // Reload page to clear errors 
+        modal_message("Les mots de passe ont &eacute;t&eacute; chang&eacute;.", "window.location='passwd.html'");
+    }).catch(error => {
+      if (! fail_loggedin(error.statusText))
+        modal_message("Erreur pendant la changement des mots de passe");
+    });
 }
 
 function dsas_display_web(what = "all"){
-  $.get("api/dsas-web.php").done(function(web){
-    if (what === "all" || what === "repo") {
-      document.getElementById("repolabel").innerHTML = 
-         "La publication de la r&eacute;positoire par HTTPS est " +
-         (web.repo  === "true" ? "Activ&eacute;" : "D&eacute;sactiv&eacute;") + " :";
-      document.getElementById("reposubmit").value = (web.repo === "true"  ? "Desactiver" : "Activer");
-    }
-    if (what === "all" || what === "cert") {
-      var csrblob = new Blob([web.ssl.csr], {type : "application/x-x509-user-cert"});
-      var csrurl = window.URL.createObjectURL(csrblob);
-      var pemblob = new Blob([web.ssl.pem], {type : "application/x-x509-user-cert"});
-      var pemurl = window.URL.createObjectURL(pemblob);
+  fetch("api/dsas-web.php").then(response => {
+      if (response.ok) 
+        return response.json();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(web => {
+      if (what === "all" || what === "repo") {
+        document.getElementById("repolabel").innerHTML = 
+           "La publication de la r&eacute;positoire par HTTPS est " +
+           (web.repo  === "true" ? "Activ&eacute;" : "D&eacute;sactiv&eacute;") + " :";
+        document.getElementById("reposubmit").value = (web.repo === "true"  ? "Desactiver" : "Activer");
+      }
+      if (what === "all" || what === "cert") {
+        var csrblob = new Blob([web.ssl.csr], {type : "application/x-x509-user-cert"});
+        var csrurl = window.URL.createObjectURL(csrblob);
+        var pemblob = new Blob([web.ssl.pem], {type : "application/x-x509-user-cert"});
+        var pemurl = window.URL.createObjectURL(pemblob);
 
-      document.getElementById("csr_body").innerHTML = web.ssl.csr;
-      document.getElementById("getcsr").setAttribute("href", csrurl);
-      document.getElementById("pem_body").innerHTML = web.ssl.pem;
-      document.getElementById("getpem").setAttribute("href", pemurl);
-      for (fld of ["countryName", "stateOrProvinceName", "localityName", 
-            "organizationName", "organizationalUnitName", "commonName", "emailAddress"]) {
-        if (Object.keys(web.ssl[fld]).length !== 0)
-          document.getElementById(fld).value = web.ssl[fld];
-        else
-          document.getElementById(fld).value = "";
+        document.getElementById("csr_body").innerHTML = web.ssl.csr;
+        document.getElementById("getcsr").setAttribute("href", csrurl);
+        document.getElementById("pem_body").innerHTML = web.ssl.pem;
+        document.getElementById("getpem").setAttribute("href", pemurl);
+        for (fld of ["countryName", "stateOrProvinceName", "localityName", 
+              "organizationName", "organizationalUnitName", "commonName", "emailAddress"]) {
+          if (Object.keys(web.ssl[fld]).length !== 0)
+            document.getElementById(fld).value = web.ssl[fld];
+          else
+            document.getElementById(fld).value = "";
+        }
+        validity = parseInt(web.ssl.validity);    
+        for (let i = 1; i <= 5; i++) {
+          if (validity  === i)
+             document.getElementById("valid" + i).setAttribute("selected", "");
+        }
       }
-      validity = parseInt(web.ssl.validity);    
-      for (let i = 1; i <= 5; i++) {
-        if (validity  === i)
-           document.getElementById("valid" + i).setAttribute("selected", "");
-      }
-    }
-  }).fail(function(xhdr, error, status){
-      fail_loggedin(status);
-  });
+    }).catch(error => {
+      fail_loggedin(error.statusText);
+    });
 }
 
 function dsas_toggle_repo(){
-  $.get("api/dsas-web.php").done(function(web){
-    web.repo = (web.repo === "true" ? "false" : "true");
-    $.post("api/dsas-web.php", 
-      { op: "repo",
-        data: web
-      }).always(function(data){
-        dsas_display_web("repo");
-        dsas_web_errors();
-      });
-  }).fail(function(xhdr, error, status){
-      fail_loggedin(status);
-  });
+  fetch("api/dsas-web.php").then(response => {
+      if (response.ok) 
+        return response.json();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(web => {
+      var formData = new FormData;
+      formData.append("op", "repo");
+      formData.append("repo", (web.repo === "true" ? "false" : "true"));
+      fetch("api/dsas-web.php", {method: "POST", body: formData 
+        }).finally(() => {
+          dsas_display_web("repo");
+          dsas_web_errors();
+        });
+    }).catch(error => {
+      fail_loggedin(error.statusText);
+    });
 }
 
 function dsas_renew_cert(){
@@ -354,28 +414,47 @@ function dsas_renew_cert(){
 }
 
 function dsas_renew_cert_real(){
-  $.get("api/dsas-web.php").done(function(web){
- 
-    for (fld of ["countryName", "stateOrProvinceName", "localityName", 
-         "organizationName", "organizationalUnitName", "commonName", "emailAddress"])
-      web.ssl[fld] = document.getElementById(fld).value;
-    for (let i = 0; i <= 5; i++) {
-      if (document.getElementById("valid" + i).checked) {
-        web.ssl["validity"] = i;
-        break;
+  fetch("api/dsas-web.php").then(response => {
+      if (response.ok) 
+        return response.json();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(web => {
+      var formData = new FormData;
+      formData.append("op", "renew");
+      for (fld of ["countryName", "stateOrProvinceName", "localityName", 
+           "organizationName", "organizationalUnitName", "commonName", "emailAddress"])
+        formData.append(fld, document.getElementById(fld).value);
+      var valid = 0;
+      for (let i = 0; i <= 5; i++) {
+        if (document.getElementById("valid" + i).selected) {
+          valid = i;
+          break;
+        }
       }
-    }
-    $.post("api/dsas-web.php", 
-      { op: "renew",
-        data: web
-    }).done(function(errors){
-       dsas_web_errors(errors);
-    }).always(function(data){
-      dsas_display_web("cert");
+      formData.append("validity", valid);
+
+      fetch("api/dsas-web.php", {method: "POST", body: formData 
+        }).then(response => {
+          if (response.ok) 
+            return response.text();
+          else
+            return Promise.reject({status: response.status, 
+                statusText: response.statusText});
+        }).then(text => {
+          try {
+            const errors = JSON.parse(text);
+            dsas_web_errors(errors);
+            dsas_display_web("cert");
+          } catch (e) {
+            // Its text => here always just "Ok"
+            dsas_display_web("cert");
+          }
+        });
+    }).catch(error => {
+      fail_loggedin(error.statusText);
     });
-  }).fail(function(xhdr, error, status){
-   fail_loggedin(status);
-  });
 }
 
 function dsas_upload_crt() {
@@ -416,7 +495,13 @@ function dsas_web_errors(errors){
 }
 
 function dsas_display_net(what = "all"){
-  $.get("api/dsas-net.php").done(function(net){
+  fetch("api/dsas-net.php").then(response => {
+      if (response.ok) 
+        return response.json();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(net => {
      if (what === "ifaces" || what === "all") {
        var i = 0;
        var body = "";
@@ -438,17 +523,17 @@ function dsas_display_net(what = "all"){
        i = 0; 
        for (iface of [net.bas, net.haut]) { 
          var dns_servers = "";
-         if (! empty_obj(iface.dns.naeserver))
+         if (! empty_obj(iface.dns.nameserver))
            for (ns of (iface.dns.nameserver.constructor === Array ? 
-               iface.dns.nameserver : [iface.dns.nameserver]))
+                 iface.dns.nameserver : [iface.dns.nameserver]))
              dns_servers = dns_servers + ns + "\n";
          document.getElementById("iface_nameserver" + i).value = dns_servers;
          i++;
        }
      }
-  }).fail(function(xhdr, error, status){
-      fail_loggedin(status);
-  });
+    }).catch(error => {
+      fail_loggedin(error.statusText);
+    });
 }
 
 function iface_body(iface, i) {
@@ -499,35 +584,56 @@ function dsas_change_net(what= "all", i = 0) {
        document.getElementById("iface_nameserver" + i).disabled =  
            document.getElementById("iface_dhcp" + i).checked;
   } else {
-    $.get("api/dsas-net.php").done(function(net){
-       op = "all";
-       j = 0;
-       for (iface2 of ["bas", "haut"]) {
-         iface = net[iface2];
-         iface.dhcp = (document.getElementById("iface_dhcp" + j).checked ? "true" : "false");
-         iface.cidr = document.getElementById("iface_cidr" + j).value;
-         iface.gateway = document.getElementById("iface_gateway" + j).value;
-         iface.dns.domain = document.getElementById("iface_dns_domain" + j).value;
-         server = [];
-         for (s of document.getElementById("iface_nameserver" + j).value.split(/((\r?\n)|(\r\n?))/)) {
-           s = (s ? s.trim() : "");
-           if (s) {
-             server.push(s);
-           }
-         }
-         iface.dns.nameserver = server;
-         j++;
-       }
-       $.post("api/dsas-net.php", 
-         { op: op,
-           data: net
-         }).always(function(errors){
-           if (! dsas_net_errors(errors))
-             dsas_display_net("all");
-         });
-     }).fail(function(xhdr, error, status){
-       fail_loggedin(status);
-     });
+    fetch("api/dsas-net.php").then(response => {
+      if (response.ok) 
+        return response.json();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+      }).then(net => {
+        j = 0;
+        for (iface2 of ["bas", "haut"]) {
+          iface = net[iface2];
+          iface.dhcp = (document.getElementById("iface_dhcp" + j).checked ? "true" : "false");
+          iface.cidr = document.getElementById("iface_cidr" + j).value;
+          iface.gateway = document.getElementById("iface_gateway" + j).value;
+          iface.dns.domain = document.getElementById("iface_dns_domain" + j).value;
+          server = [];
+          for (s of document.getElementById("iface_nameserver" + j).value.split(/((\r?\n)|(\r\n?))/)) {
+            s = (s ? s.trim() : "");
+            if (s) {
+              server.push(s);
+            }
+          }
+          iface.dns.nameserver = server;
+          j++;
+        }
+
+        var formData = new FormData;
+        formData.append("op", "all");
+        formData.append("data", JSON.stringify(net));
+        fetch("api/dsas-net.php", {method: "POST", body: formData 
+          }).then( response => {
+            if (response.ok) 
+              return response.text();
+            else
+              return Promise.reject({status: response.status, 
+                statusText: response.statusText});
+          }).then(text => {
+            try {
+              const errors = JSON.parse(text);
+              dsas_net_errors(errors);
+            } catch (e) {
+              // Its text => here always just "Ok"
+              dsas_display_net("all");
+            }
+          }).catch(error => {
+            modal_message("Error : " + error.statusText);
+          });
+
+      }).catch(error => {
+        fail_loggedin(error.statusText);
+      });
   }
 }
 

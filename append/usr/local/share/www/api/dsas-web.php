@@ -12,25 +12,23 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
   try {
     switch ($_POST["op"]){
       case "repo":
-        $data = $_POST["data"];
-        if ($data["repo"] != $dsas->config->web->repo)  {
-          $dsas->config->web->repo = $data["repo"];
+        if ($_POST["repo"] != $dsas->config->web->repo)  {
+          $dsas->config->web->repo = $_POST["repo"];
           $dsas->asXml(_DSAS_XML);
         }
         break;
  
       case "renew":
-        $data = $_POST["data"];
         $options = array(
-          "countryName" => htmlspecialchars(trim($data["ssl"]["countryName"])),
-          "stateOrProvinceName" => htmlspecialchars(trim($data["ssl"]["stateOrProvinceName"])),
-          "localityName" => htmlspecialchars(trim($data["ssl"]["localityName"])),
-          "organizationName" => htmlspecialchars(trim($data["ssl"]["organizationName"])),
-          "organizationalUnitName" => htmlspecialchars(trim($data["ssl"]["organizationalUnitName"])),
-          "commonName" => htmlspecialchars(trim($data["ssl"]["commonName"])),
-          "emailAddress" => htmlspecialchars(trim($data["ssl"]["emailAddress"])),
+          "countryName" => htmlspecialchars(trim($_POST["countryName"])),
+          "stateOrProvinceName" => htmlspecialchars(trim($_POST["stateOrProvinceName"])),
+          "localityName" => htmlspecialchars(trim($_POST["localityName"])),
+          "organizationName" => htmlspecialchars(trim($_POST["organizationName"])),
+          "organizationalUnitName" => htmlspecialchars(trim($_POST["organizationalUnitName"])),
+          "commonName" => htmlspecialchars(trim($_POST["commonName"])),
+          "emailAddress" => htmlspecialchars(trim($_POST["emailAddress"])),
         );
-        $validity = intval($data["ssl"]["validity"]);
+        $validity = intval($_POST["validity"]);
         $validity = ($validity < 1 ? 1 : ($validity > 5 ? 5 : $validity)); 
         $days = $validity * 365;
         $validity = trim($validity); // Use trim to convert to string
