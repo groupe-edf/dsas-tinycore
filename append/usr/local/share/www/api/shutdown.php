@@ -6,7 +6,9 @@ if (! dsas_loggedin())
 else {
   // exec is ok here as no user input
   exec("ssh tc@" . interco_haut() . " /usr/bin/sudo /sbin/poweroff", $output, $retval);
-  if ($retval == 0 )  exec("/usr/bin/sudo /sbin/poweroff", $output, $retval);
+  // The above will give an error is the machine haut is down. So don't test for an error
+  // here before taking the machine bas down
+  exec("/usr/bin/sudo /sbin/poweroff", $output, $retval);
   if ($retval != 0)
     die(header("HTTP/1.0 500 Internal Server Error"));
   else

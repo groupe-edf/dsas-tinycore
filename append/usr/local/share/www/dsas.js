@@ -462,23 +462,27 @@ function dsas_upload_crt() {
   var formData = new FormData();
   formData.append("op", "upload");
   formData.append("file", crt[0].files[0]);
-  $.ajax({
-      url: "api/dsas-web.php",
-      type: "POST",
-      data: formData,
-      cache: false,
-      async: false,
-      contentType: false,
-      processData: false,
-      success: function(errors){
-          if (! dsas_web_errors(errors))
-            modal_message("CRT envoyé avec sucess", "dsas_display_web('cert');", true);
-        },
-      error: function(xhdr, error, status){
-          if (!fail_loggedin(status))
-            modal_message("Error");
-        }
-  });
+
+  fetch("api/dsas-web.php", {
+    method: 'POST',
+    body: formData}).then(response => {
+      if (response.ok) 
+        return response.text();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(text => {
+      try {
+        const errors = JSON.parse(text);
+        dsas_web_errors(errors);
+      } catch (e) {
+        // Its text => here always just "Ok"
+        modal_message("CRT envoy&eacute; avec sucess", "dsas_display_web('cert');", true);
+      }
+    }).catch(error => {
+      if (!fail_loggedin(error.statusText))
+        modal_message("Error : " + error.statusText);
+    }); 
 }
 
 function dsas_web_errors(errors){
@@ -734,13 +738,27 @@ function dsas_change_service(what) {
          }
        }
        serv.ntp.server = server;
-    
-       $.post("api/dsas-service.php", 
-         { op: op,
-           data: serv
-         }).always(function(errors){
-           if (! dsas_service_errors(errors))
+ 
+       var formData = new FormData;
+       formData.append("op", "all");
+       formData.append("data", JSON.stringify(serv));
+       fetch("api/dsas-service.php", {method: "POST", body: formData 
+         }).then( response => {
+           if (response.ok) 
+             return response.text();
+           else
+             return Promise.reject({status: response.status, 
+               statusText: response.statusText});
+         }).then(text => {
+           try {
+             const errors = JSON.parse(text);
+             dsas_service_errors(errors);
+           } catch (e) {
+             // Its text => here always just "Ok"
              dsas_display_service(what);
+           }
+         }).catch(error => {
+           modal_message("Error : " + error.statusText);
          });
      }).catch(error => {
        fail_loggedin(error.statusText);
@@ -869,16 +887,28 @@ function dsas_cert_delete(name, finger){
 }
 
 function dsas_cert_real_delete(name, finger) {
-  $.post("api/dsas-cert.php", 
-    { op: "delete",
-      finger: finger
-  }).done(function(errors){
-    dsas_display_cert("all");
-    dsas_cert_errors(errors);
-  }).fail(function(xhdr, errors, status){
-    fail_loggedin(status);
-    dsas_cert_errors(status);
-  });
+  var formData = new FormData;
+  formData.append("op", "delete");
+  formData.append("finger", finger);
+  fetch("api/dsas-cert.php", {method: "POST", body: formData 
+    }).then( response => {
+      if (response.ok) 
+        return response.text();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(text => {
+      try {
+        const errors = JSON.parse(text);
+        dsas_cert_errors(errors);
+      } catch (e) {
+        // Its text => here always just "Ok"
+        dsas_display_cert("cert");
+        dsas_display_cert("gpg");
+      }
+    }).catch(error => {
+      modal_message("Error : " + error.statusText);
+    });
 }
 
 function cert_finger(cert) {
@@ -956,23 +986,27 @@ function dsas_upload_cert(type = "x509") {
   var formData = new FormData();
   formData.append("op", type + "_upload");
   formData.append("file", cert[0].files[0]);
-  $.ajax({
-      url: "api/dsas-cert.php",
-      type: "POST",
-      data: formData,
-      cache: false,
-      async: false,
-      contentType: false,
-      processData: false,
-      success: function(errors){
-          if (! dsas_cert_errors(errors))
-            modal_message("Certificate envoyé avec sucess", "dsas_display_cert();", true);
-        },
-      error: function(xhdr, error, status){
-          if (!fail_loggedin(status))
-            modal_message("Error");
-        }
-  });
+
+  fetch("api/dsas-cert.php", {
+    method: 'POST',
+    body: formData}).then(response => {
+      if (response.ok) 
+        return response.text();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(text => {
+      try {
+        const errors = JSON.parse(text);
+        dsas_cert_errors(errors);
+      } catch (e) {
+        // Its text => here always just "Ok"
+        modal_message("Certificate envoy&eacute; avec sucess", "dsas_display_cert();", true);
+      }
+    }).catch(error => {
+      if (!fail_loggedin(error.statusText))
+        modal_message("Error : " + error.statusText);
+    }); 
 }
 
 function dsas_cert_errors(errors){
@@ -1098,11 +1132,15 @@ function task_body(task) {
     '<p class="my-1">Certificates:</p>' +
     '<div class="container p-1 my-1 border overflow-hidden">';
 
-  if (task.cert.constructor === Object) {
-    body = body + '<p class="my-0">' + task.cert.name + '</p>';
-  } else {
-    for (cert of task.cert) {
-      body = body + '<p class="my-0">' + cert.name + '</p>';
+  if (empty_obj(task.cert))
+    body = body + '<p class="my-0"></p>';
+  else {
+    if (task.cert.constructor === Object) {
+      body = body + '<p class="my-0">' + task.cert.name + '</p>';
+    } else {
+      for (cert of task.cert) {
+        body = body + '<p class="my-0">' + cert.name + '</p>';
+      }
     }
   }
   body = body + '</div></div></div></div>';
@@ -1116,16 +1154,28 @@ function dsas_task_delete(id, name){
 }
 
 function dsas_task_real_delete(id) {
-  $.post("api/dsas-task.php", 
-    { op: "delete",
-      data: {id: id}
-  }).done(function(errors){
-     dsas_task_errors(errors);
-  }).always(function(data){
-    dsas_display_tasks("tasks");
-  }).fail(function(xhdr, error, status){
-    fail_loggedin(status);
-  });
+  var formData = new FormData;
+  formData.append("op", "delete");
+  formData.append("id", id);
+  fetch("api/dsas-task.php", {method: "POST", body: formData 
+    }).then( response => {
+      if (response.ok) 
+        return response.text();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(text => {
+      try {
+        const errors = JSON.parse(text);
+        dsas_task_errors(errors);
+      } catch (e) {
+        // Its text => here always just "Ok"
+        dsas_display_tasks("tasks");
+      }
+    }).catch(error => {
+      if (! fail_loggedin(error.statusText))
+        modal_message("Error : " + error.statusText);
+    });
 }
 
 function dsas_task_new() {
@@ -1205,15 +1255,28 @@ function dsas_task_run(id, name){
 }
 
 function dsas_task_real_run(id) {
-  $.post("api/dsas-task.php", 
-    { op: "run", data: {id: id}
-  }).done(function(errors){
-     dsas_task_errors(errors);
-  }).always(function(data){
-    dsas_display_tasks("tasks");
-  }).fail(function(xhdr, error, status){
-    fail_loggedin(status);
-  });
+  var formData = new FormData;
+  formData.append("op", "run");
+  formData.append("id", id);
+  fetch("api/dsas-task.php", {method: "POST", body: formData 
+    }).then( response => {
+      if (response.ok) 
+        return response.text();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(text => {
+      try {
+        const errors = JSON.parse(text);
+        dsas_task_errors(errors);
+      } catch (e) {
+        // Its text => here always just "Ok"
+        dsas_display_tasks("tasks");
+      }
+    }).catch(error => {
+      if (! fail_loggedin(error.statusText))
+        modal_message("Error : " + error.statusText);
+    });
 }
 
 function dsas_add_task_cert() {
@@ -1271,21 +1334,34 @@ function dsas_add_task() {
   for (cert of document.getElementsByTagName("dsas-task-cert"))
     certs.push({name : cert.getAttribute("name"), fingerprint: cert.getAttribute("fingerprint")});
 
-  $.post("api/dsas-task.php", 
-    { op: "add",
-      data: {name: name,
+  var formData = new FormData;
+  formData.append("op", "add");
+  formData.append("data", JSON.stringify({
+             name: name,
              directory: directory,
              uri: uri,
              type: type,
              run: run,
-             certs: certs}
-  }).done(function(errors){
-     dsas_task_errors(errors);
-  }).always(function(data){
-    dsas_display_tasks("tasks");
-  }).fail(function(xhdr, error, status){
-    fail_loggedin(status);
-  });
+             certs: certs}));
+  fetch("api/dsas-task.php", {method: "POST", body: formData 
+    }).then( response => {
+      if (response.ok) 
+        return response.text();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(text => {
+      try {
+        const errors = JSON.parse(text);
+        dsas_task_errors(errors);
+      } catch (e) {
+        // Its text => here always just "Ok"
+        dsas_display_tasks("tasks");
+      }
+    }).catch(error => {
+      if (! fail_loggedin(error.statusText))
+        modal_message("Error : " + error.statusText);
+    });
 }
 
 function dsas_task_errors(errors){
@@ -1344,17 +1420,6 @@ function dsas_apply(){
   });
 }
 
-function isReachable (site) {
-  try {
-    var img = new Image();
-    // Load favicon.ico with cache buster
-    img.src = site + "/favicon.ico" + "." + (new Date());
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
 function dsas_reboot(){
   var modalReboot = document.getElementById("modalReboot");
   document.getElementById("modalDone").hide();
@@ -1385,25 +1450,73 @@ function dsas_reboot(){
   });
 }
 
+function chkdown(site){
+  var times = 5;
+  var progress = document.getElementById("progressShutdown");
+
+  return new Promise((response, reject) => {
+    (function recurse(i) {
+      // favicon because its small and Math.random to avoid the cache
+      fetch(site + "/favicon.ico?rand=" + Math.random()).then(r => {
+        if (times === 30)
+          return reject(r);
+
+        setTimeout(() => recurse(++times), 1000);
+        var prog = ((times + 5) * 100) / 30;
+        progress.setAttribute("style", "width: " + prog + "%");
+        progress.setAttribute("aria-valuenow", prog);
+      }).catch(err => {
+         console.log(err);
+        // Machine is down return success
+        response(err);
+      });
+    })(times);
+  });
+}
+
+function chkup(site){
+  var times = 5;
+  var progress = document.getElementById("progressReboot");
+
+  return new Promise((response, reject) => {
+    (function recurse(i) {
+      // favicon because its small and Math.random to avoid the cache
+      fetch(site + "/favicon.ico?rand=" + Math.random()).then(r => {
+        // Machine is up. Return success
+        response(r);
+      }).catch(err => {
+         if (times === 30)
+          return reject(r);
+
+        setTimeout(() => recurse(++times), 1000);
+        var prog = ((times + 5) * 100) / 30;
+        progress.setAttribute("style", "width: " + prog + "%");
+        progress.setAttribute("aria-valuenow", prog);
+      });
+    })(times);
+  });
+}
+
 function waitreboot(counter = 0) {
   var modalReboot = document.getElementById("modalReboot");
   var progress = document.getElementById("progressReboot");
   counter = counter + 1;
 
   modalReboot.show();
-  if (counter < 120) {
-    if (counter > 10 && isReachable(location.host)) {
-      window.location = "login.html";
-    } else {
-      var prog = (counter * 100) / 120;
-      progress.setAttribute("style", "width: " + prog + "%");
-      progress.setAttribute("aria-valuenow", prog);
-      setTimeout(waitreboot, 1000, counter);
-    }
+  if (counter < 5) {
+    // Wait 5 seconds till testing if up 
+    var prog = (counter * 100) / 30;
+    progress.setAttribute("style", "width: " + prog + "%");
+    progress.setAttribute("aria-valuenow", prog);
+    setTimeout(waitreboot, 1000, counter);
   } else {
-    modal_message("Timeout sur r&eacute;demarrage !");
-    modalReboot.removeAttribute("disable");
-    modalReboot.hide();
+    chkup(location.host).then(reponse => {
+       window.location = "login.html";     
+    }).catch(error => {
+      modal_message("Timeout sur r&eacute;demarrage !");
+      modalReboot.removeAttribute("disable");g
+      modalReboot.hide();      
+    });
   }
 }
 
@@ -1437,32 +1550,28 @@ function dsas_shutdown(){
   });
 }
 
-function waitshutdown(counter = 0, wait = 0) {
+function waitshutdown(counter = 0) {
   var modalShutdown= document.getElementById("modalShutdown");
   var progress = document.getElementById("progressShutdown");
   counter = counter + 1;
 
-  if (counter < 7) {
+  modalReboot.show();
+  if (counter < 5) {
+    // Wait 5 seconds till testing if down 
     var prog = (counter * 100) / 30;
     progress.setAttribute("style", "width: " + prog + "%");
     progress.setAttribute("aria-valuenow", prog);
-    if (isReachable(location.host)) {
-      setTimeout(waitshutdown, 1000, counter);
-    } else {
-      // Wait 5 seconds more because web server will shutdown before the rest
-      wait = wait + 1;
-      if (wait < 5) {
-        setTimeout(waitshutdown, 1000, counter, wait);
-      } else {
-        modal_message("DSAS l'arr&ecirc;t&eacute;. Vous pouvez fermé ce fenetre !");
-        modalShutdown.removeAttribute("disable");
-        modalShutdown.hide();
-      }
-    }
+    setTimeout(waitshutdown, 1000, counter);
   } else {
-    modal_message("Timeout sur l'arr&ecirc;t !");
-    modalShutdown.removeAttribute("disable");
-    modalShutdown.hide();
+    chkdown(location.host).then(response => {
+      modal_message("DSAS arr&ecirc;t&eacute;. Vous pouvez fermer ce fenetre !");
+      modalShutdown.removeAttribute("disable");
+      modalShutdown.hide();
+    }).catch(error => {
+      modal_message("Timeout sur r&eacute;demarrage !");
+      modalShutdown.removeAttribute("disable");
+      modalShutdown.hide();      
+    });
   }
 }
 

@@ -10,7 +10,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
   try {
     switch ($_POST["op"]){
       case "add":
-        $data = $_POST["data"];;
+        $data = json_decode($_POST["data"], true);
         $name = htmlspecialchars($data["name"]);
         if (trim($name) == "")
           $errors[] = ["error" => "Le nom ne peut pas être vide"];
@@ -110,8 +110,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
  
      case "delete":   
-        $data = $_POST["data"];
-        $id = htmlspecialchars($data["id"]);
+        $id =  htmlspecialchars($_POST["id"]);
         $deltask = false;
         $i = 0;
         foreach ($dsas->tasks->task as $task) {
@@ -127,8 +126,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
 
      case "run" :
-        $data = $_POST["data"];;
-        $id = $data["id"];
+        $id = $_POST["id"];;
         if (! ctype_xdigit($id)) {
           $errors[] = ["error" => "ID de la tache invalide;"];
         } else {
