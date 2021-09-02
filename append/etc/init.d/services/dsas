@@ -37,7 +37,8 @@ init_disk(){
   FDISKL=$(fdisk -l | awk '$1 ~ /dev/{printf " %s ",$1}')
   FOUND=""
   DISK=""
-  ARGS="--stdout --radiolist 'Select device to format for the DSAS:' 0 0 0"
+  ARGS="--stdout --no-cancel --radiolist 'Select device to format for the DSAS:' 0 0 0"
+  ON="on"
   # Loop through block devices
   for i in $(find /sys/block/*/ -mindepth 1 -maxdepth 1 -name dev); do
     case "$i" in
@@ -70,12 +71,13 @@ init_disk(){
     done
     DISK="1"
     if [ $REM -lt 1 ]; then
-      ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE$SUF]' off"
+      ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE$SUF]' $ON"
     elif [ $REM -lt 100 ]; then
-      ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE.0$REM$SUF]' off"
+      ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE.0$REM$SUF]' $ON"
     else
-      ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE.$REM$SUF]' off"
+      ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE.$REM$SUF]' $ON"
     fi
+    ON="off"
   done
 
   if [ -z $FOUND ]; then
@@ -210,7 +212,7 @@ config_network(){
   else
     d="off"
   fi
-  DHCP="$(dialog --stdout --checklist 'Interface Bas:' 0 0 0 on 'DHCP' $d)"
+  DHCP="$(dialog --stdout --no-cancel --checklist 'Interface Bas:' 0 0 0 on 'DHCP' $d)"
   if [ "$DHCP" != "$d" ]; then
     if [ "$DHCP" == "on" ]; then
       echo -e "cd /dsas/config/network/bas/dhcp\nset true\nsave" | xmllint --shell $VAR/dsas_conf.xml
@@ -223,7 +225,7 @@ config_network(){
     # Static IP. Configure the rest of the interface
     c=$(xmllint --xpath 'string(dsas/config/network/bas/cidr)' $VAR/dsas_conf.xml)
     while :; do
-      CIDR="$(dialog --stdout --title 'IP Address in CIDR format' --inputbox 'Address:' 0 0 $c)"
+      CIDR="$(dialog --stdout --no-cancel --title 'IP Address in CIDR format' --inputbox 'Address:' 0 0 $c)"
       valid_cidr $CIDR && break;
       dialog --msgbox "IP Address invalid" 0 0
     done
@@ -233,7 +235,7 @@ config_network(){
 
     g=$(xmllint --xpath 'string(dsas/config/network/bas/gateway)' $VAR/dsas_conf.xml)
     while :; do
-      GWAY="$(dialog --stdout --title 'Gateway IP Address' --inputbox 'Address:' 0 0 $g)"
+      GWAY="$(dialog --stdout --no-cancel --title 'Gateway IP Address' --inputbox 'Address:' 0 0 $g)"
       valid_ip $GWAY && break
       dialog --msgbox "IP Address invalid" 0 0
     done
@@ -243,7 +245,7 @@ config_network(){
 
     d=$(xmllint --xpath 'string(dsas/config/network/bas/dns/domain)' $VAR/dsas_conf.xml)
     while :; do
-      DOMAIN="$(dialog --stdout --title 'DNS search domain' --inputbox 'Domain:' 0 0 $d)"
+      DOMAIN="$(dialog --stdout --no-cancel --title 'DNS search domain' --inputbox 'Domain:' 0 0 $d)"
       valid_domain $DOMAIN && break
       dialog --msgbox "Domain invalid" 0 0
     done
@@ -259,20 +261,27 @@ config_network(){
       [ -n "$S" ] && NS="$NS $S"
       $((i++))
     done
-    NAME="$(dialog --stdout --title 'DNS name servers' --inputbox 'Nameservers:' 0 0 "$NS")"
-    if [ "$NAME" != "$NS" ]; then
-      ARGS="cd /dsas/config/network/bas/dns\nset <domain>$DOMAIN</domain>"
-      if [ -z "${NAME// }" ]; then
-        ARGS="${ARGS}<nameserver />"
-      else
-        for S in $NAME; do
-          ARGS="${ARGS}<nameserver>$S</nameserver>"
-          $((i++))
-        done
+    while :; do
+      NAME="$(dialog --stdout --no-cancel --title 'DNS name servers' --inputbox 'Nameservers:' 0 0 "$NS")"
+      if [ "$NAME" != "$NS" ]; then
+        ARGS="cd /dsas/config/network/bas/dns\nset <domain>$DOMAIN</domain>"
+        if [ -z "${NAME// }" ]; then
+          ARGS="${ARGS}<nameserver />"
+        else
+          for S in $NAME; do
+            if  ! valid_ip $S; then 
+              dialog --msgbox "IP Address invalid" 0 0
+              continue 2
+            fi
+            ARGS="${ARGS}<nameserver>$S</nameserver>"
+            $((i++))
+          done
+        fi
+        ARGS="${ARGS}\nsave"
+        echo -e "$ARGS" | xmllint --shell $VAR/dsas_conf.xml
       fi
-      ARGS="${ARGS}\nsave"
-      echo -e "$ARGS" | xmllint --shell $VAR/dsas_conf.xml
-    fi
+      break;
+    done
   fi
 }
 
@@ -482,7 +491,7 @@ config_sshd(){
     chown haut.haut /home/haut/.ssh/known_hosts
 
     while :; do
-      PASSWD="$(dialog --stdout --insecure --passwordbox 'Password user tc:' 0 0)"
+      PASSWD="$(dialog --stdout --no-cancel --insecure --passwordbox 'Password user tc:' 0 0)"
       $as_tc sshpass -p $PASSWD ssh-copy-id -i /home/tc/.ssh/id_rsa.pub -f tc@$INTERCO_HAUT && break
     done
 
@@ -590,7 +599,7 @@ case "${1}" in
       echo "Machine configured as type: ${GREEN}$TYP${NORMAL}"
       CONFIG_SSH=""
     else
-      TYP="$(dialog --stdout --radiolist 'Select machine type:' 0 0 0 haut 'Haut/High' on bas 'Bas/Low' off)"
+      TYP="$(dialog --stdout --no-cancel --radiolist 'Select machine type:' 0 0 0 haut 'Haut/High' on bas 'Bas/Low' off)"
       $as_tc echo $TYP > $VAR/dsas_typ
       echo "Machine configured as type: ${GREEN}$TYP${NORMAL}"
       # The machine "haut" is configured from the web admin of "bas"
@@ -635,7 +644,7 @@ case "${1}" in
     ;;
 
   reconfig)
-    TYP="$(dialog --stdout --radiolist 'Select machine type:' 0 0 0 haut 'Haut/High' on bas 'Bas/Low' off)"
+    TYP="$(dialog --stdout --no-cancel --radiolist 'Select machine type:' 0 0 0 haut 'Haut/High' on bas 'Bas/Low' off)"
     $as_tc echo $TYP > $VAR/dsas_typ
     echo "Machine configured as type: ${GREEN}$TYP${NORMAL}"
     [ "$TYP" == "bas" ] && config_network
