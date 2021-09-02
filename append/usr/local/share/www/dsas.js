@@ -1401,7 +1401,7 @@ function dsas_help_toc(){
   if (ph[0].depth != 1) {
     // Special case. Stupid idiot not starting with h1 !!
     body = body + '<li><a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle dropdown-toggle-split">Main</a>'+
-      '<ul class="list-unstyled small" id="toc_submenu' + c++ + '">';
+      '<ul class="list-unstyled small collapse" id="toc_submenu' + c++ + '">';
    lvl = 2;
   }
   for (let i = 0; i < ph.length; i++) {
@@ -1413,7 +1413,7 @@ function dsas_help_toc(){
     if (i != (ph.length - 1) && (lvl < ph[i+1].depth)) {
       body = body + '<li><a href="#' + h.id + '">' + h.title + '</a>' +
         '<a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle dropdown-toggle-split"></a>' +
-        '<ul class="list-unstyled small" id="toc_submenu' + c++ + '">';
+        '<ul class="list-unstyled small collapse" id="toc_submenu' + c++ + '">';
     } else {
       body = body + '<li' + (lvl > 1 ? ' class="ms-3"' : '') + '><a href="#' + h.id + '">' + h.title + 
         '</a></li>';
@@ -1759,7 +1759,7 @@ class DSASHeader extends HTMLElement {
   render(){
     var disablenav = this.getAttribute("disablenav"); 
 
-    this.innerHTML = '    <nav class="navbar navbar-expand-sm bg-dark navbar-dark">\n' +
+    this.innerHTML = '    <nav class="navbar navbar-expand-sm bg-dark navbar-dark sticky-top">\n' +
 '      <a class="navbar-brand"' + ((disablenav != "disabled") ? ' href="/' : '') + '">DSAS</a>\n' +
 '      <ul class="navbar-nav">\n' +
 '      <li class="nav-item dropdown">\n' +

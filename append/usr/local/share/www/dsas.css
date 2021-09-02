@@ -4,3 +4,6 @@
 .text-toggle[aria-expanded=true] .text-collapsed {
  display: none;
 }
+.sticky-offset {
+  top: 58px;
+}
