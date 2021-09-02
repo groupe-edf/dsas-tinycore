@@ -10,7 +10,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
   try {
     switch ($_POST["op"]){
       case "all":
-        $data = $_POST["data"];
+        $data = json_decode($_POST["data"], true);
         // Lines like these stop the users from passing values other than true/false
         $dsas->config->ssh->active = ($data["ssh"]["active"] === "true" ? "true" : "false");
 
