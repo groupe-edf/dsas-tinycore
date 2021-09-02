@@ -1380,6 +1380,69 @@ function dsas_task_errors(errors){
   }
 }
 
+function dsas_headings(){
+  const hs = Array.prototype.slice.call(document.querySelectorAll("h1, h2"));
+  const ph = hs.map(h => {
+    return {
+      title: h.innerText,
+      depth: h.nodeName.replace(/\D/g, ""),
+      id: h.getAttribute("id")
+    }
+  }); 
+  return ph;
+}
+
+function dsas_help_toc(){
+  var body = '<ul class="list-unstyled">';
+  var lvl = 1;
+  var c = 0;
+  const ph = dsas_headings();
+  console.log(ph);
+  if (ph[0].depth != 1) {
+    // Special case. Stupid idiot not starting with h1 !!
+    body = body + '<li><a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle dropdown-toggle-split">Main</a>'+
+      '<ul class="list-unstyled small" id="toc_submenu' + c++ + '">';
+   lvl = 2;
+  }
+  for (let i = 0; i < ph.length; i++) {
+    var h = ph[i];
+    while (lvl-- > h.depth)
+      // Close the submenu
+      body = body + '</ul></li>';
+    lvl = h.depth;
+    if (i != (ph.length - 1) && (lvl < ph[i+1].depth)) {
+      body = body + '<li><a href="#' + h.id + '">' + h.title + '</a>' +
+        '<a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle dropdown-toggle-split"></a>' +
+        '<ul class="list-unstyled small" id="toc_submenu' + c++ + '">';
+    } else {
+      body = body + '<li' + (lvl > 1 ? ' class="ms-3"' : '') + '><a href="#' + h.id + '">' + h.title + 
+        '</a></li>';
+    }
+  }
+  while (lvl-- > 1)
+    body = body + '</ul></li>'
+
+  document.getElementById("toc").innerHTML = body + '<ul>';
+}
+
+function dsas_display_help(){
+  fetch("Documentation.md").then(response => {
+    if (response.ok) 
+      return response.text();
+    else
+      return Promise.reject({status: response.status, 
+          statusText: response.statusText});
+  }).then(text => {
+    // If user text was parsed here we'd need to sanitize it, but le documentation
+    // is supplied with the DSAS.  
+    document.getElementById("Documentation").innerHTML = marked(text);
+    dsas_help_toc();
+  }).catch(error => {
+    if (!fail_loggedin(error.statusText))
+      modal_message("Erreur pendant la chargement de la documentation : " + error.statusText);
+  });
+}
+
 function dsas_apply(){
   var modalApply = document.getElementById("modalApply")
 
@@ -1725,6 +1788,8 @@ class DSASHeader extends HTMLElement {
 '        <a class="nav-link ' + disablenav + '" data-bs-toggle="modal" data-bs-target="#staticLogout">Logout</a>\n' +
 '      </li>\n' +
 '      <li class="nav-item">\n' +
+'        <a class="nav-link ' + disablenav + '" data-toggle="tooltip" title="Documentation" href="help.html">&nbsp;?&nbsp;</a>\n' +
+'      </li>\n' +'      <li class="nav-item">\n' +
 '        <a class="nav-link ' + disablenav + ' btn btn-danger" data-bs-toggle="modal" data-bs-target="#staticApply">Appliquer</a>\n' +
 '      </li>\n' +
 '      </ul>\n' +
@@ -1801,7 +1866,7 @@ class DSASTaskCert extends HTMLElement {
   render(){
     var name = this.getAttribute("name");
     var fingerprint = this.getAttribute("fingerprint");
-    this.innerHTML = '<p class="my-0">' + name + '<a onclick="dsas_task_cert_delete(\'' + fingerprint + '\',\'' + 
+    this.innerHTML = '<p class="my-0">' + name + '<a  data-toggle="tooltip" title="Supprimer" onclick="dsas_task_cert_delete(\'' + fingerprint + '\',\'' + 
            fingerprint + '\');"><img src="x-lg.svg"></a></p>';
   }
 

@@ -1,0 +1,37 @@
+<!DOCTYPE .html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Help</title>
+    <link rel="stylesheet" type="text/css" href="bootstrap-5.0.2.min.css" />
+    <script src="bootstrap-5.0.2.bundle.min.js"></script>
+    <script src="marked.min.js"></script>
+    <script src="dsas.js"></script>
+    <link rel="stylesheet" type="text/css" href="dsas.css" />
+</head>
+<body>
+
+<dsas-header></dsas-header>
+<span id="Warnings"></span>
+<script>
+  dsas_loggedin();
+  dsas_check_warnings();
+</script>
+
+<div class="container p-3 my-3 border">
+  <div class="row">
+    <div class="col-sm-3">
+      <nav id="toc" class="navbar"></nav>
+    </div>
+    <div class="col-sm-9" data-bs-spy="scroll" data-bs-target="#toc">
+      <div id="Documentation"></div>
+      <script>
+        dsas_display_help();
+      </script>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
