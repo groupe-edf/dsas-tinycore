@@ -200,12 +200,6 @@ valid_domain(){
 }
 
 config_network(){
-  NETDEVICES="$(awk -F: '/eth.:|tr.:/{print $1}' /proc/net/dev 2>/dev/null)"
-  if [ $(echo $NETDEVICES | wc -w) -lt 2 ]; then
-    echo "${RED}At least two network devices are needed. Aborting !!${NORMAL}"
-    exit 1
-  fi
-
   d=$(xmllint --xpath 'string(dsas/config/network/bas/dhcp)' $VAR/dsas_conf.xml)
   if [ "$d" == "true" ]; then
     d="on"
@@ -593,6 +587,12 @@ case "${1}" in
     init_disk || reboot_required
     get_dsas
     mount_dsas
+
+    NETDEVICES="$(awk -F: '/eth.:|tr.:/{print $1}' /proc/net/dev 2>/dev/null)"
+    if [ $(echo $NETDEVICES | wc -w) -lt 2 ]; then
+      echo "${RED}At least two network devices are needed. Aborting !!${NORMAL}"
+      exit 1
+    fi
 
     if [ -f $VAR/dsas_typ ]; then
       TYP="$(cat $VAR/dsas_typ)"
