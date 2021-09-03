@@ -101,7 +101,7 @@ function dsas_login(){
 }
 
 function format_space(bytes) {
-  # Special case zero
+  // Special case zero
   if (bytes == 0)
     return "0 B";
   else {
@@ -1408,8 +1408,8 @@ function dsas_help_toc(){
 
   while (lvl < ph[0].depth) {
     // Special case. Stupid idiot not starting with h1 !!
-    body = body + '<li><a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" ' +
-      'class="dropdown-toggle dropdown-toggle-split' + (lvl == 1 ? '' : ' ms-3') + '">Main</a>'+
+    body = body + '<li' + (lvl == 1 ? '' : ' class="ms-3"') + '><a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" ' +
+      'class="dropdown-toggle dropdown-toggle-split">Main</a>'+
       '<ul class="list-unstyled small collapse" id="toc_submenu' + c++ + '">';
    lvl++;
   }
@@ -1420,12 +1420,15 @@ function dsas_help_toc(){
       body = body + '</ul></li>';
     lvl = h.depth;
     if (i != (ph.length - 1) && (lvl < ph[i+1].depth)) {
-      body = body + '<li><a href="#' + h.id + '">' + h.title + '</a>' +
-        '<a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" ' +
-        'class="dropdown-toggle dropdown-toggle-split' + (lvl == 1 ? '' : ' ms-3') + '"></a>' +
-        '<ul class="list-unstyled small collapse" id="toc_submenu' + c++ + '">';
+      while (lvl < ph[i+1].depth) {
+        body = body + '<li' + (lvl == 1 ? '' : ' class="ms-3"') + '><a href="#' + h.id + '">' + h.title + '</a>' +
+          '<a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" ' +
+          'class="dropdown-toggle dropdown-toggle-split"></a>' +
+          '<ul class="list-unstyled small collapse" id="toc_submenu' + c++ + '">';
+        lvl++;
+      }
     } else {
-      body = body + '<li' + (lvl == 1 ? '' : (lvl == 2 ? ' class="ms-3"' : 'class="ms-6"')) + 
+      body = body + '<li' + (lvl == 1 ? '' : (lvl == 2 ? ' class="ms-3"' : ' class="ms-4"')) + 
         '><a href="#' + h.id + '">' + h.title + '</a></li>';
     }
   }
