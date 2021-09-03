@@ -40,14 +40,14 @@ function dsas_loggedin(){
       return Promise.reject({status: response.status, 
           statusText: response.statusText});
   }).catch(error => {
-    modal_message("Vous n'&ecirc;tes pas connect&eacute;.\nCliquer 'Ok' afin de reconnecter",
+    modal_message("Vous n'&ecirc;tes pas connect&eacute;.\nCliquer 'Ok' afin de vous reconnecter",
         "window.location='login.html'");
   });
 }
 
 function fail_loggedin(status){
   if (status === "Forbidden") {
-    modal_message("Vous n'&ecirc;tes pas connect&eacute;.\nCliquer 'Ok' afin de reconnecter",
+    modal_message("Vous n'&ecirc;tes pas connect&eacute;.\nCliquer 'Ok' afin de vous reconnecter",
         "window.location='login.html'");
     return true;
   } else
@@ -79,7 +79,7 @@ function dsas_login(){
 
   if (! password) {
     document.getElementById("inp_pass").setAttribute("class", "form-control is-invalid");
-    document.getElementById("feed_pass").innerHTML = "Entrer la mot de passe.";
+    document.getElementById("feed_pass").innerHTML = "Entrer le mot de passe.";
     return;
   }
 
@@ -340,11 +340,11 @@ function dsas_set_passwd(){
       } catch (e) {
         // Its text => here always just "Ok"
         // Reload page to clear errors 
-        modal_message("Les mots de passe ont &eacute;t&eacute; chang&eacute;.", "window.location='passwd.html'");
+        modal_message("Les mots de passe ont &eacute;t&eacute; chang&eacute;s.", "window.location='passwd.html'");
       }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
-        modal_message("Erreur pendant la changement des mots de passe: " + error.statusText);
+        modal_message("Erreur pendant le changement des mots de passe: " + error.statusText);
     });
 }
 
@@ -1384,7 +1384,7 @@ function dsas_task_errors(errors){
 }
 
 function dsas_headings(){
-  const hs = Array.prototype.slice.call(document.querySelectorAll("h1, h2"));
+  const hs = Array.prototype.slice.call(document.querySelectorAll("h1, h2, h3"));
   const ph = hs.map(h => {
     return {
       title: h.innerText,
@@ -1401,11 +1401,12 @@ function dsas_help_toc(){
   var c = 0;
   const ph = dsas_headings();
 
-  if (ph[0].depth != 1) {
+  while (lvl < ph[0].depth) {
     // Special case. Stupid idiot not starting with h1 !!
-    body = body + '<li><a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle dropdown-toggle-split">Main</a>'+
+    body = body + '<li><a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" ' +
+      'class="dropdown-toggle dropdown-toggle-split' + (lvl == 1 ? '' : ' ms-3') + '">Main</a>'+
       '<ul class="list-unstyled small collapse" id="toc_submenu' + c++ + '">';
-   lvl = 2;
+   lvl++;
   }
   for (let i = 0; i < ph.length; i++) {
     var h = ph[i];
@@ -1415,11 +1416,12 @@ function dsas_help_toc(){
     lvl = h.depth;
     if (i != (ph.length - 1) && (lvl < ph[i+1].depth)) {
       body = body + '<li><a href="#' + h.id + '">' + h.title + '</a>' +
-        '<a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle dropdown-toggle-split"></a>' +
+        '<a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" +
+        'class="dropdown-toggle dropdown-toggle-split' + (lvl == 1 ? '' : ' ms-3') + '"></a>' +
         '<ul class="list-unstyled small collapse" id="toc_submenu' + c++ + '">';
     } else {
-      body = body + '<li' + (lvl > 1 ? ' class="ms-3"' : '') + '><a href="#' + h.id + '">' + h.title + 
-        '</a></li>';
+      body = body + '<li' + (lvl == 1 ? '' : (lvl == 2 ? ' class="ms-3"' : 'class="ms-6"')) + 
+        '><a href="#' + h.id + '">' + h.title + '</a></li>';
     }
   }
   while (lvl-- > 1)
@@ -1443,7 +1445,7 @@ function dsas_display_help(){
     dsas_help_toc();
   }).catch(error => {
     if (!fail_loggedin(error.statusText))
-      modal_message("Erreur pendant la chargement de la documentation : " + error.statusText);
+      modal_message("Erreur pendant le chargement de la documentation : " + error.statusText);
   });
 }
 
@@ -1471,7 +1473,7 @@ function dsas_apply(){
       modalApply.removeAttribute("disable");
       modalApply.removeAttribute("body");  
       modalApply.hide();
-      modal_message("Configuration appliqu&eacute;");
+      modal_message("Configuration appliqu&eacute;e");
     }).catch(error => {
       modalApply.removeAttribute("disable");
       modalApply.removeAttribute("body");  
@@ -1511,7 +1513,7 @@ function dsas_reboot(){
           statusText: response.statusText});
   }).catch( error => {
     if (! fail_loggedin(error.statusText))
-      modal_message("Erreur pendant la r&eacute;demarrage");
+      modal_message("Erreur pendant le red&eacute;marrage");
     modalReboot.removeAttribute("disable");
     modalReboot.hide();
   });
@@ -1631,7 +1633,7 @@ function waitshutdown(counter = 0) {
     setTimeout(waitshutdown, 1000, counter);
   } else {
     chkdown(location.host).then(response => {
-      modal_message("DSAS arr&ecirc;t&eacute;. Vous pouvez fermer ce fenetre !");
+      modal_message("DSAS arr&ecirc;t&eacute;. Vous pouvez fermer cette fenetre !");
       modalShutdown.removeAttribute("disable");
       modalShutdown.hide();
     }).catch(error => {
@@ -1798,7 +1800,7 @@ class DSASHeader extends HTMLElement {
 '      </li>\n' +
 '      </ul>\n' +
 '    </nav>' +
-'    <dsas-modal id="modalReboot" tag="Reboot" title="&Ecirc;tre-vous s&ucirc;r de vouloir r&eacute;demarrer ?"  action="dsas_reboot();"></dsas-modal>\n' +
+'    <dsas-modal id="modalReboot" tag="Reboot" title="&Ecirc;tre-vous s&ucirc;r de vouloir red&eacute;marrer ?"  action="dsas_reboot();"></dsas-modal>\n' +
 '    <dsas-modal id="modalShutdown" tag="Shutdown" title="&Ecirc;tre-vous s&ucirc;r de vouloir arr&ecirc;ter ?" action="dsas_shutdown();"></dsas-modal>\n' +
 '    <dsas-modal id="modalLogout" tag="Logout" title="&Ecirc;tre-vous s&ucirc;r de vouloir quitter ?" action="dsas_logout();"></dsas-modal>\n' +
 '    <dsas-modal id="modalApply" tag="Apply" title="&Ecirc;tre-vous s&ucirc;r de vouloir appliquer ?" action="dsas_apply();"></dsas-modal>\n' +

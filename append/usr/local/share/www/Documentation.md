@@ -1,457 +1,449 @@
 # Introduction
 
-Le cloisonnement des infrastructures industrielle est essentiel pour limiter 
+Le cloisonnement des infrastructures industrielles est essentiel pour limiter 
 les possibilités d’attaques malveillantes. Ce niveau de cloisonnement limite 
-fortement les capacités à automatiser la récupération des mises à jours de sécurité 
-(MAJ OS, signatures SEP, MAJ logiciels) indispensables à tous systèmes sensibles. 
-Les fichiers de configuration et d'autre support venant d'ailleurs sont egalement
-difficle à recuperer.
+fortement les capacités à automatiser la récupération des mises à jour de sécurité 
+(MAJ OS, signatures SEP, MAJ logicielles) indispensables à tous systèmes sensibles. 
+Les fichiers de configuration ou tout autre fichier sont également
+difficiles à récupérer.
 
 Généralement des clés usb sont utilisées pour injecter des fichiers dans les 
-systèmes d’information.  Ce mode de transfère nécessite des interventions humaines 
-(chronophage) et expose le système industriel à une contamination virale à chaque 
-branchement. Des moins organisationnelle pourait être mise en place afin de controller
-les clefs USB a chaque utilisation, mais la risque de contamination est impossible
+systèmes d’information.  Ce mode de transfert nécessite des interventions humaines 
+(chronophages) et expose le système industriel à une contamination virale à chaque 
+branchement. Des moyens organisationnels pourraient être mis en place afin de controller
+les clefs USB à chaque utilisation, mais le risque de contamination est impossible
 à exclure.
 
-Donc nous avons besoin un moyen technique de transfer des fichiers d'un zone non
-sensible vers nos infrastructure industriel, et de controler symetatiquement tout
-transfert afin de exclure les risques de malveillance. Le XXXXXXXXX (DSAS) a but
+Nous avons donc besoin d'un moyen technique de transfert de fichiers d'une zone non
+sensible vers nos infrastructures industrielles, et de controller systématiquement tout
+transfert afin d'exclure les risques de malveillance. Le XXXXXXXXX (DSAS) a pour but
 de mettre en place ce moyen de transfert sécurisé. Le DSAS a pour objectif de 
 télécharger les mises à jours de sécurité, contrôler leurs intégrités et de les 
-mettre à disposition dans les systèmes d’information. Il a également pour la 
-suppression des usages des clef USB sont des infrastructure industriel.
+mettre à disposition dans les systèmes d’information. Il a également pour but la 
+suppression de l'usage de clefs USB sur des infrastructures industrielles.
 
-Le DSAS assure égalemenr une rupture de session protoclaire entre les différentes
-zone de sécurité dans un contexte de défense en profondeur.
+Le DSAS assure également une rupture de session protocolaire entre les différentes
+zones de sécurité dans un contexte de défense en profondeur.
 
 ## Architecture
 
-Les principes du DSAS sont les suivante
+Les principes du DSAS sont les suivantes :
 
-- Le DSAS n'est pas integré dans aucun des deux domaines interconnecté, mais 
-cloissonné des deux. Les connexions vers les DSAS doit être strictement 
-controllés. 
-- Aucun service ou port réseau non utilisé doit être dispsonible. Les logiciels
-non  utilisé doit être désinstallé
-- Le DSAS doit implementé un rupture complet entre les deux domaines de sensiblité.
-Ceci est implementé par l'utilisation de deux machine distinct pour les connexions
-vers les deux zones de sécurité differents, afin qu'une compromission de la machine 
-interconnecté avec le zone non sensible mettra pas a risque le zone sensible
-- Aucun fichier non controlé doit être visible dans le zone sensible. Les systemes
-fichiers des deux machines du DSAS doit être distinct.
-- Des vérifications doit être fait par le DSAS avant de rendre disponible les
-fichiers dans le zone sensible. C'est vérfications sont actuellement limité à
-des controles d'intégrités mais pourait dans la futur inclure des controles des
-menaces avec un moteur d'AV
-- Le maintient en condition de sécurité  doit être assurer. Ceci veut dire que
-l'ensemble des logiciels exposé à l'attaque doit connu, veille de sécurité mise
-en place et des moyens de palier les vulnérabilité maitrisé
+- Le DSAS n'est intégré dans aucun des deux domaines interconnectés, mais est
+cloisonné des deux. Les connexions vers les DSAS doivent être strictement 
+contrôlées. 
+- Aucun service ou port réseau non utilisé ne doit être disponible. Les logiciels
+non utilisés doivent être désinstallés.
+- Le DSAS doit implémenter une rupture complète entre les deux domaines de sensibilité.
+Ceci est implémenté par l'utilisation de deux machines distinctes pour les connexions
+vers les deux zones de sécurité différentes, afin que la compromission de la machine 
+interconnectée avec le zone non sensible ne mettra pas à risque le zone sensible.
+- Aucun fichier non controlé ne doit être visible dans la zone sensible. Les systèmes
+fichiers des deux machines du DSAS doivent être distincte.
+- Des vérifications doivent être faites par le DSAS avant de rendre disponible les
+fichiers dans le zone sensible. Ces vérifications sont actuellement limitées à
+des contrôles d'intégrité mais pourraient dans la futur inclure des contrôles des
+menaces avec un moteur d'AV.
+- Le maintien en condition de sécurité doit être assurer. Ceci veut dire que
+l'ensemble des logiciels exposés à l'attaque doivent connus, une veille de sécurité doit être mise
+en place et des moyens pour pallier les vulnérabilités maitrisées.
 
-Ces contraints nous poussent vers un des principe d'architecture avec
+Ces contraintes nous poussent vers un des principes d'architecture avec
 
-- Separation de la traitement des zones sensible et non sensible sur deux machines
-distinct.
-- Utilisation d'un souche linux minimale avec le moins de logiciels installé possible.
+- séparation du traitement des zones sensibles et non sensibles sur deux machines
+distinctes.
+- Utilisation d'une souche linux minimale avec le moins de logiciels installés possible.
 Le choix d'utilisation de [Tiny Core Linux](http://tinycorelinux.net/) a été fait car 
-ce souche est mise à jour régulairement et l'installation minimale (de 12 megactets) 
-n'inclut que le noyau de linux, busybox et quelques script de démarrage. Aucun service
-est démarré par défaut
-- Des dépendances supplementaires sont éviter; par exemple perl, python, etc ne sont pas
-installé et tout script utilisé par le DSAS est écrit en shell.
-- Chaque machine utilisé dans le DSAS possede deux interface réseau distinct, un pour 
-la connexion vers les zone sensible et non sensible et l'autre pour l'interconnexion
-entre eux.
-- La sens d'initiation des flux réseau est toujours du plus senible vers le moins
-sensible, et aucun port réseau sur l'interface plus sensible est exposé vers la machine 
-moins sensible
-- L'ensemble de l'adminsitration doit se faire via la machine en zone sensible, afin de
-ne pas exposé l'administration de la machine exposé en zone non sensible.
+cette souche est mise à jour régulièrement et l'installation minimale (de 12 megaoctets) 
+n'inclut que le noyau de linux, busybox et quelques scripts de démarrage. Aucun service
+n'est démarré par défaut
+- Des dépendances supplémentaires sont à éviter; par exemple perl, python, etc ne sont pas
+installés et tout script utilisé par le DSAS est écrit en shell.
+- Chaque machine utilisée dans le DSAS possède deux interfaces réseau distinctes, l'une d'entre elles sert à l'interconnexion entre les machines. Une des machines possède une connexion vers les zones sensibles et l'autre machine est connectée à la zone non sensible.
+- La sens d'instanciation des flux réseau va toujours du plus sensible vers le moins
+sensible, et aucun port réseau sur l'interface la plus sensible n'est exposé de la machine 
+la moins sensible. Ainsi seule la machine de la zone sensible peut télécharger des flux provenant de la zone sensible, la zone non sensible ne peut envoyer des flux vers la zone sensible.
+- L'ensemble de l'administration doit se faire à partir de la zone sensible. Aucune administration ne peut se faire à partir de la zone non sensible. 
 
-L'architecture du DSAS simplifier est alors
+L'architecture du DSAS simplifiée est alors
 
 ![DSAS architecture](images/DSAS.png)
 
-ou les fleches representent des flux réeau ou applicatif et les direction de ces fleches
-est la sens de l'initation de ces flux
+où les flèches représentent des flux réseau ou applicatifs et les directions de ces flèches
+sont le sens de l'initiation de ces flux
 
 # Installation
 
-Avec le DSAS séparé en deux machine, deux installation séparé sont nécessaire. Les deux
-installation suivent le même logique. Dans la discussion suivant la machine connecté au
-réseau non sensible est appelé la machine "haut" et la machine connecté au réseau sensible
-est appelé la machine "bas". Un configuration initial de chaque machine est nécessaire
-depuis sa console, mais après cette phase initale, tout la configuration est fait depuis
-la machine bas.
+Avec le DSAS séparé en deux machines, deux installations séparées sont nécessaires. Les deux
+installations suivent la même logique. Dans la discussion suivante la machine connectée au
+réseau non sensible est appelée la machine "haute" et la machine connectée au réseau sensible
+est appelée la machine "basse". Une configuration initiale de chaque machine est nécessaire
+depuis leur console propre, mais après cette phase initiale, toute la configuration est faite depuis
+la machine basse.
 
 Afin que la configuration se passe facilement il faut démarrer avec la configuration de
-la machine haut, car même en phase initial la machine bas doit prendre la main sur la
-machine haut, et il doit être configuré en premier afin d'être pret à accepter des ordres.
+la machine haute, car même en phase initiale la machine basse doit prendre la main sur la
+machine haute, et elle doit être configurée en premier afin d'être prête à accepter des ordres.
 
-Dans les sections suivant si ce n'est pas dit explicitement la configuration concerne les
-deux machines
+Dans les sections suivantes si ce n'est pas dit explicitement la configuration concerne les
+deux machines.
 
 ## Choix des tailles des disques
 
-Le DSAS a besoin deux disque independant, un pour chacun des deux machines utilisés 
-dans son implementation. Donc le DSAS a besoin deux fois plus de disques que la 
-maximum utilisé pour les transfert. Le DSAS est configuré afin de faire des "mirroir" 
-des disques à télécharger, et les anciens fichiers sont supprimer site ils ne sont 
-plus disponible sur leur site de téléchargement. Donc seulement l'addition des espaces
-utilisé par les sites externe est nécessaire plus un peu de marge
+Le DSAS a besoin de disques indépendants, un pour chacun des deux machines utilisées 
+dans son implementation. Donc le DSAS a besoin de deux fois plus de disques que le 
+maximum utilisé pour les transferts. Le DSAS est configuré afin de faire des "mirroirs" 
+des disques à télécharger, et les anciens fichiers sont supprimés s'ils ne sont 
+plus disponibles sur leur site de téléchargement. Donc seulement l'addition des espaces
+utilisés par les sites externes est nécessaire, plus un peu de marge.
 
-Les mise à mise de windows des "patch tuesday" sont souvent iun 100 de megaoctets en
-taille, donc multiple ca par le nombre à garder à plusiers gigaoctets pourrait être 
-nécessaire pour les mise à jour de windows. Pour les mise à jour de Symantec le besoin
-est dans la 150 megactets
+Les mises à jour de windows des "patchs tuesday" sont souvent une centaine de mégaoctets en
+taille, donc multiplier ça par le nombre à garder représente potentiellement plusieurs gigaoctets. Pour les mises à jour de Symantec le besoin
+est de l'ordre de 150 mégaoctets.
 
-Chaque repositoire de Linux pourrait avoir jusqu'au 50 gigaoctets utilisé, donc si on
-tranfert des mise à jour de linux notre besoin de disque peut vite explosé. Dans Les
-configurations suivant, nous avons utilisé un taille de 50 gigaoctets, mais nous
+Chaque repositoire de Linux pourrait avoir jusqu'a 50 gigaoctets, donc si on
+tranfère des mises à jour de linux notre besoin de disque peut vite exploser. Dans Les
+configurations suivantes, nous avons utilisé une taille de 50 gigaoctets, mais nous
 recommandons au moins 500 Go pour chaque machine du DSAS.
 
-## Configuration en machine virtuel
+## Configuration des machines virtuelles
 
-Le DSAS est founir en forme de ISO à utiliser en "live CD". Ceci veut dire que le 
+Le DSAS est fourni sous forme d'une ISO à utiliser en "live CD". Ceci veut dire que le 
 système exploitation doit démarrer toujours sur ce disque ISO. La grand advantage de
-ca est que les mise à jour du DSAS va être très simple en exploitation et se resume
-par l'arret du DSAS, la remplacement du ISO et la redemarrage.
+cela est que les mises à jour du DSAS vont être très simples en exploitation et se resument
+par l'arrêt du DSAS, le remplacement de l'ISO et le redémarrage.
 
-L'iso du DSAS est un souche linux en 32 bit, et la virtuel machine est à configuré
-en consequence. Par exemple sous VirtualBox la configuration initial devrait être
+L'ISO du DSAS est une souche linux en 32 bits, et la machine virtuelle est à configurer
+en conséquence. Par exemple sous VirtualBox la configuration initiale devrait être
 
-![Création VM sous VirtualBox](images/vbox1.png)
+![Création d'une VM sous VirtualBox](images/vbox1.png)
 
-un minimum de 256 megaoctets est nécessaire afin de démarrer la DSAS. Mais en 
-fonctionnement la DSAS pourrait utiliser plus de ressources et nous recommandant 
-l'utilisation de 1 gigaoctet de memoire. 
+un minimum de 256 mégaoctets est nécessaire afin de démarrer le DSAS. Mais en 
+fonctionnement le DSAS pourrait utiliser plus de ressources et nous recommandons
+l'utilisation de 1 gigaoctet de mémoire. 
 
-La disque pourrait être configuré en présque tous les format, mais pour cette 
-installation nous avons cohoisir d'utiliser des défaut proposé par VirtualBox.
+Le DSAS n'a pas besoin d'un format spécifique de disque. Nous avons choisi ici d'utiliser le format par défaut proposé par VirtualBox.
 
-![Configuration disque sous VirtualBox](images/vbox2.png)
+![Configuration du disque sous VirtualBox](images/vbox2.png)
 
-Après il faut configuré le disque de démarrage du DSAS en mettant le disque ISO du
-DSAS en maitre primaire IDE
+Après il faut configurer le disque de démarrage du DSAS en mettant le disque ISO du
+DSAS en maître primaire IDE
 
-![Boot sur ISO sous VirtualBox](images/vbox3.png)
+![Boot sur l'ISO sous VirtualBox](images/vbox3.png)
 
 Si le disque de démarrage est mal configuré, le DSAS ne pourrait pas démarrer. 
 
-### Interconnexion réseaux entre les machines du DSAS
+### Interconnexion réseau entre les machines du DSAS
 
-Les machines virtuels sont à configurer avec deux cartes reseaux. Le premier carte 
-réseau est toujour utilisé pour les connexions vers les réseaux externe du DSAS
-et leur configuration dependant de l'environement ou est installé le DSAS. 
+Les machines virtuelles sont à configurer avec deux cartes réseaux. La première carte 
+réseau est toujours utilisée pour les connexions vers les réseaux externes du DSAS
+et leur configuration dépendent de l'environnement où est installé le DSAS. 
 
-Le deuxieme carte réseau est toujours utilisé pour l'interconnexion entre les 
-deux machines du DSAS, et ce réseau est un réseau static en "192.168.192.0/24".
-Plusieurs moyenns pourrait être mise en place pour la configuration du reseau
-d'interconnexion, notamment si un pare-feux supplementaire est à place sur ce
-lien (pas vraiment utile). Nous conseillons l'usage un réseau interne à l'hyperviseur
+La deuxième carte réseau est toujours utilisée pour l'interconnexion entre les 
+deux machines du DSAS, et ce réseau est un réseau statique en "192.168.192.0/24".
+Plusieurs moyens pourraient être mis en place pour la configuration du réseau
+d'interconnexion, notamment si un pare-feux supplémentaire est à placer sur ce
+lien (ceci ne semble néanmoins pas vraiment nécessaire). Nous conseillons l'usage un réseau interne à l'hyperviseur
 configuré en VirualBox comme
 
 ![Configuration réseau d'interconnexion sous VirtualBox](images/vbox4.png)
 
-Nous sommes maintenant prêt a démarrer la machine pour la premiere fois
+Nous sommes maintenant prêts a démarrer la machine pour la première fois. 
 
-## Formatage des disques
+Cette étape démarre ainsi une initialisation qui se fait en deux phases : la première à l'aide de la console Linux, et la deuxième à partir de l'interface d'administration en https.
 
-FIXME : Remove Cancel buttons in DSAS boot dialogs and change the images here !!
-FIXME : Therefore don't discuss the cancel button in this documentation
+## Phase d'initialisation depuis la console Linux
 
-A la premiere démarrage le DSAS nous demande de formatter sa disque. Un menu est
-présenter avec l'ensemble des disques trouver connecté au DSAS. Ceci se presente
+### Formatage des disques
+
+Au premier démarrage le DSAS nous demande de formatter son disque. Un menu est
+présenté avec l'ensemble des disques trouvés connectés au DSAS. Ceci se présente
 comme
 
-![Formattage des disques DSAS](images/init1.png)
+![Formatage des disques DSAS](images/init1.png)
 
-La navigation dans ce type de menu est fait avec les clefs suivantes
+La navigation dans ce type de menu est faite avec les clefs suivantes
 
-- les fleches - déplacement du cursors
-- Espace - selection d'un option
-- Tab - bascule entre "Ok" et "Cancel".  
+- les flèches - déplacement du curseur
+- Espace - sélection d'une option
 - Entrée - Continuer
 
-Utiliser "Espace" afin de selectionner la disque, ici "/dev/sda", et "Entrée" 
-afin de démarrer la formattage de la disque. Après la formattage, la machine 
-rédemarra automatiquement avant de continuer
+Utiliser "Espace" afin de sélectionner le disque, ici "/dev/sda", et "Entrée" 
+afin de démarrer le formatage du disque. Après le formatage, la machine 
+rédemarrera automatiquement avant de continuer
 
-## Selection de la type de la machine
+### Sélection du type de machine
 
-Le prochain étape est de selectionner si la machine du DSAS va être configuré 
-en machine haut ou bas. Le menu 
+La prochaine étape consiste à sélectionner si la machine du DSAS va être configurée 
+en machine haute ou basse. Le menu 
 
-![Selection de la type de la machine](images/init3.png)
+![Sélection du type de machine](images/init3.png)
 
-est utilisé afin de présenter la selection de type de machine. Si la machine 
-a été configuré avec seulement une carte réseau a ce point le DSAS va arreter
-sa configuration avec l'érreur
+est utilisé afin de présenter la sélection du type de machine. Si la machine 
+a été configurée avec seulement une carte réseau à ce point le DSAS va arrêter
+sa configuration avec l'erreur
 
-![L'erreur si deux interfaces réseau ne sont pas configuré](images/init2.png)
+![L'erreur si deux interfaces réseau ne sont pas configurées](images/init2.png)
 
-Dans ce cas arrêter la machine et ajouter une carte réseau dan l'hyperviseur.
+Dans ce cas arrêter la machine et ajouter une carte réseau dans l'hyperviseur.
 
-## Configuration réseau initial
+### Configuration du réseau initial
 
-La configuration réseau de la machine haut est fait via l'interface d'administration
-de la machine bas. Par consequence cette section ne concerne que la machine bas. En
-revanche si le réseau n'est pas au moins partiellement configuré sur la machine bas,
-l'interface d'administration pourrait ne pas être disponible. Par consequence un 
-configuration initial du réseau de la machine bas est fait à partir de la console 
+La configuration réseau de la machine haute est faite via l'interface d'administration
+de la machine basse. Par conséquence cette section ne concerne que la machine basse. En
+revanche si le réseau n'est pas au moins partiellement configuré sur la machine basse,
+l'interface d'administration pourrait ne pas être disponible. Par conséquent une 
+configuration initiale du réseau de la machine basse est faite à partir de la console 
 de la machine.
 
-Le premier étape est choisir si le réseau est static ou s'il utilise DHCP pour sa 
-configuration. Le menu suivantte est utilisé afin de confirmer ce choix
+La première étape consiste à choisir si le réseau est statique ou s'il utilise DHCP pour sa 
+configuration. Le menu suivant est utilisé afin de confirmer ce choix
 
-![Selection de reseau DHCP ou static](images/init4.png)
+![Sélection du réseau DHCP ou statique](images/init4.png)
 
-A ce point si DHCP a été choisi aucun autre configuration réseau est nécessaire et 
-vous pouvez passer au section suivant.
+A ce point si le DHCP a été choisi aucune autre configuration réseau n'est nécessaire et 
+vous pouvez passer au section suivante.
 
-Pour la configuration en IP static il faut rentrer l'adresse et netmask en format
-CIDR. Dans le format CIDR le netmask est répresenté par integer entre 0 et 32 
-representant des netmask avec entre 0 et 32 "1" a gauche et le reste du netmask
-completer par des zéros.
+Pour la configuration en IP statique il faut rentrer l'adresse et le netmask en format
+CIDR. Dans le format CIDR le netmask en IPv4 est représenté par un entier compris entre 0 et 32 
+représentant le nombre de bits utilisés pour coder la partie NetId.
 
 Par exemple le netmask "255.255.255.0" est répresenté en format CIDR par "/24" et
 le netmask "255.255.255.128" par "/25". Donc si notre ip est "10.0.2.15" et notre
-netmask est "255.255.255.0" il est rentrer comme
+netmask est "255.255.255.0" il est rentré comme
 
 ![Configuration IP et netmask d'un IP static](images/init6.png)
 
-dans l'interface de configuration au démarrage. L'adresse IP rentrer est validé
-pour sa synatax avant de continuer. Si il n'est pas dans un format accpetable 
-vous seriez répresenter avec le même menu.
+dans l'interface de configuration au démarrage. La syntaxe de l'adresse IP rentrée est validée
+avant de continuer. Si elle n'est pas dans un format acceptable le même menu vous sera représenté en boucle.
 
-Si la machine d'administration n'est pas sur la même sous réseau que la DSAS il faut
-configurer un passerelle par défaut. Sinon laisser vide afin d'empecher tout connexion 
-au DSAS depuis l'exterieur du sous  réseau.
+Si la machine d'administration n'est pas sur le même sous-réseau que le DSAS il faut
+configurer une passerelle par défaut. Sinon laisser vide afin d'empêcher toute connexion 
+au DSAS depuis l'extérieur du sous-réseau.
 
-![Configuration du passerelle  avec un IP static](images/init7.png)
+![Configuration du passerelle avec une IP statique](images/init7.png)
 
-Deux elements sont nécessaire pour la configuration du DNS. Premierement la domain
-de rechercher. Ici une domain de rechercher "edf.fr" est utilisé
+Deux elements sont nécessaires pour la configuration du DNS. Premièrement le domaine
+de recherche. Ici un domain de recherche "edf.fr" est utilisé
 
-![Configuration DNS avec un IP static](images/init8.png)
+![Configuration DNS avec une IP statique](images/init8.png)
 
-avec cette domain de rechercher les hosts "ntp1" et "ntp1.edf.fr" sera equivalent.
-Après il faut définir des serveurs de nom, responsable pour la conversion des 
-adresse DNS en IP. Par exemple 
+avec ce domaine de recherche les hosts "ntp1" et "ntp1.edf.fr" seront équivalents.
+Après il faut définir des serveurs de noms, responsables pour la conversion des 
+adresses DNS en IP. Par exemple 
 
-![Configuration DNS avec un IP static](images/init9.png)
+![Configuration DNS avec une IP statique](images/init9.png)
 
-Plusieurs adresses IP separé par des espaces pourrait être rentre, donnant une liste de 
-serveur de nom en ordre de leur préference d'usage.
+Plusieurs adresses IP séparées par des espaces pourraient être rentrés, donnant une liste de 
+serveurs de noms en ordre de leur préférence d'usage.
 
-## Configuration SSH
+### Configuration SSH
 
-Il n'y a aucun utilisateur SSH sur la machine haut de base, même si optionnelle un
-compte sftp pour l'utilisateur "haut" pourrait être créer pour les dépots de fichier
-sur la machine haut pour une tache sans URI. Si cette configuration non recommandé 
-est utilisé l'interface d'administration pourrait être utiliser afin de configurer.
-La machine haut n'a pas besoin d econfiguration SSH en pphase initial.
+Il n'y a aucun utilisateur SSH sur la machine haute de base, même si un
+compte sftp pour l'utilisateur "haut" pourrait être créé de manière optionnelle. Celui-ci pourrait servir au dépôt de fichiers
+sur la machine haute pour une tâche sans URI. Bien que cette configuration soit non recommandée, une telle configuration est possible depuis l'interface d'administration.  
+La machine haute n'a pas besoin de configuration SSH en phase initiale.
 
-Le configuration du SSH requiert la création de clefs SSH pour deux utilisateur du DSAS;
+Le configuration du SSH requiert la création de clefs SSH pour deux utilisateurs du DSAS;
 
-- l'utilisateur tc en tant que compte a privelge permettant de travailler en shell avec les
+- l'utilisateur __tc__ en tant que compte à privilèges permettant de travailler en shell avec les
 deux machines, et 
-- l'utilisateur haut permettant l'interconnexion en sftp avec l'utilisateur bas du machine haut.
+- l'utilisateur __haut__ permettant l'interconnexion en sftp avec l'utilisateur bas de la machine haute.
 
-La création des clefs est automatique, mais il faut transferer les clefs authorisé sur le
-machine haut. Si la machine haut n'est pas visible du machine bas il va attendre avec la message
+La création des clefs est automatique, mais il faut transférer les clefs autorisées sur la
+machine haute. Si la machine haute n'est pas visible de la machine basse elle va attendre avec le message
 
-![Attente machine bas pour la machine haut]()
+![Attente machine basse pour la machine haute]()
 
-La raison principale afin de voir cette ecran pourrait être que la machine haut n'est
-pas démarré. Mais l'interconnexion réseau entre les deux machine pourrait egalement être
+La raison principale afin de voir cet écran pourrait être que la machine haute n'est
+pas démarrée. Mais l'interconnexion réseau entre les deux machines pourrait également être
 à revoir.
 
-Dans la phase initial, il n'y a aucun clef SSH pour les SSH sans mot de passe. Donc il 
-faut entrée le mot de passe d'utilisateur priviligier __tc__ dans la fenêtre
+Dans la phase initiale, il n'y a aucune clef SSH pour les SSH sans mot de passe. Donc il 
+faut entrer le mot de passe utilisateur à privilège __tc__ dans la fenêtre.
 
-![Entrée de l a mot de passe pendant la configuration SSH]()
+![Entrée du mot de passe pendant la configuration SSH]()
 
-Par défaut le mot de passe du DSAS est __dSa02021DSAS__ mais à la premiere utilisation de
-l'interface d'administration vous seriez forcer de changer ce mot de passe.
+Par défaut le mot de passe du DSAS est __dSa02021DSAS__ mais à la première utilisation de
+l'interface d'administration vous serez forcé de changer ce mot de passe.
 
-Ceci est la dernier étape de la configuration initial sur la console. Phase deux de la
-configuration initial devrrait être fait avec l'interface d'administration.
+Ceci est la dernière étape de la configuration initiale sur la console. La deuxième phase de la
+configuration initiale devrait être faite avec l'interface d'administration.
 
-## En cas d'erreur d'initialisation du DSAS
+### En cas d'erreur d'initialisation du DSAS
 
-L'erreur est humain, et le DSAS propose des moyens de récuperer des erreurs fait
-à l'initialisation. Si la phase initial de l'installation  (utilisant la console)
-n'est terminer, aucun configuration a été sauvé. Un simple rédemarrage de la
-machine va permettre de reconfigurer de zéro. 
+L'erreur est humaine, et le DSAS propose des moyens de récupérer des erreurs faites
+lors de l'initialisation. Si la phase initiale de l'installation (utilisant la console)
+n'est terminée, aucune configuration ne sera sauvegardée. Un simple redémarrage de la
+machine va permettre de reconfigurer à partir de zéro. 
 
-Si malheuresuement vous avez terminer l'installation mais il n'est pas correcte 
-et l'interface d'administration n'est pas accessible, tout n'est pas perdu. En
-revanche le DSAS est configuré afin de démarrer sans aucun interaction humain après
-sa premiere configuration. Donc afin de récuperer d'un erreur il faut connecter
-sur l'interface console.
+Si malheureusement vous avez terminé l'installation mais qu'elle n'est pas correcte 
+et que l'interface d'administration n'est pas accessible, tout n'est pas perdu. Cependant comme le DSAS est configuré pour démarrer sans aucune interaction humaine après
+sa première configuration, il vous faudra vous connecter
+à partir l'interface console pour pouvoir accéder de nouveau au menu de configuration.
 
-Le l'utilisateur à utiliser sur la console est 'tc' et le mot de passe à utiliser,
-si vous n'avez pas déjà modifier avec l'interface d'adminsitration, est comme plus
-haut. Vous seriez presenter avec un console linux classic avec un minimum de fonctionalité
-disponible. 
+L'utilisateur à utiliser sur la console est 'tc' et le mot de passe à utiliser,
+si vous ne l'avez pas déjà modifié avec l'interface d'administration est comme plus
+haut. Un console linux classique avec un minimum de fonctionnalités
+disponibles vous era présenté. 
 
-La commande nécessaire avec de réconfigurer le DSAS est
+La commande nécessaire avec de reconfigurer le DSAS est
 
 ```shell
 $ sudo /etc/init.d/services/dsas reconfig 
 ```
 
-Vous seriez présenter avec les menus comme avant pour la réconfiguration. A la fin 
-de la configuration n'oublie pas de déconnecté avec la commande
+Le menu de configuration vous sera alors présenté. A la fin 
+de la configuration n'oubliez pas de vous déconnecter à l'aide de la commande
 
 ```shell
 $ exit
 ```
 
-## Premier connexion à l'interface d'administration
+## Première connexion à l'interface d'administration
 
-L'adresse de connexion à l'interface d'administration du DSAS va dependre de votre installation
-mais sans NAT entre vous est le DSAS va etre l'adresse IP rentrée precedement. En revanche le
+L'adresse de connexion à l'interface d'administration du DSAS va dépendre de votre installation
+mais sans NAT entre vous et le DSAS, l'adresse IP sera celle entrée précédemment. En revanche le
 port d'administration du DSAS est toujours le __port 5000__. Donc si votre IP est 10.0.15.2 
-comme utilisé dans l'exemple ci-dessus vous devrez connecté à https://10.0.2.15:5000 pour 
+comme utilisé dans l'exemple ci-dessus vous devrez vous connecter à https://10.0.2.15:5000 pour 
 l'interface d'administration du DSAS.
 
-L'interface d'administration est en HTML5 avec des function recent de javascript utilisé. Donc
-un navigateur recente (après 2016) sera nécessaire afin d'utilisé l'interface. Si vous n'arrivez 
-pas à connecter, soit il y a un problème de routage entre vous et le DSAS et il faut vous les 
-configurations des routeurs entre vous et le DSAS, soit la configuration duréseau du DSAS
-precedent est faux. Dans ce cas il faut refferer à la section [En cas d'erreur d'initialisation 
+L'interface d'administration est en HTML5 avec des functions récentes de javascript. Donc
+un navigateur récent (après 2016) sera nécessaire afin d'utiliser l'interface. Si vous n'arrivez 
+pas à vous connecter, c'est soit qu'il y a un problème de routage entre vous et le DSAS et il faut revoir les 
+configurations des routeurs entre vous et le DSAS, soit que la configuration du réseau du DSAS
+précedent est fausse. Dans ce cas il faut référer à la section [En cas d'erreur d'initialisation 
 du DSAS](#en-cas-derreur-dinitialisation-du-dsas). 
 
-Le certificate SSL utilisé par le DSAS en phase initial est auto-signé et ça sera nécessaire 
-à accepter son usage dans votre navigateur. Si vous avez réussi à connecter à l'interface
-d'administration du DSAS vous serez présenter avec l'écran de connexion suivante
+Le certificat SSL utilisé par le DSAS en phase initiale est auto-signé et il sera nécessaire 
+d'accepter son usage dans votre navigateur. Si vous avez réussi à vous connecter à l'interface
+d'administration du DSAS l'écran de connexion suivant vous sera présenté :
 
-![Ecran de connexion du DSAS(images/DSAS1.png)
+![Ecran de connexion du DSAS](images/DSAS1.png)
 
-L'utilisater priviligier sur la DSAS est l'utilisateur __tc__, et le mot de passe par défaut
-est le __dSaO2021DSAS__. A ce point connecter à l'interface d'administration.
+L'utilisateur privilégié sur le DSAS est l'utilisateur __tc__, et le mot de passe par défaut
+est le __dSaO2021DSAS__. A ce point connectez vous sur l'interface d'administration.
 
 ### Les basics de l'interface d'administration
 
 #### Le bouton `Appliquer`
 
-En haut des pages de l'interface d'administration vous trouvez un bouton `Appliquer` sousligné
-en rouge. Ce bouton est très importante. Aucun modification que vous avez fait via l'interface 
-d'administration sera permenant et tous, sauf les changements de mot de passe, ne seraint pas 
-appliqués tant que le bouton n'est pas utilisé avec de sauvegardé les changement de manière 
-permenant. De cette façon des erreurs majeurs pourrait être facilement supprimer avec un simple 
-rédemarrage tant qu'il ne sont pas appliqués. 
+En haut des pages de l'interface d'administration vous trouvez un bouton `Appliquer` souligné
+en rouge. Ce bouton est très important. Aucune modification faite via l'interface 
+d'administration ne sera permanente et aucune, sauf les changements de mot de passe, ne sera 
+appliquée tant que le bouton n'est pas utilisé. Ce bouton effectue une sauvegarde permanente 
+des changements effectués et les applique.
+De cette façon les erreurs majeures peuvent être facilement supprimées avec un simple 
+redémarrage tant qu'elles ne sont pas appliqués. 
 
-#### Arrêter et Rédemarrer
+#### Arrêter et Rédémarrer
 
-Le DSAS pourrait être arrêter et rédemarrer sans craint car l'ensemble des code executable est
-sur l'image ISO du DSAS. Les taches du DSAS en cours sera interompu, mais sera reprise à la
-rédemarrage. Les fonction d'arrêt et rédemarrage sont disponible dan sla menu `Systeme` du
+Le DSAS peut être arrêté et redémarré sans crainte car l'ensemble du code executable est
+sur l'image ISO du DSAS. Les taches du DSAS en cours seront interrompues, mais seront reprises au
+redémarrage. Les fonctions d'arrêt et redémarrage sont disponibles dans le menu `Systeme` du
 DSAS, comme
 
-![Menu systeme du DSAS](images/DSAS8.png)
+![Menu système du DSAS](images/DSAS8.png)
 
 #### Déconnexion automatique
 
-Le DSAS est configuré afin de verifier les droits de connexion à chaque opération, si plus que
-10 minutes passe entre une opération et la suivante, vous seriez déconnecté automatiquement avec
-la message suivante
+Le DSAS est configuré afin de verifier les droits de connexion à chaque opération, si plus de
+10 minutes sépare une opération de la suivante, vous serez automatiquement déconnecté avec
+la message suivant :
 
-![Ecran de deconnexion automatique du DSAS](images/DSAS3.png)
+![Ecran de déconnexion automatique du DSAS](images/DSAS3.png)
 
-En cliquenat `Ok` sur cette message vous seriez rédiriger vers l'écran de connexion du DSAS.
+En cliquant `Ok` sur ce message vous serez redirigé vers l'écran de connexion du DSAS.
 
-### Changement initale des mots de passe
+### Changement inital des mots de passe
 
-Si ceci est votre premier connexion au DSAS seriez présenté avec l'écran
+Si ceci est votre première connexion au DSAS l'écran suivant vous sera présenté :
 
 ![Ecran de changement des mots de passe initiale](images/DSAS2.png)
 
-Les lignes en rouges et jaune en haut de l'écran sont des erreur globale sur la configuration
-du DSAS et ceci sera résolu pendant l'installation du DSAS. Le premier erreur est que ceci 
-est votre premier connexion et tous les mot de passe sont à changer. C'est impossible à 
-continuer avec l'interface d'administration sans ces modifications de mot de passe. 
+Les lignes en rouge et jaune présentées en haut de l'écran sont des erreurs globales sur la configuration
+du DSAS et ceci sera résolu pendant l'installation du DSAS. La première "erreur" est que ceci 
+est votre première connexion et tous les mots de passe sont à changer. Il est impossible de
+continuer avec l'interface d'administration sans modifier les mots de passe. 
 
-L'écran de changement d emot de passe comporte 4 lignes. Sur la premiere ligne, le mot de
-passe existant de l'utilisateur __tc__ doit être rentrée. Apres les trois autres lignes 
-concerne les utilisateurs suivante
+L'écran de changement de mots de passe comporte 4 lignes. Sur la première, le mot de
+passe existant de l'utilisateur __tc__ doit être rentré. Les trois autres lignes 
+concernent les utilisateurs suivants :
 
-- __tc__ - L'utilisateur administrateur du DSAS. Il a tous les priviliges sur le DSAS y compris
-le doit de devenir __root__. Si `ssh` est active pour l'utilisateur __tc__ il pourrait connecter
-avec un interface `ssh` afin de faire de la maintenance avancé sur la DSAS.
+- __tc__ - L'utilisateur administrateur du DSAS. Il a tous les privilèges sur le DSAS y compris
+le doit de devenir __root__. Si `ssh` est actif pour l'utilisateur __tc__ il peut se connecter
+avec une interface `ssh` afin de faire de la maintenance avancée sur la DSAS.
 
-- __bas__ - Cet utilisateur est utilisé dans pour un seul chose. Si le DSAS est configuré avec 
-`ssh` pour l'utilisateur __bas__ il aurait le droit de connecter en `sftp` et seulement en `sftp`
-depuis le zone sensible. Ceci pourrait être utile pour la recuperation des fichiers transmis
-par le DSAS dans certain scenerio. Cet utilisateur ne sera présenter que des fichiers vérifié 
-par le DSAS (un [chroot](https://fr.m.wikipedia.org/wiki/Chroot) est utilisé afin d'empecher 
-l'utilisateur de voir autre chose).
+- __bas__ - Cet utilisateur n'a qu'un seul rôle. Si le DSAS est configuré avec 
+`ssh` pour l'utilisateur __bas__ il aura le droit de se connecter en `sftp` et seulement en `sftp`
+depuis la zone sensible. Ceci pourrait être utile pour la récuperation des fichiers transmis
+par le DSAS dans certains scenarios. Ne seront présentés à cet utilisateur que des fichiers vérifiés 
+par le DSAS et un [chroot](https://fr.m.wikipedia.org/wiki/Chroot) est utilisé afin d'empêcher 
+l'utilisateur de voir autre chose.
 
 - __haut__ - Cet utilisateur comme l'utilisateur __bas__ est utilisé pour une connexion en `sftp`
-depuis le zone non sensible afin de permettre la dépot de fichier directement sur la DSAS. Il est
-également cloissonné et ne peut voir qu'une zone de dépot de fichier. __L'utilisation de cette
-fonctionalité est fortement déconseillé__ car il ouvre la possibilité d'attaque contre le DSAS
+depuis la zone non sensible afin de permettre la dépôt de fichiers directement sur le DSAS. Il est
+également cloisonné et ne peut voir qu'une zone de dépôt de fichiers. __L'utilisation de cette
+fonctionnalité est fortement déconseillés__ car elle ouvre la possibilité d'attaques contre le DSAS
 
-Donc, en configuration normale seulement l'utilisateur __tc__ est à utilisé. Mais les trois
-mot de passe sont a modifier quand même afin d'éliminer l'ensemble des éléments sécret par 
-défaut. Les mots de passe des utilisateurs __bas__ et __haut__ pourraient toujours être rechanger 
-depuis cet interface et si vous ne penser par à utiliser les fonctionnes `sftp` choisir des mot 
-de passes long et aléatoire pour les utilisateurs __bas__ et __haut__.
+Donc, en configuration normale seulement l'utilisateur __tc__ est à utiliser. Mais les trois
+mots de passe sont néanmoins à modifier afin d'éliminer l'ensemble des éléments secrets par 
+défaut. Les mots de passe des utilisateurs __bas__ et __haut__ peuvent toujours être modifiés 
+depuis cette interface et si vous ne pensez pas utiliser les fonctions `sftp`, ilets recommander 
+de choisir des mots de passe longs et aléatoires pour ces utilisateurs __bas__ et __haut__.
 
 FIXME : Add any new rules for the complexity of the password here if added
 
-Les limitations imposé sur les mots de passes sont qu'ils sont
+Les limitations imposées sur les mots de passe sont 
 
-- au moins 8 caracteres de long (12 récommandé)
-- il ne contient pas des expaces ou tabulation
+- ils ont au moins 8 caractères de long (12 recommandés)
+- ils ne contiennent pas d'espaces ni de tabulations
 
-Renterer vos nouvelles mots de passe et cliquer sur `Modifier les mots de passe`. 
+Rentrez vos nouveaux mots de passe et cliquez sur `Modifier les mots de passe`. 
 
-![Ecran en cas de modification réussi de changement des mots de passe](images/DSAS4.png)
+![Ecran en cas de modification réussie de changement des mots de passe](images/DSAS4.png)
 
-A ce point il est récommandé d'appuyer sur la bouton `Appliquer` afin de rendre ces 
-modifications permenant. Sinonà la prochainement rédemarrage les anciennes mots de passe sera 
-demandé.
+A ce point il est recommandé d'appuyer sur la bouton `Appliquer` afin de rendre ces 
+modifications permanentes. Sinon au prochain redémarrage les anciens mots de passe seront 
+demandés.
 
 ### Finalisation des configurations de réseau
 
-L'écran de configuration du réseau est aceder depuis le menu `Configuration` du DSAS, comme 
-suivante
+L'écran de configuration du réseau est accédé depuis le menu `Configuration` du DSAS, comme 
+suivant :
 
 ![Menu de configuration réseau du DSAS](images/DSAS5.png)
 
-en cliquant dessus vous seriez présenté avec l'écran
+en cliquant dessus l'écran suivant vous sera présenté 
 
 ![Ecran de configuration réseau du DSAS](images/DSAS6.png)
 
-La configuration réseau du DSAS est séparé en deux partie. Le réseau conecté vers le réseau 
-sensible denommé __bas__ et le reseau vers le réseau non sensible dénommé __haut__.  Chacun
-de ces deux configuration enu pourrait être acceder en cliquent sur le fleche à côté de type
-du réseau, comme
+La configuration réseau du DSAS est séparée en deux parties. Le réseau connecté vers le réseau 
+sensible denommé __bas__ et le réseau vers le réseau non sensible dénommé __haut__.  Chacunes
+de ces deux configurations pourront être accédées en cliquant sur la flèche située à côté du type
+de réseau, comme
 
 ![Ecran de configuration réseau du DSAS déroulé](images/DSAS7.png)
 
-La configuration du réseau __bas__, précedement rentré est visible dans ce menu. Verifier les
+La configuration du réseau __bas__, précédemment entrée est visible dans ce menu. Vérifier les
 configurations, modifier si nécessaire et appuyer sur  `Sauvegarder des changements`.
 
-Une synthese des formats des entrées sur cette pages sont
+Une synthèse des formats des entrées sur cette pages sont
 
-- Si l'option DHCP est sélecté les autres champs pour la configuration réseau est ignoré sur cette
+- Si l'option DHCP est sélectionnée les autres champs pour la configuration réseau sont ignorés sur cette
 interface.
 
-- Les adresses IP, sont en format IPv4 come NNN.NNN.NNN.NNN
+- Les adresses IP, sont au format IPv4 comme NNN.NNN.NNN.NNN
 
-- Si un netmask est nécessaire il rentrer en format CIDR  Dans le format CIDR le netmask est 
-répresenté par integer entre 0 et 32  representant des netmask avec entre 0 et 32 "1" a gauche
-et le reste du netmask completer par des zéros. Par exemple le netmask "255.255.255.0" est 
+- Si un netmask est nécessaire il est rentré au format CIDR. Dans le format CIDR le netmask est 
+répresenté par un entier compris entre 0 et 32, représentant la taille du NetId. 
+Par exemple le netmask "255.255.255.0" est 
 répresenté en format CIDR par "/24" et le netmask "255.255.255.128" par "/25". 
 
-- Le "DNS serach domain" doit être un nom de domaine valable.
+- Le "DNS Domain" doit être un nom de domaine valable.
 
-Plusieurs adresses IP separé par des espaces pourrait être rentre, donnant une liste de 
-serveur de nom en ordre de leur préference d'usage.
+Plusieurs adresses IP separées par des retours chariot peuvent être rentrées, donnant une liste de 
+serveurs de noms en ordre de leur préférence d'usage.
 
 
 ### Renouvellement de la certificate web
