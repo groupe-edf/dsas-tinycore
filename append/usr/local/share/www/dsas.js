@@ -101,9 +101,14 @@ function dsas_login(){
 }
 
 function format_space(bytes) {
-  symbols = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-  exp = Math.floor(Math.log(bytes)/Math.log(1024));
-  return (bytes/Math.pow(1024, Math.floor(exp))).toFixed(2)  + " " + symbols[exp];
+  # Special case zero
+  if (bytes == 0)
+    return "0 B";
+  else {
+    symbols = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+    exp = Math.floor(Math.log(bytes)/Math.log(1024));
+    return (bytes/Math.pow(1024, Math.floor(exp))).toFixed(2)  + " " + symbols[exp];
+  }
 }
 
 function dsas_status(){
@@ -1416,7 +1421,7 @@ function dsas_help_toc(){
     lvl = h.depth;
     if (i != (ph.length - 1) && (lvl < ph[i+1].depth)) {
       body = body + '<li><a href="#' + h.id + '">' + h.title + '</a>' +
-        '<a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" +
+        '<a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" ' +
         'class="dropdown-toggle dropdown-toggle-split' + (lvl == 1 ? '' : ' ms-3') + '"></a>' +
         '<ul class="list-unstyled small collapse" id="toc_submenu' + c++ + '">';
     } else {

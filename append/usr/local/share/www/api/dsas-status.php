@@ -18,7 +18,8 @@ else {
   $bas = ["disk" =>  $d,
           "disk_free" => disk_free_space($d),
           "disk_total" => disk_total_space($d),
-          "memory_used" => (int)$mem[2],
+           // With a ramdisk, the free memory is pretty much false. Used 'Total - Avail' instead
+          "memory_used" => (int)$mem[1] - (int)$mem[6],
           "memory_total" => (int)$mem[1],
           "cores" => (int)$cores,
           "loadavg" => (float)$loadavg];
@@ -45,14 +46,14 @@ else {
              "disk" =>  $d,
              "disk_free" => $free,
              "disk_total" => $total,
-             "memory_used" => (int)$mem[2],
+             "memory_used" => (int)$mem[1] - (int)$mem[6],
              "memory_total" => (int)$mem[1],
              "cores" => (int)$cores,
              "loadavg" => (float)$loadavg];
   } else
     $haut = ["status" => "down",
              "disk" =>  $d,
-             "disk_free" => 0,
+             "disk_free" => 1,
              "disk_total" => 1,
              "memory_used" => 0,
              "memory_total" => 1,
