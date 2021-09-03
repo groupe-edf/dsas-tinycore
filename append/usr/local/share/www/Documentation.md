@@ -122,24 +122,31 @@ en consequence. Par exemple sous VirtualBox la configuration initial devrait êt
 
 ![Création VM sous VirtualBox](images/vbox1.png)
 
-Avec la configuration de la disque comme
+un minimum de 256 megaoctets est nécessaire afin de démarrer la DSAS. Mais en 
+fonctionnement la DSAS pourrait utiliser plus de ressources et nous recommandant 
+l'utilisation de 1 gigaoctet de memoire. 
+
+La disque pourrait être configuré en présque tous les format, mais pour cette 
+installation nous avons cohoisir d'utiliser des défaut proposé par VirtualBox.
 
 ![Configuration disque sous VirtualBox](images/vbox2.png)
 
-Après il faut configuré le disque de démarrage du DSAS en mettant le disaus ISO du
+Après il faut configuré le disque de démarrage du DSAS en mettant le disque ISO du
 DSAS en maitre primaire IDE
 
 ![Boot sur ISO sous VirtualBox](images/vbox3.png)
 
+Si le disque de démarrage est mal configuré, le DSAS ne pourrait pas démarrer. 
+
 ### Interconnexion réseaux entre les machines du DSAS
 
-Les machine virtuel sont à configurer avec deux carte reseaux. Le premier carte 
+Les machines virtuels sont à configurer avec deux cartes reseaux. Le premier carte 
 réseau est toujour utilisé pour les connexions vers les réseaux externe du DSAS
 et leur configuration dependant de l'environement ou est installé le DSAS. 
 
 Le deuxieme carte réseau est toujours utilisé pour l'interconnexion entre les 
 deux machines du DSAS, et ce réseau est un réseau static en "192.168.192.0/24".
-Plusieurs moins pourrait être mise en place pour la confiuration du reseau
+Plusieurs moyenns pourrait être mise en place pour la configuration du reseau
 d'interconnexion, notamment si un pare-feux supplementaire est à place sur ce
 lien (pas vraiment utile). Nous conseillons l'usage un réseau interne à l'hyperviseur
 configuré en VirualBox comme
@@ -172,9 +179,18 @@ rédemarra automatiquement avant de continuer
 
 ## Selection de la type de la machine
 
+Le prochain étape est de selectionner si la machine du DSAS va être configuré 
+en machine haut ou bas. Le menu 
+
 ![Selection de la type de la machine](images/init3.png)
 
+est utilisé afin de présenter la selection de type de machine. Si la machine 
+a été configuré avec seulement une carte réseau a ce point le DSAS va arreter
+sa configuration avec l'érreur
+
 ![L'erreur si deux interfaces réseau ne sont pas configuré](images/init2.png)
+
+Dans ce cas arrêter la machine et ajouter une carte réseau dan l'hyperviseur.
 
 ## Configuration réseau initial
 
@@ -204,7 +220,16 @@ netmask est "255.255.255.0" il est rentrer comme
 
 ![Configuration IP et netmask d'un IP static](images/init6.png)
 
-dans l'interface de configuration au démarrage.
+dans l'interface de configuration au démarrage. L'adresse IP rentrer est validé
+pour sa synatax avant de continuer. Si il n'est pas dans un format accpetable 
+vous seriez répresenter avec le même menu.
+
+
+
+Si la machine d'administration n'est
+pas sur la même sous réseau que la DSAS il aut configuré un passerelle par défaut.
+Sinon laisser vide afin d'empecher tout connexion au DSAS depuis l'exterieur du sous 
+réseau.
 
 ![Configuration du passerelle  avec un IP static](images/init7.png)
 
