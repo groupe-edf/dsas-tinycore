@@ -224,22 +224,59 @@ dans l'interface de configuration au démarrage. L'adresse IP rentrer est valid�
 pour sa synatax avant de continuer. Si il n'est pas dans un format accpetable 
 vous seriez répresenter avec le même menu.
 
-
-
-Si la machine d'administration n'est
-pas sur la même sous réseau que la DSAS il aut configuré un passerelle par défaut.
-Sinon laisser vide afin d'empecher tout connexion au DSAS depuis l'exterieur du sous 
-réseau.
+Si la machine d'administration n'est pas sur la même sous réseau que la DSAS il faut
+configurer un passerelle par défaut. Sinon laisser vide afin d'empecher tout connexion 
+au DSAS depuis l'exterieur du sous  réseau.
 
 ![Configuration du passerelle  avec un IP static](images/init7.png)
 
+Deux elements sont nécessaire pour la configuration du DNS. Premierement la domain
+de rechercher. Ici une domain de rechercher "edf.fr" est utilisé
+
 ![Configuration DNS avec un IP static](images/init8.png)
+
+avec cette domain de rechercher les hosts "ntp1" et "ntp1.edf.fr" sera equivalent.
+Après il faut définir des serveurs de nom, responsable pour la conversion des 
+adresse DNS en IP. Par exemple 
 
 ![Configuration DNS avec un IP static](images/init9.png)
 
+Plusieurs adresses IP separé par des espaces pourrait être rentre, donnant une liste de 
+serveur de nom en ordre de leur préference d'usage.
+
 ## Configuration SSH
 
-Le configuration 
+Il n'y a aucun utilisateur SSH sur la machine haut de base, même si optionnelle un
+compte sftp pour l'utilisateur "haut" pourrait être créer pour les dépots de fichier
+sur la machine haut pour une tache sans URI. Si cette configuration non recommandé 
+est utilisé l'interface d'administration pourrait être utiliser afin de configurer.
+La machine haut n'a pas besoin d econfiguration SSH en pphase initial.
+
+Le configuration du SSH requiert la création de clefs SSH pour deux utilisateur du DSAS;
+
+- l'utilisateur tc en tant que compte a privelge permettant de travailler en shell avec les
+deux machines, et 
+- l'utilisateur haut permettant l'interconnexion en sftp avec l'utilisateur bas du machine haut.
+
+La création des clefs est automatique, mais il faut transferer les clefs authorisé sur le
+machine haut. Si la machine haut n'est pas visible du machine bas il va attendre avec la message
+
+![Attente machine bas pour la machine haut]()
+
+La raison principale afin de voir cette ecran pourrait être que la machine haut n'est
+pas démarré. Mais l'interconnexion réseau entre les deux machine pourrait egalement être
+à revoir.
+
+Dans la phase initial, il n'y a aucun clef SSH pour les SSH sans mot de passe. Donc il 
+faut entrée le mot de passe d'utilisateur priviligier __tc__ dans la fenêtre
+
+![Entrée de l a mot de passe pendant la configuration SSH]()
+
+Par défaut le mot de passe du DSAS est __dSa02021DSAS__ mais à la premiere utilisation de
+l'interface d'administration vous seriez forcer de changer ce mot de passe.
+
+Ceci est la dernier étape de la configuration initial sur la console. Phase deux de la
+configuration initial devrrait être fait avec l'interface d'administration.
 
 ## En cas d'erreur d'initialisation du DSAS
 
@@ -261,28 +298,167 @@ disponible.
 
 La commande nécessaire avec de réconfigurer le DSAS est
 
-```
-sudo /etc/init.d/services/dsas reconfig 
+```shell
+$ sudo /etc/init.d/services/dsas reconfig 
 ```
 
 Vous seriez présenter avec les menus comme avant pour la réconfiguration. A la fin 
 de la configuration n'oublie pas de déconnecté avec la commande
 
-```
-exit
+```shell
+$ exit
 ```
 
 ## Premier connexion à l'interface d'administration
 
-### Changement des mots de passe
+L'adresse de connexion à l'interface d'administration du DSAS va dependre de votre installation
+mais sans NAT entre vous est le DSAS va etre l'adresse IP rentrée precedement. En revanche le
+port d'administration du DSAS est toujours le __port 5000__. Donc si votre IP est 10.0.15.2 
+comme utilisé dans l'exemple ci-dessus vous devrez connecté à https://10.0.2.15:5000 pour 
+l'interface d'administration du DSAS.
 
-### Finalisation des configuration de réseau
+L'interface d'administration est en HTML5 avec des function recent de javascript utilisé. Donc
+un navigateur recente (après 2016) sera nécessaire afin d'utilisé l'interface. Si vous n'arrivez 
+pas à connecter, soit il y a un problème de routage entre vous et le DSAS et il faut vous les 
+configurations des routeurs entre vous et le DSAS, soit la configuration duréseau du DSAS
+precedent est faux. Dans ce cas il faut refferer à la section [En cas d'erreur d'initialisation 
+du DSAS](#en-cas-derreur-dinitialisation-du-dsas). 
+
+Le certificate SSL utilisé par le DSAS en phase initial est auto-signé et ça sera nécessaire 
+à accepter son usage dans votre navigateur. Si vous avez réussi à connecter à l'interface
+d'administration du DSAS vous serez présenter avec l'écran de connexion suivante
+
+![Ecran de connexion du DSAS(images/DSAS1.png)
+
+L'utilisater priviligier sur la DSAS est l'utilisateur __tc__, et le mot de passe par défaut
+est le __dSaO2021DSAS__. A ce point connecter à l'interface d'administration.
+
+### Les basics de l'interface d'administration
+
+#### Le bouton `Appliquer`
+
+En haut des pages de l'interface d'administration vous trouvez un bouton `Appliquer` sousligné
+en rouge. Ce bouton est très importante. Aucun modification que vous avez fait via l'interface 
+d'administration sera permenant et tous, sauf les changements de mot de passe, ne seraint pas 
+appliqués tant que le bouton n'est pas utilisé avec de sauvegardé les changement de manière 
+permenant. De cette façon des erreurs majeurs pourrait être facilement supprimer avec un simple 
+rédemarrage tant qu'il ne sont pas appliqués. 
+
+#### Arrêter et Rédemarrer
+
+Le DSAS pourrait être arrêter et rédemarrer sans craint car l'ensemble des code executable est
+sur l'image ISO du DSAS. Les taches du DSAS en cours sera interompu, mais sera reprise à la
+rédemarrage. Les fonction d'arrêt et rédemarrage sont disponible dan sla menu `Systeme` du
+DSAS, comme
+
+![Menu systeme du DSAS](images/DSAS8.png)
+
+#### Déconnexion automatique
+
+Le DSAS est configuré afin de verifier les droits de connexion à chaque opération, si plus que
+10 minutes passe entre une opération et la suivante, vous seriez déconnecté automatiquement avec
+la message suivante
+
+![Ecran de deconnexion automatique du DSAS](images/DSAS3.png)
+
+En cliquenat `Ok` sur cette message vous seriez rédiriger vers l'écran de connexion du DSAS.
+
+### Changement initale des mots de passe
+
+Si ceci est votre premier connexion au DSAS seriez présenté avec l'écran
+
+![Ecran de changement des mots de passe initiale](images/DSAS2.png)
+
+Les lignes en rouges et jaune en haut de l'écran sont des erreur globale sur la configuration
+du DSAS et ceci sera résolu pendant l'installation du DSAS. Le premier erreur est que ceci 
+est votre premier connexion et tous les mot de passe sont à changer. C'est impossible à 
+continuer avec l'interface d'administration sans ces modifications de mot de passe. 
+
+L'écran de changement d emot de passe comporte 4 lignes. Sur la premiere ligne, le mot de
+passe existant de l'utilisateur __tc__ doit être rentrée. Apres les trois autres lignes 
+concerne les utilisateurs suivante
+
+- __tc__ - L'utilisateur administrateur du DSAS. Il a tous les priviliges sur le DSAS y compris
+le doit de devenir __root__. Si `ssh` est active pour l'utilisateur __tc__ il pourrait connecter
+avec un interface `ssh` afin de faire de la maintenance avancé sur la DSAS.
+
+- __bas__ - Cet utilisateur est utilisé dans pour un seul chose. Si le DSAS est configuré avec 
+`ssh` pour l'utilisateur __bas__ il aurait le droit de connecter en `sftp` et seulement en `sftp`
+depuis le zone sensible. Ceci pourrait être utile pour la recuperation des fichiers transmis
+par le DSAS dans certain scenerio. Cet utilisateur ne sera présenter que des fichiers vérifié 
+par le DSAS (un [chroot](https://fr.m.wikipedia.org/wiki/Chroot) est utilisé afin d'empecher 
+l'utilisateur de voir autre chose).
+
+- __haut__ - Cet utilisateur comme l'utilisateur __bas__ est utilisé pour une connexion en `sftp`
+depuis le zone non sensible afin de permettre la dépot de fichier directement sur la DSAS. Il est
+également cloissonné et ne peut voir qu'une zone de dépot de fichier. __L'utilisation de cette
+fonctionalité est fortement déconseillé__ car il ouvre la possibilité d'attaque contre le DSAS
+
+Donc, en configuration normale seulement l'utilisateur __tc__ est à utilisé. Mais les trois
+mot de passe sont a modifier quand même afin d'éliminer l'ensemble des éléments sécret par 
+défaut. Les mots de passe des utilisateurs __bas__ et __haut__ pourraient toujours être rechanger 
+depuis cet interface et si vous ne penser par à utiliser les fonctionnes `sftp` choisir des mot 
+de passes long et aléatoire pour les utilisateurs __bas__ et __haut__.
+
+FIXME : Add any new rules for the complexity of the password here if added
+
+Les limitations imposé sur les mots de passes sont qu'ils sont
+
+- au moins 8 caracteres de long (12 récommandé)
+- il ne contient pas des expaces ou tabulation
+
+Renterer vos nouvelles mots de passe et cliquer sur `Modifier les mots de passe`. 
+
+![Ecran en cas de modification réussi de changement des mots de passe](images/DSAS4.png)
+
+A ce point il est récommandé d'appuyer sur la bouton `Appliquer` afin de rendre ces 
+modifications permenant. Sinonà la prochainement rédemarrage les anciennes mots de passe sera 
+demandé.
+
+### Finalisation des configurations de réseau
+
+L'écran de configuration du réseau est aceder depuis le menu `Configuration` du DSAS, comme 
+suivante
+
+![Menu de configuration réseau du DSAS](images/DSAS5.png)
+
+en cliquant dessus vous seriez présenté avec l'écran
+
+![Ecran de configuration réseau du DSAS](images/DSAS6.png)
+
+La configuration réseau du DSAS est séparé en deux partie. Le réseau conecté vers le réseau 
+sensible denommé __bas__ et le reseau vers le réseau non sensible dénommé __haut__.  Chacun
+de ces deux configuration enu pourrait être acceder en cliquent sur le fleche à côté de type
+du réseau, comme
+
+![Ecran de configuration réseau du DSAS déroulé](images/DSAS7.png)
+
+La configuration du réseau __bas__, précedement rentré est visible dans ce menu. Verifier les
+configurations, modifier si nécessaire et appuyer sur  `Sauvegarder des changements`.
+
+Une synthese des formats des entrées sur cette pages sont
+
+- Si l'option DHCP est sélecté les autres champs pour la configuration réseau est ignoré sur cette
+interface.
+
+- Les adresses IP, sont en format IPv4 come NNN.NNN.NNN.NNN
+
+- Si un netmask est nécessaire il rentrer en format CIDR  Dans le format CIDR le netmask est 
+répresenté par integer entre 0 et 32  representant des netmask avec entre 0 et 32 "1" a gauche
+et le reste du netmask completer par des zéros. Par exemple le netmask "255.255.255.0" est 
+répresenté en format CIDR par "/24" et le netmask "255.255.255.128" par "/25". 
+
+- Le "DNS serach domain" doit être un nom de domaine valable.
+
+Plusieurs adresses IP separé par des espaces pourrait être rentre, donnant une liste de 
+serveur de nom en ordre de leur préference d'usage.
+
 
 ### Renouvellement de la certificate web
 
 # Usage
 
-## Application des changements
+## Page de statut des taches et les machines
 
 ## Configuration réseau 
 
@@ -401,10 +577,10 @@ Le logiciel osslsigncode [https://github.com/mtrojnar/osslsigncode] est utilisé
 Les signatures GPG pourrait être integré dans le fichier signé ou dans un fichier à part. Le DSAS
 assume qu'un des moyens suivant est utilisé afin de signé un fichier
 
-```
-gpg --output <file>.gpg --sign <file>
-gpg --output <file>.sig --detach-sig <file>
-gpg --output <file>.sig -a --detach-sig <file>
+```shell
+$ gpg --output <file>.gpg --sign <file>
+$ gpg --output <file>.sig --detach-sig <file>
+$ gpg --output <file>.sig -a --detach-sig <file>
 ```
 
 Donc des signature detaché sont en deux fichiers <file> et <file>.sig, et des signature integrés 
@@ -414,16 +590,16 @@ sont dans des fichiers terminant comme <file>.gpg
 
 L'utilisateur doit avoir déja generé des clefs publique et privé pour la signature avec 
 
-```
-openssl genrsa -out key.pem 4096
-openssl rsa -in key.pem -pubout > key.pub
+```shell
+$ openssl genrsa -out key.pem 4096
+$ openssl rsa -in key.pem -pubout > key.pub
 ```
 
 Et le clef publique dans le fichier key.pub doit être associé avec le tache dans le DSAS. Les fichiers
 sont signés comme
 
-```
-openssl dgst -sign key.pem -keyform PEM -sha256 -out <file>.sig -binaru <file>
+```shell
+openssl dgst -sign key.pem -keyform PEM -sha256 -out <file>.sig -binary <file>
 ```
 
 Les signatures sont toujours stockés dans des fichiers séparé, et le DSAS assume que les signature
