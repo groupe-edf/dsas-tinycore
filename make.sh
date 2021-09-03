@@ -353,13 +353,6 @@ case $1 in
   mkdir -p $extract/home/tc
   chown root.root $extract
   chmod 755 $extract/home
-  chown -R tc.staff $extract/home/tc
-  chown -R tc.verif $extract/var/dsas
-  chmod 775 
-  chmod 600 $extract/var/dsas/*.csr $extract/var/dsas/*.pem
-  chown -R root.staff $extract/opt
-  chmod 770 $extract/opt
-  chmod 770 $extract/opt/.filetool.lst
 
   # prevent autologin of tc user
   ( cd $extract/etc; cat inittab | sed -r 's/(.*getty)(.*autologin)(.*)/\1\3/g' > inittab.new; )
@@ -376,7 +369,7 @@ case $1 in
   msg WARNING: Change default password for 'tc' user and run 'filetool.sh -b'
   echo tc:dSa02021cTf >> $passfile
 cat << EOF >> $create_users
-echo tc:dSaO2021cTf | chpasswd -c sha512
+echo tc:dSaO2021DSAS | chpasswd -c sha512
 EOF
 
 
@@ -415,12 +408,23 @@ addgroup haut share
 addgroup -g 2004 repo
 addgroup bas repo
 addgroup tc repo
+
+# Fix directory and file permissions
+chown -R tc.staff /home/tc
+chown -R tc.verif /var/dsas
+chomod 775 /var/dsas          # Write perm for verif
+chmod 640 /var/dsas/*.csr /var/dsas/*.pem
 chown tc.repo /var/dsas/*.csr /var/dsas/*.pem
+chown -R root.staff /opt
+chmod 770 /opt
+chmod 770 /opt/.filetool.lst
+
 EOF
 
   chmod 755 $create_users
   chroot $extract /tmp/create_users.sh
   rm $create_users
+
 
   # customize boot screen
   rsync -rv ./boot/ $newiso/boot/
