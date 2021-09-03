@@ -6,13 +6,17 @@
     <title>Help</title>
     <link rel="stylesheet" type="text/css" href="bootstrap-5.0.2.min.css" />
     <script src="bootstrap-5.0.2.bundle.min.js"></script>
+<!-- hightlight.js code syntax hightlighting code. Not really needed with only shell
+    <link rel="stylesheet" type="text/css" href="default.min.css" />
+    <script src="highlight.min.js"></script>
+-->
+    <link rel="stylesheet" type="text/css" href="github-markdown.min.css" />
     <script src="marked.min.js"></script>
     <script src="dsas.js"></script>
     <link rel="stylesheet" type="text/css" href="dsas.css" />
 </head>
 <body>
 
-<-- Don't put this in dsas.css as I don't want it to apply on all pages -->
 <style>
 html {
   scroll-padding-top: 70px;
@@ -32,7 +36,7 @@ html {
       <nav id="toc" class="navbar flex-column sticky-top sticky-offset navbar-light bg-light">
       </nav>
     </div>
-    <div class="col-sm-9" data-bs-spy="scroll" data-bs-target="#toc">
+    <div class="col-sm-9">
       <div id="Documentation"></div>
       <script>
         dsas_display_help();
