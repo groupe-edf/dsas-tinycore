@@ -68,6 +68,7 @@ moins sensible
 - L'ensemble de l'adminsitration doit se faire via la machine en zone sensible, afin de
 ne pas exposé l'administration de la machine exposé en zone non sensible.
 
+![DSAS architecture](images/DSAS.png)
 
 
 
