@@ -95,7 +95,6 @@ function dsas_init(){
       <user>tc</user>
       <user>bas</user>
       <user>haut</user>
-      <user>verif</user>
     </users>
     <network>
       <bas>
@@ -182,8 +181,9 @@ function change_passwd($name, $passwd, $hash = "sha512"){
   $cwd="/tmp";
   
   // User proc_open with a command array to avoid spawning
-  // a shell that can be attacked 
-  $process = proc_open(["sudo", "/usr/sbin/chpasswd", "-c", $hash], $descriptorspec, $pipes, $cwd);
+  // a shell that can be attacked
+  // Set the machine "haut" first as it might not be available
+  $process = proc_open(["ssh", "tc@" . interco_haut(), "sudo", "/usr/sbin/chpasswd", "-c", $hash], $descriptorspec, $pipes, $cwd);
   // password and username can't be used to attack here as
   // there is no shell to attack. At this point its also too late
   // to pass args to chpasswd like "-c md5" to force a weak hash
@@ -193,23 +193,23 @@ function change_passwd($name, $passwd, $hash = "sha512"){
   fclose($pipes[1]);
   $stderr = fgets($pipes[2]);
   fclose($pipes[2]);
-  $retval = proc_close($process);
+  $retval = proc_close($process); 
+  $ret["retval"] = $retval;
+  $ret["stderr"] = $stderr;
   if (! empty($retval)) {
     $ret["retval"] = $retval;
     $ret["stderr"] = $stderr;
     return $ret;
   }
 
-  // Now set the password on the machine "haut"
-  $process = proc_open(["ssh", "tc@" . interco_haut(), "sudo", "/usr/sbin/chpasswd", "-c", $hash], $descriptorspec, $pipes, $cwd);
+  // Now set the password on the machine "bas"
+  $process = proc_open(["sudo", "/usr/sbin/chpasswd", "-c", $hash], $descriptorspec, $pipes, $cwd);
   fwrite($pipes[0], $name . ":" . $passwd . PHP_EOL);
   fclose($pipes[0]);
   fclose($pipes[1]);
   $stderr = fgets($pipes[2]);
   fclose($pipes[2]);
-  $retval = proc_close($process); 
-  $ret["retval"] = $retval;
-  $ret["stderr"] = $stderr;
+  $retval = proc_close($process);
   return $ret;
 }
 

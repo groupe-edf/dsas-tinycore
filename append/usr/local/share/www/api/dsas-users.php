@@ -4,11 +4,12 @@ require_once "common.php";
 if (! dsas_loggedin())
   die(header("HTTP/1.0 403 Forbidden"));
 else if($_SERVER["REQUEST_METHOD"] == "POST"){
+  $users = json_decode($_POST["data"],true);
   $dsas = simplexml_load_file(_DSAS_XML);
   $old = -1;
   $i = 0;
   $errors = array();
-  foreach ($_POST["users"] as $user) {
+  foreach ($users as $user) {
     if ($user["old"] == "true" && !empty($user["password"])) {
       $old = $i;
       break;
@@ -21,7 +22,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
     $nempty = 0;
     if (force_passwd()) {
       foreach ($dsas->config->users->user as $duser) {
-        foreach ($_POST["users"] as $user) {
+        foreach ($users as $user) {
            if ((trim($user["username"]) == $duser) && (! empty($user["password"])))
              continue 2;
         }
@@ -30,13 +31,13 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
     }
     if ($nempty != 0) {
       $errors[] = ["error" => "Premiere usage. Tous les mots de passe doit-&ecirc;tre changer"];
-    } else if (sasl_checkpass($_POST["users"][$old]["username"], $_POST["users"][$old]["password"])) {
+    } else if (sasl_checkpass($users[$old]["username"], $users[$old]["password"])) {
       $errors[] = ["old" => "Mot de passe ancien incorrect"];
     } else {
       $count = 0;
       $hash = $dsas->config->users->hash;
 
-      foreach ($_POST["users"] as $user) {
+      foreach ($users as $user) {
          if ($user["old"] == "true") continue;
          $name = trim($user["username"]);
          $passwd = trim($user["password"]);
