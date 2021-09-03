@@ -23,7 +23,6 @@ else {
           "cores" => (int)$cores,
           "loadavg" => (float)$loadavg];
 
-  # FIXME
   # test if the machine haut is alive before proceeding
   $hautip = interco_haut();
   exec('ping -q -c 1 -W 1 ' . $hautip, $output, $status);
@@ -51,7 +50,14 @@ else {
              "cores" => (int)$cores,
              "loadavg" => (float)$loadavg];
   } else
-    $haut = ["status" => "down"];
+    $haut = ["status" => "down",
+             "disk" =>  $d,
+             "disk_free" => 0,
+             "disk_total" => 1,
+             "memory_used" => 0,
+             "memory_total" => 1,
+             "cores" => 1,
+             "loadavg" => (float)0.0];
 
   header("Content-Type: application/json");
   echo json_encode(["haut" => $haut, "bas" => $bas]);

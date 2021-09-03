@@ -118,7 +118,7 @@ function dsas_status(){
         '<h5>Machine bas:</h5>' + machine_status(obj.bas);
       if (obj.haut.status == "down")
         body = body + '</div><div class="col-6 container p-3 border text-muted">' +
-           '<h5>Machine haut: INDISPONIBLE</h5>' + machine_status(obj.bas) + '</div></div>';
+           '<h5 class="text-danger">Machine haut: INDISPONIBLE</h5>' + machine_status(obj.haut) + '</div></div>';
       else
         body = body + '</div><div class="col-6 container p-3 border">' +
            '<h5>Machine haut:</h5>' + machine_status(obj.haut) + '</div></div>';
@@ -314,16 +314,17 @@ function dsas_set_passwd(){
      feed.setAttribute("class", "form-control");
 
   var formData = new FormData();
-  formData.append("data", data);
-  fetch("api/login.php", {method: "POST", body: formData 
+  formData.append("data", JSON.stringify(data));
+  fetch("api/dsas-users.php", {method: "POST", body: formData 
     }).then(response => {
       if (response.ok)
-        return response.json();
+        return response.text();
       else
         return Promise.reject({status: response.status, 
             statusText: response.statusText});
-    }).then(errors => {
-      if (errors && errors != "Ok") {
+    }).then(text => {
+      try {
+        const errors = JSON.parse(text);
         for (err of errors) {
           if (typeof err.old !== "undefined") {
             document.getElementsByClassName("form-control")[0].setAttribute("class", "form-control is-invalid");
@@ -336,12 +337,14 @@ function dsas_set_passwd(){
             document.getElementById("feed_" + key).innerHTML = err[key];
           }
         }
-      } else
+      } catch (e) {
+        // Its text => here always just "Ok"
         // Reload page to clear errors 
         modal_message("Les mots de passe ont &eacute;t&eacute; chang&eacute;.", "window.location='passwd.html'");
+      }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
-        modal_message("Erreur pendant la changement des mots de passe");
+        modal_message("Erreur pendant la changement des mots de passe: " + error.statusText);
     });
 }
 
@@ -1397,7 +1400,7 @@ function dsas_help_toc(){
   var lvl = 1;
   var c = 0;
   const ph = dsas_headings();
-  console.log(ph);
+
   if (ph[0].depth != 1) {
     // Special case. Stupid idiot not starting with h1 !!
     body = body + '<li><a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle dropdown-toggle-split">Main</a>'+
@@ -1435,7 +1438,8 @@ function dsas_display_help(){
   }).then(text => {
     // If user text was parsed here we'd need to sanitize it, but le documentation
     // is supplied with the DSAS.  
-    document.getElementById("Documentation").innerHTML = marked(text);
+    document.getElementById("Documentation").innerHTML = '<article class="markdown-body">' + 
+        marked(text) + '</article>';
     dsas_help_toc();
   }).catch(error => {
     if (!fail_loggedin(error.statusText))
@@ -1788,7 +1792,7 @@ class DSASHeader extends HTMLElement {
 '        <a class="nav-link ' + disablenav + '" data-bs-toggle="modal" data-bs-target="#staticLogout">Logout</a>\n' +
 '      </li>\n' +
 '      <li class="nav-item">\n' +
-'        <a class="nav-link ' + disablenav + '" data-toggle="tooltip" title="Documentation" href="help.html">&nbsp;?&nbsp;</a>\n' +
+'        <a class="nav-link ' + disablenav + '" href="help.html">Documentation</a>\n' +
 '      </li>\n' +'      <li class="nav-item">\n' +
 '        <a class="nav-link ' + disablenav + ' btn btn-danger" data-bs-toggle="modal" data-bs-target="#staticApply">Appliquer</a>\n' +
 '      </li>\n' +
