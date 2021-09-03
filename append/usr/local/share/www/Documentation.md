@@ -77,15 +77,175 @@ est la sens de l'initation de ces flux
 
 # Installation
 
+Avec le DSAS séparé en deux machine, deux installation séparé sont nécessaire. Les deux
+installation suivent le même logique. Dans la discussion suivant la machine connecté au
+réseau non sensible est appelé la machine "haut" et la machine connecté au réseau sensible
+est appelé la machine "bas". Un configuration initial de chaque machine est nécessaire
+depuis sa console, mais après cette phase initale, tout la configuration est fait depuis
+la machine bas.
+
+Afin que la configuration se passe facilement il faut démarrer avec la configuration de
+la machine haut, car même en phase initial la machine bas doit prendre la main sur la
+machine haut, et il doit être configuré en premier afin d'être pret à accepter des ordres.
+
+Dans les sections suivant si ce n'est pas dit explicitement la configuration concerne les
+deux machines
+
 ## Choix des tailles des disques
+
+Le DSAS a besoin deux disque independant, un pour chacun des deux machines utilisés 
+dans son implementation. Donc le DSAS a besoin deux fois plus de disques que la 
+maximum utilisé pour les transfert. Le DSAS est configuré afin de faire des "mirroir" 
+des disques à télécharger, et les anciens fichiers sont supprimer site ils ne sont 
+plus disponible sur leur site de téléchargement. Donc seulement l'addition des espaces
+utilisé par les sites externe est nécessaire plus un peu de marge
+
+Les mise à mise de windows des "patch tuesday" sont souvent iun 100 de megaoctets en
+taille, donc multiple ca par le nombre à garder à plusiers gigaoctets pourrait être 
+nécessaire pour les mise à jour de windows. Pour les mise à jour de Symantec le besoin
+est dans la 150 megactets
+
+Chaque repositoire de Linux pourrait avoir jusqu'au 50 gigaoctets utilisé, donc si on
+tranfert des mise à jour de linux notre besoin de disque peut vite explosé. Dans Les
+configurations suivant, nous avons utilisé un taille de 50 gigaoctets, mais nous
+recommandons au moins 500 Go pour chaque machine du DSAS.
 
 ## Configuration en machine virtuel
 
+Le DSAS est founir en forme de ISO à utiliser en "live CD". Ceci veut dire que le 
+système exploitation doit démarrer toujours sur ce disque ISO. La grand advantage de
+ca est que les mise à jour du DSAS va être très simple en exploitation et se resume
+par l'arret du DSAS, la remplacement du ISO et la redemarrage.
+
+L'iso du DSAS est un souche linux en 32 bit, et la virtuel machine est à configuré
+en consequence. Par exemple sous VirtualBox la configuration initial devrait être
+
+![Création VM sous VirtualBox](images/vbox1.png)
+
+Avec la configuration de la disque comme
+
+![Configuration disque sous VirtualBox](images/vbox2.png)
+
+Après il faut configuré le disque de démarrage du DSAS en mettant le disaus ISO du
+DSAS en maitre primaire IDE
+
+![Boot sur ISO sous VirtualBox](images/vbox3.png)
+
 ### Interconnexion réseaux entre les machines du DSAS
+
+Les machine virtuel sont à configurer avec deux carte reseaux. Le premier carte 
+réseau est toujour utilisé pour les connexions vers les réseaux externe du DSAS
+et leur configuration dependant de l'environement ou est installé le DSAS. 
+
+Le deuxieme carte réseau est toujours utilisé pour l'interconnexion entre les 
+deux machines du DSAS, et ce réseau est un réseau static en "192.168.192.0/24".
+Plusieurs moins pourrait être mise en place pour la confiuration du reseau
+d'interconnexion, notamment si un pare-feux supplementaire est à place sur ce
+lien (pas vraiment utile). Nous conseillons l'usage un réseau interne à l'hyperviseur
+configuré en VirualBox comme
+
+![Configuration réseau d'interconnexion sous VirtualBox](images/vbox4.png)
+
+Nous sommes maintenant prêt a démarrer la machine pour la premiere fois
 
 ## Formatage des disques
 
+FIXME : Remove Cancel buttons in DSAS boot dialogs and change the images here !!
+FIXME : Therefore don't discuss the cancel button in this documentation
+
+A la premiere démarrage le DSAS nous demande de formatter sa disque. Un menu est
+présenter avec l'ensemble des disques trouver connecté au DSAS. Ceci se presente
+comme
+
+![Formattage des disques DSAS](images/init1.png)
+
+La navigation dans ce type de menu est fait avec les clefs suivantes
+
+- les fleches - déplacement du cursors
+- Espace - selection d'un option
+- Tab - bascule entre "Ok" et "Cancel".  
+- Entrée - Continuer
+
+Utiliser "Espace" afin de selectionner la disque, ici "/dev/sda", et "Entrée" 
+afin de démarrer la formattage de la disque. Après la formattage, la machine 
+rédemarra automatiquement avant de continuer
+
+## Selection de la type de la machine
+
+![Selection de la type de la machine](images/init3.png)
+
+![L'erreur si deux interfaces réseau ne sont pas configuré](images/init2.png)
+
 ## Configuration réseau initial
+
+La configuration réseau de la machine haut est fait via l'interface d'administration
+de la machine bas. Par consequence cette section ne concerne que la machine bas. En
+revanche si le réseau n'est pas au moins partiellement configuré sur la machine bas,
+l'interface d'administration pourrait ne pas être disponible. Par consequence un 
+configuration initial du réseau de la machine bas est fait à partir de la console 
+de la machine.
+
+Le premier étape est choisir si le réseau est static ou s'il utilise DHCP pour sa 
+configuration. Le menu suivantte est utilisé afin de confirmer ce choix
+
+![Selection de reseau DHCP ou static](images/init4.png)
+
+A ce point si DHCP a été choisi aucun autre configuration réseau est nécessaire et 
+vous pouvez passer au section suivant.
+
+Pour la configuration en IP static il faut rentrer l'adresse et netmask en format
+CIDR. Dans le format CIDR le netmask est répresenté par integer entre 0 et 32 
+representant des netmask avec entre 0 et 32 "1" a gauche et le reste du netmask
+completer par des zéros.
+
+Par exemple le netmask "255.255.255.0" est répresenté en format CIDR par "/24" et
+le netmask "255.255.255.128" par "/25". Donc si notre ip est "10.0.2.15" et notre
+netmask est "255.255.255.0" il est rentrer comme
+
+![Configuration IP et netmask d'un IP static](images/init6.png)
+
+dans l'interface de configuration au démarrage.
+
+![Configuration du passerelle  avec un IP static](images/init7.png)
+
+![Configuration DNS avec un IP static](images/init8.png)
+
+![Configuration DNS avec un IP static](images/init9.png)
+
+## Configuration SSH
+
+Le configuration 
+
+## En cas d'erreur d'initialisation du DSAS
+
+L'erreur est humain, et le DSAS propose des moyens de récuperer des erreurs fait
+à l'initialisation. Si la phase initial de l'installation  (utilisant la console)
+n'est terminer, aucun configuration a été sauvé. Un simple rédemarrage de la
+machine va permettre de reconfigurer de zéro. 
+
+Si malheuresuement vous avez terminer l'installation mais il n'est pas correcte 
+et l'interface d'administration n'est pas accessible, tout n'est pas perdu. En
+revanche le DSAS est configuré afin de démarrer sans aucun interaction humain après
+sa premiere configuration. Donc afin de récuperer d'un erreur il faut connecter
+sur l'interface console.
+
+Le l'utilisateur à utiliser sur la console est 'tc' et le mot de passe à utiliser,
+si vous n'avez pas déjà modifier avec l'interface d'adminsitration, est comme plus
+haut. Vous seriez presenter avec un console linux classic avec un minimum de fonctionalité
+disponible. 
+
+La commande nécessaire avec de réconfigurer le DSAS est
+
+```
+sudo /etc/init.d/services/dsas reconfig 
+```
+
+Vous seriez présenter avec les menus comme avant pour la réconfiguration. A la fin 
+de la configuration n'oublie pas de déconnecté avec la commande
+
+```
+exit
+```
 
 ## Premier connexion à l'interface d'administration
 
