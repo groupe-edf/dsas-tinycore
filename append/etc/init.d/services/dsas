@@ -230,6 +230,7 @@ config_network(){
     g=$(xmllint --xpath 'string(dsas/config/network/bas/gateway)' $VAR/dsas_conf.xml)
     while :; do
       GWAY="$(dialog --stdout --no-cancel --title 'Gateway IP Address' --inputbox 'Address:' 0 0 $g)"
+      [ -z "$GWAY" ] || break
       valid_ip $GWAY && break
       dialog --msgbox "IP Address invalid" 0 0
     done
@@ -240,6 +241,7 @@ config_network(){
     d=$(xmllint --xpath 'string(dsas/config/network/bas/dns/domain)' $VAR/dsas_conf.xml)
     while :; do
       DOMAIN="$(dialog --stdout --no-cancel --title 'DNS search domain' --inputbox 'Domain:' 0 0 $d)"
+      [ -z "$DOMAIN" ] || break
       valid_domain $DOMAIN && break
       dialog --msgbox "Domain invalid" 0 0
     done
@@ -257,6 +259,7 @@ config_network(){
     done
     while :; do
       NAME="$(dialog --stdout --no-cancel --title 'DNS name servers' --inputbox 'Nameservers:' 0 0 "$NS")"
+      [ -z "$NAME" ] || break
       if [ "$NAME" != "$NS" ]; then
         ARGS="cd /dsas/config/network/bas/dns\nset <domain>$DOMAIN</domain>"
         if [ -z "${NAME// }" ]; then
@@ -315,8 +318,8 @@ start_network(){
     DOMAIN=$(xmllint --xpath "string(dsas/config/network/${TYP}/dns/domain)" $VAR/dsas_conf.xml)
 
     /sbin/ifconfig $ETH0 $IP netmask $NET up
-    /sbin/route add default gw $GWAY &
-    echo -e "search $DOMAIN" > /etc/resolv.conf
+    [ -z "$GWAY" ] || /sbin/route add default gw $GWAY &
+    [ -z "$DOMAIN" ] || echo -e "search $DOMAIN" > /etc/resolv.conf
     NS=$(xmllint --xpath "string(dsas/config/network/${TYP}/dns/nameserver)" $VAR/dsas_conf.xml)
     i=2
     while :; do
