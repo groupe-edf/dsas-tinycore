@@ -418,6 +418,8 @@ chown tc.repo /var/dsas/*.csr /var/dsas/*.pem
 chown -R root.staff /opt
 chmod 770 /opt
 chmod 770 /opt/.filetool.lst
+chmod 644 /usr/local/share/www/* /usr/local/share/www/api/* usr/local/share/www/images/*
+chmod 755 /usr/loca/share/www/images /usr/local/share/www/api
 
 EOF
 
