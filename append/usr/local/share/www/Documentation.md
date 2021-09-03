@@ -68,11 +68,79 @@ moins sensible
 - L'ensemble de l'adminsitration doit se faire via la machine en zone sensible, afin de
 ne pas exposé l'administration de la machine exposé en zone non sensible.
 
+L'architecture du DSAS simplifier est alors
+
 ![DSAS architecture](images/DSAS.png)
 
+ou les fleches representent des flux réeau ou applicatif et les direction de ces fleches
+est la sens de l'initation de ces flux
 
+# Installation
 
-## Usage des hardlink linux
+## Choix des tailles des disques
+
+## Configuration en machine virtuel
+
+### Interconnexion réseaux entre les machines du DSAS
+
+## Formatage des disques
+
+## Configuration réseau initial
+
+## Premier connexion à l'interface d'administration
+
+### Changement des mots de passe
+
+### Finalisation des configuration de réseau
+
+### Renouvellement de la certificate web
+
+# Usage
+
+## Application des changements
+
+## Configuration réseau 
+
+## Configuration web
+
+## Configuration des services
+
+## Configuration des certificates
+
+## Configuration des taches
+
+## Rédemarrage et arret
+
+# Mantient en condition de sécurité
+
+FIXME : Ajouter la liste des logiciels exposé et leurs vesrsion ici
+
+FIXME : Discuter procedure de remplacement de l'iso 
+
+## Processus de pull et build github
+
+FIXME : Fournir une image de build tinycore preconfiguré
+
+## Mise à jour binaire
+
+## Mise à jour source
+
+# Architecture détaillé
+
+Cette séction inclut des détailles des mesures de sécurité mise en place afin
+de garantir le niveau de sécurité du DSAS.
+
+## Matrice de flux réseau détaillé
+
+## Les comptes utilisateurs sur la DSAS
+
+### Les droit d'ecriture de chaque utilisateur
+
+### Les droit de connexion de chaque utilisateur
+
+## Cloissonnement disque 
+
+FIXME : Discuter sur le disque mounter en "noexec"
 
 Un hardlink sous linux est exactement le même fichier dupliqué à un autre endroit. 
 L'usage des hardlink entre les fichier du gichet haut du sas et le guichet bas 
@@ -109,10 +177,7 @@ share:x:2003:verif,bas,haut
 les exigences voulu sont respecté. Les script de verification DSAS ont été adapté
 afin d'assurer ces coditions
 
-
-# Taches
-
-## Verification 
+## Moyens de Verification 
 
 Il y a 3 type de verification des répository linux
 
@@ -178,3 +243,9 @@ openssl dgst -sign key.pem -keyform PEM -sha256 -out <file>.sig -binaru <file>
 
 Les signatures sont toujours stockés dans des fichiers séparé, et le DSAS assume que les signature
 sont dans un fichier avec un extension .sig 
+
+## Service OpenSSH
+
+## Service web
+
+FIXME: discuter l'usage de TLS et le group "repo" afin de respecté les droit
