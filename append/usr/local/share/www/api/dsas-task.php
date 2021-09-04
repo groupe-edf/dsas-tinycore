@@ -21,11 +21,12 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         $type = $data["type"];
         if ($type !== "rpm" && $type !== "repomd" && $type !== "deb" && $type !== "authenticode" &&
             $type !== "openssl" && $type !== "gpg")
-          $errors[] = ["error" => "Le type de tache est illegale"];
+          $errors[] = ["error" => "Le type de la tache est illegale"];
         $run = $data["run"];
         if ($run !== "never" && $run !== "hourly" && $run !== "daily" && $run !== "weekly" && $run !== "monthly")
-          $errors[] = ["error" => "Le periode entre les execution de la tache est illegale"];
+          $errors[] = ["error" => "Le periode entre les executions de la tache est illegale"];
         $certs = array();
+        $have_ca = false;
         foreach ($data["certs"] as $cert) {
           $certok = false;
           $certname = "";
@@ -33,6 +34,20 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             if ($certificate->type == "x509") {
               $x509_cert =  openssl_x509_parse(trim($certificate->pem));
               if ($x509_cert["extensions"]["subjectKeyIdentifier"] == $cert["fingerprint"]) {
+                if ($certificate->authority == "true") {
+                  if ($have_ca) {
+                    $errors[] = ["error" => "Les taches de type " . $type . 
+                                 " ne supporte un seul certificate raçine"];
+                    break 2;
+                  }
+                  $have_ca = true;
+                }
+                if ($type === "rpm" || $type === "repomd" || $type === "deb" || $type === "gpg") {
+                  $errors[] = ["error" => "Les taches de type " . $type . 
+                            " ne supporte pas des certificates X509"];
+                  break 2;
+                }
+
                 $certok = true;
                 if ($x509_cert["subject"]["CN"])
                   $certname = $x509_cert["subject"]["CN"];
@@ -50,8 +65,19 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             if ($certificate->type == "gpg") {
               $gpg_cert =  parse_gpg(trim($certificate->pem));
               if ($gpg_cert["fingerprint"] == $cert["fingerprint"]) {
+                if ($type === "authenticode" || $type === "openssl") {
+                  $errors[] = ["error" => "Les taches de type " . $type . 
+                            " ne supporte pas des certificates GPG"];
+                  break 2;
+                }
+                if ($have_ca) {
+                  $errors[] = ["error" => "Les taches de type " . $type . 
+                               " ont besoin un seul certificate GPG"];
+                  break 2;
+                }
                 $certname = $gpg_cert["uid"];
                 $certok = true;
+                $have_ca = true;
                 break;
               }
             }
@@ -63,7 +89,19 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
               $ca = parse_x509($cafile);
               foreach ($ca as $x509_cert) {
                 if ($x509_cert["extensions"]["subjectKeyIdentifier"] == $cert["fingerprint"]) {
+                  if ($type === "rpm" || $type === "repomd" || $type === "deb" || $type === "gpg") {
+                    $errors[] = ["error" => "Les taches de type " . $type . 
+                              " ne supporte pas des certificates X509"];
+                    break 2;
+                  }
+                  if ($have_ca) {
+                    $errors[] = ["error" => "Les taches de type " . $type . 
+                                 " ne supporte un seul certificate raçine"];
+                    break 2;
+                  }
+                  $have_ca = true;
                   $certok = true;
+
                   if ($x509_cert["subject"]["CN"])
                     $certname = $x509_cert["subject"]["CN"];
                   else if ($x509_cert["subject"]["OU"])
@@ -85,6 +123,13 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           else
             $errors[] = ["error" => "Un des certificates n'existe pas"];
         }
+
+        if ($type === "rpm"  $type === "repomd" || $type === "deb" || $type === "gpg") {
+	  if (count($certs) != 1)
+            $errors[] = ["error" => "Les taches de type " . $type . 
+                         " ont besoin un certificate GPG"];
+        }
+
         if ($errors == []) {
           $i = 0;
           foreach ($dsas->tasks->task as $task) {
