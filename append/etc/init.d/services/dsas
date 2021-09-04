@@ -259,7 +259,6 @@ config_network(){
     done
     while :; do
       NAME="$(dialog --stdout --no-cancel --title 'DNS name servers' --inputbox 'Nameservers:' 0 0 "$NS")"
-      [ -z "$NAME" ] || break
       if [ "$NAME" != "$NS" ]; then
         ARGS="cd /dsas/config/network/bas/dns\nset <domain>$DOMAIN</domain>"
         if [ -z "${NAME// }" ]; then
@@ -271,7 +270,7 @@ config_network(){
               continue 2
             fi
             ARGS="${ARGS}<nameserver>$S</nameserver>"
-            $((i++))
+            i = $((i + 1))
           done
         fi
         ARGS="${ARGS}\nsave"
