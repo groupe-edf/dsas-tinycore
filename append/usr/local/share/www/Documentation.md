@@ -387,14 +387,12 @@ concernent les utilisateurs suivants :
 - __tc__ - L'utilisateur administrateur du DSAS. Il a tous les privilèges sur le DSAS y compris
 le doit de devenir __root__. Si `ssh` est actif pour l'utilisateur __tc__ il peut se connecter
 avec une interface `ssh` afin de faire de la maintenance avancée sur la DSAS.
-
 - __bas__ - Cet utilisateur n'a qu'un seul rôle. Si le DSAS est configuré avec 
 `ssh` pour l'utilisateur __bas__ il aura le droit de se connecter en `sftp` et seulement en `sftp`
 depuis la zone sensible. Ceci pourrait être utile pour la récuperation des fichiers transmis
 par le DSAS dans certains scenarios. Ne seront présentés à cet utilisateur que des fichiers vérifiés 
 par le DSAS et un [chroot](https://fr.m.wikipedia.org/wiki/Chroot) est utilisé afin d'empêcher 
 l'utilisateur de voir autre chose.
-
 - __haut__ - Cet utilisateur comme l'utilisateur __bas__ est utilisé pour une connexion en `sftp`
 depuis la zone non sensible afin de permettre la dépôt de fichiers directement sur le DSAS. Il est
 également cloisonné et ne peut voir qu'une zone de dépôt de fichiers. __L'utilisation de cette
@@ -446,21 +444,48 @@ Une synthèse des formats des entrées sur cette pages sont
 
 - Si l'option DHCP est sélectionnée les autres champs pour la configuration réseau sont ignorés sur cette
 interface.
-
 - Les adresses IP, sont au format IPv4 comme NNN.NNN.NNN.NNN
-
 - Si un netmask est nécessaire il est rentré au format CIDR. Dans le format CIDR le netmask est 
 répresenté par un entier compris entre 0 et 32, représentant la taille du NetId. 
 Par exemple le netmask "255.255.255.0" est 
 répresenté en format CIDR par "/24" et le netmask "255.255.255.128" par "/25". 
-
 - Le "DNS Domain" doit être un nom de domaine valable.
 
 Plusieurs adresses IP separées par des retours chariot peuvent être rentrées, donnant une liste de 
 serveurs de noms en ordre de leur préférence d'usage.
 
+### Renouvellement du certificate web
 
-### Renouvellement de la certificate web
+Comme [discuté ci-dessus](#première-connexion-à-linterface-dadministration), le certificate SSL
+utilisé par le DSAS par défaut est auto-signé. Cecu est également un élément secret à remplacer 
+à la mise en service. L'interface d'administration of le serveur web est dans le sous-menu `Web`
+du ment `Configuration` et se presente comme
+
+[Menu de configuration du serveur web](images/DSAS9.png)
+
+L'onglet de renouvellement est acedé en cliquant sur la fleche à gauche de `Renouvellement du 
+certificate`, et se présente comme
+
+[Menu de configuration du serveur web](images/DSAS13.png)
+
+Les champs à remplir pour la renouvellement sont des champs défini par la norme [RFC5280]
+(https://datatracker.ietf.org/doc/html/rfc5280.html).
+
+- __C__ - Ce champ est le pays de l'organisation responasable du serveur. Il est obligatoire
+codé sur deux lettres comme dédini dans le RFC5280. Le code pour la France est __FR__.
+- __O__ - L'organisation responsable pour le serveur. En France est est obligatoirement le
+nom du société enregistré avec INSEE et doit être tout en majuscule.
+- __OU__ - Un identifiant of le sous organisation responsale pour le serveur. Les certificates
+signés par l'ONS d'EDF utilise tous '0002 552081317'
+- __CN__ - Pour un serveur, comme le DSAS ceci est obligatoirement le nom DNS du serveur
+- __S__ - Un champ libre pour la region de la seige social de L'entreprise. Il est optionnel
+- __L__ - Un champ libre pour la ville de la seige social de L'entreprise. Il est optionnel
+
+Vous pouvez maintenant cliquer sur le bouton `Renouvellement certificate` et une certificate
+sera géneré. En revanche il ne sera pas utilisé par le serveur jusqu'au prochaine fois que 
+vous avez cliquer sur `Appliquer`. Le certificate publique et Requete de signature (CSR) pourrait
+téléchargé en cliquant sur le bouton ![](images/DSAS11.png).
+
 
 # Usage
 
