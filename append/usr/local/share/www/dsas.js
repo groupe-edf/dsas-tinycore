@@ -1542,7 +1542,6 @@ function chkdown(site){
         progress.setAttribute("style", "width: " + prog + "%");
         progress.setAttribute("aria-valuenow", prog);
       }).catch(err => {
-         console.log(err);
         // Machine is down return success
         response(err);
       });
