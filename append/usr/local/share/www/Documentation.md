@@ -45,8 +45,8 @@ fichiers dans le zone sensible. Ces vérifications sont actuellement limitées �
 des contrôles d'intégrité mais pourraient dans la futur inclure des contrôles des
 menaces avec un moteur d'AV.
 - Le maintien en condition de sécurité doit être assurer. Ceci veut dire que
-l'ensemble des logiciels exposés à l'attaque doivent connus, une veille de sécurité doit être mise
-en place et des moyens pour pallier les vulnérabilités maitrisées.
+l'ensemble des logiciels exposés à l'attaque doivent connus, une veille de sécurité doit 
+être mise en place et des moyens pour pallier les vulnérabilités maitrisées.
 
 Ces contraintes nous poussent vers un des principes d'architecture avec
 
@@ -59,11 +59,16 @@ n'inclut que le noyau de linux, busybox et quelques scripts de démarrage. Aucun
 n'est démarré par défaut
 - Des dépendances supplémentaires sont à éviter; par exemple perl, python, etc ne sont pas
 installés et tout script utilisé par le DSAS est écrit en shell.
-- Chaque machine utilisée dans le DSAS possède deux interfaces réseau distinctes, l'une d'entre elles sert à l'interconnexion entre les machines. Une des machines possède une connexion vers les zones sensibles et l'autre machine est connectée à la zone non sensible.
+- Chaque machine utilisée dans le DSAS possède deux interfaces réseau distinctes, l'une 
+d'entre elles sert à l'interconnexion entre les machines. Une des machines possède une 
+connexion vers les zones sensibles et l'autre machine est connectée à la zone non sensible.
 - La sens d'instanciation des flux réseau va toujours du plus sensible vers le moins
 sensible, et aucun port réseau sur l'interface la plus sensible n'est exposé de la machine 
-la moins sensible. Ainsi seule la machine de la zone sensible peut télécharger des flux provenant de la zone sensible, la zone non sensible ne peut envoyer des flux vers la zone sensible.
-- L'ensemble de l'administration doit se faire à partir de la zone sensible. Aucune administration ne peut se faire à partir de la zone non sensible. 
+la moins sensible. Ainsi seule la machine de la zone sensible peut télécharger des flux 
+provenant de la zone sensible, la zone non sensible ne peut envoyer des flux vers la zone 
+sensible.
+- L'ensemble de l'administration doit se faire à partir de la zone sensible. Aucune 
+administration ne peut se faire à partir de la zone non sensible. 
 
 L'architecture du DSAS simplifiée est alors
 
@@ -71,6 +76,8 @@ L'architecture du DSAS simplifiée est alors
 
 où les flèches représentent des flux réseau ou applicatifs et les directions de ces flèches
 sont le sens de l'initiation de ces flux
+
+FIXME Add haut/bas for the machines and discuss the uses tc, haut, bas et verif on each machine
 
 # Installation
 
@@ -98,8 +105,8 @@ plus disponibles sur leur site de téléchargement. Donc seulement l'addition de
 utilisés par les sites externes est nécessaire, plus un peu de marge.
 
 Les mises à jour de windows des "patchs tuesday" sont souvent une centaine de mégaoctets en
-taille, donc multiplier ça par le nombre à garder représente potentiellement plusieurs gigaoctets. Pour les mises à jour de Symantec le besoin
-est de l'ordre de 150 mégaoctets.
+taille, donc multiplier ça par le nombre à garder représente potentiellement plusieurs 
+gigaoctets. Pour les mises à jour de Symantec le besoin est de l'ordre de 150 mégaoctets.
 
 Chaque repositoire de Linux pourrait avoir jusqu'a 50 gigaoctets, donc si on
 tranfère des mises à jour de linux notre besoin de disque peut vite exploser. Dans Les
@@ -122,7 +129,8 @@ un minimum de 256 mégaoctets est nécessaire afin de démarrer le DSAS. Mais en
 fonctionnement le DSAS pourrait utiliser plus de ressources et nous recommandons
 l'utilisation de 1 gigaoctet de mémoire. 
 
-Le DSAS n'a pas besoin d'un format spécifique de disque. Nous avons choisi ici d'utiliser le format par défaut proposé par VirtualBox.
+Le DSAS n'a pas besoin d'un format spécifique de disque. Nous avons choisi ici d'utiliser 
+le format par défaut proposé par VirtualBox.
 
 ![Configuration du disque sous VirtualBox](images/vbox2.png)
 
@@ -143,14 +151,15 @@ La deuxième carte réseau est toujours utilisée pour l'interconnexion entre le
 deux machines du DSAS, et ce réseau est un réseau statique en "192.168.192.0/24".
 Plusieurs moyens pourraient être mis en place pour la configuration du réseau
 d'interconnexion, notamment si un pare-feux supplémentaire est à placer sur ce
-lien (ceci ne semble néanmoins pas vraiment nécessaire). Nous conseillons l'usage un réseau interne à l'hyperviseur
-configuré en VirualBox comme
+lien (ceci ne semble néanmoins pas vraiment nécessaire). Nous conseillons l'usage un 
+réseau interne à l'hyperviseur configuré en VirualBox comme
 
 ![Configuration réseau d'interconnexion sous VirtualBox](images/vbox4.png)
 
 Nous sommes maintenant prêts a démarrer la machine pour la première fois. 
 
-Cette étape démarre ainsi une initialisation qui se fait en deux phases : la première à l'aide de la console Linux, et la deuxième à partir de l'interface d'administration en https.
+Cette étape démarre ainsi une initialisation qui se fait en deux phases : la première à 
+l'aide de la console Linux, et la deuxième à partir de l'interface d'administration en https.
 
 ## Phase d'initialisation depuis la console Linux
 
@@ -205,8 +214,8 @@ A ce point si le DHCP a été choisi aucune autre configuration réseau n'est n�
 vous pouvez passer au section suivante.
 
 Pour la configuration en IP statique il faut rentrer l'adresse et le netmask en format
-CIDR. Dans le format CIDR le netmask en IPv4 est représenté par un entier compris entre 0 et 32 
-représentant le nombre de bits utilisés pour coder la partie NetId.
+CIDR. Dans le format CIDR le netmask en IPv4 est représenté par un entier compris entre 
+0 et 32 représentant le nombre de bits utilisés pour coder la partie NetId.
 
 Par exemple le netmask "255.255.255.0" est répresenté en format CIDR par "/24" et
 le netmask "255.255.255.128" par "/25". Donc si notre ip est "10.0.2.15" et notre
@@ -214,8 +223,9 @@ netmask est "255.255.255.0" il est rentré comme
 
 ![Configuration IP et netmask d'un IP static](images/init6.png)
 
-dans l'interface de configuration au démarrage. La syntaxe de l'adresse IP rentrée est validée
-avant de continuer. Si elle n'est pas dans un format acceptable le même menu vous sera représenté en boucle.
+dans l'interface de configuration au démarrage. La syntaxe de l'adresse IP rentrée est 
+validée avant de continuer. Si elle n'est pas dans un format acceptable le même menu vous 
+sera représenté en boucle.
 
 Si la machine d'administration n'est pas sur le même sous-réseau que le DSAS il faut
 configurer une passerelle par défaut. Sinon laisser vide afin d'empêcher toute connexion 
@@ -234,26 +244,30 @@ adresses DNS en IP. Par exemple
 
 ![Configuration DNS avec une IP statique](images/init9.png)
 
-Plusieurs adresses IP séparées par des espaces pourraient être rentrés, donnant une liste de 
-serveurs de noms en ordre de leur préférence d'usage.
+Plusieurs adresses IP séparées par des espaces pourraient être rentrés, donnant une 
+liste de  serveurs de noms en ordre de leur préférence d'usage.
 
 ### Configuration SSH
 
 Il n'y a aucun utilisateur SSH sur la machine haute de base, même si un
-compte sftp pour l'utilisateur "haut" pourrait être créé de manière optionnelle. Celui-ci pourrait servir au dépôt de fichiers
-sur la machine haute pour une tâche sans URI. Bien que cette configuration soit non recommandée, une telle configuration est possible depuis l'interface d'administration.  
-La machine haute n'a pas besoin de configuration SSH en phase initiale.
+compte sftp pour l'utilisateur "haut" pourrait être créé de manière optionnelle. C
+elui-ci pourrait servir au dépôt de fichiers sur la machine haute pour une tâche sans 
+URI. Bien que cette configuration soit non recommandée, une telle configuration est 
+possible depuis l'interface d'administration.  La machine haute n'a pas besoin de 
+configuration SSH en phase initiale.
 
 Le configuration du SSH requiert la création de clefs SSH pour deux utilisateurs du DSAS;
 
-- l'utilisateur __tc__ en tant que compte à privilèges permettant de travailler en shell avec les
-deux machines, et 
-- l'utilisateur __haut__ permettant l'interconnexion en sftp avec l'utilisateur bas de la machine haute.
+- l'utilisateur __tc__ en tant que compte à privilèges permettant de travailler en shell 
+avec les deux machines, et 
+- l'utilisateur __haut__ permettant l'interconnexion en sftp avec l'utilisateur bas de la 
+machine haute.
 
 La création des clefs est automatique, mais il faut transférer les clefs autorisées sur la
-machine haute. Si la machine haute n'est pas visible de la machine basse elle va attendre avec le message
+machine haute. Si la machine haute n'est pas visible de la machine basse elle va attendre 
+avec le message
 
-![Attente machine basse pour la machine haute]()
+![Attente machine basse pour la machine haute](init11.png)
 
 La raison principale afin de voir cet écran pourrait être que la machine haute n'est
 pas démarrée. Mais l'interconnexion réseau entre les deux machines pourrait également être
@@ -262,13 +276,13 @@ pas démarrée. Mais l'interconnexion réseau entre les deux machines pourrait �
 Dans la phase initiale, il n'y a aucune clef SSH pour les SSH sans mot de passe. Donc il 
 faut entrer le mot de passe utilisateur à privilège __tc__ dans la fenêtre.
 
-![Entrée du mot de passe pendant la configuration SSH]()
+![Entrée du mot de passe pendant la configuration SSH](init9.png)
 
 Par défaut le mot de passe du DSAS est __dSa02021DSAS__ mais à la première utilisation de
 l'interface d'administration vous serez forcé de changer ce mot de passe.
 
-Ceci est la dernière étape de la configuration initiale sur la console. La deuxième phase de la
-configuration initiale devrait être faite avec l'interface d'administration.
+Ceci est la dernière étape de la configuration initiale sur la console. La deuxième phase 
+de la configuration initiale devrait être faite avec l'interface d'administration.
 
 ### En cas d'erreur d'initialisation du DSAS
 
@@ -278,9 +292,10 @@ n'est terminée, aucune configuration ne sera sauvegardée. Un simple redémarra
 machine va permettre de reconfigurer à partir de zéro. 
 
 Si malheureusement vous avez terminé l'installation mais qu'elle n'est pas correcte 
-et que l'interface d'administration n'est pas accessible, tout n'est pas perdu. Cependant comme le DSAS est configuré pour démarrer sans aucune interaction humaine après
-sa première configuration, il vous faudra vous connecter
-à partir l'interface console pour pouvoir accéder de nouveau au menu de configuration.
+et que l'interface d'administration n'est pas accessible, tout n'est pas perdu. Cependant 
+comme le DSAS est configuré pour démarrer sans aucune interaction humaine après
+sa première configuration, il vous faudra vous connecter à partir l'interface console pour 
+pouvoir accéder de nouveau au menu de configuration.
 
 L'utilisateur à utiliser sur la console est 'tc' et le mot de passe à utiliser,
 si vous ne l'avez pas déjà modifié avec l'interface d'administration est comme plus
@@ -293,8 +308,8 @@ La commande nécessaire avec de reconfigurer le DSAS est
 $ sudo /etc/init.d/services/dsas reconfig 
 ```
 
-Le menu de configuration vous sera alors présenté. A la fin 
-de la configuration n'oubliez pas de vous déconnecter à l'aide de la commande
+Le menu de configuration vous sera alors présenté. A la fin de la configuration n'oubliez 
+pas de vous déconnecter à l'aide de la commande
 
 ```shell
 $ exit
@@ -310,9 +325,9 @@ l'interface d'administration du DSAS.
 
 L'interface d'administration est en HTML5 avec des functions récentes de javascript. Donc
 un navigateur récent (après 2016) sera nécessaire afin d'utiliser l'interface. Si vous n'arrivez 
-pas à vous connecter, c'est soit qu'il y a un problème de routage entre vous et le DSAS et il faut revoir les 
-configurations des routeurs entre vous et le DSAS, soit que la configuration du réseau du DSAS
-précedent est fausse. Dans ce cas il faut référer à la section [En cas d'erreur d'initialisation 
+pas à vous connecter, c'est soit qu'il y a un problème de routage entre vous et le DSAS et il faut 
+revoir les  configurations des routeurs entre vous et le DSAS, soit que la configuration du réseau 
+du DSAS précedent est fausse. Dans ce cas il faut référer à la section [En cas d'erreur d'initialisation 
 du DSAS](#en-cas-derreur-dinitialisation-du-dsas). 
 
 Le certificat SSL utilisé par le DSAS en phase initiale est auto-signé et il sera nécessaire 
@@ -332,9 +347,8 @@ En haut des pages de l'interface d'administration vous trouvez un bouton `Appliq
 en rouge. Ce bouton est très important. Aucune modification faite via l'interface 
 d'administration ne sera permanente et aucune, sauf les changements de mot de passe, ne sera 
 appliquée tant que le bouton n'est pas utilisé. Ce bouton effectue une sauvegarde permanente 
-des changements effectués et les applique.
-De cette façon les erreurs majeures peuvent être facilement supprimées avec un simple 
-redémarrage tant qu'elles ne sont pas appliqués. 
+des changements effectués et les applique. De cette façon les erreurs majeures peuvent être 
+facilement supprimées avec un simple redémarrage tant qu'elles ne sont pas appliqués. 
 
 #### Arrêter et Rédémarrer
 
@@ -361,10 +375,10 @@ Si ceci est votre première connexion au DSAS l'écran suivant vous sera présen
 
 ![Ecran de changement des mots de passe initiale](images/DSAS2.png)
 
-Les lignes en rouge et jaune présentées en haut de l'écran sont des erreurs globales sur la configuration
-du DSAS et ceci sera résolu pendant l'installation du DSAS. La première "erreur" est que ceci 
-est votre première connexion et tous les mots de passe sont à changer. Il est impossible de
-continuer avec l'interface d'administration sans modifier les mots de passe. 
+Les lignes en rouge et jaune présentées en haut de l'écran sont des erreurs globales sur la 
+configuration du DSAS et ceci sera résolu pendant l'installation du DSAS. La première "erreur" 
+est que ceci est votre première connexion et tous les mots de passe sont à changer. Il est
+impossible de continuer avec l'interface d'administration sans modifier les mots de passe. 
 
 L'écran de changement de mots de passe comporte 4 lignes. Sur la première, le mot de
 passe existant de l'utilisateur __tc__ doit être rentré. Les trois autres lignes 
