@@ -461,12 +461,12 @@ utilisé par le DSAS par défaut est auto-signé. Cecu est également un éléme
 à la mise en service. L'interface d'administration of le serveur web est dans le sous-menu `Web`
 du ment `Configuration` et se presente comme
 
-[Menu de configuration du serveur web](images/DSAS9.png)
+![Menu de configuration du serveur web](images/DSAS9.png)
 
 L'onglet de renouvellement est acedé en cliquant sur la fleche à gauche de `Renouvellement du 
 certificate`, et se présente comme
 
-[Menu de configuration du serveur web](images/DSAS13.png)
+![Menu de configuration du serveur web](images/DSAS13.png)
 
 Les champs à remplir pour la renouvellement sont des champs défini par la norme [RFC5280]
 (https://datatracker.ietf.org/doc/html/rfc5280.html).
