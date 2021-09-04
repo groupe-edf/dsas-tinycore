@@ -48,6 +48,36 @@ function modal_task(action = "dsas_add_task();"){
   modalDSAS.setAttribute("title", "Ajouter un tache");
   modalDSAS.setAttribute("size", "lg");
   modalDSAS.show();
+
+  fetch("api/dsas-cert.php").then(response => {
+    if (response.ok) 
+      return response.json();
+    else
+      return Promise.reject({status: response.status, 
+          statusText: response.statusText});
+  }).then(certs => {
+    var i = 1;
+    var certbody = '<option id="TaskAddCert0" value="" selected>Selectionner une certificate</option>\n';
+    for (cert of certs[0].dsas.x509) {
+      ertbody = certbody + '<option id="TaskAddCert' + i + '" value="' + cert_finger(cert) + 
+                    '">' + cert_name(cert) + '</option>\n';
+      i++;
+    }
+    for (cert of certs[0].dsas.gpg) {
+      certbody = certbody + '<option id="TaskAddCert' + i + '" value="' + cert.fingerprint  + 
+                    '">' + cert.uid + '</option>\n';
+      i++;
+    }
+    for (cert of certs[0].ca) {
+      certbody = certbody + '<option id="TaskAddCert' + i + '" value="' + cert_finger(cert) + 
+                    '">' + cert_name(cert) + '</option>\n';
+      i++;
+    }
+    document.getElementById("TaskAddCert").innerHTML = certbody;
+  }).catch(error => {
+    fail_loggedin(error.statusText);
+  });
+
   modalDSAS.setAttribute("body", '<form>\n' +
 '  <div class="row">\n' +
 '    <div class="col-6">\n' +
@@ -1055,38 +1085,6 @@ function dsas_upload_cert(type = "x509") {
 }
 
 function dsas_display_tasks(what = "all") {
-  if (what === "all" || what === "cert") {
-    fetch("api/dsas-cert.php").then(response => {
-      if (response.ok) 
-        return response.json();
-      else
-        return Promise.reject({status: response.status, 
-            statusText: response.statusText});
-    }).then(certs => {
-      var taskAddCert = document.getElementById("TaskAddCert");
-      var i = 1;
-      var body = '<option id="TaskAddCert0" value="" selected>Selectionner une certificate</option>\n';
-      for (cert of certs[0].dsas.x509) {
-        body = body + '<option id="TaskAddCert' + i + '" value="' + cert_finger(cert) + 
-                      '">' + cert_name(cert) + '</option>\n';
-        i++;
-      }
-      for (cert of certs[0].dsas.gpg) {
-        body = body + '<option id="TaskAddCert' + i + '" value="' + cert.fingerprint  + 
-                      '">' + cert.uid + '</option>\n';
-        i++;
-      }
-      for (cert of certs[0].ca) {
-        body = body + '<option id="TaskAddCert' + i + '" value="' + cert_finger(cert) + 
-                      '">' + cert_name(cert) + '</option>\n';
-        i++;
-      }
-      taskAddCert.innerHTML = body;
-      
-    }).catch(error => {
-      fail_loggedin(error.statusText);
-    });
-  }
   if (what === "all" || what === "tasks") {
     fetch("api/dsas-task.php").then(response => {
       if (response.ok) 
@@ -1792,8 +1790,8 @@ class DSASHeader extends HTMLElement {
 '        </a>\n' +
 '        <div class="dropdown-menu">\n' +
 '          <a class="dropdown-item" href="passwd.html">Mot de passe</a>\n' +
-'          <a class="dropdown-item" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir red&eacute;marrer ?\', \'dsas_reboot();\', true)">Red&eacute;marrer</a>\n' + 
-'          <a class="dropdown-item" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir arr&ecirc;ter ?\',\'dsas_shutdown();\', true)">Arr&ecirc;ter</a>\n' +
+'          <a class="dropdown-item" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir red&eacute;marrer ?\', \'dsas_reboot();\')">Red&eacute;marrer</a>\n' + 
+'          <a class="dropdown-item" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir arr&ecirc;ter ?\',\'dsas_shutdown();\')">Arr&ecirc;ter</a>\n' +
 '        </div>\n' +
 '      </li>\n' +
 '      <li class="nav-item">\n' +
@@ -1802,7 +1800,7 @@ class DSASHeader extends HTMLElement {
 '      <li class="nav-item">\n' +
 '        <a class="nav-link ' + disablenav + '" href="help.html">Documentation</a>\n' +
 '      </li>\n' +'      <li class="nav-item">\n' +
-'        <a class="nav-link ' + disablenav + ' btn btn-danger" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir appliquer ?\', \'dsas_apply();\', true)">Appliquer</a>\n' +
+'        <a class="nav-link ' + disablenav + ' btn btn-danger" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir appliquer ?\', \'dsas_apply();\')">Appliquer</a>\n' +
 '      </li>\n' +
 '      </ul>\n' +
 '    </nav>' +
