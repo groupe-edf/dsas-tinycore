@@ -267,7 +267,7 @@ La création des clefs est automatique, mais il faut transférer les clefs autor
 machine haute. Si la machine haute n'est pas visible de la machine basse elle va attendre 
 avec le message
 
-![Attente machine basse pour la machine haute](init11.png)
+![Attente machine basse pour la machine haute](images/init11.png)
 
 La raison principale afin de voir cet écran pourrait être que la machine haute n'est
 pas démarrée. Mais l'interconnexion réseau entre les deux machines pourrait également être
@@ -276,7 +276,7 @@ pas démarrée. Mais l'interconnexion réseau entre les deux machines pourrait �
 Dans la phase initiale, il n'y a aucune clef SSH pour les SSH sans mot de passe. Donc il 
 faut entrer le mot de passe utilisateur à privilège __tc__ dans la fenêtre.
 
-![Entrée du mot de passe pendant la configuration SSH](init9.png)
+![Entrée du mot de passe pendant la configuration SSH](images/init9.png)
 
 Par défaut le mot de passe du DSAS est __dSa02021DSAS__ mais à la première utilisation de
 l'interface d'administration vous serez forcé de changer ce mot de passe.
