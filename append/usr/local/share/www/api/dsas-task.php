@@ -124,7 +124,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $errors[] = ["error" => "Un des certificates n'existe pas"];
         }
 
-        if ($type === "rpm"  $type === "repomd" || $type === "deb" || $type === "gpg") {
+        if ($type === "rpm" || $type === "repomd" || $type === "deb" || $type === "gpg") {
 	  if (count($certs) != 1)
             $errors[] = ["error" => "Les taches de type " . $type . 
                          " ont besoin un certificate GPG"];

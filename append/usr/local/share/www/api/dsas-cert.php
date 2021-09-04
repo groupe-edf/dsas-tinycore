@@ -90,14 +90,12 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           if ($certificate->type == "x509") {
             $cert =  openssl_x509_parse(trim($certificate->pem));
             if ($cert["extensions"]["subjectKeyIdentifier"] == $_POST["finger"]) {
-              unset($dsas->certificates->certificate[$i]);
               $certok = true;
               break;
             }
           } else {
             $cert = parse_gpg(trim($certificate->pem));
             if ($cert["fingerprint"]  == $_POST["finger"]) {
-              unset($dsas->certificates->certificate[$i]);
               $certok = true;
               break;
             }
@@ -105,7 +103,20 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $i++;
         }
         if (! $certok)
-          $errors[] = [ "delete" => "Le certificate X509 n'existe pas"];
+          $errors[] = [ "delete" => "Le certificate n'existe pas"];
+        else {
+          foreach ($dsas->tasks->task as $task) {
+            foreach ($task->cert as $cert) {
+              if ($cert->fingerprint == $_POST["finger"]) {
+                $certok = false;
+                $errors[] = [ "delete" => "Le certificate est utilisé par le tache '" . $task->name . "'"];
+              }
+            }
+          }
+         if ($certok)
+             unset($dsas->certificates->certificate[$i]);
+        }
+
         break;
 
       default:
