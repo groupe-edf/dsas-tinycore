@@ -276,7 +276,7 @@ pas démarrée. Mais l'interconnexion réseau entre les deux machines pourrait �
 Dans la phase initiale, il n'y a aucune clef SSH pour les SSH sans mot de passe. Donc il 
 faut entrer le mot de passe utilisateur à privilège __tc__ dans la fenêtre.
 
-![Entrée du mot de passe pendant la configuration SSH](images/init9.png)
+![Entrée du mot de passe pendant la configuration SSH](images/init10.png)
 
 Par défaut le mot de passe du DSAS est __dSa02021DSAS__ mais à la première utilisation de
 l'interface d'administration vous serez forcé de changer ce mot de passe.
