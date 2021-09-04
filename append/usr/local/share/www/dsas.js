@@ -1,37 +1,135 @@
 function modal_message(text, action = null, hide = false){
-  var modalDone = document.getElementById("modalDone");
-  modalDone.removeAttribute("disable");
-  modalDone.removeAttribute("body");
+  var modalDSAS = document.getElementById("modalDSAS");
+  modalDSAS.removeAttribute("disable");
+  modalDSAS.removeAttribute("body");
 
   if (hide)
-    modalDone.setAttribute("hideonclick", true);
+    modalDSAS.setAttribute("hideonclick", true);
   else
-    modalDone.removeAttribute("hideonclick");
- 
+    modalDSAS.removeAttribute("hideonclick");
+
   if (action) 
-    modalDone.setAttribute("action", action);
+    modalDSAS.setAttribute("action", action);
   else
-    modalDone.setAttribute("action", "");
-  modalDone.setAttribute("title", text);
-  modalDone.show();
+    modalDSAS.setAttribute("action", "");
+  modalDSAS.setAttribute("title", text);
+  modalDSAS.setAttribute("type", "Ok");
+  modalDSAS.show();
 }
 
 function modal_action(text, action = null, hide = false){
-  var modalAction = document.getElementById("modalAction");
-  modalAction.removeAttribute("disable");
-  modalAction.removeAttribute("body");
+  var modalAction = document.getElementById("modalDSAS");
+  modalDSAS.removeAttribute("disable");
+  modalDSAS.removeAttribute("body");
+  modalDSAS.removeAttribute("type");
 
   if (hide)
-    modalAction.setAttribute("hideonclick", true);
+    modalDSAS.setAttribute("hideonclick", true);
   else
-    modalAction.removeAttribute("hideonclick");
+    modalDSAS.removeAttribute("hideonclick");
  
   if (action) 
-    modalAction.setAttribute("action", action);
+    modalDSAS.setAttribute("action", action);
   else
-    modalAction.setAttribute("action", "");
-  modalAction.setAttribute("title", text);
-  modalAction.show();
+    modalDSAS.setAttribute("action", "");
+  modalDSAS.setAttribute("title", text);
+  modalDSAS.show();
+}
+
+function modal_task(action = "dsas_add_task();"){
+  var modalAction = document.getElementById("modalDSAS");
+  modalDSAS.removeAttribute("disable");
+  modalDSAS.removeAttribute("type");
+  if (action) 
+    modalDSAS.setAttribute("action", action);
+  else
+    modalDSAS.setAttribute("action", "");
+  modalDSAS.setAttribute("hideonclick", true);
+  modalDSAS.setAttribute("title", "Ajouter un tache");
+  modalDSAS.setAttribute("size", "lg");
+  modalDSAS.show();
+  modalDSAS.setAttribute("body", '<form>\n' +
+'  <div class="row">\n' +
+'    <div class="col-6">\n' +
+'      <label for="TaskName">Nom du tache :</label>\n' +
+'      <input type="text" id="TaskName" value="" class="form-control">\n' +
+'      <div class="invalid-feedback" id="feed_TaskName"></div>\n' +
+'    </div>\n' +
+'    <div class="col-6">\n' +
+'      <label for="TaskDirectory">Sous-dossier utilisé par le tache :</label>\n' +
+'      <input type="text" id="TaskDirectory" value="" class="form-control">\n' +
+'      <div class="invalid-feedback" id="feed_Directory"></div>\n' +
+'    </div>\n' +
+'    <div class="col-6">\n' +
+'      <label for="TaskURI">URI (pas de chargement si vide) :</label>\n' +
+'      <input type="text" id="TaskURI" value="" class="form-control">\n' +
+'      <div class="invalid-feedback" id="feed_URI"></div>\n' +
+'    </div>\n' +
+'    <div class="col-6">\n' +
+'      <label for="TaskType">Type de tache :</label>\n' +
+'      <select class="form-select" name="TaskType" id="TaskType">\n' +
+'        <option id="TaskTypeNull" value="" selected>Selectionner un type</option>\n' +
+'        <option id="TaskTypeRPM" value="rpm">rpm</option>\n' +
+'        <option id="TaskTypeRepomd" value="repomd">repomd</option>\n' +
+'        <option id="TaskTypeDeb" value="deb">deb</option>\n' +
+'        <option id="TaskTypeAuth" value="authenticode">authenticode</option>\n' +
+'        <option id="TaskTypeSsl" value="deb">openssl</option>\n' +
+'        <option id="TaskTypeGpg" value="deb">gpg</option>\n' +
+'      </select>\n' +
+'    </div>\n' +
+'    <div class="col-6">\n' +
+'      <label for="TaskRun">Periodicit&eacute, du tache :</label>\n' +
+'      <select class="form-select" name="TaskRun" id="TaskRun">\n' +
+'        <option id="TaskRunNull" value="" selected>Selectionner une periode</option>\n' +
+'        <option id="TaskRunNever" value="never">jamais</option>\n' +
+'        <option id="TaskRunHourly" value="hourly">par heure</option>\n' +
+'        <option id="TaskRunDaily" value="daily">par jour</option>\n' +
+'        <option id="TaskRunWeekly" value="weekly">par semaine</option>\n' +
+'        <option id="TaskRunMonthly" value="monthly">par mois</option>\n' +
+'      </select>\n' +
+'    </div>\n' +
+'    <div class="col-6">\n' +
+'      <label for="TaskAddCert">Ajouter un certificate :</label>\n' +
+'      <select class="form-select" name="TaskAddCert" id="TaskAddCert" onchange="dsas_add_task_cert();">\n' +
+'              </select>\n' +
+'  </div>\n' +
+'  <div class="row">\n' +
+'    <div class="col-12">\n' +
+'      <label for="TaskCert">Certificates:</label>\n' +
+'      <div class="container my-1 border" id="TaskCert"></div>\n' +
+'    </div>\n' +
+'  </div>\n' +
+'</form>');
+}
+
+function modal_errors(errors, feedback = false){
+  if (feedback) {
+    // Clear old invalid feedbacks
+    for (feed of document.getElementsByClassName("invalid-feedback")) 
+       feed.innerHTML = "";
+    for (feed of document.getElementsByClassName("form-control")) 
+       feed.setAttribute("class", "form-control");
+  }
+  if (errors && errors != "Ok") {
+    var body = "";
+    for (err of errors)
+      if (typeof errors === "string" || errors instanceof String)
+        body = body + "<p>" + errors + "</p>"
+      else {
+        key = Object.keys(error)[0]
+        if (key == "error" || ! feedback) {
+          body = body + "<p>" + err[Object.keys(err)] + "</p>";
+        } else {
+          document.getElementById(key).setAttribute("class", "form-control is-invalid");
+          document.getElementById("feed_" + key).innerHTML = error[key];
+        }
+      }
+    if (body)
+      modal_message(body);
+    return true;
+  } else {
+     return false;
+  }
 }
 
 function dsas_loggedin(){
@@ -130,7 +228,7 @@ function dsas_status(){
       document.getElementById("StatusBar").innerHTML = body;
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
-        modal_message("Erreur (" + error.status + ") pendant la detection des machine :\n" + error.status);
+        modal_message("Erreur (" + error.status + ") pendant la detection des machines :\n" + error.statusText);
     });
 }
 
@@ -193,7 +291,6 @@ function dsas_check_warnings(disablenav = false, redirect = true){
             statusText: response.statusText});
     }).then(obj => {
       if (obj !== null) {
-        var divWarn = document.getElementById("Warnings");
         var warn = "";
         var error = "";
         var body = "";
@@ -211,7 +308,7 @@ function dsas_check_warnings(disablenav = false, redirect = true){
         if (warn)
           body = body + '<div class="alert alert-warning">' + warn + '</div>';
         if (body)
-          divWarn.innerHTML = body;
+          modal_message(body);
       }
     }).catch(error => {
       fail_loggedin(error.statusText);
@@ -267,10 +364,10 @@ function dsas_display_logs(all = false){
         }
         preLog.innerHTML = body;
       } else
-        preLog.innerHTML = '<span class="text-danger">Aucun log rétourné par le DSAS</span>\n';
+        modal_message("Aucun log rétourné par le DSAS");
     }).catch(error => {
-      fail_loggedin(error.statusText);
-      preLog.innerHTML = '<span class="text-danger">Erreur pendant la chargement des logs du DSAS</span>\n';
+      if (! fail_loggedin(error.statusText))
+        modal_message("Erreur (" + error.status + ") pendant la chargement des logs du DSAS :\n" + error.statusText);
     });
 }
 
@@ -297,8 +394,8 @@ function dsas_display_passwd(){
         divPasswd.innerHTML = body;
       }
     }).catch(error => {
-      fail_loggedin(error.statusText);
-      divPasswd.innerHTML = '<div class="alert alert-danger">Erreur pendant la chargement des utilisateurs !</div>';
+      if (! fail_loggedin(error.statusText))
+        modal_message("Erreur (" + error.status + ") pendant la chargement des utilisateurs :\n" + error.statusText);
     });
 }
 
@@ -391,7 +488,8 @@ function dsas_display_web(what = "all"){
         }
       }
     }).catch(error => {
-      fail_loggedin(error.statusText);
+      if (! fail_loggedin(error.statusText))
+        modal_message("Erreur pendant le chanrgement de la page : " + error.statusText);
     });
 }
 
@@ -409,10 +507,10 @@ function dsas_toggle_repo(){
       fetch("api/dsas-web.php", {method: "POST", body: formData 
         }).finally(() => {
           dsas_display_web("repo");
-          dsas_web_errors();
         });
     }).catch(error => {
-      fail_loggedin(error.statusText);
+      if (! fail_loggedin(error.statusText))
+        modal_message("Erreur pendant le chanrgement de la page : " + error.statusText);
     });
 }
 
@@ -453,7 +551,7 @@ function dsas_renew_cert_real(){
         }).then(text => {
           try {
             const errors = JSON.parse(text);
-            dsas_web_errors(errors);
+            modal_errors(errors);
             dsas_display_web("cert");
           } catch (e) {
             // Its text => here always just "Ok"
@@ -461,7 +559,8 @@ function dsas_renew_cert_real(){
           }
         });
     }).catch(error => {
-      fail_loggedin(error.statusText);
+      if (! fail_loggedin(error.statusText))
+        modal_message("Erreur pendant le chanrgement de la page : " + error.statusText);
     });
 }
 
@@ -482,7 +581,7 @@ function dsas_upload_crt() {
     }).then(text => {
       try {
         const errors = JSON.parse(text);
-        dsas_web_errors(errors);
+        modal_errors(errors);
       } catch (e) {
         // Its text => here always just "Ok"
         modal_message("CRT envoy&eacute; avec sucess", "dsas_display_web('cert');", true);
@@ -491,19 +590,6 @@ function dsas_upload_crt() {
       if (!fail_loggedin(error.statusText))
         modal_message("Error : " + error.statusText);
     }); 
-}
-
-function dsas_web_errors(errors){
-  if (errors && errors != "Ok") {
-    var body = "";
-    for (err of errors)
-       body = body + "<p>" + err[Object.keys(err)] + "</p>";
-     document.getElementById("WebErrors").innerHTML = '<div class="alert alert-warning">' + body + '</div>';
-     return true;
-  } else {
-     document.getElementById("WebErrors").innerHTML = "";
-     return false;
-  }
 }
 
 function dsas_display_net(what = "all"){
@@ -544,7 +630,8 @@ function dsas_display_net(what = "all"){
        }
      }
     }).catch(error => {
-      fail_loggedin(error.statusText);
+      if (! fail_loggedin(error.statusText))
+        modal_message("Erreur pendant le chanrgement de la page : " + error.statusText);
     });
 }
 
@@ -634,7 +721,7 @@ function dsas_change_net(what= "all", i = 0) {
           }).then(text => {
             try {
               const errors = JSON.parse(text);
-              dsas_net_errors(errors);
+              modal_errors(errors, true);
             } catch (e) {
               // Its text => here always just "Ok"
               dsas_display_net("all");
@@ -646,31 +733,6 @@ function dsas_change_net(what= "all", i = 0) {
       }).catch(error => {
         fail_loggedin(error.statusText);
       });
-  }
-}
-
-function dsas_net_errors(errors) {
-  // Clear old invalid feedbacks
-  for (feed of document.getElementsByClassName("invalid-feedback")) 
-     feed.innerHTML = "";
-  for (feed of document.getElementsByClassName("form-control")) 
-     feed.setAttribute("class", "form-control");
-  if (errors !== "Ok") {
-    body = "";
-    for (error of errors) {
-      key = Object.keys(error)[0];
-      if (key == "error") {
-        body = body + "<p>" + err[Object.keys(err)] + "</p>";
-      } else {
-        document.getElementById(key).setAttribute("class", "form-control is-invalid");
-        document.getElementById("feed_" + key).innerHTML = error[key];
-      }
-      if (body)
-        document.getElementById("NetErrors").innerHTML = '<div class="alert alert-warning">' + body + '</div>';
-    }
-    return true;
-  } else {
-    return false;
   }
 }
 
@@ -760,7 +822,7 @@ function dsas_change_service(what) {
          }).then(text => {
            try {
              const errors = JSON.parse(text);
-             dsas_service_errors(errors);
+             modal_errors(errors, true);
            } catch (e) {
              // Its text => here always just "Ok"
              dsas_display_service(what);
@@ -771,31 +833,6 @@ function dsas_change_service(what) {
      }).catch(error => {
        fail_loggedin(error.statusText);
      });
-  }
-}
-
-function dsas_service_errors(errors) {
-  // Clear old invalid feedbacks
-  for (feed of document.getElementsByClassName("invalid-feedback")) 
-     feed.innerHTML = "";
-  for (feed of document.getElementsByClassName("form-control")) 
-     feed.setAttribute("class", "form-control");
-  if (errors !== "Ok") {
-    body = "";
-    for (error of errors) {
-      key = Object.keys(error)[0];
-      if (key == "error") {
-        body = body + "<p>" + err[Object.keys(err)] + "</p>";
-      } else {
-        document.getElementById(key).setAttribute("class", "form-control is-invalid");
-        document.getElementById("feed_" + key).innerHTML = error[key];
-      }
-      if (body)
-        document.getElementById("ServiceErrors").innerHTML = '<div class="alert alert-warning">' + body + '</div>';
-    }
-    return true;
-  } else {
-    return false;
   }
 }
 
@@ -908,7 +945,7 @@ function dsas_cert_real_delete(name, finger) {
     }).then(text => {
       try {
         const errors = JSON.parse(text);
-        dsas_cert_errors(errors);
+        modal_errors(errors);
       } catch (e) {
         // Its text => here always just "Ok"
         dsas_display_cert("cert");
@@ -1006,7 +1043,7 @@ function dsas_upload_cert(type = "x509") {
     }).then(text => {
       try {
         const errors = JSON.parse(text);
-        dsas_cert_errors(errors);
+        modal_errors(errors);
       } catch (e) {
         // Its text => here always just "Ok"
         modal_message("Certificate envoy&eacute; avec sucess", "dsas_display_cert();", true);
@@ -1015,22 +1052,6 @@ function dsas_upload_cert(type = "x509") {
       if (!fail_loggedin(error.statusText))
         modal_message("Error : " + error.statusText);
     }); 
-}
-
-function dsas_cert_errors(errors){
-  if (errors && errors != "Ok") {
-    var body = "";
-    if (typeof errors === "string" || errors instanceof String)
-      body = body + "<p>" + errors + "</p>"
-    else
-      for (err of errors)
-        body = body + "<p>" + err[Object.keys(err)] + "</p>";
-     document.getElementById("CertErrors").innerHTML = '<div class="alert alert-warning">' + body + '</div>';
-     return true;
-  } else {
-     document.getElementById("CertErrors").innerHTML = "";
-     return false;
-  }
 }
 
 function dsas_display_tasks(what = "all") {
@@ -1175,7 +1196,7 @@ function dsas_task_real_delete(id) {
     }).then(text => {
       try {
         const errors = JSON.parse(text);
-        dsas_task_errors(errors);
+        modal_errors(errors);
       } catch (e) {
         // Its text => here always just "Ok"
         dsas_display_tasks("tasks");
@@ -1187,6 +1208,7 @@ function dsas_task_real_delete(id) {
 }
 
 function dsas_task_new() {
+  modal_task();
   document.getElementById('TaskName').value = "";
   document.getElementById('TaskDirectory').value = "";
   document.getElementById('TaskURI').value = "";
@@ -1197,7 +1219,6 @@ function dsas_task_new() {
     else
       opt.selected = false;
   document.getElementById('TaskCert').innerHTML = "";
-   document.getElementById('modalTask').show()
 }
 
 function dsas_task_modify(id) {
@@ -1209,9 +1230,9 @@ function dsas_task_modify(id) {
           statusText: response.statusText});
   }).then(tasks => {
     if (tasks.task) {
-      document.getElementById('TaskCert').innerHTML = "";
       for (task of (tasks.task.constructor === Object ? [tasks.task] : tasks.task)) {
         if (id === task.id) {
+          modal_task();
           document.getElementById('TaskName').value = print_obj(task.name);
           document.getElementById('TaskDirectory').value = print_obj(task.directory);
           document.getElementById('TaskURI').value = print_obj(task.uri);
@@ -1247,7 +1268,6 @@ function dsas_task_modify(id) {
             }
           }
 
-          document.getElementById('modalTask').show()
           break;
         }
       }
@@ -1276,7 +1296,7 @@ function dsas_task_real_run(id) {
     }).then(text => {
       try {
         const errors = JSON.parse(text);
-        dsas_task_errors(errors);
+        modal_errors(errors);
       } catch (e) {
         // Its text => here always just "Ok"
         dsas_display_tasks("tasks");
@@ -1361,7 +1381,7 @@ function dsas_add_task() {
     }).then(text => {
       try {
         const errors = JSON.parse(text);
-        dsas_task_errors(errors);
+        modal_errors(errors);
       } catch (e) {
         // Its text => here always just "Ok"
         dsas_display_tasks("tasks");
@@ -1370,22 +1390,6 @@ function dsas_add_task() {
       if (! fail_loggedin(error.statusText))
         modal_message("Error : " + error.statusText);
     });
-}
-
-function dsas_task_errors(errors){
-  if (errors && errors != "Ok") {
-    var body = "";
-    if (typeof errors === "string" || errors instanceof String)
-      body = body + "<p>" + errors + "</p>"
-    else
-      for (err of errors)
-        body = body + "<p>" + err[Object.keys(err)] + "</p>";
-     document.getElementById("TaskErrors").innerHTML = '<div class="alert alert-warning">' + body + '</div>';
-     return true;
-  } else {
-     document.getElementById("TaskErrors").innerHTML = "";
-     return false;
-  }
 }
 
 function dsas_headings(){
@@ -1408,8 +1412,8 @@ function dsas_help_toc(){
 
   while (lvl < ph[0].depth) {
     // Special case. Stupid idiot not starting with h1 !!
-    body = body + '<li' + (lvl == 1 ? '' : ' class="ms-3"') + '><a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" ' +
-      'class="dropdown-toggle dropdown-toggle-split">Main</a>'+
+    body = body + '<li><a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" ' +
+      'class="dropdown-toggle dropdown-toggle-split' + (lvl == 1 ? '' : ' ms-3') + '">Main</a>'+
       '<ul class="list-unstyled small collapse" id="toc_submenu' + c++ + '">';
    lvl++;
   }
@@ -1420,15 +1424,12 @@ function dsas_help_toc(){
       body = body + '</ul></li>';
     lvl = h.depth;
     if (i != (ph.length - 1) && (lvl < ph[i+1].depth)) {
-      while (lvl < ph[i+1].depth) {
-        body = body + '<li' + (lvl == 1 ? '' : ' class="ms-3"') + '><a href="#' + h.id + '">' + h.title + '</a>' +
-          '<a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" ' +
-          'class="dropdown-toggle dropdown-toggle-split"></a>' +
-          '<ul class="list-unstyled small collapse" id="toc_submenu' + c++ + '">';
-        lvl++;
-      }
+      body = body + '<li><a href="#' + h.id + '">' + h.title + '</a>' +
+        '<a href="#toc_submenu' + c + '" data-bs-toggle="collapse" aria-expanded="false" ' +
+        'class="dropdown-toggle dropdown-toggle-split' + (lvl == 1 ? '' : ' ms-3') + '"></a>' +
+        '<ul class="list-unstyled small collapse" id="toc_submenu' + c++ + '">';
     } else {
-      body = body + '<li' + (lvl == 1 ? '' : (lvl == 2 ? ' class="ms-3"' : ' class="ms-4"')) + 
+      body = body + '<li' + (lvl == 1 ? '' : (lvl == 2 ? ' class="ms-3"' : 'class="ms-6"')) + 
         '><a href="#' + h.id + '">' + h.title + '</a></li>';
     }
   }
@@ -1458,7 +1459,7 @@ function dsas_display_help(){
 }
 
 function dsas_apply(){
-  var modalApply = document.getElementById("modalApply")
+  var modalApply = document.getElementById("modalDSAS")
 
   modalApply.setAttribute("disable", true);
   modalApply.setAttribute("body", "<span class='spinner-border spinner-border-sm'></span> &nbsp; Sauvegarde de la configuration en cours.");
@@ -1498,8 +1499,8 @@ function dsas_apply(){
 }
 
 function dsas_reboot(){
-  var modalReboot = document.getElementById("modalReboot");
-  document.getElementById("modalDone").hide();
+  var modalReboot = document.getElementById("modalDSAS");
+  document.getElementById("modalDSAS").hide();
 
   modalReboot.setAttribute("disable", true);
   modalReboot.setAttribute("body", '  <div class="row">\n'+
@@ -1520,10 +1521,10 @@ function dsas_reboot(){
       return Promise.reject({status: response.status, 
           statusText: response.statusText});
   }).catch( error => {
-    if (! fail_loggedin(error.statusText))
-      modal_message("Erreur pendant le red&eacute;marrage");
     modalReboot.removeAttribute("disable");
     modalReboot.hide();
+    if (! fail_loggedin(error.statusText))
+      modal_message("Erreur pendant le red&eacute;marrage");
   });
 }
 
@@ -1575,11 +1576,10 @@ function chkup(site){
 }
 
 function waitreboot(counter = 0) {
-  var modalReboot = document.getElementById("modalReboot");
+  var modalReboot = document.getElementById("modalDSAS");
   var progress = document.getElementById("progressReboot");
   counter = counter + 1;
 
-  modalReboot.show();
   if (counter < 5) {
     // Wait 5 seconds till testing if up 
     var prog = (counter * 100) / 30;
@@ -1590,16 +1590,15 @@ function waitreboot(counter = 0) {
     chkup(location.host).then(reponse => {
        window.location = "login.html";     
     }).catch(error => {
-      modal_message("Timeout sur r&eacute;demarrage !");
-      modalReboot.removeAttribute("disable");g
-      modalReboot.hide();      
+      modalReboot.removeAttribute("disable");
+      modalReboot.hide();  
+      modal_message("Timeout sur r&eacute;demarrage !");    
     });
   }
 }
 
 function dsas_shutdown(){
-  var modalShutdown= document.getElementById("modalShutdown");
-  document.getElementById("modalDone").hide();
+  var modalShutdown= document.getElementById("modalDSAS");
 
   modalShutdown.setAttribute("disable", true);
   modalShutdown.setAttribute("body", '  <div class="row">\n'+
@@ -1620,19 +1619,18 @@ function dsas_shutdown(){
       return Promise.reject({status: response.status, 
           statusText: response.statusText});
   }).catch( error => {
-    if (! fail_loggedin(error.statusText))
-      modal_message("Erreur pendant l'arr&ecirc;t !");
     modalShutdown.removeAttribute("disable");
     modalShutdown.hide();
+    if (! fail_loggedin(error.statusText))
+      modal_message("Erreur pendant l'arr&ecirc;t !");
   });
 }
 
 function waitshutdown(counter = 0) {
-  var modalShutdown= document.getElementById("modalShutdown");
+  var modalShutdown= document.getElementById("modalDSAS");
   var progress = document.getElementById("progressShutdown");
   counter = counter + 1;
 
-  modalReboot.show();
   if (counter < 5) {
     // Wait 5 seconds till testing if down 
     var prog = (counter * 100) / 30;
@@ -1641,13 +1639,13 @@ function waitshutdown(counter = 0) {
     setTimeout(waitshutdown, 1000, counter);
   } else {
     chkdown(location.host).then(response => {
-      modal_message("DSAS arr&ecirc;t&eacute;. Vous pouvez fermer cette fenetre !");
       modalShutdown.removeAttribute("disable");
       modalShutdown.hide();
+      modal_message("DSAS arr&ecirc;t&eacute;. Vous pouvez fermer cette fenetre !");
     }).catch(error => {
-      modal_message("Timeout sur r&eacute;demarrage !");
       modalShutdown.removeAttribute("disable");
-      modalShutdown.hide();      
+      modalShutdown.hide();  
+      modal_message("Timeout sur r&eacute;demarrage !");    
     });
   }
 }
@@ -1794,26 +1792,21 @@ class DSASHeader extends HTMLElement {
 '        </a>\n' +
 '        <div class="dropdown-menu">\n' +
 '          <a class="dropdown-item" href="passwd.html">Mot de passe</a>\n' +
-'          <a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#staticReboot">R&eacute;demarrage</a>\n' +
-'          <a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#staticShutdown">Arr&ecirc;ter</a>\n' +
+'          <a class="dropdown-item" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir red&eacute;marrer ?\', \'dsas_reboot();\', true)">Red&eacute;marrer</a>\n' + 
+'          <a class="dropdown-item" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir arr&ecirc;ter ?\',\'dsas_shutdown();\', true)">Arr&ecirc;ter</a>\n' +
 '        </div>\n' +
 '      </li>\n' +
 '      <li class="nav-item">\n' +
-'        <a class="nav-link ' + disablenav + '" data-bs-toggle="modal" data-bs-target="#staticLogout">Logout</a>\n' +
+'        <a class="nav-link ' + disablenav + '" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir quitter ?\', \'dsas_logout();\', true)">Logout</a>\n' +
 '      </li>\n' +
 '      <li class="nav-item">\n' +
 '        <a class="nav-link ' + disablenav + '" href="help.html">Documentation</a>\n' +
 '      </li>\n' +'      <li class="nav-item">\n' +
-'        <a class="nav-link ' + disablenav + ' btn btn-danger" data-bs-toggle="modal" data-bs-target="#staticApply">Appliquer</a>\n' +
+'        <a class="nav-link ' + disablenav + ' btn btn-danger" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir appliquer ?\', \'dsas_apply();\', true)">Appliquer</a>\n' +
 '      </li>\n' +
 '      </ul>\n' +
 '    </nav>' +
-'    <dsas-modal id="modalReboot" tag="Reboot" title="&Ecirc;tre-vous s&ucirc;r de vouloir red&eacute;marrer ?"  action="dsas_reboot();"></dsas-modal>\n' +
-'    <dsas-modal id="modalShutdown" tag="Shutdown" title="&Ecirc;tre-vous s&ucirc;r de vouloir arr&ecirc;ter ?" action="dsas_shutdown();"></dsas-modal>\n' +
-'    <dsas-modal id="modalLogout" tag="Logout" title="&Ecirc;tre-vous s&ucirc;r de vouloir quitter ?" action="dsas_logout();"></dsas-modal>\n' +
-'    <dsas-modal id="modalApply" tag="Apply" title="&Ecirc;tre-vous s&ucirc;r de vouloir appliquer ?" action="dsas_apply();"></dsas-modal>\n' +
-'    <dsas-modal id="modalAction" tag="Action"></dsas-modal>\n' +
-'    <dsas-modal id="modalDone" tag="Done"  type="Ok"></dsas-modal>\n';
+'    <dsas-modal id="modalDSAS" tag="DSAS"  type="Ok"></dsas-modal>\n';
 
   }
 

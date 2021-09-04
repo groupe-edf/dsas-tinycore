@@ -12,63 +12,6 @@
 <body>
 
 <dsas-header></dsas-header>
-<dsas-modal id="modalTask" tag="Task" title="Ajouter un tache" size="lg" hideonclick=true 
-action="dsas_add_task();" body='
-<form>
-  <div class="row">
-    <div class="col-6">
-      <label for="TaskName">Nom du tache :</label>
-      <input type="text" id="TaskName" value="" class="form-control">
-      <div class="invalid-feedback" id="feed_TaskName"></div>
-    </div>
-    <div class="col-6">
-      <label for="TaskDirectory">Sous-dossier utilisé par le tache :</label>
-      <input type="text" id="TaskDirectory" value="" class="form-control">
-      <div class="invalid-feedback" id="feed_Directory"></div>
-    </div>
-    <div class="col-6">
-      <label for="TaskURI">URI (pas de chargement si vide) :</label>
-      <input type="text" id="TaskURI" value="" class="form-control">
-      <div class="invalid-feedback" id="feed_URI"></div>
-    </div>
-    <div class="col-6">
-      <label for="TaskType">Type de tache :</label>
-      <select class="form-select" name="TaskType" id="TaskType">
-        <option id="TaskTypeNull" value="" selected>Selectionner un type</option>
-        <option id="TaskTypeRPM" value="rpm">rpm</option>
-        <option id="TaskTypeRepomd" value="repomd">repomd</option>
-        <option id="TaskTypeDeb" value="deb">deb</option>
-        <option id="TaskTypeAuth" value="authenticode">authenticode</option>
-        <option id="TaskTypeSsl" value="deb">openssl</option>
-        <option id="TaskTypeGpg" value="deb">gpg</option>
-      </select>
-    </div>
-    <div class="col-6">
-      <label for="TaskRun">Periodicit&eacute, du tache :</label>
-      <select class="form-select" name="TaskRun" id="TaskRun">
-        <option id="TaskRunNull" value="" selected>Selectionner une periode</option>
-        <option id="TaskRunNever" value="never">jamais</option>
-        <option id="TaskRunHourly" value="hourly">par heure</option>
-        <option id="TaskRunDaily" value="daily">par jour</option>
-        <option id="TaskRunWeekly" value="weekly">par semaine</option>
-        <option id="TaskRunMonthly" value="monthly">par mois</option>
-      </select>
-    </div>
-    <div class="col-6">
-      <label for="TaskAddCert">Ajouter un certificate :</label>
-      <select class="form-select" name="TaskAddCert" id="TaskAddCert" onchange="dsas_add_task_cert();">
-              </select>
-  </div>
-  <div class="row">
-    <div class="col-12">
-      <label for="TaskCert">Certificates:</label>
-      <div class="container my-1 border" id="TaskCert"></div>
-    </div>
-  </div>
-</form>'></dsas-modal>
-
-<span id="Warnings"></span>
-<span id="TaskErrors"></span>
 <script>
   dsas_loggedin();
   dsas_check_warnings();
