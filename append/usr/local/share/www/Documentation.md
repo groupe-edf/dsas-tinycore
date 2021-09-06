@@ -489,9 +489,46 @@ téléchargé en cliquant sur le bouton ![](images/DSAS11.png).
 
 # Usage
 
-## Page de statut des taches et les machines
+## Statut des machines
 
+Le page de statut des taches et les machines et la page d'entrée dans la DSAS et la page 
+principale. Il est accedé en cliquant sur `DSAS`dans la menu en tête des pages et se 
+presente commande
 
+![Page de statut des taches et les machines](images/DSAS14.png)
+
+Le page est divisé en deux section; en haut la statut des machines du DSAS en en bas la status
+des taches du DSAS. Trois statistiques sont donné pour les deux machines du DSAS.
+
+- __L'usage disque__ - L'occupation total des disques de DSAS sont montrés. Si les disques 
+sont plein ça sera impossible de correctement télécharger et verifier des fichiers. Donc il
+faut surveillé periodeement l'état des disques. Logiquement si les taches n'ont pas changés,
+l'usage des disques ne devraient pas changé non plus, mais un des taches soudainnement
+augmente son usage des disque ça sera facile à rétrouver en manque. Un disque occupé à plus
+de 80 ou 90% présente un risque de débordement.
+- L'usage de la mémoire__ - Chaque tache sur le DSAS occupe de la mémoire de la machine.
+Si le mémoire est remplit, la performance des taches sera impacté. Il faut surveillé que
+la mémoire n'est jamais trop utilisé, mais tant qu'il en dessous de 90% il ne faut trop 
+s'en occupé. Avec l'architecture du DSAS, presque 200Mo est utilisé par le systeme 
+d'exploitation.
+- Loadavg - Le "Load average" est un concept d'unix donnant un idée sur l'occupation des
+ressources de calcul de la machine. Un "Load Average" de "1" veut dire que l'équivalent 
+d'un coeur du processeur est completement occupé. Donc l'occupation total des ressources
+de calcul de la machine est à la point ou le "Load average" est égale à la nomre de coeur
+de la processeur. Sur la page de la DSAS le "Load average" est présenté de manière 
+logarithmique et avec un echelle avec le nombre de coer de la processeur à 50% de la 
+longeur de la barre de statut. Si le barre de statut est plus longue que la moitie, il y
+a peut-être un probleme avec le DSAS ou pas suffisamment de resosurces de calcul. Le premier
+chose à refaire dans ce cas est de redémarrer le DSAS afin de voir si le probleme 
+disparaitre.
+
+Si la machine basse du DSAS n'est pas dispnile vous seriez en imposisbilité de connecter 
+à l'interface d'administration. En revanche si le machine haute est défaillante, la page 
+de status vous informe avec l'écran suivante
+
+![Page de statut, machine haute indisponible](images/DSAS15.png)
+
+## Statut des taches 
 
 ## Configuration réseau 
 
