@@ -476,7 +476,7 @@ codé sur deux lettres comme dédini dans le RFC5280. Le code pour la France est
 - __O__ - L'organisation responsable pour le serveur. En France est est obligatoirement le
 nom du société enregistré avec INSEE et doit être tout en majuscule.
 - __OU__ - Un identifiant of le sous organisation responsale pour le serveur. Les certificates
-signés par l'ONS d'EDF utilise tous '0002 552081317'
+signés par l'ONS d'EDF utilise tous '0002 552081317', le KBIS d'EDF.
 - __CN__ - Pour un serveur, comme le DSAS ceci est obligatoirement le nom DNS du serveur
 - __S__ - Un champ libre pour la region de la seige social de L'entreprise. Il est optionnel
 - __L__ - Un champ libre pour la ville de la seige social de L'entreprise. Il est optionnel
@@ -490,6 +490,8 @@ téléchargé en cliquant sur le bouton ![](images/DSAS11.png).
 # Usage
 
 ## Page de statut des taches et les machines
+
+
 
 ## Configuration réseau 
 
