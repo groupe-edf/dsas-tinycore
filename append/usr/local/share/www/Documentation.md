@@ -95,7 +95,9 @@ machine haute, et elle doit être configurée en premier afin d'être prête à 
 Dans les sections suivantes si ce n'est pas dit explicitement la configuration concerne les
 deux machines.
 
-## Choix des tailles des disques
+## Configuration des machines virtuelles
+
+### Choix des tailles des disques
 
 Le DSAS a besoin de disques indépendants, un pour chacun des deux machines utilisées 
 dans son implementation. Donc le DSAS a besoin de deux fois plus de disques que le 
@@ -113,7 +115,7 @@ tranfère des mises à jour de linux notre besoin de disque peut vite exploser. 
 configurations suivantes, nous avons utilisé une taille de 50 gigaoctets, mais nous
 recommandons au moins 500 Go pour chaque machine du DSAS.
 
-## Configuration des machines virtuelles
+### Création des machines virtuelles
 
 Le DSAS est fourni sous forme d'une ISO à utiliser en "live CD". Ceci veut dire que le 
 système exploitation doit démarrer toujours sur ce disque ISO. La grand advantage de
@@ -161,7 +163,12 @@ Nous sommes maintenant prêts a démarrer la machine pour la première fois.
 Cette étape démarre ainsi une initialisation qui se fait en deux phases : la première à 
 l'aide de la console Linux, et la deuxième à partir de l'interface d'administration en https.
 
-## Phase d'initialisation depuis la console Linux
+## Premier phase d'initialisation
+
+Cette phase est fait depuis les consoles des machines, parce-que avant la première
+configuration il n'y a aucun garanti que les machines soit visible depuis l'exterieur.
+Il faut faire un minimum de geste sur la console afin de démarrer la configuration réseau 
+avat de continuer dans une deuxieme phase depuis l'interface d'administration du DSAS.
 
 ### Formatage des disques
 
@@ -395,7 +402,7 @@ par le DSAS et un [chroot](https://fr.m.wikipedia.org/wiki/Chroot) est utilisé 
 l'utilisateur de voir autre chose.
 - __haut__ - Cet utilisateur comme l'utilisateur __bas__ est utilisé pour une connexion en `sftp`
 depuis la zone non sensible afin de permettre la dépôt de fichiers directement sur le DSAS. Il est
-également cloisonné et ne peut voir qu'une zone de dépôt de fichiers. __L'utilisation de cette
+également cloisonné et ne peugt voir qu'une zone de dépôt de fichiers. __L'utilisation de cette
 fonctionnalité est fortement déconseillés__ car elle ouvre la possibilité d'attaques contre le DSAS
 
 Donc, en configuration normale seulement l'utilisateur __tc__ est à utiliser. Mais les trois
@@ -419,7 +426,7 @@ A ce point il est recommandé d'appuyer sur la bouton `Appliquer` afin de rendre
 modifications permanentes. Sinon au prochain redémarrage les anciens mots de passe seront 
 demandés.
 
-### Finalisation des configurations de réseau
+### Configuration des réseaux
 
 L'écran de configuration du réseau est accédé depuis le menu `Configuration` du DSAS, comme 
 suivant :
@@ -450,8 +457,7 @@ répresenté par un entier compris entre 0 et 32, représentant la taille du Net
 Par exemple le netmask "255.255.255.0" est 
 répresenté en format CIDR par "/24" et le netmask "255.255.255.128" par "/25". 
 - Le "DNS Domain" doit être un nom de domaine valable.
-
-Plusieurs adresses IP separées par des retours chariot peuvent être rentrées, donnant une liste de 
+- Plusieurs adresses IP separées par des retours chariot peuvent être rentrées, donnant une liste de 
 serveurs de noms en ordre de leur préférence d'usage.
 
 ### Renouvellement du certificate web
@@ -486,8 +492,14 @@ sera géneré. En revanche il ne sera pas utilisé par le serveur jusqu'au proch
 vous avez cliquer sur `Appliquer`. Le certificate publique et Requete de signature (CSR) pourrait
 téléchargé en cliquant sur le bouton ![](images/DSAS11.png).
 
+## Configuration des services
 
-# Usage
+FIXME :: Document the configuration of the services
+
+A ce point des gestes initiales pour la configuration du DSAS sont fait et en rentrée dans
+une d'exploitation du DSAS.
+
+# Exploitation du DSAS
 
 ## Statut des machines
 
@@ -506,12 +518,12 @@ faut surveillé periodeement l'état des disques. Logiquement si les taches n'on
 l'usage des disques ne devraient pas changé non plus, mais un des taches soudainnement
 augmente son usage des disque ça sera facile à rétrouver en manque. Un disque occupé à plus
 de 80 ou 90% présente un risque de débordement.
-- L'usage de la mémoire__ - Chaque tache sur le DSAS occupe de la mémoire de la machine.
+- __L'usage de la mémoire__ - Chaque tache sur le DSAS occupe de la mémoire de la machine.
 Si le mémoire est remplit, la performance des taches sera impacté. Il faut surveillé que
 la mémoire n'est jamais trop utilisé, mais tant qu'il en dessous de 90% il ne faut trop 
 s'en occupé. Avec l'architecture du DSAS, presque 200Mo est utilisé par le systeme 
 d'exploitation.
-- Loadavg - Le "Load average" est un concept d'unix donnant un idée sur l'occupation des
+- __Loadavg__ - Le "Load average" est un concept d'unix donnant un idée sur l'occupation des
 ressources de calcul de la machine. Un "Load Average" de "1" veut dire que l'équivalent 
 d'un coeur du processeur est completement occupé. Donc l'occupation total des ressources
 de calcul de la machine est à la point ou le "Load average" est égale à la nomre de coeur
@@ -530,17 +542,9 @@ de status vous informe avec l'écran suivante
 
 ## Statut des taches 
 
-## Configuration réseau 
-
-## Configuration web
-
-## Configuration des services
-
 ## Configuration des certificates
 
 ## Configuration des taches
-
-## Rédemarrage et arret
 
 # Mantient en condition de sécurité
 
