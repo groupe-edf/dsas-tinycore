@@ -17,11 +17,12 @@ les clefs USB à chaque utilisation, mais le risque de contamination est impossi
 Nous avons donc besoin d'un moyen technique de transfert de fichiers d'une zone non
 sensible vers nos infrastructures industrielles, et de controller systématiquement tout
 transfert afin d'exclure les risques de malveillance. Le XXXXXXXXX (DSAS) a pour but
-de mettre en place ce moyen de transfert sécurisé. Le DSAS a pour objectif de 
-télécharger les mises à jours de sécurité, contrôler leurs intégrités et de les 
-mettre à disposition dans les systèmes d’information. Il a également pour but la 
-suppression de l'usage de clefs USB sur des infrastructures industrielles.
+de mettre en place ce moyen de transfert sécurisé. 
 
+Le DSAS a pour objectif de télécharger les mises à jours de sécurité, contrôler leurs 
+intégrités et de les mettre à disposition dans les systèmes d’information. Il a également 
+pour but la suppression de l'usage de clefs USB sur des infrastructures industrielles, et 
+donc  inclut la capacite de transfert des fihciers signé par des personnes habilités.
 Le DSAS assure également une rupture de session protocolaire entre les différentes
 zones de sécurité dans un contexte de défense en profondeur.
 
@@ -38,6 +39,9 @@ non utilisés doivent être désinstallés.
 Ceci est implémenté par l'utilisation de deux machines distinctes pour les connexions
 vers les deux zones de sécurité différentes, afin que la compromission de la machine 
 interconnectée avec le zone non sensible ne mettra pas à risque le zone sensible.
+- Plusieurs compte utilisateurs sur les machines du DSAS sont utilisé, avec les droits
+d'accès disctinct, afin que la compromission d'un compte, n'expose pas entierement
+les zones interne de chaque machine.
 - Aucun fichier non controlé ne doit être visible dans la zone sensible. Les systèmes
 fichiers des deux machines du DSAS doivent être distincte.
 - Des vérifications doivent être faites par le DSAS avant de rendre disponible les
@@ -69,6 +73,12 @@ provenant de la zone sensible, la zone non sensible ne peut envoyer des flux ver
 sensible.
 - L'ensemble de l'administration doit se faire à partir de la zone sensible. Aucune 
 administration ne peut se faire à partir de la zone non sensible. 
+- Plusieurs comptes de service sont créés avec le compte "haut" etant le seul avec les droit
+de declecher un téléchargement depuis le zone moins sensible, le compte "verif" etant le 
+seul avec les droit de transfert entrée un guichet haut et bas de chaque machine, et le 
+compte "bas" etant le seul avec les droit d'accès au guichet bas de chaque machine depuis 
+le zone plus sesnibles. Le compte "verif" n'est pas accesible depuis l'exterieur de la
+machine.
 
 L'architecture du DSAS simplifiée est alors
 
@@ -77,7 +87,10 @@ L'architecture du DSAS simplifiée est alors
 où les flèches représentent des flux réseau ou applicatifs et les directions de ces flèches
 sont le sens de l'initiation de ces flux
 
-FIXME Add haut/bas for the machines and discuss the uses tc, haut, bas et verif on each machine
+Un autilisateur administrateur est également ajouté. Cet utilisateurs ne peut que connecté
+depuis le zone sensible et un filtrage forte sur les machine avec les droit de connecter
+sur cette compte est implementé. Ceci est le seul compte avec les droit d'adminsitration
+sur les deux machines, et le compte root n'est accessible que depuis le compte "tc".
 
 # Installation
 
@@ -493,6 +506,8 @@ vous avez cliquer sur `Appliquer`. Le certificate publique et Requete de signatu
 téléchargé en cliquant sur le bouton ![](images/DSAS11.png).
 
 ## Configuration des services
+
+
 
 FIXME :: Document the configuration of the services
 
