@@ -16,8 +16,8 @@ les clefs USB à chaque utilisation, mais le risque de contamination est impossi
 
 Nous avons donc besoin d'un moyen technique de transfert de fichiers d'une zone non
 sensible vers nos infrastructures industrielles, et de controller systématiquement tout
-transfert afin d'exclure les risques de malveillance. Le XXXXXXXXX (DSAS) a pour but
-de mettre en place ce moyen de transfert sécurisé. 
+transfert afin d'exclure les risques de malveillance. Le "Dynamic Security Access Service" 
+(DSAS) a pour but de mettre en place ce moyen de transfert sécurisé. 
 
 Le DSAS a pour objectif de télécharger les mises à jours de sécurité, contrôler leurs 
 intégrités et de les mettre à disposition dans les systèmes d’information. Il a également 
