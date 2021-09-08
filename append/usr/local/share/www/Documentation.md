@@ -627,9 +627,37 @@ FIXME: Add section on the task status
 
 ## Configuration des certificates
 
-Le DSAS est pré-configuré avec l'ensemble de certiciates racines d'un souche linux classic.
-Ces certificaties racines pourrait être utiliser pour les verifications du DSAS. Mais
-l'utilisation de ces certificates seulement n'est pas suffisante, parce que
+Le DSAS est pré-configuré avec l'ensemble de certiciates racines d'un souche linux classic. 
+L'ensemble de ces certificates et d'autres certificate importés sont disponble depuis onglet
+Configuration/Certificates comme vue ci-dessous
+
+![Page de configuration des certificates](images/DSAS17.png)
+
+Les certificates installé dans chaque categorie pourrait être vue en cliquant sur la
+fleche a gauche de chaque categorie et les détailles de chaque certificate sont disponible
+comme
+
+![Page de configuration des certificates](images/DSAS19.png)
+
+Chaque certificate pourrait être téléchargé sur la poste d'adminsitration en cliquant 
+sur le bouton ![](images/DSAS11.png). 
+
+Les certificates sont souslignés de 4 façon differentes dependant sur les caracteristiques
+du certificate. 
+
+- __Certificate Raçine__ - Le certicate est un certificate racine ou un certificate
+auto-signé. Les deux types de certicate se resemble avec la difference étant la 
+confiance ou pas donné au certificate.
+- __<span style="color:red">Certicate Intermediare</span>__ - Ce certificate n'est pas
+un certificate raçine, mais elle est signé par un autre certificate
+- __<span style="color:orange">Certicate proche de lExpiration</span>__ - Ce certifcate 
+est à moins de 6 mois de l'expiration
+- __<span style="color:red">Certicate Expiré</span>__ - Le certificate a déjà expiré. Ceci
+ne veut pas dire qu'il n'est plus utilisable, mais il n'est pas valable pour des fichiers
+signé après la date de éxpiration
+
+Les certificaties racines preinsatllés pourraientt être utiliser pour les verifications 
+du DSAS. Mais l'utilisation de ces certificates seulement n'est pas suffisante, parce que
 
 - Les certiciates pré-installé n'incluent pas des certiciates GPG utilisé par les 
 repositoire linux
