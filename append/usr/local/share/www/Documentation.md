@@ -623,7 +623,83 @@ de status vous informe avec l'écran suivante
 
 ## Statut des taches 
 
+FIXME: Add section on the task status
+
 ## Configuration des certificates
+
+Le DSAS est pré-configuré avec l'ensemble de certiciates racines d'un souche linux classic.
+Ces certificaties racines pourrait être utiliser pour les verifications du DSAS. Mais
+l'utilisation de ces certificates seulement n'est pas suffisante, parce que
+
+- Les certiciates pré-installé n'incluent pas des certiciates GPG utilisé par les 
+repositoire linux
+- La verification seulement contre un certificate racine n'ai pas un garanti forte d'absence
+de malveillance. [Les certificiate de type "code signing" ont été abusés par les malveillantes] 
+(https://duo.com/decipher/attackers-are-signing-malware-with-valid-certificates) afin de
+signer des malware.
+
+Donc idéalement il faut restriente les verifications par des vérifications des certicates
+de type intermediares la plus proche de l'éditeur de logiciel voulu. Par exemple un
+mise à jour de "Symantec Endpoint Protection" (SEP) comporte la chaine de confiance 
+suivante
+
+```
+VeriSign Class 3 Public Primary Certification Authority - G5
+-> Symantec Class 3 SHA256 Code Signing CA
+  -> Symantec Corporation
+```
+Donc idéalement il faut vérifier les mise à jour de SEP avec le certificate racine 
+`VeriSign Class 3 Public Primary Certification Authority - G5` et avec le certificate
+intermediate  `Symantec Corporation` afin de limiter au maximum les fichiers qui 
+pourrait être validé en tant que mise à jour de Symantec. Donc pour ces mise à
+jour il faut chargé le certificate `Symantec Corporation` dans le DSAS. (Ce certificate
+est disponible sur le site de Symantec)[]
+
+### Identification des certificaties X509
+
+Les certicates X509 sont utilisé dans la verification des binaires Windows, mais
+également pour des fichiers signés par `openssl`. 
+
+Depuis un poste de travail en windows, avec un clique droit et en selectionnant l'option
+`Propriétés` nous pourrions vous le menu suivante
+
+![Menu propriétés d'un binaire signé](images/CERT1.png)
+
+En cliquant sur `Détails` et après `Affichier le certificat` nous pourrions voir la
+chaine de confiance suivante
+
+![Chaine de confiance d'un binaire signé](images/CERT4.png)
+
+Ceci permet de valider le certificate racine et l'ensemble des certificates utilisés
+pendant la signature des binaires.
+
+### Preparation des certificates X509
+
+La plus importante pour la préparion d'une certificate pour l'importation est de savoir
+la provenance de la certificate. Idéalement la certiciate est donnés de manière sûr par
+l'éditeur de logiciel. Cette moyen de diffussion est souvent réalisé par une moyen de
+télécharger le(s) certificate(s) depuis une site web de l'éditeur. 
+
+A défaut de ça, l'ensemble des certificates utilisés pour des signatures sont embraquées 
+dans les binaires signés eux-mêmes. Donc si vous êtes sûr de la provenance d'un bianire
+vous pouvez utiliser le binaire lui-même comme source de certificate.
+
+Sur le même menu que ci-dessous sur l'onglet `Détails` nous pourrionq voir
+
+![Détails d'un certificate](images/CERT5.png)
+
+avec l'option de `copier dans un fichier`. Cet option permettre de Sauvegarder 
+l'ensemble des certificates de la chaine de confiance. Il faut selectionner de
+sauvegarder le certificate en format X.509 encodé en base 64 comme 
+
+![Export d'un certificate en base 64](images/CERT7.png)
+
+
+### Gestion des certificates GPG
+
+
+### Importation d'un certicate dans le DSAS
+
 
 ## Configuration des taches
 
