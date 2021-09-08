@@ -39,9 +39,9 @@ non utilisés doivent être désinstallés.
 Ceci est implémenté par l'utilisation de deux machines distinctes pour les connexions
 vers les deux zones de sécurité différentes, afin que la compromission de la machine 
 interconnectée avec le zone non sensible ne mettra pas à risque le zone sensible.
-- Plusieurs compte utilisateurs sur les machines du DSAS sont utilisé, avec les droits
-d'accès disctinct, afin que la compromission d'un compte, n'expose pas entierement
-les zones interne de chaque machine.
+- Plusieurs compte utilisateurs sur les machines du DSAS sont utilisés, avec les droits
+d'accès distinct, afin que la compromission d'un compte, n'expose pas entierement
+les zones internes de chaque machine.
 - Aucun fichier non controlé ne doit être visible dans la zone sensible. Les systèmes
 fichiers des deux machines du DSAS doivent être distincte.
 - Des vérifications doivent être faites par le DSAS avant de rendre disponible les
@@ -89,7 +89,7 @@ sont le sens de l'initiation de ces flux
 
 Un autilisateur administrateur est également ajouté. Cet utilisateurs ne peut que connecté
 depuis le zone sensible et un filtrage forte sur les machine avec les droit de connecter
-sur cette compte est implementé. Ceci est le seul compte avec les droit d'adminsitration
+sur cette compte est implementé. Ceci est le seul compte avec les droit d'administration
 sur les deux machines, et le compte root n'est accessible que depuis le compte "tc".
 
 # Installation
@@ -507,7 +507,7 @@ téléchargé en cliquant sur le bouton ![](images/DSAS11.png).
 
 ## Configuration des services
 
-Autre que les service web d'administration et service web de repositoire, il y a 3 services
+Autre que le service web d'administration et service web de repositoire, il y a 3 services
 qui pourrait être demarrer sur les machines du DSAS;
 
 - Un serveur OpenSSH pour les connexion depuis l'exterieur,
@@ -518,49 +518,51 @@ qui pourrait être demarrer sur les machines du DSAS;
 
 ### Configuration de la service OpenSSH
 
-En plus que le serveur openssh sur la machine haut utilisé pour les communications depuis la
-machine interne à la DSAS, l'adminsitrateur du DSAS peut choisir d'ouvrir d'autre service 
-de SSH depuis le zone senseible et/ou non-sensible.
+En plus que le serveur openssh sur la machine haut utilisé pour les communications 
+interne entre les deux machine du DSAS, l'adminsitrateur du DSAS peut choisir d'ouvrir 
+d'autre service de SSH depuis le zone sensible et/ou non-sensible.
 
 Le serveur OpenSSH n'est jamais démarrer avec des accès ouvertes à tous les utilisateurs sur 
-le DSAS. Il faut explicitement donner accès a chaque utilisateur, et cet accès n'est que valable
-depuis certain zones de sécurité. Par exemple, ci-dessus le service OpenSSH est coché est 
+le DSAS. Il faut explicitement donner l'accès a chaque utilisateur, et cet accès n'est valable
+que depuis certain zones de sécurité. Par exemple, ci-dessus le service OpenSSH est coché est 
 l'utilisateur __tc__  peut connecté que depuis des adresseses IP dans le sous-réseau 10.0.2.0/24. 
-Les utilisateurs bas  et haut n'ont aucun droit d'accès.
+Les utilisateurs bas et haut n'ont aucun droit d'accès.
 
 Les adresses d'écoute pour chaque utilisateur peut-être très complexe avec plusieurs adresses 
-possible separées par des virgules. Un exemple comple pourrait-être
+possible separées par des virgules. Un exemple complexe pourrait-être
 
 ```
 10.0.2.1,10.0.2.128/25,!10.0.2.129
 ```
 
 ou l'adresse 10.0.2.1 et le sous reseau 10.0.2.128/25 pourraient aceder au DSAS, mais l'adresse
-10.0.2.129 est interdit de faire.
+10.0.2.129 est interdit de faire. Par défaut aucun accès est donné, et si l"adresse d'écoute 
+pour un utilisateur est blanc, le serveur OpenSSH n'est même pas démarrer sur l'interface 
+réseau du DSAS concerné.
 
 Chaque utilisateur ne peut que connecter depuis certaines zones de sécurité:
 
-- __tc__ - L'utilisateur __tc__ ne peut que connecter depuis le zone sensible et peut 
+- __tc__ - L'utilisateur __tc__ ne peut que connecter depuis la zone sensible et peut 
 connecter en ssh, scp et sftp
-- __bas__ - L'utilisateur bas ne peut que connecter en sftp depuis le zone sensible. Cette
+- __bas__ - L'utilisateur bas ne peut que connecter en sftp depuis la zone sensible. Cette
 fonctionalité de sftp pourrait être utilisé pour remplacer le serveur http de répositoire
-(ou en complement). Il n'a que accès à la zone du DSAS avec les fichier verifiés et ne
+(ou en complement). Il n'a que accès à la zone du DSAS avec les fichiers verifiés et ne
 peut pas accéder ailleurs dans le DSAS.
 - __haut__ - `Utilisation du compte haut en SSH en fortement déconseillé`. La raison qu'il est 
 déconseillé est qu'il ne respecte pas le sens de l'ouverture des flux de la zone plus sensible 
 vers la zone moins sensible. Mais en absence d'autre moyen de téléchargement ce compte ouvre
 la possiblité depuis la zone non sensible à déposer des fichiers sur la machine haute du DSAS.
 L'utilisateur __haut__ n'a accès que en sftp et que à la zone du DSAS avec les fichiers non
-vérifiés. 
+vérifiés.
 
 Si le service SSH est activé vers une zone le port 22 est ouverte sur la machine du DSAS
 concernée.
 
 ### Client syslogd
 
-Si le service `syslogd` du DSAS est activé, des logs des service sont fait localement au DSAS.
-Il est egalement possible à definir une serveur distant pour ave le service rsyslogd pour 
-des logs en UDP sur la port 514. 
+Si le service `syslogd` du DSAS est activé, des logs des services sont fait localement au DSAS.
+Il est egalement possible à definir une serveur distante pour le service rsyslogd pour des logs 
+en UDP sur la port 514. 
 
 A noter que le service syslogd est fournit par BusyBox, et l'implementation de syslogd de BusyBox
 n'inclut pas la possibilité de chiffrement en TLS sur la port 6514. Donc d'autre moyen de 
@@ -591,13 +593,13 @@ presente commande
 ![Page de statut des taches et les machines](images/DSAS14.png)
 
 Le page est divisé en deux section; en haut la statut des machines du DSAS en en bas la status
-des taches du DSAS. Trois statistiques sont donné pour les deux machines du DSAS.
+des taches du DSAS. Trois statistiques sont donnés pour les deux machines du DSAS.
 
 - __L'usage disque__ - L'occupation total des disques de DSAS sont montrés. Si les disques 
 sont plein ça sera impossible de correctement télécharger et verifier des fichiers. Donc il
-faut surveillé periodeement l'état des disques. Logiquement si les taches n'ont pas changés,
-l'usage des disques ne devraient pas changé non plus, mais un des taches soudainnement
-augmente son usage des disque ça sera facile à rétrouver en manque. Un disque occupé à plus
+faut surveiller periodiquement l'état des disques. Logiquement si les taches n'ont pas changés,
+l'usage des disques ne devraient pas changer non plus, mais si une des taches soudainnement
+augmente son usage des disques ça sera facile à rétrouver en manque. Un disque occupé à plus
 de 80 ou 90% présente un risque de débordement.
 - __L'usage de la mémoire__ - Chaque tache sur le DSAS occupe de la mémoire de la machine.
 Si le mémoire est remplit, la performance des taches sera impacté. Il faut surveillé que
@@ -607,15 +609,15 @@ d'exploitation.
 - __Loadavg__ - Le "Load average" est un concept d'unix donnant un idée sur l'occupation des
 ressources de calcul de la machine. Un "Load Average" de "1" veut dire que l'équivalent 
 d'un coeur du processeur est completement occupé. Donc l'occupation total des ressources
-de calcul de la machine est à la point ou le "Load average" est égale à la nomre de coeur
+de calcul de la machine est à la point ou le "Load average" est égale à la nombre de coeur
 de la processeur. Sur la page de la DSAS le "Load average" est présenté de manière 
-logarithmique et avec un echelle avec le nombre de coer de la processeur à 50% de la 
+logarithmique et avec un echelle avec le nombre de coeur de la processeur à 50% de la 
 longeur de la barre de statut. Si le barre de statut est plus longue que la moitie, il y
 a peut-être un probleme avec le DSAS ou pas suffisamment de resosurces de calcul. Le premier
 chose à refaire dans ce cas est de redémarrer le DSAS afin de voir si le probleme 
 disparaitre.
 
-Si la machine basse du DSAS n'est pas dispnile vous seriez en imposisbilité de connecter 
+Si la machine basse du DSAS n'est pas disponible vous seriez en imposisbilité de connecter 
 à l'interface d'administration. En revanche si le machine haute est défaillante, la page 
 de status vous informe avec l'écran suivante
 
@@ -628,12 +630,12 @@ FIXME: Add section on the task status
 ## Configuration des certificates
 
 Le DSAS est pré-configuré avec l'ensemble de certiciates racines d'un souche linux classic. 
-L'ensemble de ces certificates et d'autres certificate importés sont disponble depuis onglet
+L'ensemble de ces certificates et d'autres certificates importés sont disponible depuis onglet
 Configuration/Certificates comme vue ci-dessous
 
 ![Page de configuration des certificates](images/DSAS17.png)
 
-Les certificates installé dans chaque categorie pourrait être vue en cliquant sur la
+Les certificates installés dans chaque categorie pourrait être vue en cliquant sur la
 fleche a gauche de chaque categorie et les détailles de chaque certificate sont disponible
 comme
 
@@ -645,16 +647,16 @@ sur le bouton ![](images/DSAS11.png).
 Les certificates sont souslignés de 4 façon differentes dependant sur les caracteristiques
 du certificate. 
 
-- __Certificate Raçine__ - Le certicate est un certificate racine ou un certificate
-auto-signé. Les deux types de certicate se resemble avec la difference étant la 
-confiance ou pas donné au certificate.
-- __<span style="color:red">Certicate Intermediare</span>__ - Ce certificate n'est pas
+- __Certificate CA__ - Avec une texte en noir. Le certificate est un certificate racine ou 
+un certificate auto-signé. Les deux types de certicate se resemble avec la difference étant 
+la  confiance ou pas donné au certificate.
+- __Certicate Intermediate__ - Avec une texte en bleue. Ce certificate n'est pas
 un certificate raçine, mais elle est signé par un autre certificate
-- __<span style="color:orange">Certicate proche de lExpiration</span>__ - Ce certifcate 
-est à moins de 6 mois de l'expiration
-- __<span style="color:red">Certicate Expiré</span>__ - Le certificate a déjà expiré. Ceci
-ne veut pas dire qu'il n'est plus utilisable, mais il n'est pas valable pour des fichiers
-signé après la date de éxpiration
+- __Moins de 6mois à l'éxpiration__ - Avec une texte en orange/jaune. Ce certifcate est à 
+moins de 6 mois de l'éxpiration
+- __Expiré__ - Avec une texte en rouge. Le certificate a déjà expiré. Ceci ne veut pas dire
+qu'il n'est plus utilisable, mais il n'est pas valable pour des fichiers signés après la date
+de éxpiration
 
 Les certificaties racines preinsatllés pourraientt être utiliser pour les verifications 
 du DSAS. Mais l'utilisation de ces certificates seulement n'est pas suffisante, parce que
@@ -676,12 +678,11 @@ VeriSign Class 3 Public Primary Certification Authority - G5
 -> Symantec Class 3 SHA256 Code Signing CA
   -> Symantec Corporation
 ```
-Donc idéalement il faut vérifier les mise à jour de SEP avec le certificate racine 
+Donc idéalement il faut vérifier les mises à jour de SEP avec le certificate racine 
 `VeriSign Class 3 Public Primary Certification Authority - G5` et avec le certificate
 intermediate  `Symantec Corporation` afin de limiter au maximum les fichiers qui 
-pourrait être validé en tant que mise à jour de Symantec. Donc pour ces mise à
-jour il faut chargé le certificate `Symantec Corporation` dans le DSAS. (Ce certificate
-est disponible sur le site de Symantec)[]
+pourrait être validé en tant que mise à jour de Symantec. Donc pour ces mises à
+jour il faut chargé le certificate `Symantec Corporation` dans le DSAS.
 
 ### Identification des certificaties X509
 
@@ -689,7 +690,7 @@ Les certicates X509 sont utilisé dans la verification des binaires Windows, mai
 également pour des fichiers signés par `openssl`. 
 
 Depuis un poste de travail en windows, avec un clique droit et en selectionnant l'option
-`Propriétés` nous pourrions vous le menu suivante
+`Propriétés` nous pourrions voir la menu suivante
 
 ![Menu propriétés d'un binaire signé](images/CERT1.png)
 
@@ -703,16 +704,17 @@ pendant la signature des binaires.
 
 ### Preparation des certificates X509
 
-La plus importante pour la préparion d'une certificate pour l'importation est de savoir
-la provenance de la certificate. Idéalement la certiciate est donnés de manière sûr par
-l'éditeur de logiciel. Cette moyen de diffussion est souvent réalisé par une moyen de
-télécharger le(s) certificate(s) depuis une site web de l'éditeur. 
+La plus importante pour la préparation d'une certificate pour l'importation dans le DSAS
+est de savoir la provenance de la certificate. Idéalement le certiciate est donnés de 
+manière sûr par l'éditeur de logiciel. Cette moyen de diffussion est souvent réalisé par
+une moyen de télécharger le(s) certificate(s) depuis une site web de l'éditeur. Mais
+ceci n'est pas toujour le cas, nottament pour Symantec comme ci-dessus.
 
-A défaut de ça, l'ensemble des certificates utilisés pour des signatures sont embraquées 
-dans les binaires signés eux-mêmes. Donc si vous êtes sûr de la provenance d'un bianire
-vous pouvez utiliser le binaire lui-même comme source de certificate.
+A défaut de la distribution par site web, l'ensemble des certificates utilisés pour des
+signatures sont embraquées dans les binaires signés eux-mêmes. Donc si vous êtes __sûr__ de 
+la provenance d'un bianire vous pouvez utiliser le binaire lui-même comme source de certificate.
 
-Sur le même menu que ci-dessous sur l'onglet `Détails` nous pourrionq voir
+Sur le même menu que ci-dessous sur l'onglet `Détails` nous pourrions voir
 
 ![Détails d'un certificate](images/CERT5.png)
 
@@ -732,9 +734,9 @@ fichiers de configuration dévéloppé par les utilisateurs du DSAS).
 
 Les certificates GPG n'integrent pas explicitement la chaine de confiance dans les
 binaires signées. GPG utilise la concept de [toile de confiance](https://fr.wikipedia.org/wiki/Toile_de_confiance)
-ou les certicates eux-mêmes sont validé entre eux. Ceci est en dehors de la scope
-de cette document et nous avons assumé que vous avez un confiance complet dans
-les certificates que vous avez choisi à télécharger sur le DSAS.
+ou les certicates eux-mêmes sont validés entre eux. Ceci est en dehors de la scope
+du document et nous avons assumé que vous avez un confiance complet dans les certificates 
+que vous avez choisi à télécharger sur le DSAS.
 
 Afin de récuperer un certificate GPG, la seule solutions est de retouner vers 
 l'editeur de logiciel concerné. Par exemple quelques exemples de certificate
@@ -745,10 +747,22 @@ contient [le certificate utilisé pour la signatures des binaires de Redhat depu
 2010](https://www.redhat.com/security/data/fd431d51.txt)
 - [La page des certificates de CentOs](https://www.centos.org/keys/) contient nottament 
 [le certificate utilisé pour CentOS7](https://www.centos.org/keys/RPM-GPG-KEY-CentOS-7)
-- FIXME: Add debian
+- [La page des certificates debian](https://ftp-master.debian.org/keys.html) contient
+nottamment le certicate de [Debian Bullseye](https://ftp-master.debian.org/keys/archive-key-11.asc)
 
 ### Importation d'un certicate dans le DSAS
 
+Des certificates X509 et GPG pourraient être ajoutés au DSAS en cliquant sur le
+[](images/DSAS23.png) a droit de chaque categorie de certificate. Un navigateur 
+du poste de travail est ouvert afin de selectionner le fichier à télécharger sur
+le DSAS. Et un importation réussi est signalé par
+
+![Importation de certificate réussi](images/DSAS20.png)
+
+Afin de confirmer la bonne importation du certificate dans le DSAS, il est 
+receommandé de regarder les détails du certificate importé, comme par exemple
+
+![Détails du certificate importé](images/DSAS21.png)
 
 ## Configuration des taches
 
