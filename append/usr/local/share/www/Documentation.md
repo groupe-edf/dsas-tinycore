@@ -270,8 +270,8 @@ liste de  serveurs de noms en ordre de leur préférence d'usage.
 ### Configuration SSH
 
 Il n'y a aucun utilisateur SSH sur la machine haute de base, même si un
-compte sftp pour l'utilisateur "haut" pourrait être créé de manière optionnelle. C
-elui-ci pourrait servir au dépôt de fichiers sur la machine haute pour une tâche sans 
+compte sftp pour l'utilisateur "haut" pourrait être créé de manière optionnelle.
+Celui-ci pourrait servir au dépôt de fichiers sur la machine haute pour une tâche sans 
 URI. Bien que cette configuration soit non recommandée, une telle configuration est 
 possible depuis l'interface d'administration.  La machine haute n'a pas besoin de 
 configuration SSH en phase initiale.
@@ -507,12 +507,78 @@ téléchargé en cliquant sur le bouton ![](images/DSAS11.png).
 
 ## Configuration des services
 
+Autre que les service web d'administration et service web de repositoire, il y a 3 services
+qui pourrait être demarrer sur les machines du DSAS;
+
+- Un serveur OpenSSH pour les connexion depuis l'exterieur,
+- Un client ntpd pour la mise à l'heure des machines, et
+- Un client syslogd pour les logs d'administration locale et distante
+
+![Menu de configuration du serveur web](images/DSAS16.png)
+
+### Configuration de la service OpenSSH
+
+En plus que le serveur openssh sur la machine haut utilisé pour les communications depuis la
+machine interne à la DSAS, l'adminsitrateur du DSAS peut choisir d'ouvrir d'autre service 
+de SSH depuis le zone senseible et/ou non-sensible.
+
+Le serveur OpenSSH n'est jamais démarrer avec des accès ouvertes à tous les utilisateurs sur 
+le DSAS. Il faut explicitement donner accès a chaque utilisateur, et cet accès n'est que valable
+depuis certain zones de sécurité. Par exemple, ci-dessus le service OpenSSH est coché est 
+l'utilisateur __tc__  peut connecté que depuis des adresseses IP dans le sous-réseau 10.0.2.0/24. 
+Les utilisateurs bas  et haut n'ont aucun droit d'accès.
+
+Les adresses d'écoute pour chaque utilisateur peut-être très complexe avec plusieurs adresses 
+possible separées par des virgules. Un exemple comple pourrait-être
+
+```
+10.0.2.1,10.0.2.128/25,!10.0.2.129
+```
+
+ou l'adresse 10.0.2.1 et le sous reseau 10.0.2.128/25 pourraient aceder au DSAS, mais l'adresse
+10.0.2.129 est interdit de faire.
+
+Chaque utilisateur ne peut que connecter depuis certaines zones de sécurité:
+
+- __tc__ - L'utilisateur __tc__ ne peut que connecter depuis le zone sensible et peut 
+connecter en ssh, scp et sftp
+- __bas__ - L'utilisateur bas ne peut que connecter en sftp depuis le zone sensible. Cette
+fonctionalité de sftp pourrait être utilisé pour remplacer le serveur http de répositoire
+(ou en complement). Il n'a que accès à la zone du DSAS avec les fichier verifiés et ne
+peut pas accéder ailleurs dans le DSAS.
+- __haut__ - `Utilisation du compte haut en SSH en fortement déconseillé`. La raison qu'il est 
+déconseillé est qu'il ne respecte pas le sens de l'ouverture des flux de la zone plus sensible 
+vers la zone moins sensible. Mais en absence d'autre moyen de téléchargement ce compte ouvre
+la possiblité depuis la zone non sensible à déposer des fichiers sur la machine haute du DSAS.
+L'utilisateur __haut__ n'a accès que en sftp et que à la zone du DSAS avec les fichiers non
+vérifiés. 
+
+Si le service SSH est activé vers une zone le port 22 est ouverte sur la machine du DSAS
+concernée.
+
+### Client syslogd
+
+Si le service `syslogd` du DSAS est activé, des logs des service sont fait localement au DSAS.
+Il est egalement possible à definir une serveur distant pour ave le service rsyslogd pour 
+des logs en UDP sur la port 514. 
+
+A noter que le service syslogd est fournit par BusyBox, et l'implementation de syslogd de BusyBox
+n'inclut pas la possibilité de chiffrement en TLS sur la port 6514. Donc d'autre moyen de 
+sécurisation de cette flux sont à mettre en place.
+
+L'utilisation de la service syslogd n'ouvre pas une port sur le DSAS, mais seulement une flux
+vers une serveur distante.
+
+### Client ntpd
+
+Le DSAS inclut la possibilité de synchroniser via le protocole ntp. Un ou plusieurs hôtes ntp
+pourraient être configuré. Les adresses des hôtes ntp pourrait être des adresses IP ou des
+nom de hôte comme fournit par le DNS. Dans le deuxieme cas le DNS doit-être configuré dans 
+comme discuté dans la section [Configuration des réseaux](configuration-des-réseaux).
 
 
-FIXME :: Document the configuration of the services
-
-A ce point des gestes initiales pour la configuration du DSAS sont fait et en rentrée dans
-une d'exploitation du DSAS.
+Utilisation de ntp n'ouvre pas une port sur le DSAS mais seuelment des flux vers des serevurs 
+distantes
 
 # Exploitation du DSAS
 
