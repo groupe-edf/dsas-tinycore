@@ -634,9 +634,9 @@ l'utilisation de ces certificates seulement n'est pas suffisante, parce que
 - Les certiciates pré-installé n'incluent pas des certiciates GPG utilisé par les 
 repositoire linux
 - La verification seulement contre un certificate racine n'ai pas un garanti forte d'absence
-de malveillance. [Les certificiate de type "code signing" ont été abusés par les malveillantes] 
-(https://duo.com/decipher/attackers-are-signing-malware-with-valid-certificates) afin de
-signer des malware.
+de malveillance. [Les certificiate de type "code signing" ont été abusés par les 
+malveillantes](https://duo.com/decipher/attackers-are-signing-malware-with-valid-certificates) 
+afin de signer des malware.
 
 Donc idéalement il faut restriente les verifications par des vérifications des certicates
 de type intermediares la plus proche de l'éditeur de logiciel voulu. Par exemple un
@@ -694,9 +694,30 @@ sauvegarder le certificate en format X.509 encodé en base 64 comme
 
 ![Export d'un certificate en base 64](images/CERT7.png)
 
+Un fichier avec le certificate sera sauvegarder sur votre poste de travail.
 
 ### Gestion des certificates GPG
 
+Les certificiates GPG sont utilisé notamment pour la vérification des binaires
+de linux, mais également pour d'autres fichiers signés par GPG (par exemple des
+fichiers de configuration dévéloppé par les utilisateurs du DSAS). 
+
+Les certificates GPG n'integrent pas explicitement la chaine de confiance dans les
+binaires signées. GPG utilise la concept de [toile de confiance](https://fr.wikipedia.org/wiki/Toile_de_confiance)
+ou les certicates eux-mêmes sont validé entre eux. Ceci est en dehors de la scope
+de cette document et nous avons assumé que vous avez un confiance complet dans
+les certificates que vous avez choisi à télécharger sur le DSAS.
+
+Afin de récuperer un certificate GPG, la seule solutions est de retouner vers 
+l'editeur de logiciel concerné. Par exemple quelques exemples de certificate
+des éditeurs de logiciels sont
+
+- [La page des certificates de RedHat](https://access.redhat.com/security/team/key) 
+contient [le certificate utilisé pour la signatures des binaires de Redhat depuis 
+2010](https://www.redhat.com/security/data/fd431d51.txt)
+- [La page des certificates de CentOs](https://www.centos.org/keys/) contient nottament 
+[le certificate utilisé pour CentOS7](https://www.centos.org/keys/RPM-GPG-KEY-CentOS-7)
+- FIXME: Add debian
 
 ### Importation d'un certicate dans le DSAS
 
