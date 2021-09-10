@@ -2,3 +2,5 @@
 00  */1 *   *   *   /usr/local/sbin/runtask 2>&1 1> /dev/null
 # Once a week rotate the logs
 00  01  *   *   0   /usr/local/sbin/rotatelogs 2>&1 1> /dev/null
+# Set date on machine haut once an hour. Can't use ntp
+00  */1 *   *   *   su tc ssh tc@192.168.192.2 sudo date -c @$(date -u +"%s")
