@@ -2,6 +2,7 @@ function modal_message(text, action = null, hide = false){
   var modalDSAS = document.getElementById("modalDSAS");
   modalDSAS.removeAttribute("disable");
   modalDSAS.removeAttribute("body");
+  modalDSAS.removeAttribute("size");
 
   if (hide)
     modalDSAS.setAttribute("hideonclick", true);
@@ -22,6 +23,7 @@ function modal_action(text, action = null, hide = false){
   modalDSAS.removeAttribute("disable");
   modalDSAS.removeAttribute("body");
   modalDSAS.removeAttribute("type");
+  modalDSAS.removeAttribute("size");
 
   if (hide)
     modalDSAS.setAttribute("hideonclick", true);
@@ -1390,6 +1392,74 @@ function dsas_add_task() {
     });
 }
 
+function b64toBlob(b64Data, contentType='', sliceSize=512){
+  const byteChar = atob(b64Data);
+  const byteArray = [];
+
+  for (let offset = 0; offset < byteChar.length; offset += sliceSize) {
+    const slice = byteChar.slice(offset, offset + sliceSize);
+
+    const byteNumbers = new Array(slice.length);
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i);
+    }
+
+    const ba = new Uint8Array(byteNumbers);
+    byteArray.push(ba);
+  }
+
+  const blob = new Blob(byteArray, {type: contentType});
+  return blob;
+}
+
+function dsas_backup(){
+  var modalDSAS = document.getElementById("modalDSAS");
+  var body = "";
+  modal_action("Sauvegarde de la configuration du DSAS", 'dsas_real_backup();', true);
+  body = '    <div class="col-9 d-flex justify-content-center">\n' +
+         '      <label for="BackupPassword">Mot de passe de la sauvegarde :</label>\n' +
+         '      <input type="password" id="BackupPassword" value="" class="form-control">\n' +
+         '    </div>';
+  modalDSAS.setAttribute("body", body);
+}
+
+function dsas_real_backup(){
+  var passwd = document.getElementById("BackupPassword").value;
+  var uri = new URL("api/backup.php", window.location.origin);
+  uri.search = new URLSearchParams({passwd: passwd});
+  fetch(uri).then(response => {
+     console.log(response); 
+     if (response.ok) 
+        return response.text();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(backup => {
+      var saveBase64 = (function() {
+        var a = document.createElement("a");
+        document.body.appendChild(a);
+        a.style = "display: none";
+        return function (data, name) {
+          var backupblob = b64toBlob(data, "application/gzip");
+          var backupurl = window.URL.createObjectURL(backupblob);
+          a.href = backupurl;
+          a.download = name;
+          a.click();
+          console.log("here");
+          window.URL.revokeObjectURL(backupurl);
+        };
+      }());
+      saveBase64(backup, "dsas_backup.tgz");
+    }).catch(error => {
+      if (! fail_loggedin(error.statusText))
+        modal_message("Error : " + error.statusText);
+    });     
+}
+
+function dsas_restore(){
+  modal_message("Restauration pas implement&ecute;");
+}
+
 function dsas_headings(){
   const hs = Array.prototype.slice.call(document.querySelectorAll("h1, h2, h3"));
   const ph = hs.map(h => {
@@ -1789,6 +1859,8 @@ class DSASHeader extends HTMLElement {
 '        </a>\n' +
 '        <div class="dropdown-menu">\n' +
 '          <a class="dropdown-item" href="passwd.html">Mot de passe</a>\n' +
+'          <a class="dropdown-item" onclick="dsas_backup();">Sauvegard&eacute;</a>\n' +
+'          <a class="dropdown-item" onclick="dsas_retore();">Restaur&eacute;</a>\n' +
 '          <a class="dropdown-item" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir red&eacute;marrer ?\', \'dsas_reboot();\')">Red&eacute;marrer</a>\n' + 
 '          <a class="dropdown-item" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir arr&ecirc;ter ?\',\'dsas_shutdown();\')">Arr&ecirc;ter</a>\n' +
 '        </div>\n' +

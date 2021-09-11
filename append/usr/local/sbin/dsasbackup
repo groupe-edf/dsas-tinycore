@@ -1,0 +1,98 @@
+#! /bin/sh
+
+# If root rerun as user tc
+if [ $(id -u) == 0 ];then
+  sudo -E -u tc $0 $*
+  exit $?
+fi
+
+# if not user tc, quit
+[ "$(whoami)" != "tc" ] && 1>&2 echo "$0: Must de run as user 'tc'" && exit 1
+
+if [ -f "$(dirname $0)/dsas_common.sh" ]; then
+  . $(dirname $0)/dsas_common.sh
+else
+  1>&2 echo "Common functions not found !!"
+  exit 1
+fi
+
+RESTORE=""
+if [ "$1" == "-r" ]; then
+ RESTORE=1
+ shift
+fi
+
+BKP="/tmp/dsas_backup.tgz"
+[ -n "$1" ] && BKP=$1
+[ -f "$BKP" ] && /bin/rm -f $BKP  
+
+PASSWD=""
+[ -n "$2" ] && PASSWD=$2
+
+MYDATA=mydata
+[ -r /etc/sysconfig/mydata ] && read MYDATA < /etc/sysconfig/mydata
+
+blowfish_encrypt(){
+  cat << EOD | /usr/bin/bcrypt -c $1 2> /dev/null  
+$2
+$2
+EOD
+[ "$?" != 0 ] && 1>&2 echo "Encryption failed" && exit 1 
+}
+
+blowfish_decrypt(){
+  cat << EOD | /usr/bin/bcrypt -o ${1}.bfe 2> /dev/null > $1
+$2
+EOD
+[ "$?" != 0 ] && 1>&2 echo "Decryption failed" && exit 1 
+}
+
+if [ -z "$RESTORE" ]; then
+  # Get the backup from the machine haut
+  (umask 077; scp tc@$INTERCO_HAUT:/etc/sysconfig/tcedir/${MYDATA}.tgz /tmp/haut.tgz 2>&1 > /dev/null)
+  [ -n "$PASSWD" ] && (umask 077; cd /tmp; blowfish_encrypt haut.tgz $PASSWD)
+  
+  # Get the backup for the machine bas
+  (umask 077; cp /etc/sysconfig/tcedir/${MYDATA}.tgz /tmp/bas.tgz)
+  [ -n "$PASSWD" ] && (umask 077; cd /tmp; blowfish_encrypt bas.tgz $PASSWD)
+
+  # Create the backup file
+  if [ -z "$PASSWD" ]; then
+    (umask 077; cd /tmp; tar -czf $BKP haut.tgz bas.tgz)
+  else
+    (umask 077; cd /tmp; tar -czf $BKP haut.tgz.bfe bas.tgz.bfe)
+fi
+else
+  # Remove existing files
+  (cd /tmp; /bin/rm -f haut.tgz bas.tgz haut.tgz.bfe bas.tgz.bfe)
+
+  # Unpack the tar file
+  (umask 077; cd /tmp; tar -zxf $BKP)
+
+  if [ -z "$PASSWD" ]; then
+    [ -f "/tmp/haut.tgz" ] || (1>&2 echo "Backup corrupted or encrypted"; exit 1)
+    [ -f "/tmp/bas.tgz" ] || (1>&2 echo "Backup corrupted or encrypted"; exit 1)
+  else
+    [ -f "/tmp/haut.tgz.bfe" ] || (1>&2 echo "Backup corrupted or not encrypted"; exit 1)
+    [ -f "/tmp/bas.tgz.bfe" ] || (1>&2 echo "Backup corrupted or not encrypted"; exit 1)
+
+    # Decrypt the files 
+    (umask 077; cd /tmp; blowfish_decrypt haut.tgz $PASSWD)
+    (umask 077; cd /tmp; blowfish_decrypt bas.tgz $PASSWD)
+  fi
+  
+  # Move backup of machine bas into place
+  /bin/mv /tmp/bas.tgz /etc/sysconfig/tcedir/${MYDATA}.tgz
+  chmod 0660 /etc/sysconfig/tcedir/${MYDATA}.tgz 
+  chgrp staff /etc/sysconfig/tcedir/${MYDATA}.tgz 
+  
+  # Move backup of machine haut into place
+  scp /tmp/haut.tgz tc@$INTERCO_HAUT:/tmp/haut.tgz 2>&1 > /dev/null
+  ssh i-T tc@$INTERCO_HAUT << EOF
+/bin/mv /tmp/haut.tgz /etc/sysconfig/tcedir/${MYDATA}.tgz
+chmod 0660 /etc/sysconfig/tcedir/${MYDATA}.tgz 
+chgrp staff /etc/sysconfig/tcedir/${MYDATA}.tgz 
+EOF
+
+fi
+
