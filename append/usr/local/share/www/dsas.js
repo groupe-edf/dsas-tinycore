@@ -19,7 +19,7 @@ function modal_message(text, action = null, hide = false){
 }
 
 function modal_action(text, action = null, hide = false){
-  var modalAction = document.getElementById("modalDSAS");
+  var modalDSAS = document.getElementById("modalDSAS");
   modalDSAS.removeAttribute("disable");
   modalDSAS.removeAttribute("body");
   modalDSAS.removeAttribute("type");
@@ -1498,8 +1498,19 @@ function dsas_real_restore() {
         const errors = JSON.parse(text);
         modal_errors(errors);
       } catch (e) {
-        // Its text => here always just "Ok"
-        modal_message("Restauration reussi", "window.location = '';", true);
+        // Can't apply directly from the restore script as the application
+        // might restart the web server. Need to use use apply JS function
+        // dsas_apply with a pre setup modal
+        var modalDSAS = document.getElementById("modalDSAS");
+        modalDSAS.removeAttribute("disable");
+        modalDSAS.removeAttribute("body");
+        modalDSAS.removeAttribute("size");
+        modalDSAS.removeAttribute("hideonclick");
+        modalDSAS.setAttribute("action", "");
+        modalDSAS.setAttribute("title", "Appliquer le configuration");
+        modalDSAS.setAttribute("type", "Ok");
+        modalDSAS.show();
+        dsas_apply();
       } 
     }).catch(error => {
       if (!fail_loggedin(error.statusText))
@@ -1825,12 +1836,13 @@ class DSASModal extends HTMLElement {
     else {
       switch (name) {
         case "disable":
+            var type = this.getAttribute("type");
             if (newValue === null) {
               document.getElementById("ok" + tag).removeAttribute("disabled");
-              document.getElementById("cancel" + tag).removeAttribute("disabled");            
+              if (type != "Ok") document.getElementById("cancel" + tag).removeAttribute("disabled");            
             } else {
               document.getElementById("ok" + tag).setAttribute("disabled", "");
-              document.getElementById("cancel" + tag).setAttribute("disabled", "");
+              if (type != "Ok") document.getElementById("cancel" + tag).setAttribute("disabled", "");
             }
           break;
         case "title": 

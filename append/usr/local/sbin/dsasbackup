@@ -16,17 +16,30 @@ else
   exit 1
 fi
 
-RESTORE=""
-if [ "$1" == "-r" ]; then
- RESTORE=1
- shift
-fi
-
-BKP="/tmp/dsas_backup.tgz"
-[ -n "$1" ] && BKP=$1
-
+RESTORE=0
+APPLY=0
+BKP=""
 PASSWD=""
-[ -n "$2" ] && PASSWD=$2
+while [ "$#" -gt 0 ]; do
+  case $1 in
+    -r|--restore) RESTORE=1 ;;
+    -b|--backup) RESTORE=0 ;;
+    -a|--apply) APPLY=1; ;;
+    -*) 1>&2 echo "Unrecognized option : $1"; help; exit 1 ;;
+    *)
+      if [ -f "$1" ]; then
+        [ -n "$BKP" ] && { 1>&2 echo "Only one backup file allowed"; exit 1; }
+        BKP=$1
+      else
+        [ -n "$PASSWD" ] && { 1>&2 echo "Only one password allowed"; exit 1; }
+        PASSWD=$1
+      fi
+      ;;
+  esac
+  shift 1
+done
+
+[ -z "$BKP" ] && BKP="/tmp/dsas_backup.tgz"
 
 MYDATA=mydata
 [ -r /etc/sysconfig/mydata ] && read MYDATA < /etc/sysconfig/mydata
@@ -44,7 +57,7 @@ $2
 EOD
 }
 
-if [ -z "$RESTORE" ]; then
+if [ "$RESTORE" -eq 0 ]; then
   # Get the backup from the machine haut
   (umask 077; scp tc@$INTERCO_HAUT:/etc/sysconfig/tcedir/${MYDATA}.tgz /tmp/haut.tgz 2>&1 > /dev/null)
   [ -n "$PASSWD" ] && (umask 077; cd /tmp; blowfish_encrypt haut.tgz $PASSWD)
@@ -96,10 +109,12 @@ chgrp staff /etc/sysconfig/tcedir/${MYDATA}.tgz
 EOF
   [ $? -eq 0 ] || { 1>&2 echo "Can not transfert the backup to the machine haut"; exit 1; }
 
-  # Restore the files and apply the configuration
+  # Restore the files and apply the configuration if requested
   /usr/bin/filetool.sh -r 2>&1 > /dev/null
   [ $? -eq 0 ] || { 1>&2 echo "Error running filetool"; exit 1; }
-  sudo /etc/init.d/services/dsas apply 2>&1 > /dev/null
-  [ $? -eq 0 ] || { 1>&2 echo "Error applying the configuration"; exit 1; }
+  if [ "$APPLY" -ne 0 ]; then
+    sudo /etc/init.d/services/dsas apply 2>&1 > /dev/null
+    [ $? -eq 0 ] || { 1>&2 echo "Error applying the configuration"; exit 1; }
+  fi
 fi
 
