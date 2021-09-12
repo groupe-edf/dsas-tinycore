@@ -145,10 +145,10 @@ function modal_errors(errors, feedback = false){
   if (errors && errors != "Ok") {
     var body = "";
     for (err of errors)
-      if (typeof errors === "string" || errors instanceof String)
+      if (typeof err === "string" || err instanceof String)
         body = body + "<p>" + errors + "</p>"
       else {
-        key = Object.keys(error)[0]
+        key = Object.keys(err)[0]
         if (key == "error" || ! feedback) {
           body = body + "<p>" + err[Object.keys(err)] + "</p>";
         } else {
@@ -1428,7 +1428,6 @@ function dsas_real_backup(){
   var uri = new URL("api/backup.php", window.location.origin);
   uri.search = new URLSearchParams({passwd: passwd});
   fetch(uri).then(response => {
-     console.log(response); 
      if (response.ok) 
         return response.text();
       else
@@ -1445,7 +1444,6 @@ function dsas_real_backup(){
           a.href = backupurl;
           a.download = name;
           a.click();
-          console.log("here");
           window.URL.revokeObjectURL(backupurl);
         };
       }());
@@ -1457,7 +1455,54 @@ function dsas_real_backup(){
 }
 
 function dsas_restore(){
-  modal_message("Restauration pas implement&ecute;");
+  var inp = document.createElement("input");
+  document.body.appendChild(inp);
+  inp.style = "display: none";
+  inp.type = "file";
+  inp.accept = "application/gzip";
+  inp.id = "RestoreSelectFile";
+  inp.addEventListener("change", dsas_passwd_restore, true);
+  inp.click();
+}
+
+function dsas_passwd_restore(){
+  var modalDSAS = document.getElementById("modalDSAS");
+  var body = "";
+  modal_action("Restauration de la configuration du DSAS", 'dsas_real_restore();', true);
+  body = '    <div class="col-9 d-flex justify-content-center">\n' +
+         '      <label for="RestorePassword">Mot de passe de la sauvegarde :</label>\n' +
+         '      <input type="password" id="RestorePassword" value="" class="form-control">\n' +
+         '    </div>';
+  modalDSAS.setAttribute("body", body);
+}
+
+function dsas_real_restore() {
+  var passwd = document.getElementById("RestorePassword").value;
+  var file = document.getElementById("RestoreSelectFile").files[0];
+  var formData = new FormData();
+  formData.append("file", file);
+  formData.append("passwd", passwd);
+
+  fetch("api/backup.php", {
+    method: 'POST',
+    body: formData}).then(response => {
+      if (response.ok) 
+        return response.text();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(text => {
+      try {
+        const errors = JSON.parse(text);
+        modal_errors(errors);
+      } catch (e) {
+        // Its text => here always just "Ok"
+        modal_message("Restauration reussi", "window.location = '';", true);
+      } 
+    }).catch(error => {
+      if (!fail_loggedin(error.statusText))
+        modal_message("Error : " + error.statusText);
+    });
 }
 
 function dsas_headings(){
@@ -1854,15 +1899,15 @@ class DSASHeader extends HTMLElement {
 '        </div>\n' +
 '      </li>\n' +
 '      <li class="nav-item dropdown">\n' +
-'        <a class="nav-link ' + disablenav + ' dropdown-toggle" data-bs-toggle="dropdown">\n' +
+'        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">\n' +
 '        Syst&egrave;me\n' +
 '        </a>\n' +
 '        <div class="dropdown-menu">\n' +
 '          <a class="dropdown-item" href="passwd.html">Mot de passe</a>\n' +
-'          <a class="dropdown-item" onclick="dsas_backup();">Sauvegard&eacute;</a>\n' +
-'          <a class="dropdown-item" onclick="dsas_retore();">Restaur&eacute;</a>\n' +
-'          <a class="dropdown-item" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir red&eacute;marrer ?\', \'dsas_reboot();\')">Red&eacute;marrer</a>\n' + 
-'          <a class="dropdown-item" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir arr&ecirc;ter ?\',\'dsas_shutdown();\')">Arr&ecirc;ter</a>\n' +
+'          <a class="dropdown-item ' + disablenav + '" onclick="dsas_backup();">Sauvegard&eacute;</a>\n' +
+'          <a class="dropdown-item" onclick="dsas_restore();">Restaur&eacute;</a>\n' +
+'          <a class="dropdown-item ' + disablenav + '" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir red&eacute;marrer ?\', \'dsas_reboot();\')">Red&eacute;marrer</a>\n' + 
+'          <a class="dropdown-item ' + disablenav + '" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir arr&ecirc;ter ?\',\'dsas_shutdown();\')">Arr&ecirc;ter</a>\n' +
 '        </div>\n' +
 '      </li>\n' +
 '      <li class="nav-item">\n' +

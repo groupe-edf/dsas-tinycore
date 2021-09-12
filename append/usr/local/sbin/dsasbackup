@@ -7,7 +7,7 @@ if [ $(id -u) == 0 ];then
 fi
 
 # if not user tc, quit
-[ "$(whoami)" != "tc" ] && 1>&2 echo "$0: Must de run as user 'tc'" && exit 1
+[ "$(whoami)" != "tc" ] && { 1>&2 echo "$0: Must de run as user 'tc'"; exit 1; }
 
 if [ -f "$(dirname $0)/dsas_common.sh" ]; then
   . $(dirname $0)/dsas_common.sh
@@ -24,7 +24,6 @@ fi
 
 BKP="/tmp/dsas_backup.tgz"
 [ -n "$1" ] && BKP=$1
-[ -f "$BKP" ] && /bin/rm -f $BKP  
 
 PASSWD=""
 [ -n "$2" ] && PASSWD=$2
@@ -37,14 +36,12 @@ blowfish_encrypt(){
 $2
 $2
 EOD
-[ "$?" != 0 ] && 1>&2 echo "Encryption failed" && exit 1 
 }
 
 blowfish_decrypt(){
-  cat << EOD | /usr/bin/bcrypt -o ${1}.bfe 2> /dev/null > $1
+  cat << EOD | /usr/bin/bcrypt -o $1.bfe 2> /dev/null > $1
 $2
 EOD
-[ "$?" != 0 ] && 1>&2 echo "Decryption failed" && exit 1 
 }
 
 if [ -z "$RESTORE" ]; then
@@ -57,28 +54,32 @@ if [ -z "$RESTORE" ]; then
   [ -n "$PASSWD" ] && (umask 077; cd /tmp; blowfish_encrypt bas.tgz $PASSWD)
 
   # Create the backup file
+  [ -f "$BKP" ] && /bin/rm -f $BKP  
   if [ -z "$PASSWD" ]; then
     (umask 077; cd /tmp; tar -czf $BKP haut.tgz bas.tgz)
   else
     (umask 077; cd /tmp; tar -czf $BKP haut.tgz.bfe bas.tgz.bfe)
-fi
+  fi
 else
   # Remove existing files
   (cd /tmp; /bin/rm -f haut.tgz bas.tgz haut.tgz.bfe bas.tgz.bfe)
 
   # Unpack the tar file
   (umask 077; cd /tmp; tar -zxf $BKP)
+  [ $? -eq 0 ] || exit 1;
 
   if [ -z "$PASSWD" ]; then
-    [ -f "/tmp/haut.tgz" ] || (1>&2 echo "Backup corrupted or encrypted"; exit 1)
-    [ -f "/tmp/bas.tgz" ] || (1>&2 echo "Backup corrupted or encrypted"; exit 1)
+    [ -f "/tmp/haut.tgz" ] || { 1>&2 echo "Backup corrupted or encrypted"; exit 1; }
+    [ -f "/tmp/bas.tgz" ] || { 1>&2 echo "Backup corrupted or encrypted"; exit 1; }
   else
-    [ -f "/tmp/haut.tgz.bfe" ] || (1>&2 echo "Backup corrupted or not encrypted"; exit 1)
-    [ -f "/tmp/bas.tgz.bfe" ] || (1>&2 echo "Backup corrupted or not encrypted"; exit 1)
+    [ -f "/tmp/haut.tgz.bfe" ] || { 1>&2 echo "Backup corrupted or not encrypted"; exit 1; }
+    [ -f "/tmp/bas.tgz.bfe" ] || { 1>&2 echo "Backup corrupted or not encrypted"; exit 1; }
 
     # Decrypt the files 
     (umask 077; cd /tmp; blowfish_decrypt haut.tgz $PASSWD)
+    [ $? -eq 0 ] || { 1>&2 echo "Can not decrypt the backup. Check the password"; exit 1; }
     (umask 077; cd /tmp; blowfish_decrypt bas.tgz $PASSWD)
+    [ $? -eq 0 ] || { 1>&2 echo "The backup is corrupted"; exit 1; }
   fi
   
   # Move backup of machine bas into place
@@ -88,11 +89,17 @@ else
   
   # Move backup of machine haut into place
   scp /tmp/haut.tgz tc@$INTERCO_HAUT:/tmp/haut.tgz 2>&1 > /dev/null
-  ssh i-T tc@$INTERCO_HAUT << EOF
+  ssh -T tc@$INTERCO_HAUT << EOF
 /bin/mv /tmp/haut.tgz /etc/sysconfig/tcedir/${MYDATA}.tgz
 chmod 0660 /etc/sysconfig/tcedir/${MYDATA}.tgz 
 chgrp staff /etc/sysconfig/tcedir/${MYDATA}.tgz 
 EOF
+  [ $? -eq 0 ] || { 1>&2 echo "Can not transfert the backup to the machine haut"; exit 1; }
 
+  # Restore the files and apply the configuration
+  /usr/bin/filetool.sh -r 2>&1 > /dev/null
+  [ $? -eq 0 ] || { 1>&2 echo "Error running filetool"; exit 1; }
+  sudo /etc/init.d/services/dsas apply 2>&1 > /dev/null
+  [ $? -eq 0 ] || { 1>&2 echo "Error applying the configuration"; exit 1; }
 fi
 

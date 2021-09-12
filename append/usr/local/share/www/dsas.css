@@ -19,3 +19,7 @@
     padding: 15px;
   }
 }
+a.disablenav {
+  color: gray;
+  pointer-events: none;
+}
