@@ -412,14 +412,14 @@ addgroup tc repo
 # Fix directory and file permissions
 chown -R tc.staff /home/tc
 chown -R tc.verif /var/dsas
-chomod 775 /var/dsas          # Write perm for verif
+chmod 775 /var/dsas          # Write perm for verif
 chmod 640 /var/dsas/*.csr /var/dsas/*.pem
 chown tc.repo /var/dsas/*.csr /var/dsas/*.pem
 chown -R root.staff /opt
 chmod 770 /opt
 chmod 770 /opt/.filetool.lst
 chmod 644 /usr/local/share/www/* /usr/local/share/www/api/* usr/local/share/www/images/*
-chmod 755 /usr/loca/share/www/images /usr/local/share/www/api
+chmod 755 /usr/local/share/www/images /usr/local/share/www/api
 
 EOF
 
