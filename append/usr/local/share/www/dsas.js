@@ -337,10 +337,10 @@ function dsas_check_warnings(disablenav = false, redirect = true){
         if (error) {
           if (disablenav)
             document.getElementsByTagName("dsas-header")[0].setAttribute("disablenav", "disabled")
-          body = body + '<div class="alert alert-danger">' + error + '</div>';
+          body = body + '<p class="text-danger">' + error + '</p>';
         }
         if (warn)
-          body = body + '<div class="alert alert-warning">' + warn + '</div>';
+          body = body + '<p class="text-warning">' + warn + '</p>';
         if (body)
           modal_message(body);
       }
