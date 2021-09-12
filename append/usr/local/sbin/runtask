@@ -7,7 +7,7 @@ if [ $(id -u) == 0 ]; then
 fi
 
 # if not user tc, quit
-[ "$(whoami)" != "tc" ] && 1>&2 echo "$0: Must be run as user 'tc'" && exit 1
+[ "$(whoami)" != "tc" ] && { 1>&2 echo "$0: Must be run as user 'tc'"; exit 1; }
 
 if [ -f "$(dirname $0)/dsas_common.sh" ]; then
   . $(dirname $0)/dsas_common.sh
@@ -17,7 +17,7 @@ else
 fi
 
 # If on machine haut, quit, as this script is reserved for the machine bas
-[ "$TYP" == "haut" ] && 1>&2 echo "$0: Must be run from machine bas'" && exit 1
+[ "$TYP" == "haut" ] && { 1>&2 echo "$0: Must be run from machine bas'"; exit 1; }
 
 # Créate run log file if it doesn't exist
 [ -f "$RUNLOG" ] || touch $RUNLOG
@@ -81,7 +81,7 @@ chgrp verif $LOG
 for _id in $ids; do
   # Check if task is already running and skip if not 
   _pid=$(pgrep $_id)
-  [ -n "$_pid" ] && 1>&2 myecho "$0 task $_id is running" && continue
+  [ -n "$_pid" ] && { 1>&2 myecho "$0 task $_id is running"; continue }
 
   1>&2 myecho "$0: #### Tasks on machine HAUT ####"
   ssh tc@$INTERCO_HAUT sudo sudo -u haut $(dirname $0)/getfiles $opts $_id

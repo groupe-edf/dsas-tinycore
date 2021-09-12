@@ -26,9 +26,9 @@ dryrun=0
 grp="share"
 
 check_dsas(){
-  [ -d $DSAS_HOME ] || (echo "DSAS home directory missing"; exit -1)
-  [ "$(whoami)" == "bas" ] || [ -d $DSAS_HAUT ] || (echo "DSAS haut directory missing"; exit -1)
-  [ "$(whoami)" == "haut" ] || [ -d $DSAS_BAS ] || (echo "DSAS bas directory missing"; exit -1)
+  [ -d $DSAS_HOME ] || { echo "DSAS home directory missing"; exit 1; }
+  [ "$(whoami)" == "bas" ] || [ -d $DSAS_HAUT ] || { echo "DSAS haut directory missing"; exit -1; }
+  [ "$(whoami)" == "haut" ] || [ -d $DSAS_BAS ] || { echo "DSAS bas directory missing"; exit -1; }
 }
 
 myecho(){
