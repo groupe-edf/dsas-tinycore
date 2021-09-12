@@ -48,6 +48,46 @@ function dsas_has_xml() {
   return is_file(_DSAS_XML); 
 }
 
+function dsas_exec($args, $cwd = null, $stdin = []){
+  # Simplify the call to proc_open with the means to avoids spawning a shell
+  # and escaping the args integrated. The args MUST be passed as an array to get
+  # the escaping to work properly.
+
+  $descriptorspec = array(
+    0 => array("pipe", "r"), // stdin
+    1 => array("pipe", "w"), // stdout
+    2 => array("pipe", "w") //stderr
+  );
+
+  // Call command as an array to avoid creating a shell
+  $process = proc_open($args, $descriptorspec, $pipes, $cwd);
+  if (is_resource($process)) {
+    // Make the output pipes non-blocking so we can just read them 
+    // after all of the inputs are done
+    stream_set_blocking($pipes[1], 0);
+    stream_set_blocking($pipes[2], 0);
+
+    // Write all of the inputs line by line. Need to parse user
+    // input before using them in this function !!!
+    foreach ($stdin as $line)
+       fwrite($pipes[0], $line . PHP_EOL);
+    fclose($pipes[0]);
+
+    $stdout="";
+    while (!feof($pipes[1]))
+      $stdout = $stdout . fgets($pipes[1]);
+    fclose($pipes[1]);
+    $stderr = "";
+    while (!feof($pipes[2]))
+      $stderr = $stderr . fgets($pipes[2]);
+    fclose($pipes[2]);
+    $retval = proc_close($process);
+    return ["retval" => $retval, "stdout" => $stdout, "stderr" => $stderr];
+  } else {
+    return ["retval" => -1];    
+  }
+}
+
 function sasl_checkpass($user, $pass){
     // FIXME : I should really reimplement this using sockets like in
     //   testsasldauth.c on the Cyrus github
