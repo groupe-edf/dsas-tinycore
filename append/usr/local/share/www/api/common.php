@@ -531,21 +531,27 @@ function dsasid($len = 24){
   return substr(bin2hex($bytes), 0, $len);
 }
 
+function dsas_task_running($id){
+   $ret = dsas_exec(["pgrep", "-f", "$id"]);
+   return ($ret["retval"] === 0);
+}
+
 function dsas_run_log($id){
+ $run = dsas_task_running($id);
  if (is_file(_DSAS_VAR . "/dsas_runlog")) {
     if ($fp = fopen(_DSAS_VAR . "/dsas_runlog", "r")) {
       while (($line = fgets($fp)) !== false) {
         if ($id == substr($line,0,strlen($id))) {
            $tmp = preg_split("/\s+/", $line);
            if (count($tmp) > 2)
-             return array("last" => $tmp[1], "status" => $tmp[2]);
+             return array("last" => $tmp[1], "status" => ($run ? "Running" : ($tmp[2] === "0" ? "Ok" : "Failed")));
            else
              break;
         }
       }
     }
   }
-  return array("last" => "never", "status" => "0");
+  return array("last" => "never", "status" => ($run ? "Running" : "Ok"));
 }
 
 // Check the $_FILES variable for possible attacks

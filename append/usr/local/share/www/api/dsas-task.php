@@ -175,10 +175,22 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         if (! ctype_xdigit($id)) {
           $errors[] = ["error" => "ID de la tache invalide;"];
         } else {
-          // Force the execution of the task with the "-f" flag
-          exec("runtask -f " . escapeshellarg($id), $output, $retval);
-          if ($retval != 0)
-            $errors[] = ["error" => "Execution de la tache (" . $id . ") a &eacute;chouch&eacute;"];
+          $dsas_active = simplexml_load_file(_DSAS_XML . ".active");
+          $runtask = false;
+          foreach ($dsas_active->tasks->task as $task) {
+            if ($task->id == $id) {
+              $runtask = true;
+              break;
+            }
+          }
+          if ( ! $runtask) {
+            $errors[] = ["error" => "La tache (" . $id . ") n'est pas active. Essaye d'appliquer avant"];
+          } else {
+            // Force the execution of the task with the "-f" flag
+            exec("runtask -f " . escapeshellarg($id) . " > /dev/null &", $output, $retval);
+            if ($retval != 0)
+              $errors[] = ["error" => "Execution de la tache (" . $id . ") a &eacute;chouch&eacute;"];
+          }
         }
 
         break;

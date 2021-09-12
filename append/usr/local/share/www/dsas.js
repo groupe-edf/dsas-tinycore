@@ -1095,7 +1095,7 @@ function dsas_display_tasks(what = "all") {
 
       if (tasks.task) {
         for (task of (tasks.task.constructor === Object ? [tasks.task] : tasks.task)) { 
-          cls = (task.last == "never" ? "text-info" : (task.status != 0 ? "text-danger" : "text-success"));
+          cls = (task.last == "never" ? "text-info" : (task.status == "Running" ? "text-info" : (task.status == "Failed" ? "text-danger" : "text-success")));
           body = body + 
               '<p class="my-0 ' + cls + '"><a class="text-toggle" data-bs-toggle="collapse" href="#task' + i + '" role="button"' + 
               'aria-controls="task' + i + '" aria-expanded="false">' +
