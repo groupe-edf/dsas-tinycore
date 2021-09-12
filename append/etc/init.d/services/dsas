@@ -29,6 +29,8 @@ mount_dsas(){
     mkdir -p /home/dsas
     chown root.staff /home/dsas
     chmod 755 /home/dsas
+    # remount main disk as noexec. Strip trail "/dsas" from $DSAS to get the real partition
+    mount -o remount,noexec ${DSAS:0:-5}
     mount --noexec --nobind $DSAS /home/dsas
   fi
 }
