@@ -125,6 +125,7 @@ function modal_task(action = "dsas_add_task();"){
 '      <label for="TaskAddCert">Ajouter un certificate :</label>\n' +
 '      <select class="form-select" name="TaskAddCert" id="TaskAddCert" onchange="dsas_add_task_cert();">\n' +
 '              </select>\n' +
+'    </div>\n' + 
 '  </div>\n' +
 '  <div class="row">\n' +
 '    <div class="col-12">\n' +
