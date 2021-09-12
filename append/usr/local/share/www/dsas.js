@@ -374,9 +374,9 @@ function dsas_display_logs(all = false){
           for (const log of logs[0]) {
             if (log["type"] === "normal") {
               if (showall) 
-                body = body + '<span class="text-muted">' + log["line"] + "</span>\n";
+                body = body + '<pre class="my-0 text-muted overflow-hidden">' + log["line"] + "</pre>\n";
             } else
-              body = body + '<span class="text-danger">' + log["line"] + "</span>\n";
+              body = body + '<pre class="my-0 text-danger overflow-hidden">' + log["line"] + "</pre>\n";
           }
         } else {
           body = body + '<ul class="nav nav-tabs" id="logs" role="tablist">\n';
