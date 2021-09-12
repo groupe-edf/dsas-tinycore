@@ -38,8 +38,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
                 $newcert->type = "x509";
                 $newcert->pem = trim($x509);
                 $newcert->authority = (empty($parse["extensions"]["authorityKeyIdentifier"]) || 
-                  (!empty($parse("extensions"]["subjectKeyIdentifier"]) && str_contains($parse["extensions"]["authorityKeyIdentifier"],
-                  $parse["extensions"]["subjectKeyIdentifier"]) ? "true" : "false");
+                  (!empty($parse["extensions"]["subjectKeyIdentifier"]) && str_contains($parse["extensions"]["authorityKeyIdentifier"],
+                  $parse["extensions"]["subjectKeyIdentifier"])) ? "true" : "false");
               }
             }
           }

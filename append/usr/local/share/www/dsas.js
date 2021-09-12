@@ -39,13 +39,13 @@ function modal_action(text, action = null, hide = false){
 }
 
 function modal_task(action = "dsas_add_task();"){
-  var modalAction = document.getElementById("modalDSAS");
+  var modalDSAS = document.getElementById("modalDSAS");
   modalDSAS.removeAttribute("disable");
   modalDSAS.removeAttribute("type");
   if (action) 
     modalDSAS.setAttribute("action", action);
   else
-    modalDSAS.setAttribute("action", "");
+    modalDSAS.removeAttribute("action");
   modalDSAS.setAttribute("hideonclick", true);
   modalDSAS.setAttribute("title", "Ajouter un tache");
   modalDSAS.setAttribute("size", "lg");
@@ -61,7 +61,7 @@ function modal_task(action = "dsas_add_task();"){
     var i = 1;
     var certbody = '<option id="TaskAddCert0" value="" selected>Selectionner une certificate</option>\n';
     for (cert of certs[0].dsas.x509) {
-      ertbody = certbody + '<option id="TaskAddCert' + i + '" value="' + cert_finger(cert) + 
+      certbody = certbody + '<option id="TaskAddCert' + i + '" value="' + cert_finger(cert) + 
                     '">' + cert_name(cert) + '</option>\n';
       i++;
     }
@@ -77,7 +77,8 @@ function modal_task(action = "dsas_add_task();"){
     }
     document.getElementById("TaskAddCert").innerHTML = certbody;
   }).catch(error => {
-    fail_loggedin(error.statusText);
+    if (! fail_loggedin(error.statusText))
+      modal_message("Erreur (" + error.status + ") pendant chargement des certificates :\n" + error.statusText);
   });
 
   modalDSAS.setAttribute("body", '<form>\n' +
