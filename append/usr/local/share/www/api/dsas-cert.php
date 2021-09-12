@@ -9,78 +9,60 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
 
   try {
     switch ($_POST["op"]){
-      case "x509_upload":      
-        if (!empty($_FILES["file"])) {
-           if ((@$_FILES["file"]["type"] != "text/plain" && 
-               @$_FILES["file"]["type"] != "application/x-x509-ca-cert" &&
-               @$_FILES["file"]["type"] != "application/x-x509-user-cert"))
-            $errors[] = ["x509_upload" => "Certificate doit-&ecirc;tre en format PEM"];
-          else {   
-            $x509 = htmlspecialchars(file_get_contents($_FILES["file"]["tmp_name"]));
-            $x509 = str_replace("\r", "", $x509);   // dos2unix
-            $parse = openssl_x509_parse($x509);
-            if (! $parse)
-              $errors[] = ["509_upload" => "Fichier x509 doit-&ecirc;tre en format PEM"];
-            else {
-              $certok = true;
-              foreach ($dsas->certificates->certificate as $certificate) {
-                if ($certificate->type == "x509") {
-                  $cert =  openssl_x509_parse(trim($certificate->pem));
-                  if ($cert["extensions"]["subjectKeyIdentifier"] == $parse["extensions"]["subjectKeyIdentifier"]) {
-                    $errors[] = [ "x509_upload" => "Le certificate X509 existe déja"];
-                    $certok = false;
-                    break;
-                  }
-                }
-              }
-              if ($certok) {
-		$newcert = $dsas->certificates->addChild("certificate");
-                $newcert->type = "x509";
-                $newcert->pem = trim($x509);
-                $newcert->authority = (empty($parse["extensions"]["authorityKeyIdentifier"]) || 
-                  (!empty($parse["extensions"]["subjectKeyIdentifier"]) && str_contains($parse["extensions"]["authorityKeyIdentifier"],
-                  $parse["extensions"]["subjectKeyIdentifier"])) ? "true" : "false");
-              }
+      case "x509_upload":
+        try {
+          // PEM files are detected as text/plain
+          check_files($_FILES["file"], "text/plain");
+      
+          $x509 = htmlspecialchars(file_get_contents($_FILES["file"]["tmp_name"]));
+          $x509 = str_replace("\r", "", $x509);   // dos2unix
+          $parse = openssl_x509_parse($x509);
+          if (! $parse)
+            throw new RuntimeException("Fichier x509 doit-&ecirc;tre en format PEM");
+          
+          foreach ($dsas->certificates->certificate as $certificate) {
+            if ($certificate->type == "x509") {
+              $cert =  openssl_x509_parse(trim($certificate->pem));
+              if ($cert["extensions"]["subjectKeyIdentifier"] == $parse["extensions"]["subjectKeyIdentifier"])
+                throw new RuntimeException("Le certificate X509 existe déja");
             }
           }
-        } else 
-          $errors[] = ["error" => "Aucun fichier envoy&eacute;"]; 
+          $newcert = $dsas->certificates->addChild("certificate");
+          $newcert->type = "x509";
+          $newcert->pem = trim($x509);
+          $newcert->authority = (empty($parse["extensions"]["authorityKeyIdentifier"]) || 
+            (!empty($parse["extensions"]["subjectKeyIdentifier"]) && str_contains($parse["extensions"]["authorityKeyIdentifier"],
+            $parse["extensions"]["subjectKeyIdentifier"])) ? "true" : "false");
+          
+        } catch (RuntimeException $e) {
+          $errors[] = ["x509_upload" => $e->getMessage()];
+        }
         break;
  
-     case "gpg_upload":      
-        if (!empty($_FILES["file"])) {
-           if ((@$_FILES["file"]["type"] != "text/plain" && 
-               @$_FILES["file"]["type"] != "application/octet-stream" &&
-               @$_FILES["file"]["type"] != "application/pgp-keys"))
-            $errors[] = ["gpg_upload" => "Certificate doit-&ecirc;tre en format PEM"];
-          else {   
-            $gpg = htmlspecialchars(file_get_contents($_FILES["file"]["tmp_name"]));
-            $gpg = str_replace("\r", "", $gpg);   // dos2unix
-            $parse = parse_gpg($gpg);
-            if (! $parse)
-              $errors[] = ["gpg_upload" => "Fichier GPG doit-&ecirc;tre en format PEM"];
-            else {
-              $certok = true;
-              foreach ($dsas->certificates->certificate as $certificate) {
-                if ($certificate->type == "gpg") {
-                  $cert =  parse_gpg(trim($certificate->pem));
-                  if ($cert["fingerprint"] == $parse["fingerprint"]) {
-                    $errors[] = [ "gpg_upload" => "Le certificate GPG existe déja"];
-                    $certok = false;
-                    break;
-                  }
-                }
-              }
-              if ($certok) {
-		$newcert = $dsas->certificates->addChild("certificate");
-                $newcert->type = "gpg";
-                $newcert->pem = trim($gpg);
-                $newcert->authority = "true";
-              }
+     case "gpg_upload":
+        try {
+          check_files($_FILES["file"], "application/pgp-keys");
+
+          $gpg = htmlspecialchars(file_get_contents($_FILES["file"]["tmp_name"]));
+          $gpg = str_replace("\r", "", $gpg);   // dos2unix
+          $parse = parse_gpg($gpg);
+          if (! $parse)
+            throw new RuntimeException("Fichier GPG doit-&ecirc;tre en format PEM");
+
+          foreach ($dsas->certificates->certificate as $certificate) {
+            if ($certificate->type == "gpg") {
+              $cert =  parse_gpg(trim($certificate->pem));
+              if ($cert["fingerprint"] == $parse["fingerprint"])
+                throw new RuntimeException("Le certificate GPG existe déja");
             }
           }
-        } else 
-          $errors[] = ["error" => "Aucun fichier envoy&eacute;"]; 
+          $newcert = $dsas->certificates->addChild("certificate");
+          $newcert->type = "gpg";
+          $newcert->pem = trim($gpg);
+          $newcert->authority = "true";
+        } catch (RuntimeException $e) {
+          $errors[] = ["gpg_upload" => $e->getMessage()];
+        }
         break;
 
      case "delete":

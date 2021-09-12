@@ -552,4 +552,32 @@ function dsas_run_log($id){
   return array("last" => "never", "status" => "0");
 }
 
+// Check the $_FILES variable for possible attacks
+function check_files($files, $mime_type){
+  // Protect against correupted $_FILES array
+  if (!isset($files["error"]) || is_array($files["error"]))
+    throw new RuntimeException("Invalid parameter");
+
+  switch ($files["error"]) {
+    case UPLOAD_ERR_OK:
+      break;
+    case UPLOAD_ERR_NO_FILE:
+      throw new RuntimeException("No file sent");
+    case UPLOAD_ERR_INI_SIZE:
+    case UPLOAD_ERR_FORM_SIZE:
+      throw new RunetimeException("Exceeded filesize limit");
+    default:
+      throw new RuntimeException("Unknown error");
+  }
+
+  // 100 Mo hard limit
+  if ($files["size"] > 100000000)
+    throw new RuntimeException("Execeed filesize limit");
+
+  // Don't trust passed mime type. Test it
+  $finfo = new finfo(FILEINFO_MIME_TYPE);
+  if ($finfo->file($files["tmp_name"]) !== $mime_type)
+    throw new RuntimeException("Invalid file format");
+}
+
 ?>

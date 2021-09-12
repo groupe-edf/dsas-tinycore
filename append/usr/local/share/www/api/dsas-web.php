@@ -69,31 +69,26 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
 
       case "upload" :
        
-        if (!empty($_FILES["file"])) {
-          @$temp = explode(".", $_FILES["file"]["name"]);
-          if ((@$_FILES["file"]["type"] != "text/plain" && 
-               @$_FILES["file"]["type"] != "application/x-x509-ca-cert" &&
-               @$_FILES["file"]["type"] != "application/x-x509-user-cert") ||
-               (end($temp) != "crt"))
-            $errors[] = ["upload" => "Fichier CRT doit-&ecirc;tre en format PEM"];
-          else {   
-            $crt = htmlspecialchars(file_get_contents($_FILES["file"]["tmp_name"]));
-            $crt = str_replace("\r", "", $crt);   // dos2unix
-            if (!openssl_x509_parse($crt))
-              $errors[] = ["upload" => "Fichier CRT doit-&ecirc;tre en format PEM"];
-            else {
-              $priv = file_get_contents(_DSAS_VAR . "/dsas_priv.pem");
-              $retval = file_put_contents(_DSAS_VAR . "/dsas_pub.pem", $crt);
-              chmod (_DSAS_VAR . "/dsas_pub.pem", 0600);
-              if ($retval !== 0 && $retval !== false) 
-                $retval = file_put_contents(_DSAS_VAR . "/dsas.pem", $priv . PHP_EOL . $crt);
-              chmod (_DSAS_VAR . "/dsas.pem", 0600);
-              if ($retval === 0 || $retval === false) 
-                $errors[] = ["upload" => "Erreur pendant la sauvegarde du CRT"];
-            }
-          }
-        } else 
-          $errors[] = ["error" => "Aucun fichier envoy&eacute;"]; 
+        try {
+          check_files($_FILES["file"], "text/plain");
+
+          $crt = htmlspecialchars(file_get_contents($_FILES["file"]["tmp_name"]));
+          $crt = str_replace("\r", "", $crt);   // dos2unix
+          if (!openssl_x509_parse($crt))
+            throw new RunetimeException("Fichier CRT doit-&ecirc;tre en format PEM");
+          
+          $priv = file_get_contents(_DSAS_VAR . "/dsas_priv.pem");
+          $retval = file_put_contents(_DSAS_VAR . "/dsas_pub.pem", $crt);
+          chmod (_DSAS_VAR . "/dsas_pub.pem", 0600);
+          if ($retval !== 0 && $retval !== false) 
+            $retval = file_put_contents(_DSAS_VAR . "/dsas.pem", $priv . PHP_EOL . $crt);
+          chmod (_DSAS_VAR . "/dsas.pem", 0600);
+          if ($retval === 0 || $retval === false) 
+            throw new RuntimeException("Erreur pendant la sauvegarde du CRT");
+
+        } catch (RuntimeException $e) {
+          $errors[] = ["upload" => $e->getMessage()];
+        }
         break;
 
       default:
