@@ -22,8 +22,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           
           foreach ($dsas->certificates->certificate as $certificate) {
             if ($certificate->type == "x509") {
-              $cert =  openssl_x509_parse(trim($certificate->pem));
-              if ($cert["extensions"]["subjectKeyIdentifier"] == $parse["extensions"]["subjectKeyIdentifier"])
+              if (openssl_x509_fingerprint(trim($certificate->pem, "sha256")) == $parse["fingerprint"])
                 throw new RuntimeException("Le certificate X509 existe déja");
             }
           }
@@ -70,8 +69,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         $i = 0;
         foreach ($dsas->certificates->certificate as $certificate) {
           if ($certificate->type == "x509") {
-            $cert =  openssl_x509_parse(trim($certificate->pem));
-            if ($cert["extensions"]["subjectKeyIdentifier"] == $_POST["finger"]) {
+            if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $_POST["finger"]) {
               $certok = true;
               break;
             }
@@ -129,6 +127,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
     if ($certificate->type == "x509") {
       $cert =  utf8ize(openssl_x509_parse(trim($certificate->pem)));
       $cert["pem"] = trim($certificate->pem[0]);
+      $cert["fingerprint"] = openssl_x509_fingerprint(trim($certificate->pem[0]), "sha256");
       $cert["authority"] = trim($certificate->authority);
       $dsas_x509[] = $cert;
     } else if ($certificate->type == "gpg") {

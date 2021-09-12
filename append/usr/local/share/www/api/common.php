@@ -454,13 +454,9 @@ function parse_x509($certfile){
           $cert = $cert . $line;
           $incert = false;
           $tmp = openssl_x509_parse($cert);
-          // We need subjectKeyIdentifier to be set to allow us to identifier the certificate
-          // if it isn't set, dump the certificatie.
-          if (array_key_exists("extensions", $tmp) &&
-              array_key_exists("subjectKeyIdentifier", $tmp["extensions"])) {
-            $tmp["pem"] = $cert;
-            $certs[] = $tmp;
-          }
+          $tmp["fingerprint"] = openssl_x509_fingerprint($cert, "sha256");
+          $tmp["pem"] = $cert;
+          $certs[] = $tmp;
         }
       } else if ($incert)
         $cert = $cert . $line;

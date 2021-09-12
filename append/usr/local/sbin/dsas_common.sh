@@ -238,19 +238,16 @@ get_certificate(){
 
     case $type in
       x509)
-        openssl x509 -in /tmp/cert.$$ -noout -text | grep -A1 "Subject Key Identifier" | grep -q $1
+        f=$(openssl x509 -in /tmp/cert.$$ -noout -fingerprint -sha256 -inform pem  | cut -d= -f2 | sed -e "s/://g" | tr "[A-Z]" "[a-z]")
+        [ "$f" == "$1" ] && { echo $i; return; }
         ;;
       gpg)
-        gpg -v < /tmp/cert.$$ 2>&1 | grep -q $1
+        gpg -v < /tmp/cert.$$ 2>&1 | grep -q $1 && { echo $i; return; }
         ;;
       *)
-        echo "Unknown certificate type"
+        1>&2 echo "Unknown certificate type"
         ;;
     esac
-    if [ $? -eq 0 ]; then 
-      echo $i
-      return
-    fi
     /bin/rm /tmp/cert.$$
     i=$((i + 1))
   done
@@ -271,12 +268,8 @@ get_certificate(){
         cert="$cert\n$line"
         incert="false"
         echo -e "$cert" > /tmp/cert.$$
-        openssl x509 -in /tmp/cert.$$ -noout -text | grep -A1 "Subject Key Identifier" | grep -q $1
-        
-        if [ $? -eq 0 ]; then 
-          echo 0
-          return
-        fi 
+        f=$(openssl x509 -in /tmp/cert.$$ -noout -fingerprint -sha256 -inform pem  | cut -d= -f2 | sed -e "s/://g" | tr "[A-Z]" "[a-z]")
+        [ "$f" == "$1" ] && { echo 0; return; }
         /bin/rm /tmp/cert.$$
       fi
     else

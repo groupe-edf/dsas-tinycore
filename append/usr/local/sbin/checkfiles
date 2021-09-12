@@ -31,15 +31,19 @@ verifauthenticode(){
   local file=$3
 
   if [ -f "$tempdir/cert.0" ]; then
-    retossl=$(osslsigncode verify -CAfile $tempdir/cert.0 $file 2>&1) || return $?
+    osslsigncode verify -CAfile $tempdir/cert.0 $file 2>&1 > /dev/null || return $?
   else
-    retossl=$(osslsigncode verify $file 2>&1) || return $?
+    osslsigncode verify $file 2>&1 > /dev/null || return $?
   fi
 
-  for file in $(ls $tempdir); do
-    [ "$(basename $file)" == "cert.0" ] && continue
-    fingerprint=$(openssl x509 -in $tempdir/$file -noout -text | grep -A1 "Subject Key Identifier" | sed -n 2p | xargs)
-    echo $resossl | grep -q $fingerprint && return 3
+  for _file in $(ls $tempdir); do
+    [ "$(basename $_file)" == "cert.0" ] && continue
+    hash=$(openssl x509 -in $tempdir/$_file -noout -fingerprint -sha256 -inform pem 2>&1 | cut -d= -f2 | sed -e "s/://g" | tr "[A-Z]" "[a-z]")
+    if [ -f "$tempdir/cert.0" ]; then
+      osslsigncode verify -CAfile $tempdir/cert.0 -require-leaf-hash sha256:$hash $file 2>&1 > /dev/null || return 3
+    else
+      osslsigncode verify -require-leaf-hash sha256:$hash $file 2>&1 > /dev/null || return 3
+    fi
   done
   return 0
 }
@@ -60,7 +64,14 @@ verifopenssl(){
   local id=$1
   local tempdir=$2
   local file=$3
-  openssl dgst -verify $tempdir/cert.0.gpg -keyform PEM -sha256 -signature $file.sig -binary $file
+  local args=""
+  for _file in $(ls $tempdir); do
+    [ "$(basename $_file)" == "cert.0" ] && continue
+    args="$args $tempdir/$_file"
+  done
+  [ -n "$args" ] && args="-untrusted $args"
+  [ -f "$tempdir/cert.0" ] && args="-CAfile $tempdir/cert.0 $args"
+  openssl dgst -verify -keyform PEM -sha256 -signature $file.sig -binary $file $args
   return $?
 }
 

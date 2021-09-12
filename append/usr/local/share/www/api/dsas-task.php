@@ -32,8 +32,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $certname = "";
           foreach ($dsas->certificates->certificate as $certificate) {
             if ($certificate->type == "x509") {
-              $x509_cert =  openssl_x509_parse(trim($certificate->pem));
-              if ($x509_cert["extensions"]["subjectKeyIdentifier"] == $cert["fingerprint"]) {
+              if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $cert["fingerprint"]) {
                 if ($certificate->authority == "true") {
                   if ($have_ca) {
                     $errors[] = ["error" => "Les taches de type " . $type . 
@@ -49,6 +48,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
                 }
 
                 $certok = true;
+                $x509_cert = openssl_x509_parse(trim($certificate->pem));
                 if ($x509_cert["subject"]["CN"])
                   $certname = $x509_cert["subject"]["CN"];
                 else if ($x509_cert["subject"]["OU"])
@@ -88,7 +88,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             if ($cafile) {
               $ca = parse_x509($cafile);
               foreach ($ca as $x509_cert) {
-                if ($x509_cert["extensions"]["subjectKeyIdentifier"] == $cert["fingerprint"]) {
+                if ($x509_cert["fingerprint"] == $cert["fingerprint"]) {
                   if ($type === "rpm" || $type === "repomd" || $type === "deb" || $type === "gpg") {
                     $errors[] = ["error" => "Les taches de type " . $type . 
                               " ne supporte pas des certificates X509"];

@@ -61,7 +61,7 @@ function modal_task(action = "dsas_add_task();"){
     var i = 1;
     var certbody = '<option id="TaskAddCert0" value="" selected>Selectionner une certificate</option>\n';
     for (cert of certs[0].dsas.x509) {
-      certbody = certbody + '<option id="TaskAddCert' + i + '" value="' + cert_finger(cert) + 
+      certbody = certbody + '<option id="TaskAddCert' + i + '" value="' + cert.fingerprint + 
                     '">' + cert_name(cert) + '</option>\n';
       i++;
     }
@@ -71,7 +71,7 @@ function modal_task(action = "dsas_add_task();"){
       i++;
     }
     for (cert of certs[0].ca) {
-      certbody = certbody + '<option id="TaskAddCert' + i + '" value="' + cert_finger(cert) + 
+      certbody = certbody + '<option id="TaskAddCert' + i + '" value="' + cert.fingerprint + 
                     '">' + cert_name(cert) + '</option>\n';
       i++;
     }
@@ -951,7 +951,7 @@ function treat_x509_certs(certs, added = false) {
       '<img src="save.svg"></a>';
     if (added)
       body = body + '&nbsp;<a data-toggle="tooltip" title="Supprimer" onclick="dsas_cert_delete(\'' + name + '\',\'' + 
-        cert_finger(cert) + '\');"><img src="x-lg.svg"></a>';
+        cert.fingerprint + '\');"><img src="x-lg.svg"></a>';
     body = body + 
       '</p><div class="collapse" id="' + (added ? 'add' : 'ca') + i + '"><div class="card card-body">' +
       '<pre style="height : 300px">' + cert_body(cert) + '</pre></div></div>\n';
@@ -988,13 +988,6 @@ function dsas_cert_real_delete(name, finger) {
     }).catch(error => {
       modal_message("Error : " + error.statusText);
     });
-}
-
-function cert_finger(cert) {
-  if (cert.extensions.subjectKeyIdentifier)
-    return cert.extensions.subjectKeyIdentifier;
-  else
-    return "";
 }
 
 function cert_expiring(cert) {
