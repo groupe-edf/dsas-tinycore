@@ -1418,7 +1418,7 @@ function dsas_backup(){
   modal_action("Sauvegarde de la configuration du DSAS", 'dsas_real_backup();', true);
   body = '    <div class="col-9 d-flex justify-content-center">\n' +
          '      <label for="BackupPassword">Mot de passe de la sauvegarde :</label>\n' +
-         '      <input type="password" id="BackupPassword" value="" class="form-control">\n' +
+         '      <input type="password" id="BackupPassword" value="" class="form-control" onkeypress="if (event.key === \'Enter\'){ modalDSAS.hide(); dsas_real_backup();}">\n' +
          '    </div>';
   modalDSAS.setAttribute("body", body);
 }
@@ -1471,7 +1471,7 @@ function dsas_passwd_restore(){
   modal_action("Restauration de la configuration du DSAS", 'dsas_real_restore();', true);
   body = '    <div class="col-9 d-flex justify-content-center">\n' +
          '      <label for="RestorePassword">Mot de passe de la sauvegarde :</label>\n' +
-         '      <input type="password" id="RestorePassword" value="" class="form-control">\n' +
+         '      <input type="password" id="RestorePassword" value="" class="form-control" onkeypress="if (event.key === \'Enter\') {modalDSAS.hide(); dsas_real_restore();}">\n' +
          '    </div>';
   modalDSAS.setAttribute("body", body);
 }
