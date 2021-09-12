@@ -609,6 +609,7 @@ case "${1}" in
       [ "$TYP" == "bas" ] && config_network
       CONFIG_SSH="true"
     fi
+    /usr/bin/sethostname $TYP
     start_network
     start_sshd
     if [ "$TYP" == "bas" ]; then
