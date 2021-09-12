@@ -11,7 +11,6 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
     switch ($_POST["op"]){
       case "all":
         $data = json_decode($_POST["data"], true);
-        error_log(print_r($data,true));
         $ifaces = get_ifaces();
         $j=0;
         foreach (["bas", "haut"] as $iface) {
@@ -47,7 +46,6 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
               break;
           }
           if (empty($dns_err)) {
-            //error_log(print_r($net,true));
             unset($dsas->config->network->{$iface}->dns->nameserver);
             foreach ($net["dns"]["nameserver"] as $server)
               $dsas->config->network->{$iface}->dns->nameserver[] = $server;

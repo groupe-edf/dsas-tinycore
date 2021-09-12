@@ -107,7 +107,6 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
   if ($errors == [])
     echo "Ok";
   else {
-    error_log(print_r($errors,true));
     header("Content-Type: application/json");
     echo json_encode($errors);
   }
