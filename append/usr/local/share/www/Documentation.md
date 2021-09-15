@@ -598,7 +598,6 @@ pourraient être configuré. Les adresses des hôtes ntp pourrait être des adre
 nom de hôte comme fournit par le DNS. Dans le deuxieme cas le DNS doit-être configuré dans 
 comme discuté dans la section [Configuration des réseaux](configuration-des-réseaux).
 
-
 Utilisation de ntp n'ouvre pas une port sur le DSAS mais seuelment des flux vers des serevurs 
 distantes
 
@@ -643,9 +642,42 @@ de status vous informe avec l'écran suivante
 
 ![Page de statut, machine haute indisponible](images/DSAS15.png)
 
-## Statut des taches 
+## Statut des fichiers vérifiés 
 
-FIXME: Add section on the task status
+Le statut des fichiers vérifiés est disponible directement en dessous les statuts des machines 
+du DSAS, comme
+
+![Page de statut des fichiers vérifiés](images/DSAS25.png)
+
+La statut des verifications des fichiers pourraient être sur plusieurs onglet. Le numèro de
+l'onglet est croissant avec l'age des verifications. Le premier onglet est la semaine en cours,
+le deuxieme onglet la semaine derniere, etc.
+
+Le statut de chaque fichier vérifié est donné sur une ligne de la page, et chaque ligne est 
+composées de 4 éléments
+
+- __Statut__ : En premier position on pourrait trouver la statut de la vérification
+- __Hache__ : En deuxieme position est un hache unique en MD5 de la fichier. En cas de recherche
+de ménaces ceci pourrait être utile afin de voir si le DSAS de laisser passer le fichier ou pas.
+- __Date__ : La date de la vérification est donner en troisieme position. La date est en format
+`AAAAMMJJHHMMSS` ou `AAAA` est l'année, `MM` est le mois, etc. Les dates sont toujours données 
+en format UTC.
+- __Fichier__ : Et en dernier position le chemin vers le fichier est données
+
+Le statut pourrait prendre les valeurs suivantes
+
+- `   Ok` : Tout les vérifications démandé ont réussi et le fichier a été mise à disposition
+depuis le machine bas.
+- `$$ Checksum fail` : Un test de checksum sur le fichier a échoué 
+- `** Bad Sig` : Un des vérifications démandé à signalé une mauvaise signature
+- `** Bad Interm Sig` : La vérification d'une certificate intermediare a échoué
+- `** Bad RPM Sig` : La vérification de signature d'un fichier RPM a échoué
+- `** Bad DEB Sig` : La vérification de signature d'un fichier RPM a échoué
+- `** Not signed` : Le fichier n'est pas signé et ne pourrait pas être vérifié
+
+le boutton blue en haut des logs de vérification permettre de basculer entre un mode ou "tous le logs" 
+sont visible ou un mode ou "que des erreurs" sont visible. ceci permettre de rapidement identifiés 
+les fichiers ayant eu des problemes.
 
 ## Configuration des certificates
 
