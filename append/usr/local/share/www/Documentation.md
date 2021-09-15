@@ -649,7 +649,7 @@ FIXME: Add section on the task status
 
 ## Configuration des certificates
 
-Le DSAS est pré-configuré avec l'ensemble de certiciates racines d'un souche linux classic. 
+Le DSAS est pré-configuré avec l'ensemble de certificates racines d'un souche linux classic. 
 L'ensemble de ces certificates et d'autres certificates importés sont disponible depuis onglet
 Configuration/Certificates comme vue ci-dessous
 
@@ -678,17 +678,17 @@ moins de 6 mois de l'éxpiration
 qu'il n'est plus utilisable, mais il n'est pas valable pour des fichiers signés après la date
 de éxpiration
 
-Les certificaties racines preinsatllés pourraientt être utiliser pour les verifications 
-du DSAS. Mais l'utilisation de ces certificates seulement n'est pas suffisante, parce que
+Les certificaties racines preinstallés pourraientt être utiliser pour les verifications 
+du DSAS. Mais l'utilisation de ces certificates seule n'est pas suffisante, parce que
 
-- Les certiciates pré-installé n'incluent pas des certiciates GPG utilisé par les 
+- Les certiciates pré-installé n'incluent pas des certificates GPG utilisé par les 
 repositoire linux
 - La verification seulement contre un certificate racine n'ai pas un garanti forte d'absence
 de malveillance. [Les certificiate de type "code signing" ont été abusés par les 
 malveillantes](https://duo.com/decipher/attackers-are-signing-malware-with-valid-certificates) 
 afin de signer des malware.
 
-Donc idéalement il faut restriente les verifications par des vérifications des certicates
+Donc idéalement il faut restriente les verifications par des vérifications des certificates
 de type intermediares la plus proche de l'éditeur de logiciel voulu. Par exemple un
 mise à jour de "Symantec Endpoint Protection" (SEP) comporte la chaine de confiance 
 suivante
@@ -719,7 +719,7 @@ chaine de confiance suivante
 
 ![Chaine de confiance d'un binaire signé](images/CERT4.png)
 
-Ceci permet de valider le certificate racine et l'ensemble des certificates utilisés
+Ceci permet de valider la certificate racine et l'ensemble des certificates utilisées
 pendant la signature des binaires.
 
 ### Preparation des certificates X509
@@ -731,8 +731,9 @@ une moyen de télécharger le(s) certificate(s) depuis une site web de l'éditeu
 ceci n'est pas toujour le cas, nottament pour Symantec comme ci-dessus.
 
 A défaut de la distribution par site web, l'ensemble des certificates utilisés pour des
-signatures sont embraquées dans les binaires signés eux-mêmes. Donc si vous êtes __sûr__ de 
-la provenance d'un bianire vous pouvez utiliser le binaire lui-même comme source de certificate.
+signatures de binaires windows sont embarquées dans les binaires signés eux-mêmes. Donc si 
+vous êtes __sûr__ de  la provenance d'un bianire vous pouvez utiliser le binaire lui-même comme 
+source de certificate.
 
 Sur le même menu que ci-dessous sur l'onglet `Détails` nous pourrions voir
 
@@ -754,7 +755,7 @@ fichiers de configuration dévéloppé par les utilisateurs du DSAS).
 
 Les certificates GPG n'integrent pas explicitement la chaine de confiance dans les
 binaires signées. GPG utilise la concept de [toile de confiance](https://fr.wikipedia.org/wiki/Toile_de_confiance)
-ou les certicates eux-mêmes sont validés entre eux. Ceci est en dehors de la scope
+ou les certificates eux-mêmes sont validés entre eux. Ceci est en dehors de la scope
 du document et nous avons assumé que vous avez un confiance complet dans les certificates 
 que vous avez choisi à télécharger sur le DSAS.
 
@@ -780,7 +781,7 @@ le DSAS. Et un importation réussi est signalé par
 ![Importation de certificate réussi](images/DSAS20.png)
 
 Afin de confirmer la bonne importation du certificate dans le DSAS, il est 
-receommandé de regarder les détails du certificate importé, comme par exemple
+recommander de regarder les détails de la certificate importée, comme par exemple
 
 ![Détails du certificate importé](images/DSAS21.png)
 
