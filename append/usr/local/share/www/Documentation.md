@@ -379,6 +379,27 @@ DSAS, comme
 
 ![Menu système du DSAS](images/DSAS8.png)
 
+#### Sauvegarde et Restauration
+
+La configuration actuellement appliqué du DSAS peut-être sauvegardée en utilisant le button dans
+la menu ci-dessus. En selectionnant vous seriez demander d'entrée un mot de passe pour la 
+sauvegarde, comme
+
+![Menu d'entrée de mot de passe de sauvegarde](images/DSAS24.png)
+
+Les sauvegardes des deux machines du DSAS sont alors chiffré en `bcrypt` avec ce mot de passe et
+archivé ensemble. Si vous ne rentrée pas de mot de passe de sauvegarde, les fichiers sera archivés
+sans l'étape de chiffrement.
+
+Il est fortement conseillé de chiffrer ces archives, parce qu'il contient la configuration completement
+du DSAS, y compris les haches des mots de passe, les certificates SSL et les éléemnts secrets SSH.
+Le mot de passe n'a pas besoin être le même mot de passe que le DSAS. 
+
+En cas de restauration le même mot de passe sera demander, et donc garder le preciousement. En cas
+de restauration la configuration sera appliqué immediatement. Ceci pourrait empecher l'accès au DSAS, 
+particulierement si la configuration réseau n'est plus à jour. Dans ce cas referer à la section [En cas 
+d'erreur d'initialisation du DSAS](#en-cas-derreur-dinitialisation-du-dsas).
+
 #### Déconnexion automatique
 
 Le DSAS est configuré afin de verifier les droits de connexion à chaque opération, si plus de
@@ -391,14 +412,13 @@ En cliquant `Ok` sur ce message vous serez redirigé vers l'écran de connexion 
 
 ### Changement inital des mots de passe
 
-Si ceci est votre première connexion au DSAS l'écran suivant vous sera présenté :
+Si ceci est votre première connexion au DSAS, une message d'erreur sera affiché et après, 
+l'écran suivant vous sera présenté :
 
 ![Ecran de changement des mots de passe initiale](images/DSAS2.png)
 
-Les lignes en rouge et jaune présentées en haut de l'écran sont des erreurs globales sur la 
-configuration du DSAS et ceci sera résolu pendant l'installation du DSAS. La première "erreur" 
-est que ceci est votre première connexion et tous les mots de passe sont à changer. Il est
-impossible de continuer avec l'interface d'administration sans modifier les mots de passe. 
+A votre première connexion, tous les mots de passe sont à changer. Il est impossible de 
+continuer avec l'interface d'administration sans modifier les mots de passes. 
 
 L'écran de changement de mots de passe comporte 4 lignes. Sur la première, le mot de
 passe existant de l'utilisateur __tc__ doit être rentré. Les trois autres lignes 
