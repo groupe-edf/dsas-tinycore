@@ -736,7 +736,9 @@ intermediate  `Symantec Corporation` afin de limiter au maximum les fichiers qui
 pourrait être validé en tant que mise à jour de Symantec. Donc pour ces mises à
 jour il faut chargé le certificate `Symantec Corporation` dans le DSAS.
 
-### Identification des certificaties X509
+### Gestion des certificates X509
+
+#### Identification des certificaties X509
 
 Les certicates X509 sont utilisé dans la verification des binaires Windows, mais
 également pour des fichiers signés par `openssl`. 
@@ -754,7 +756,7 @@ chaine de confiance suivante
 Ceci permet de valider la certificate racine et l'ensemble des certificates utilisées
 pendant la signature des binaires.
 
-### Preparation des certificates X509
+#### Preparation des certificates X509
 
 La plus importante pour la préparation d'une certificate pour l'importation dans le DSAS
 est de savoir la provenance de la certificate. Idéalement le certiciate est donnés de 
@@ -778,6 +780,30 @@ sauvegarder le certificate en format X.509 encodé en base 64 comme
 ![Export d'un certificate en base 64](images/CERT7.png)
 
 Un fichier avec le certificate sera sauvegarder sur votre poste de travail.
+
+#### Cas special des certificate Symantec LiveUpdate
+
+Les fichiers LiveUpdate de Symantec ne sont pas signées directement, sont sont 
+plutot des archive en format `7z` avec tous les metadonnées signés nécessaire à 
+leur vérification. Dans chaque fichier de `LiveUpdate` un fichier avec l'extension
+`.sig` pourrait être trouver, typiquement `v.sig`. Ce fichier contient les 
+certificates qui doit être importés dans le DSAS pour la signature des fichiers 
+de LiveUpdate. Tant que vous avez extrait le ficher `v.sig`, les deux Certificates
+à importer peux être retrouver avec la commande
+
+```shell
+$ openssl pkcs7 -inform der -in v.sig -outform pem -print_certs | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if(length($0) > 0) print > "cert" n ".pem"}
+```
+
+sur une machine linux. A partir de la ligne de command windows nous pourrions faire
+
+
+```shell
+$ openssl pkcs7 -inform der -in v.sig -outform pem -print_certs -out certs.pem
+```
+
+et la fichiers `certs.pem` va contenir plusieurs certificates en format text que vous pouvez
+splitté en plusiers fichiers avec l'aide d'un editeur de texte.
 
 ### Gestion des certificates GPG
 
@@ -977,12 +1003,12 @@ sont inclut dans les fichiers `.sig` et nous pourrions les sortir en format PEM 
 commande
 
 ```shell
-$ openssl pkcs7 -inform der -in v.sig -outform pem -print_certs -out certs.pem
-FIXME
+$ openssl pkcs7 -inform der -in v.sig -outform pem -print_certs | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if(length($0) > 0) print > "cert" n ".pem"}
 ```
 
-
-
+cette commande va créer un fichier `cert.pem`avec le certificate raçine et plusiers certificates 
+`cert1.pem`, etc, avec des certificates intermediaires. Ces certificates peuvent être importé 
+dans le DSAS.
 
 ### Vérification - gpg
 
