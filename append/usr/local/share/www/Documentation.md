@@ -917,7 +917,72 @@ beaucoup meiux de spécifier un seul certificate autorité pour la vérification
 Si les signatures sont valable et signé par les certificates spécifiés, les fichiers sont mise à 
 disponibilité sur le sas du bas de DSAS. Aucun sous-dossier est traité
 
-Le logiciel osslsigncode [https://github.com/mtrojnar/osslsigncode] est utilisé pour la verification
+Le logiciel osslsigncode [https://github.com/mtrojnar/osslsigncode] est utilisé pour la verification.
+La commande
+
+```shell
+$ osslsigncode verify -CAfile ca.pem  <file>
+```
+
+est utilisé pour la verifications d'un fichier `<file>` contre un specifique certificate raçine `ca.pem`.
+Si nous voulons verifier contre un certificate intermediaire, la commande est
+
+```shell
+$ osslsigncode verify -CAfile ca.pem -require-leaf-hash sha256:$(sha256sum inter.der | cut -d" " -f1) <file>
+```
+
+ou le ficher `inter.der` est la certificate intermediaire à utiliser pour la verification.
+
+### Vérification - Symantec LiveUpdate
+
+Les fichiers de LiveUpdate, et les fichierJDB, de Symantec ne sont pas signés directement. En revanche 
+l'ensemble de ces fichiers sont des archive en format `7z`, et ces acrhive contient deux fichiers,
+typiquement nommés `v.grd` et `v.sig`. C'est fichiers pourrait avoir d'autre nom, mais les extensions
+`.grd` et `.sig` sont toujours utilisé
+
+Le contenu de la fichier `.sig` est en format comme
+
+```
+[GuardHeader]
+Legal=Copyright (c) 2021 Broadcom. All Rights Reserved.
+LastModifiedUtcSeconds=1631691252
+LastModifiedGmtFormated=20210915 07:34:12
+[File-catalog.dat]
+SHA1=283a3db5efa98bca72c9a637d06ee91e0602bd78
+SHA256=aba60a13486e25fe4cb4faf332ff304159d9611433618f1d067e756746432918
+[File-cceraser.dll]
+SHA1=4454574388758ec3d0cad00b142df6a163a5c001
+SHA256=721473abd9d240d5170c9952a8a1d1644f177c1dbbef01b105e1d44705188db4
+...
+```
+
+Avec des hashes de l'ensmeble des fichiers contenu dans l'archive. La commande
+
+```shell
+$ openssl asn1parse -i -inform der -in v.sig
+```
+
+permettre de voir facilement que la fichier sig contient, au moins deux certificates,
+un hache de la fichier `.grd` et la signature en binaire lui-même. Le probleme est que
+la chaine de confiance des ficheirs `.sig` sont typiquement
+
+```
+Symantec Coporation - Symantec Root CA
+-> Symantec Corporation - Code Signing CA
+```
+
+Aucun de c'est certificates est publiquement disponible, est sûrement ils sont embarquées
+directement dans le logiciel SEPM à son installation. Heureusement les certificates utilisés
+sont inclut dans les fichiers `.sig` et nous pourrions les sortir en format PEM avec une 
+commande
+
+```shell
+$ openssl pkcs7 -inform der -in v.sig -outform pem -print_certs -out certs.pem
+FIXME
+```
+
+
+
 
 ### Vérification - gpg
 
@@ -946,7 +1011,7 @@ Et le clef publique dans le fichier key.pub doit être associé avec le tache da
 sont signés comme
 
 ```shell
-openssl dgst -sign key.pem -keyform PEM -sha256 -out <file>.sig -binary <file>
+$ openssl dgst -sign key.pem -keyform PEM -sha256 -out <file>.sig -binary <file>
 ```
 
 Les signatures sont toujours stockés dans des fichiers séparé, et le DSAS assume que les signature
