@@ -966,7 +966,7 @@ l'ensemble de ces fichiers sont des archive en format `7z`, et ces acrhive conti
 typiquement nommés `v.grd` et `v.sig`. C'est fichiers pourrait avoir d'autre nom, mais les extensions
 `.grd` et `.sig` sont toujours utilisé
 
-Le contenu de la fichier `.sig` est en format comme
+Le contenu de la fichier `.grd` est en format comme
 
 ```
 [GuardHeader]
@@ -989,8 +989,9 @@ $ openssl asn1parse -i -inform der -in v.sig
 ```
 
 permettre de voir facilement que la fichier sig contient, au moins deux certificates,
-un hache de la fichier `.grd` et la signature en binaire lui-même. Le probleme est que
-la chaine de confiance des ficheirs `.sig` sont typiquement
+un hache de la fichier `.grd` et la signature en binaire lui-même. La texte "pkcs7-signedData"
+permettre d'identifier le type de signature utilisé. Le probleme est que la chaine de 
+confiance des ficheirs `.sig` sont typiquement
 
 ```
 Symantec Coporation - Symantec Root CA
@@ -1008,7 +1009,39 @@ $ openssl pkcs7 -inform der -in v.sig -outform pem -print_certs | awk 'split_aft
 
 cette commande va créer un fichier `cert.pem`avec le certificate raçine et plusiers certificates 
 `cert1.pem`, etc, avec des certificates intermediaires. Ces certificates peuvent être importé 
-dans le DSAS.
+dans le DSAS. 
+
+Maintenant le format `PKCS7` est la format utilisé par `SMIME`, et ici la signature est en 
+format `DER`. La commande normale de verification de signature smime est
+
+```shell
+openssl smime -verify -binary -inform der v.sig -content v.grd
+```
+
+cette commande va verifier les signatures contenu dans `v.sig' contre les certificates raçines 
+installé sur la machine et comparé contre le hache du fichier `v.grd`. Mais pour le cas du 
+DSAS nous voulons ignorer les certificates dans `v.sig` en prennant en compte que les données
+de signature, ignorer les certificates raçine installé et comparer contre une certificate 
+raçine et intermediaire proposé pour la tache. La commande afin de faire ça est 
+
+```shell
+$ openssl smime -verify -binary -inform der -in v.sig -content v.grd -certfile cert.pem -certfile cert1.pem -nointern -noverify
+```
+
+Ici les options `-certfile` definir specifiquement la certificate raçine et intermediaire 
+utilisés afin de signer `v.grd` et l'option `-nointern` demande à `openssl` à ignorer les
+certificate interne au fichier `v.sig`. Attention aux options
+
+```
+-noverify : do not verify the signers certificate of a signed message.
+-nosigs : don't try to verify the signatures on the message.
+```
+
+prise dans la page utilisateur de `openssl smine`. Donc `-noverify` est un peu malnommé; avec 
+cet option des verification de signature sont Bien fait, mais les certificates fournit ne sont 
+pas verifier contre les fichiers raçines installés sur la machines. Afin de vraiment empecher 
+tout vérification de signature de la message l'option est plutot `-nosigs`.
+
 
 ### Vérification - gpg
 
