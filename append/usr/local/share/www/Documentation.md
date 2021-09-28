@@ -961,9 +961,9 @@ ou le ficher `inter.der` est la certificate intermediaire à utiliser pour la ve
 
 ### Vérification - Symantec LiveUpdate
 
-Les fichiers de LiveUpdate, et les fichierJDB, de Symantec ne sont pas signés directement. En revanche 
-l'ensemble de ces fichiers sont des archive en format `7z`, et ces acrhive contient deux fichiers,
-typiquement nommés `v.grd` et `v.sig`. C'est fichiers pourrait avoir d'autre nom, mais les extensions
+Les fichiers de LiveUpdate, et les fichier JDB, de Symantec ne sont pas signés directement. En revanche 
+l'ensemble de ces fichiers sont des archive en format `7z`, et ces acrhives contient deux fichiers,
+typiquement nommés `v.grd` et `v.sig`. C'est fichiers pourraient avoir d'autre nom, mais les extensions
 `.grd` et `.sig` sont toujours utilisé
 
 Le contenu de la fichier `.grd` est en format comme
@@ -994,13 +994,22 @@ permettre d'identifier le type de signature utilisé. Le probleme est que la cha
 confiance des ficheirs `.sig` sont typiquement
 
 ```
-Symantec Coporation - Symantec Root CA
--> Symantec Corporation - Code Signing CA
+Symantec Root 2005 CA
+-> Code Signing 2005 CA
+  -> Symantec Corporation
 ```
 
-Aucun de c'est certificates est publiquement disponible, est sûrement ils sont embarquées
-directement dans le logiciel SEPM à son installation. Heureusement les certificates utilisés
-sont inclut dans les fichiers `.sig` et nous pourrions les sortir en format PEM avec une 
+ou bien
+
+```
+Symantec Root CA
+-> Code Signing CA
+  -> Symantec Corporation
+```
+
+pour des vielles fichiers. Aucun de c'est certificates est publiquement disponible, est ils sont 
+embarquées directement dans le logiciel SEPM à son installation. La chaine des certificates 
+utilisés sont inclut dans les fichiers `.sig` et nous pourrions les sortir en format PEM avec une 
 commande
 
 ```shell
@@ -1009,39 +1018,104 @@ $ openssl pkcs7 -inform der -in v.sig -outform pem -print_certs | awk 'split_aft
 
 cette commande va créer un fichier `cert.pem`avec le certificate raçine et plusiers certificates 
 `cert1.pem`, etc, avec des certificates intermediaires. Ces certificates peuvent être importé 
-dans le DSAS. 
+dans le DSAS. malheureusement, ceci va permettre de sortir que les certificates intermediaires et 
+la certificate utilisé pour la signature. La certfiicate raçine n'est pas inclut dans les fichiers
+signature. Il faut retourner vers l'executable de SEP afin de retrouver les deux certificates raçines
+utilisé par SEPM. 
+
+Tous les postes clients 64bit de SEP inclut l'executable `sepWscSvc64.exe`. En regardant avec la commande
+
+```shell
+$ LANG=C grep -obUaP "\x30\x82..\x30\x82" sepWscSvc64.exe
+```
+
+ou si ta version de grep inclut pas de regexp de type perl 
+
+```shell
+$ echo -e "\x30\x82..\x30\x82" | LANG=C xargs -i grep -obUa {} sepWscSvc64.exe
+``` 
+
+c'est possible d'indentifiés la debut des certificates. le string "\x30\x82" correspond à la code ASN.1
+pour une `SEQUENCE`. Une sequence est toujour suivi par une longeur codé sur deux octets, et une 
+certificate demarre toujour avec deux `SEQUENCE`. Donc le regexp "\x30\x82..\x30\x82" est adapté à
+trouver les debut des certificates, mais pas que.  Cette commande trouver les offsets binaires desendroit correspondant à des certificates comme
+
+```
+$ echo -e "\x30\x82..\x30\x82" | LANG=C xargs -i grep -obUa {} sepWscSvc64.exe
+1665104:0▒▒0▒
+1666048:0▒▒0▒
+1667008:0▒▒0▒
+1794627:0▒)▒0▒
+1805383:0▒0▒
+1806692:0▒▒0▒
+1809680:0▒j0▒
+1810300:0▒▒0▒
+1811326:0▒▒0▒
+1811999:0▒▒0▒
+1814423:0▒▒0▒
+1815659:0▒Y0▒
+1817874:0▒j0▒
+1818494:0▒▒0▒
+1819520:0▒▒0▒
+1820193:0▒▒0▒
+```
+
+mais le string du regexp pourrait egalement être une partie du binaire et pas une certificate de tout. 
+Il faut les tester tous ces valeurs avec
+
+```shell
+$ dd bs=1666048 skip=1 if=sepWscSVC64.exe | openssl -inform der -in - -noout -text | less
+```
+
+et quand les certificates `Symantec Root 2005 CA` et `Symantec Root CA` sont identifiés, les sauver avec
+
+```shell
+$ dd bs=1666048 skip=1 if=sepWscSVC64.exe | openssl -inform der -in - -outform pem -out SymantecRoot2005CA.pem
+$ dd bs=1667008 skip=1 if=sepWscSVC64.exe | openssl -inform der -in - -outform pem -out SymantecRootCA.pem
+```
 
 Maintenant le format `PKCS7` est la format utilisé par `SMIME`, et ici la signature est en 
 format `DER`. La commande normale de verification de signature smime est
 
 ```shell
-openssl smime -verify -binary -inform der v.sig -content v.grd
+$ openssl cms -verify -inform der -in v.sig -content v.grd
 ```
 
 cette commande va verifier les signatures contenu dans `v.sig' contre les certificates raçines 
-installé sur la machine et comparé contre le hache du fichier `v.grd`. Mais pour le cas du 
-DSAS nous voulons ignorer les certificates dans `v.sig` en prennant en compte que les données
-de signature, ignorer les certificates raçine installé et comparer contre une certificate 
-raçine et intermediaire proposé pour la tache. La commande afin de faire ça est 
+installé sur la machine et comparé contre le hache du fichier `v.grd`. La certficate raçine 
+typiquement utilisé est `Symantec Root 2005 CA`, et donc le vrai verification à mettre en place 
+est 
 
 ```shell
-$ openssl smime -verify -binary -inform der -in v.sig -content v.grd -certfile cert.pem -certfile cert1.pem -nointern -noverify
+$ openssl cms -verify -CAfile SymantecRoot2005CA.pem -inform der -in v.sig -content v.grd
 ```
 
-Ici les options `-certfile` definir specifiquement la certificate raçine et intermediaire 
-utilisés afin de signer `v.grd` et l'option `-nointern` demande à `openssl` à ignorer les
-certificate interne au fichier `v.sig`. Attention aux options
+qu'on va trouver deux autres probleme avec les chaines de signature de Symantec. Les deux certificates
+raçines utilisés par Symantec pour les signatures ont tous les deux expiré, et Symantec n'ont pas utilisé
+des signatures horodaté avec un server de temps openssl. Donc, òpenssl` va réfuser de valider les fichiers
+fournaient par Symantec. Le deuxieme probleme est dans les champs `X509v3 Key Usage` et `X509v3 Extended
+Key Usage`. `openssl` demande que l'ensemble des certificates de la chaine de confiance support les mêmes
+options de signature, mais la certificate `Code Signing CA` support l'option `Code Signing', mais les
+deux atres certificates dans la chaine ne le supportent pas. Deux autres option de `openssl` sont
+necessaire afin de détoruner ces problemes, comme
 
+```shell
+$ openssl cms -verify -purpose any -no_check_time -CAfile SymantecRoot2005CA.pem -inform der -in v.sig -content v.grd
 ```
--noverify : do not verify the signers certificate of a signed message.
--nosigs : don't try to verify the signatures on the message.
+
+Ceci suffit afin de verifier que les fichiers de SYmantec sont bien signés par une certificate avec la
+raçine `Symantec Root 2005 CA`, mais rien veut dire Symantec n'as pas autorisé un autre certifcate 
+intermediate sur cette raçine. Donc ca sera plus propre de verifier la signature contre une chaine
+de confiance complete que nous contrôle. Pour ça le DSAS nous doit ignorer les certificates dans 
+`v.sig` en prennant en compte que les données de signature, et nous sommes obligé à fournir les deux
+autres certificates utilisé pour les signatures, `cert.pem` et `cert1.pem` créé ci-dessus. L'argument
+`-certfile` pourrait être utilisé afin de faire, mais `openssl` n'accepte qu'une seul argument de 
+type `-certfile`, donc les deux certficates doit être remise dans un seul fichier et verifier comme
+
+```shell
+$ cat cert.pem cert1.pem > certs.pem
+$ openssl cms -verify -CAfile SymantecRoot2005CA.pem -certfile certs.pem -nointern -inform der -in v.sig -content v.grd
 ```
-
-prise dans la page utilisateur de `openssl smine`. Donc `-noverify` est un peu malnommé; avec 
-cet option des verification de signature sont Bien fait, mais les certificates fournit ne sont 
-pas verifier contre les fichiers raçines installés sur la machines. Afin de vraiment empecher 
-tout vérification de signature de la message l'option est plutot `-nosigs`.
-
 
 ### Vérification - gpg
 
