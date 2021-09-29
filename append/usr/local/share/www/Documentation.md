@@ -993,6 +993,16 @@ un hache de la fichier `.grd` et la signature en binaire lui-même. La texte "pk
 permettre d'identifier le type de signature utilisé. Le probleme est que la chaine de 
 confiance des ficheirs `.sig` sont typiquement
 
+
+
+```
+Symantec Internal RSA IT Root
+-> Symantec Code Signing 2017 CA
+  -> Product Group - LiveUpdate
+```
+
+ou
+
 ```
 Symantec Root 2005 CA
 -> Code Signing 2005 CA
@@ -1016,12 +1026,11 @@ commande
 $ openssl pkcs7 -inform der -in v.sig -outform pem -print_certs | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if(length($0) > 0) print > "cert" n ".pem"}
 ```
 
-cette commande va créer un fichier `cert.pem`avec le certificate raçine et plusiers certificates 
-`cert1.pem`, etc, avec des certificates intermediaires. Ces certificates peuvent être importé 
-dans le DSAS. malheureusement, ceci va permettre de sortir que les certificates intermediaires et 
-la certificate utilisé pour la signature. La certfiicate raçine n'est pas inclut dans les fichiers
-signature. Il faut retourner vers l'executable de SEP afin de retrouver les deux certificates raçines
-utilisé par SEPM. 
+cette commande va créer deux fichier, `cert.pem` et 'cert1.pem' avec la certificate signateur et les 
+certificates intermediaires utilisées. Ces certificates peuvent être importé  dans le DSAS. Malheureusement, 
+ceci va permettre de sortir que les certificates intermediaires et la certificate utilisé pour la signature. 
+La certfiicate raçine n'est pas inclut dans les fichiers signature. Il faut retourner vers l'executable de SEP 
+afin de retrouver les trois certificates raçines utilisées par SEPM. 
 
 Tous les postes clients 64bit de SEP inclut l'executable `sepWscSvc64.exe`. En regardant avec la commande
 
@@ -1038,7 +1047,8 @@ $ echo -e "\x30\x82..\x30\x82" | LANG=C xargs -i grep -obUa {} sepWscSvc64.exe
 c'est possible d'indentifiés la debut des certificates. le string "\x30\x82" correspond à la code ASN.1
 pour une `SEQUENCE`. Une sequence est toujour suivi par une longeur codé sur deux octets, et une 
 certificate demarre toujour avec deux `SEQUENCE`. Donc le regexp "\x30\x82..\x30\x82" est adapté à
-trouver les debut des certificates, mais pas que.  Cette commande trouver les offsets binaires desendroit correspondant à des certificates comme
+trouver les debut des certificates, mais pas que.  Cette commande trouver les offsets binaires des
+endroit correspondant à des certificates comme
 
 ```
 $ echo -e "\x30\x82..\x30\x82" | LANG=C xargs -i grep -obUa {} sepWscSvc64.exe
@@ -1067,11 +1077,12 @@ Il faut les tester tous ces valeurs avec
 $ dd bs=1666048 skip=1 if=sepWscSVC64.exe | openssl -inform der -in - -noout -text | less
 ```
 
-et quand les certificates `Symantec Root 2005 CA` et `Symantec Root CA` sont identifiés, les sauver avec
+et quand les certificates `Symantec Internal RSA IT Root`, `Symantec Root 2005 CA` et `Symantec Root CA` sont identifiés, les sauver avec
 
 ```shell
-$ dd bs=1666048 skip=1 if=sepWscSVC64.exe | openssl -inform der -in - -outform pem -out SymantecRoot2005CA.pem
-$ dd bs=1667008 skip=1 if=sepWscSVC64.exe | openssl -inform der -in - -outform pem -out SymantecRootCA.pem
+$ dd bs=1665104 skip=1 if=sepWscSvc64.exe | openssl x509 -inform der -in - -outform pem -out Symantec_Internal_RSA_IT_ROOT.pem
+$ dd bs=1666048 skip=1 if=sepWscSvc64.exe | openssl x509 -inform der -in - -outform pem -out Symantec_Root_2005_CA.pem
+$ dd bs=1667008 skip=1 if=sepWscSvc64.exe | openssl x509 -inform der -in - -outform pem -out Symantec_Root_CA.pem
 ```
 
 Maintenant le format `PKCS7` est la format utilisé par `SMIME`, et ici la signature est en 
