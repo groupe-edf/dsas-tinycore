@@ -106,6 +106,7 @@ function modal_task(action = "dsas_add_task();"){
 '        <option id="TaskTypeRepomd" value="repomd">repomd</option>\n' +
 '        <option id="TaskTypeDeb" value="deb">deb</option>\n' +
 '        <option id="TaskTypeAuth" value="authenticode">authenticode</option>\n' +
+'        <option id="TaskTypeLive" value="liveupdate">liveupdate</option>\n' +
 '        <option id="TaskTypeSsl" value="deb">openssl</option>\n' +
 '        <option id="TaskTypeGpg" value="deb">gpg</option>\n' +
 '      </select>\n' +

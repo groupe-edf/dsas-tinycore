@@ -20,7 +20,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         $uri =  htmlspecialchars($data["uri"]);
         $type = $data["type"];
         if ($type !== "rpm" && $type !== "repomd" && $type !== "deb" && $type !== "authenticode" &&
-            $type !== "openssl" && $type !== "gpg")
+            $type !== "openssl" && $type !== "gpg" && $type !== "liveupdate")
           $errors[] = ["error" => "Le type de la tache est illegale"];
         $run = $data["run"];
         if ($run !== "never" && $run !== "hourly" && $run !== "daily" && $run !== "weekly" && $run !== "monthly")
@@ -65,7 +65,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             if ($certificate->type == "gpg") {
               $gpg_cert =  parse_gpg(trim($certificate->pem));
               if ($gpg_cert["fingerprint"] == $cert["fingerprint"]) {
-                if ($type === "authenticode" || $type === "openssl") {
+                if ($type === "authenticode" || $type === "openssl" || $type === "liveupdate") {
                   $errors[] = ["error" => "Les taches de type " . $type . 
                             " ne supporte pas des certificates GPG"];
                   break 2;

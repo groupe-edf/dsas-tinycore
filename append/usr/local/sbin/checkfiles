@@ -24,6 +24,16 @@ help() {
   echo "     -?|-h|--help    Print this help"
 }
 
+cleanup_and_exit() {
+  status=$1
+  shift
+  while [ "$#" -gt 0 ]; do
+    rm -fr $1
+    shift
+  done
+  exit $status
+}
+
 verifauthenticode(){
   local fingerprint
   local id=$1
@@ -75,6 +85,114 @@ verifopenssl(){
   return $?
 }
 
+verifliveupdate(){
+  local id=$1
+  local tempdir=$2
+  local src=$3
+  local file=$4
+  local zipdir=$5
+  local dest=$6
+  local livetri=$7
+  local sig grd args s1 s256 f basedir s t last filedir
+
+  unzip -d $zipdir $src/$file >& /dev/null || 7z -o$zipdir x $src/$file >& /dev/null 
+  sig=$(find $zipdir -name "*.sig")
+  grd=$(find $zipdir -name "*.grd")
+
+  [ -n "$grd" ] || { 1>&2 myecho "File *.grd not found in the archive $(basename $file)"; return 1; }
+  [ -n "$sig" ] || { 1>&2 myecho "File *.sig not found in the archive $(basename $file)"; return 1; }
+
+  # Assumes all of the CA are in $termpdir/cert.0 and the other certificates in $tempdir/cert.1
+  args="-purpose any -no_check_time"
+  [ -f "$tempdir/cert.0" ] && args="$args -CAfile $tempdir/cert.0"
+  [ -f "$tempdir/ceirt.1" ] && args="$args -nointern -certfile $tempdir/cert.1"
+    
+  # Verify the signature of the  file *.grd...  
+  for s in $sig; do
+    # Special case v1.sig that is an alternative signature for v.sig
+    [ "$(basename $s)" == "v1.sig" ] && continue
+    t=$(echo $s | sed -e 's/.sig$/.grd/g')
+    echo $grd | grep -q $t || { 2>&1 myecho "Checksum file $t not found in the archive $(basename $file)"; return 1; }
+    openssl cms -verify -inform DER -in $s -content $t $args > /dev/null 2>&1 || \
+        { 1>&2 myecho "Verification failure of the file $t from the archive $(basename $file) "; return 1; }
+  done
+
+  # Get base directory name
+  basedir=$(dirname $(find $zipdir -name "*.grd" | head -n1))
+
+  # Fail if there are any files in the archive not listed in the file GRD
+  for f in $(cd $basedir/; find . -type f | cut -c3-); do
+    [[ "$f" =~ ".*.grd" ]] && continue
+    [[ "$f" =~ ".*.sig" ]] && continue
+    if ! grep -qi $f $grd; then
+      # FIXME The JDB files have the files lic.dat and navlic.dat that are not listed 
+      # in a grd file; What are these files ? How to check them ? For now we ignore
+      # these files under three conditions:
+      #    1. The file size is exactly 1048 bytes
+      #    2. navlic.dat et lic.dat are the same file
+      #    3. They are both listed in the catalog.dat file that is included in v.grd
+      if [ "$f" == "lic.dat" ] || [ "$f" == "navlic.dat" ]; then
+        [ "$(stat -c%s $basedir/$f)" == "1048" ] || { 1>&2 myecho "Can not verify the file $f from the archive $(basename $file)"; return 1; }
+        [ -f "$basedir/lic.dat" ] && [ -f "$basedir/navlic.dat" ] && diff -q $zipdir/lic.dat $zipdir/navlic.dat || { 1>&2 myecho "Can not verify the file $f from the archive $(basename $file)"; return 1; }
+        grep -qi $f $basedir/catalog.dat || { 1>&2 myecho "Can not verify the file $f from the archive $(basename $file)"; return 1; }       
+      else
+        1>&2 myecho "Can not verify the file $f from the archive $(basename $file)"; 
+        return 1;
+      fi
+    fi
+  done
+
+  s1=""
+  s256=""
+  f=""
+  last=""
+  filedir=$(dirname $file)
+  for t in $grd; do
+    while :; do
+      IFS= read -r line || last="true"
+      if [ -n "$last" ] || [[ "$line" =~ "^\[File-.*\]" ]]; then
+        [ -z "$last" ] && [ -z "$f" ] && { f=$(echo $line | sed -e "s/^\[File-\(.*\)\]\s*$/\1/g"); continue; }
+        if [ -f "$basedir/$f" ]; then
+          [ -z "$s256" ] || sha256sum $basedir/$f | grep -q $s256 || \
+              { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename $file)"; return 2; }
+          [ -z "$s1" ] || sha1sum $basedir/$f | grep -q $s1 || \
+              { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename $file)"; return 2; }
+          [ -z "$256" ] && [ -z "$s1" ] && { 1>&2 myecho "File $f from the archive $(basename $file) has no checksum"; return 2; }
+          1>&2 myecho "File $f from the archive $(basename $file) verified"
+        elif [ -f "$src/$filedir/$f" ]; then
+          # Only reverify the hash if its not already done.
+          if [ ! $src/$filedir/$f -ef $dest/$filedir/$f ]; then
+            [ -z "$s256" ] || sha256sum $src/$filedir/$f | grep -q $s256 || \
+                { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename $file)"; return 2; }
+            [ -z "$s1" ] || sha1sum $src/$filedir/$f | grep -q $s1 || \
+                { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename $file)"; return 2; }
+            [ -z "$256" ] && [ -z "$s1" ] && { 1>&2 myecho "File $f from the archive $(basename $file) has no checksum"; return 2; }
+            if [ -n "$livetri" ]; then
+              msgline $src/$filedir/$f 0
+              ln $src/$filedir/$f $dest/$filedir/$f
+            fi
+            1>&2 myecho "File $f verified"
+          fi
+        else
+          1>&2 echo "File $f not found. skipping"
+        fi
+        [ -z "$last" ] || break;
+        f=$(echo $line | sed -e "s/^\[File-\(.*\)\]\s*$/\1/g")
+        [ -f "$basedir/$f" ] || [ -f "$src/$filedir/$f" ] || f=$(echo $f | awk '{print tolower($0)}')
+        s1=""
+        s256=""
+      elif [[ "$line" =~ "^SHA1=.*" ]]; then
+        s1=$(echo $line | sed -e "s/^SHA1=\([0-9a-fA-F]*\)\s*$/\1/g")
+      elif [[ "$line" =~ "^SHA256=.*" ]]; then
+        s256=$(echo $line | sed -e "s/^SHA256=\([0-9a-fA-F]*\)\s*$/\1/g")
+      fi
+    done < $t
+  done
+
+  1>&2 myecho "Archive $(basename $file) correctly verified"
+  return 0
+}
+
 verifdirectory() {
   local filetable file status i j fprint tempdir idx auth
   local id=$1
@@ -83,7 +201,7 @@ verifdirectory() {
 
   # Validate check type
   case $type in
-    authenticode|openssl|gpg) : ;;
+    authenticode|openssl|gpg|liveupdate) : ;;
     *) 1>&2 echo "Unknown file checking type"; exit 1 ;;
   esac
 
@@ -94,17 +212,29 @@ verifdirectory() {
     fprint=$(xmllint --xpath "string(dsas/tasks/task[$id]/cert[$j]/fingerprint)" $CONF)
     [ -z "$fprint" ] && break;
     idx=$(get_certificate $fprint)
-    [ -z "$idx" ] && { 1>&2 echo "Certificate used by task($id) not found !!"; exit 1; }
+    [ -z "$idx" ] && { 1>&2 echo "Certificate used by task($id) not found !!"; cleanup_and_exit 1 $tempdir; }
     if [ $idx -eq 0 ]; then
-      [ -f "$tempdir/cert.0" ] && myecho "Multiple authority certificates defined" 
-      /bin/mv /tmp/cert.$$ $tempdir/cert.0
+      if [ "$type" == "liveupdate" ]; then
+        cat /tmp/cert.$$ >> $tempdir/cert.0
+      else
+        [ -f "$tempdir/cert.0" ] && myecho "Multiple authority certificates defined" 
+        /bin/mv /tmp/cert.$$ $tempdir/cert.0
+      fi
     else
       auth=$(xmllint --xpath "string(dsas/certificates/certificate[$idx]/authority)" $CONF)
       if [ "$auth" == "true" ]; then
-        [ -f "$tempdir/cert.0" ] && myecho "Multiple authority certificates defined"
-        /bin/mv /tmp/cert.$$ $tempdir/cert.0
+        if [ "$type" == "liveupdate" ]; then
+          cat /tmp/cert.$$ >> $tempdir/cert.0
+        else
+          [ -f "$tempdir/cert.0" ] && myecho "Multiple authority certificates defined"
+          /bin/mv /tmp/cert.$$ $tempdir/cert.0
+        fi
       else
-        /bin/mv -f /tmp/cert.$$ $tempdir/cert.$((i++))
+        if [ "$type" == "liveupdate" ]; then
+          cat /tmp/cert.$$ >> $tempdir/cert.1
+        else
+          /bin/mv -f /tmp/cert.$$ $tempdir/cert.$((i++))
+        fi
       fi
     fi
     j=$((j + 1))
@@ -126,19 +256,38 @@ verifdirectory() {
     fi
   done
 
+  # If LiveUpdate, test files *livetri.zip first as they can sign other files
+  if [ "$type" == "liveupdate" ]; then
+    for file in $(cd $DSAS_HAUT; find $dir -type f -name "*livetri.zip"); do
+      # If file exists in bas skip. Hardlinked, so test is fast
+      [ $DSAS_HAUT/$file -ef $DSAS_BAS/$file ] && continue
+
+      zipdir=$(mktemp -d)
+      verifliveupdate $id "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS" "true"
+      status=$?
+      msgline $DSAS_HAUT/$file $status
+      [ $status -eq 0 ] && ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
+      /bin/rm -fr $zipdir
+    done 
+  fi
+
   for file in $(cd $DSAS_HAUT; find $dir -type f); do
     # If file exists in bas skip. Hardlinked, so test is fast
     [ $DSAS_HAUT/$file -ef $DSAS_BAS/$file ] && continue
 
     case $type in
-      authenticode) verifauthenticode $id $tempdir $DSAS_HAUT/$file ;;
+      authenticode) verifauthenticode $id "$tempdir" "$DSAS_HAUT/$file" ;;
+      liveupdate)
+        zipdir=$(mktemp -d)
+        verifliveupdate $id "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS"
+        ;;
       openssl) 
         [ "${file##.*}" == "asc" ]  && continue 
-        verifopenssl $id $tempdir $DSAS_HAUT/$file
+        verifopenssl $id "$tempdir" "$DSAS_HAUT/$file"
         ;;
       gpg)
         [ "${file##.*}" == "sig" ]  && continue 
-        verifgpg $id $tempdir $DSAS_HAUT/$file
+        verifgpg $id "$tempdir" "$DSAS_HAUT/$file"
         ;;
     esac
     status=$?
@@ -148,6 +297,7 @@ verifdirectory() {
       [ "$type" == "gpg" ] && [ "${file##.*}" != "gpg" ] && ln "$DSAS_HAUT/$file.sig" "$DSAS_BAS/$file.sig"
       [ "$type" == "openssl" ] && ln "$DSAS_HAUT/$file.asc" "$DSAS_BAS/$file.asc"
     fi
+    [ -d "$zipdir" ] && rm -fr $zipdir
   done
   /bin/rm -fr $tempdir
 }
@@ -230,7 +380,7 @@ verifrepo() {
          xmllint --xpath 'string(//repomd/data[@type="primary"]/checksum/@type)' - )
   if  check_checksum $DSAS_HAUT/$dir/$filelist $chksum $chktype; then
     1>&2 echo "Error verifiying checksum of $filelist"
-    exit 1
+    cleanup_and_exit 1 $tempdir
   fi
 
   # Unzip and verify the checksum of primary.xml
@@ -244,7 +394,7 @@ verifrepo() {
   gunzip -k -f $DSAS_HAUT/$dir//$filelist
   if  check_checksum $DSAS_HAUT/$dir/$unzipfile $chksum $chktype; then
     1>&2 echo "Error verifiying checksum of $unzipfile"
-    exit 1
+    cleanup_and_exit 1 $tempdir
   fi
 
   # Copy repomd.xml*  and primary.xml* to $bas
@@ -349,7 +499,7 @@ for _id in $idx; do
     case $type in
       rpm|repomd) verifrepo $_id; ;;
       deb) 1>&2 echo "DEB files are  are not yet implemented"; exit 1; ;;
-      authenticode|openssl|gpg) verifdirectory $_id; ;; 
+      authenticode|openssl|gpg|liveupdate) verifdirectory $_id; ;; 
       *) 1>&2 echo "Unknown task type : $type"; exit 1 ;;
     esac
   fi

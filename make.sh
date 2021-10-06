@@ -4,7 +4,7 @@ cd $(dirname $0)
 
 # Force to run as root
 if [ $(id -u) != 0 ]; then
-  sudo $0 $* 
+  sudo -E $0 $* 
   exit $?
 fi
 
@@ -136,7 +136,7 @@ install_tcz() {
 get() {
   _src=$(basename $1)
   msg "Downloading $_src"
-  curl -L -o $2/$_src $1 2> /dev/null
+  curl -L -o $2/$_src $1
 }
 
 download() {
@@ -343,6 +343,7 @@ case $1 in
   install_tcz pcre2
   install_tcz dialog
   install_tcz rpm
+  install_tcz p7zip         # Needed by LiveUpdate
 
   # Copy the pre-extracted packages to work dir. This must be after packages
   # are installed to allow for files to be overwritten. Run as root 
