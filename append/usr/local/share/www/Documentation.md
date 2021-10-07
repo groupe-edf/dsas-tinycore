@@ -26,6 +26,42 @@ donc  inclut la capacite de transfert des fihciers signé par des personnes habi
 Le DSAS assure également une rupture de session protocolaire entre les différentes
 zones de sécurité dans un contexte de défense en profondeur.
 
+## La principe de vérification des signatures
+
+Le moyen principal de vérification des ichiers transmis par le DSAS est la vérification
+des signatures. Chaque fichier permis de passer par le DSAS pourrait être verifier par
+une signature cryptographique. 
+
+Le DSAS n'est pas le premier a proposer ce moyen de vérification dans un sas de transfert
+de fichier et [nous avons déja un produit](https://www.seclab-security.com/seclab-securing-systems/)
+déployé a EDF. Le probleme est que ces moyen requiert quand l'intervention de quelqu'un à EDF 
+afin de signer chaque fichier reçu avant leurs transmission. Un produit comme Symantec 
+End Point Manager produit approximativement 4000 fichiers par jours à transmettre. Donc c'est 
+illusoire à penser que quelqu'un va controller chacun de ses fichier avant de les transmettre.
+
+Le DSAS prendre un autre approche, en donnant confiance aux signature des fichier fournient par
+certains editeur de logiciel, et permettant le transfert de ces fichiers. En revanche il est 
+plusiers moyens de signature utilisé par les éditeurs de logiciels, est le DSAS est requis 
+d'avoir une moyen de vérifier chaque type de signature utilisé par les éditeurs de logiciel
+
+### La chaine de confiance
+
+Le probleme avec une verification de signature est de savoir et limiter à qui on donne confiance.
+Pour ça la chaine de confiance de la signature est important à conaitre. Cette chaine de confiance
+pourrait être lié à des "Autorités de certification" (ou CA) dans la cas des certificates de type X509,
+soit à une confiance distribué avec des certificates eux-mêmes qui sont signé entre-eux dans la
+cas des certificates PGP. Dans la cas des certificates PGP, la "toile de confiance" est implicite
+est se passe avant l'inclusion des certificates dans la DSAS. Pour les certificates basé sur la
+norme X509 la chaine de confiance est inclut dans chaque fichier signés. Par exemple la certificate
+utilisé pour la signature d'une fichier est lui-même signé par une certificate intermediaire, et
+cette certificate intermediaire est signé par l'autorité de certification. Le DSAS permet de définir
+des taches de verification limitant des fichiers permis à paasser à une chaine de confiance complete
+et pas seulement verifier vis-à-vis des autorités de certification. Malheureusement, [les malveillantes
+peut acheter des certificates de signature aussi](https://duo.com/decipher/attackers-are-signing-malware-with-valid-certificates).
+Si correctement configuré ceci permets de strictement limiter les transfert par le DSAS a pas
+seulement un seul editeur de logiciel, mais souvent un sous-division du editeur de logiciel, minimisant
+les risques.
+
 ## Architecture
 
 Les principes du DSAS sont les suivantes :
