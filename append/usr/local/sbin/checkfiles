@@ -258,47 +258,50 @@ verifdirectory() {
 
   # If LiveUpdate, test files *livetri.zip first as they can sign other files
   if [ "$type" == "liveupdate" ]; then
-    for file in $(cd $DSAS_HAUT; find $dir -type f -name "*livetri.zip"); do
+    for file in $(cd $DSAS_HAUT; find $dir -type f -name "*livetri.zip" -o -name "minitri.flg" \
+        -o -name "SymantecProductCatalog.zip"); do
       # If file exists in bas skip. Hardlinked, so test is fast
       [ $DSAS_HAUT/$file -ef $DSAS_BAS/$file ] && continue
 
       zipdir=$(mktemp -d)
-      verifliveupdate $id "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS" "true"
+      if [[ "$file" == "*livetri.zip" ]]; then
+        verifliveupdate $id "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS" "true"
+      elif [ "$file" == "minitri.flg" ]; then
+        # mintri.flg is one byte with a single 0x20 character
+        [ "$(cat $DSAS_HAUT/$file) == " " ]
+      else
+        verifliveupdate $id "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS"
+      fi
       status=$?
       msgline $DSAS_HAUT/$file $status
       [ $status -eq 0 ] && ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
       /bin/rm -fr $zipdir
     done 
+  else
+    for file in $(cd $DSAS_HAUT; find $dir -type f); do
+      # If file exists in bas skip. Hardlinked, so test is fast
+      [ $DSAS_HAUT/$file -ef $DSAS_BAS/$file ] && continue
+
+      case $type in
+        authenticode) verifauthenticode $id "$tempdir" "$DSAS_HAUT/$file" ;;
+        openssl) 
+          [ "${file##.*}" == "asc" ]  && continue 
+          verifopenssl $id "$tempdir" "$DSAS_HAUT/$file"
+          ;;
+        gpg)
+          [ "${file##.*}" == "sig" ]  && continue 
+          verifgpg $id "$tempdir" "$DSAS_HAUT/$file"
+          ;;
+      esac
+      status=$?
+      msgline $DSAS_HAUT/$file $status
+      if [ $status -eq 0 ]; then
+        ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
+        [ "$type" == "gpg" ] && [ "${file##.*}" != "gpg" ] && ln "$DSAS_HAUT/$file.sig" "$DSAS_BAS/$file.sig"
+        [ "$type" == "openssl" ] && ln "$DSAS_HAUT/$file.asc" "$DSAS_BAS/$file.asc"
+      fi
+    done
   fi
-
-  for file in $(cd $DSAS_HAUT; find $dir -type f); do
-    # If file exists in bas skip. Hardlinked, so test is fast
-    [ $DSAS_HAUT/$file -ef $DSAS_BAS/$file ] && continue
-
-    case $type in
-      authenticode) verifauthenticode $id "$tempdir" "$DSAS_HAUT/$file" ;;
-      liveupdate)
-        zipdir=$(mktemp -d)
-        verifliveupdate $id "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS"
-        ;;
-      openssl) 
-        [ "${file##.*}" == "asc" ]  && continue 
-        verifopenssl $id "$tempdir" "$DSAS_HAUT/$file"
-        ;;
-      gpg)
-        [ "${file##.*}" == "sig" ]  && continue 
-        verifgpg $id "$tempdir" "$DSAS_HAUT/$file"
-        ;;
-    esac
-    status=$?
-    msgline $DSAS_HAUT/$file $status
-    if [ $status -eq 0 ]; then
-      ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
-      [ "$type" == "gpg" ] && [ "${file##.*}" != "gpg" ] && ln "$DSAS_HAUT/$file.sig" "$DSAS_BAS/$file.sig"
-      [ "$type" == "openssl" ] && ln "$DSAS_HAUT/$file.asc" "$DSAS_BAS/$file.asc"
-    fi
-    [ -d "$zipdir" ] && rm -fr $zipdir
-  done
   /bin/rm -fr $tempdir
 }
 
