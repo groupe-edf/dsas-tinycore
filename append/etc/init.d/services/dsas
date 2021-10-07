@@ -612,6 +612,9 @@ case "${1}" in
       CONFIG_SSH="true"
     fi
     /usr/bin/sethostname $TYP
+    echo "# Hardcoded address of other DSAS machine" >> /etc/hosts
+    [ "$TYP" == "bas" ] && echo "192.168.192.2 haut" >> /etc/hosts
+    [ "$TYP" == "haut" ] && echo "192.168.192.1 bas" >> /etc/hosts
     start_network
     start_sshd
     if [ "$TYP" == "bas" ]; then
