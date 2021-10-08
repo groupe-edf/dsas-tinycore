@@ -1324,7 +1324,7 @@ contexte de faire rentre des fichiers depuis un zone non sensible vers un zone s
 - `SymantecProductCatalog.zip` - les dates des ficheirs dans cette archive sont tous tous avant 2009.  Mais la
 date de l'archive est toujours mise à jour par `SEPM`, le fichier est signé est des vieux certificate de
 Symantec. Ce fichier est verifié est transmis par le DSAS
-- `*.jdb`- (Les fichiers JDB sont pour des mise à jour de `SEPM` ou des clients `SEP`) 
+- `*.jdb`- [Les fichiers JDB sont pour des mise à jour de `SEPM` ou des clients `SEP`]
 (https://knowledge.broadcom.com/external/article/151309/download-jdb-files-to-update-definitions.html). 
 A ce jour ils sont signé avec un certificate Symantec périmé. 
 
