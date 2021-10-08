@@ -1233,19 +1233,30 @@ Il y a 3 type de verification des répository linux
 * repomd - Le fichier repomd.xml est verifié et seulement les hashes to chaque fichier est verifié
 * deb - Actuellement non implementé
 
-Il y a trois autres type de vérification 
+Il y a quatre autres type de vérification 
 
 * authenticode - Verifier avec Microsoft Authenticode signatures. 
-* gpg - 
-* openssl -
+* liveupdate - Symantec LiveUpdate signatures
+* gpg - Signature d'un fichier avec gpg
+* openssl - signature d'un fichier avec 
 
 ### Verification - rpm
 
-Les détails - A completer
+Dans les verifications des repository RPM le fichier repodata/repodmd.xml est lu et les fichiers
+xml avec la liste des packages à verifier sont lu. Actuellement seulement le repositoire primaire
+est identifié est lu (FIXME: rendre possible la transfert des autre repo). 
+
+Dand la mode de vérification `rpm`, chaque fichier de package listé dans le fichier xml de repositoire
+primaire est vérifié avec la commande `rpm -k` contre la certificate GPG fournit pour la tache.
 
 ### Vérification - repomd
 
-Les détails - A completer
+La mode `repomd` est comme la mode `rpm` avec l'exception que le fichier `repodata/repomd.xml` est
+signé directement avec GPG. Le fait que ce fichier de metadonnées est signée et il contient la 
+hash du fichier xml primaire, et les hashes de chaque package est inclut dans le fichier xml de
+repositoire primaire. De cette façon, une seule vérification de signature et des vérification de
+hash de chaque fichier de package, permets de cryptographiquement vérifier l'ensemble des fichiers
+du répositoire. Ceci est plus rapide est aussi sûr que la verification de type `rpm`.
 
 ### Vérification - authenticode
 
@@ -1275,6 +1286,9 @@ ou le ficher `inter.der` est la certificate intermediaire à utiliser pour la ve
 
 ### Vérification - Symantec LiveUpdate
 
+
+
+#### Signature des fichier LiveUpdate
 Les fichiers de LiveUpdate, et les fichier JDB, de Symantec ne sont pas signés directement. En revanche 
 l'ensemble de ces fichiers sont des archive en format `7z`, et ces acrhives contient deux fichiers,
 typiquement nommés `v.grd` et `v.sig`. C'est fichiers pourraient avoir d'autre nom, mais les extensions
@@ -1454,7 +1468,8 @@ $ gpg --output <file>.sig -a --detach-sig <file>
 ```
 
 Donc des signature detaché sont en deux fichiers <file> et <file>.sig, et des signature integrés 
-sont dans des fichiers terminant comme <file>.gpg
+sont dans des fichiers terminant comme <file>.gpg. Le DSAS traite les deux type de signatrue. Dans le
+cas de signature detaché, les deux fichiers doit être fournient au DSAS.
 
 ### Verification - openssl
 
@@ -1473,7 +1488,7 @@ $ openssl dgst -sign key.pem -keyform PEM -sha256 -out <file>.sig -binary <file>
 ```
 
 Les signatures sont toujours stockés dans des fichiers séparé, et le DSAS assume que les signature
-sont dans un fichier avec un extension .sig 
+sont dans un fichier avec un extension .sig. Les deux fichiers doit être fournient au DSAS.
 
 ## Service OpenSSH
 
