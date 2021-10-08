@@ -1159,6 +1159,15 @@ recommander de regarder les détails de la certificate importée, comme par exem
 
 ## Configuration des taches
 
+Une nouvelle tache pourrait être ajouter en cliquant sur le [](images/DSAS23.png) 
+a droit de la page des taches. 
+
+
+
+
+
+
+
 # Mantient en condition de sécurité
 
 FIXME : Ajouter la liste des logiciels exposé et leurs vesrsion ici
