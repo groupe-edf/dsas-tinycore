@@ -1180,6 +1180,25 @@ de garantir le niveau de sécurité du DSAS.
 
 ## Matrice de flux réseau détaillé
 
+| Source          |  Destination    | Port        |  proto  | Service  | optionnel | commentaire                  |
+|-----------------|-----------------|-------------|---------|----------|-----------|------------------------------|
+| bas             | haut            | 22          | tcp     | ssh      | requis    | interconnexion machines dsas |
+| reseau sensible | bas             | 5000        | tcp/udp | https    | requis    | console d'adminsitration     |
+| reseau sensible | bas             | 443         | tcp/udp | https    | optionnel | repositoire de fichier       |
+| reseau sensible | bas             | 22          | tcp     | ssh      | optionnel | acces console user 'tc'      |
+| reseau sensible | bas             | 22          | tcp     | sftp     | optionnel | acces fichiers user 'bas'    |
+| reseau ouverte  | haut            | 22          | tcp     | sftp     | non reco. | depot fichier user 'haut'    |
+| bas             | reseau sensible | 123         | udp     | ntp      | optionnel | synchronisation temps        |
+| bas             | reseau sensible | 514         | udp     | syslog   | optionnel | service de log               | 
+| haut            | reseau ouverte  | 22          | tcp     | sftp/scp |    -      | tache en sftp/scp            |
+| haut            | reseau ouverte  | 20          | tcp     | ftp      |    -      | tache en ftp - data fixed    |
+| haut            | reseau ouverte  | 21          | tcp     | ftp      |    -      | tache en ftp                 |
+| haut            | reseau ouverte  | 60000-65535 | tcp     | ftp      |    -      | tache en ftp - data trigger  |
+| haut            | reseau ouverte  | 80          | tcp/udp | http     |    -      | tache en http                |
+| haut            | reseau ouverte  | 443         | tcp/udp | https    |    -      | tache en https               |
+
+
+
 ## Les comptes utilisateurs sur la DSAS
 
 ### Les droit d'ecriture de chaque utilisateur
@@ -1223,7 +1242,7 @@ share:x:2003:verif,bas,haut
 ```
 
 les exigences voulu sont respecté. Les script de verification DSAS ont été adapté
-afin d'assurer ces coditions
+afin d'assurer ces conditions
 
 ## Moyens de Verification 
 
