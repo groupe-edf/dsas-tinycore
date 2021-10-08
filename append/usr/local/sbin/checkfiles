@@ -268,7 +268,7 @@ verifdirectory() {
         verifliveupdate $id "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS" "true"
       elif [ "$file" == "minitri.flg" ]; then
         # mintri.flg is one byte with a single 0x20 character
-        [ "$(cat $DSAS_HAUT/$file) == " " ]
+        [ "$(cat $DSAS_HAUT/$file)" == " " ]
       else
         verifliveupdate $id "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS"
       fi
@@ -347,7 +347,7 @@ verifrepo() {
   tempdir=$(mktemp -d)
   fprint=$(xmllint --xpath "string(dsas/tasks/task[$id]/cert[1]/fingerprint)" $CONF)
   idx=$(get_certificate $fprint)
-  [ -z "$idx" ] && { 1>&2 echo "Certificate used by task($id) not found !!"; exit 1; }
+  [ -z "$idx" ] && { 1>&2 echo "Certificate used by task\($id\) not found !!"; exit 1; }
   /bin/mv /tmp/cert.$$ $tempdir/cert.0
   gpg --dearmor $tempdir/cert.0
 
@@ -368,46 +368,42 @@ verifrepo() {
   # Create the destination directory if needed
   [ -d $DSAS_BAS/$dir ] || $(umask 007 && mkdir -p $DSAS_BAS/$dir && chgrp $grp $DSAS_BAS/$dir)
 
+  # Copy repomd.xml* to $bas
+  ln $DSAS_HAUT/$dir/repodata/repomd.xml $DSAS_BAS/$dir/repodata/repomd.xml
+  [ -f "$DSAS_HAUT/$dir/repodata/repomd.xml.asc" ] && ln $DSAS_HAUT/$dir/repodata/repomd.xml.asc $DSAS_BAS/$dir/repodata/repomd.xml.asc
+
+  # Verify the checksum of all files referenced in repomd.xml and copy tp $bas
+  i=1
+  while :; do
+    # Note that we have to ignore the xml namespace (initial cat/sed)
+    f=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
+         sed -e "s:repomd xmlns:repomd ignore:g" | \
+         xmllint --xpath 'string(//repomd/data[$i]/location/@href)' -)
+    [ -z "$f" ] && break
+
+    # Verify its checksum
+    chksum=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
+         sed -e "s:repomd xmlns:repomd ignore:g" | \
+         xmllint --xpath 'string(//repomd/data[$i]/checksum)' - )
+    chktype=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
+         sed -e "s:repomd xmlns:repomd ignore:g" | \
+         xmllint --xpath 'string(//repomd/data[$i]/checksum/@type)' - )
+    if  check_checksum $DSAS_HAUT/$dir/$f $chksum $chktype; then
+      1>&2 echo "Error verifiying checksum of $f"
+      cleanup_and_exit 1 $tempdir
+    fi
+    ln $DSAS_HAUT/$dir/$f $DSAS_BAS/$dir/$f
+    i=$(($i + 1))
+  done
+
   # Identify the primary file list
   # Note that we have to ignore the xml namespace (initial cat/sed)
   filelist=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
          sed -e "s:repomd xmlns:repomd ignore:g" | \
          xmllint --xpath 'string(//repomd/data[@type="primary"]/location/@href)' -)
 
-  # Verify its checksum
-  chksum=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
-         sed -e "s:repomd xmlns:repomd ignore:g" | \
-         xmllint --xpath 'string(//repomd/data[@type="primary"]/checksum)' - )
-  chktype=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
-         sed -e "s:repomd xmlns:repomd ignore:g" | \
-         xmllint --xpath 'string(//repomd/data[@type="primary"]/checksum/@type)' - )
-  if  check_checksum $DSAS_HAUT/$dir/$filelist $chksum $chktype; then
-    1>&2 echo "Error verifiying checksum of $filelist"
-    cleanup_and_exit 1 $tempdir
-  fi
-
-  # Unzip and verify the checksum of primary.xml
-  chksum=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
-          sed -e "s:repomd xmlns:repomd ignore:g" | \
-          xmllint --xpath 'string(//repomd/data[@type="primary"]/open-checksum)' - )
-  chktype=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
-          sed -e "s:repomd xmlns:repomd ignore:g" | \
-          xmllint --xpath 'string(//repomd/data[@type="primary"]/open-checksum/@type)' - )
-  unzipfile=$(echo $filelist | sed -e "s/.gz//g")
-  gunzip -k -f $DSAS_HAUT/$dir//$filelist
-  if  check_checksum $DSAS_HAUT/$dir/$unzipfile $chksum $chktype; then
-    1>&2 echo "Error verifiying checksum of $unzipfile"
-    cleanup_and_exit 1 $tempdir
-  fi
-
-  # Copy repomd.xml*  and primary.xml* to $bas
-  ln $DSAS_HAUT/$dir/repodata/repomd.xml $DSAS_BAS/$dir/repodata/repomd.xml
-  [ -f "$DSAS_HAUT/$dir/repodata/repomd.xml.asc" ] && ln $DSAS_HAUT/$dir/repodata/repomd.xml.asc $DSAS_BAS/$dir/repodata/repomd.xml.asc
-  ln $DSAS_HAUT/$dir/$filelist $DSAS_BAS/$dir/$filelist
-  ln $DSAS_HAUT/$dir/$unzipfile $DSAS_BAS/$dir/$unzipfile
-
   # Recover a table of the hashtype, hash and file names
-  filetable=$(cat $DSAS_HAUT/$dir/$unzipfile | \
+  filetable=$(zcat $DSAS_HAUT/$dir/$unzipfile | \
           sed -e "s/xmlns=/ignore=/g" | \
           xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | \
           sed -e 's:.*href="\(.*\)"/>$:\1:g' \
@@ -489,7 +485,7 @@ done
 idx=""
 for _id in $ids; do
   _idx=$(task_id_to_idx $_id)
-  [ $? -ne 0 ] && { 1>&2 echo "Task id ($_id) does not exist"; exit 1; }
+  [ $? -ne 0 ] && { 1>&2 echo "Task id\($_id\) does not exist"; exit 1; }
   idx="$idx $_idx"
 done
 
