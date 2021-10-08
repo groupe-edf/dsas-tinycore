@@ -1305,11 +1305,36 @@ ou le ficher `inter.der` est la certificate intermediaire à utiliser pour la ve
 
 ### Vérification - Symantec LiveUpdate
 
+Les fichiers IntelligentUpdate de Symantec sont en authenticode, donc ils sont exclut de cette discussion.
+Le format Symantec LiveUpdate est utilisé par `Symantec Endpoint Protection Manager` (SEPM) pour les mises
+à jour. La format de signature des fichier de LiveUpdate sont très complexe avec des ficheirs signée selon 
+[la methode déatillé dans la section suivante](#signature-des-fichiers-liveupdate), et des fichiers verifiés
+que par leurs hash dans un autre fichier signé, l'ensemble des fichier en format LiveUpdate peut-être 
+idéntifiées selon leurs nom comme
 
+- `*.livetri.zip` - des fichiers signés de type LiveUpdate faissant réferences à d'autre fichiers non-signés
+- `NNNNNNNNNN*.*` - des fichiers non-signés avec le champ `NNNNNNNNNN` répresentant la date en nombre de secondes
+depuis l'epoche unix (1 janvier 1970, 00:00:00 UTC). Ce fichiers ne sont pas signés, et doit être référencés 
+dans un fichier `*livtri.zip`. Ca semble que `SEPM` laisse des fichiers de ce type qui ne sont plus utilisé dans
+un fichier `*livetri.zip` et dans ce cas les fichiers pourraient être ignorés.
+- `minitri.flg` - Un fichier de un seul octets avec le caracters `0x20` (un esapce) dedans. Le presence ou pas
+du fichiers pourrait modifier la comportement de `SEPM`. Le fichier ne pourrait âs être malveillante. Dans le
+contexte de faire rentre des fichiers depuis un zone non sensible vers un zone sensible il ne pourrait pas 
+être utilisé pour un canal cache pour la fuite d'information non plus. Ce fichier est transmit sans test
+- `SymantecProductCatalog.zip` - les dates des ficheirs dans cette archive sont tous tous avant 2009.  Mais la
+date de l'archive est toujours mise à jour par `SEPM`, le fichier est signé est des vieux certificate de
+Symantec. Ce fichier est verifié est transmis par le DSAS
+- `*.jdb`- (Les fichiers JDB sont pour des mise à jour de `SEPM` ou des clients `SEP`) 
+(https://knowledge.broadcom.com/external/article/151309/download-jdb-files-to-update-definitions.html). 
+A ce jour ils sont signé avec un certificate Symantec périmé. 
 
-#### Signature des fichier LiveUpdate
+Le DSAS est capable de transmettre l'ensemble de ce type de fichiers avec l'exception des fichiers
+`NNNNNNNNNN*.*` qui ne sont plus listé dans un fichier `*livetri.zip`.
+
+#### Signature des fichiers LiveUpdate
+
 Les fichiers de LiveUpdate, et les fichier JDB, de Symantec ne sont pas signés directement. En revanche 
-l'ensemble de ces fichiers sont des archive en format `7z`, et ces acrhives contient deux fichiers,
+l'ensemble de ces fichiers sont des archive en format `7z` ou `ZIP`, et ces acrhives contient deux fichiers,
 typiquement nommés `v.grd` et `v.sig`. C'est fichiers pourraient avoir d'autre nom, mais les extensions
 `.grd` et `.sig` sont toujours utilisé
 
@@ -1329,7 +1354,9 @@ SHA256=721473abd9d240d5170c9952a8a1d1644f177c1dbbef01b105e1d44705188db4
 ...
 ```
 
-Avec des hashes de l'ensmeble des fichiers contenu dans l'archive. La commande
+Avec des hashes de l'ensmeble des fichiers contenu dans l'archive. Dans le cas des fichiers `*livetri.zip`
+les hashes des fichiers pourrait correspondre egalement à un autre fichiers pas inclut directement dans
+l'archive mais à côté avec un nom comme `NNNNNNNNNN*.*`. La commande
 
 ```shell
 $ openssl asn1parse -i -inform der -in v.sig
@@ -1339,8 +1366,6 @@ permettre de voir facilement que la fichier sig contient, au moins deux certific
 un hache de la fichier `.grd` et la signature en binaire lui-même. La texte "pkcs7-signedData"
 permettre d'identifier le type de signature utilisé. Le probleme est que la chaine de 
 confiance des ficheirs `.sig` sont typiquement
-
-
 
 ```
 Symantec Internal RSA IT Root
@@ -1373,7 +1398,7 @@ commande
 $ openssl pkcs7 -inform der -in v.sig -outform pem -print_certs | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if(length($0) > 0) print > "cert" n ".pem"}
 ```
 
-cette commande va créer deux fichier, `cert.pem` et 'cert1.pem' avec la certificate signateur et les 
+cette commande va créer deux fichier, `cert.pem` et `cert1.pem` avec la certificate signateur et les 
 certificates intermediaires utilisées. Ces certificates peuvent être importé  dans le DSAS. Malheureusement, 
 ceci va permettre de sortir que les certificates intermediaires et la certificate utilisé pour la signature. 
 La certfiicate raçine n'est pas inclut dans les fichiers signature. Il faut retourner vers l'executable de SEP 
