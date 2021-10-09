@@ -38,7 +38,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 if [ -z $ids ]; then
-  # No tasks sepcified. Get a list of all tasks
+  # No tasks specified. Get a list of all tasks
   i=1
   while :; do
     _id=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" $CONF)
@@ -46,6 +46,10 @@ if [ -z $ids ]; then
     # Is the task scheduled to run ? Is the run forced ?
     if [ -z "$force" ]; then
       _run=$(xmllint --xpath "string(dsas/tasks/task[$i]/run)" $CONF)
+      case "$_run" in
+        hourly|daily|weekly|monthly) :; ;;
+        *) continue; ;;
+      esac
       _last=$(cat $RUNLOG | grep $_id | cut -d' ' -f2) 
       [ -z "$_last" ] || should_run $_last $_run && ids="$ids $_id"    
     else
@@ -66,6 +70,10 @@ elif [ -z "$force" ]; then
     done
     [ -z "$_idx" ] && { 1>&2 echo "Task $_id not found"; continue; }
     _run=$(xmllint --xpath "string(dsas/tasks/task[$i]/run)" $CONF)
+    case "$_run" in
+      hourly|daily|weekly|monthly) :; ;;
+      *) continue; ;;
+    esac
     _last=$(cat $RUNLOG | grep $_id | cut -d' ' -f2)
     [ -z "$_last" ] || should_run $_last $_run && newids="$newids $_id" 
   done
