@@ -3,6 +3,7 @@
 // FIXME : Lots of dead code here to clean up
 
 define("_DSAS_VAR", "/var/dsas");
+define("_DSAS_LOG", "/home/dsas/log");
 define("_DSAS_XML", _DSAS_VAR . "/dsas_conf.xml");
 
 function dsas_ca_file() {
@@ -343,8 +344,8 @@ function inet_valid($addr){
 function dsas_get_logs() {
   $logs = array();
   foreach (["", ".0", ".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9"] as $ext) {
-    if (is_file(_DSAS_VAR . "/dsas_verif.log" . $ext)) {
-      if ($fp = fopen(_DSAS_VAR . "/dsas_verif.log" .$ext, "r")) {
+    if (is_file(_DSAS_LOG . "/dsas_verif.log" . $ext)) {
+      if ($fp = fopen(_DSAS_LOG . "/dsas_verif.log" .$ext, "r")) {
         $log = array();
         while (($line = fgets($fp)) !== false){
           if (substr($line,0,2) === "  ")
@@ -538,8 +539,8 @@ function dsas_task_running($id){
 
 function dsas_run_log($id){
  $run = dsas_task_running($id);
- if (is_file(_DSAS_VAR . "/dsas_runlog")) {
-    if ($fp = fopen(_DSAS_VAR . "/dsas_runlog", "r")) {
+ if (is_file(_DSAS_LOG . "/dsas_runlog")) {
+    if ($fp = fopen(_DSAS_LOG . "/dsas_runlog", "r")) {
       while (($line = fgets($fp)) !== false) {
         if ($id == substr($line,0,strlen($id))) {
            $tmp = preg_split("/\s+/", $line);
