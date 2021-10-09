@@ -122,15 +122,15 @@ function complexity_test($passwd) {
       return false;
    # Voir https://owasp.org/www-community/password-special-characters
    # Don't permit the characters "'` or spaces because however
-   luds = 0;
+   $luds = 0;
    if (preg_match("/[a-z]/", $passwd))
-     luds += 1; 
+     $luds += 1; 
    if (preg_match("/[A-Z]/", $passwd))
-     luds += 1;
+     $luds += 1;
    if (preg_match("/[0-9]/", $passwd))
-     luds += 1;   
+     $luds += 1;   
    if (preg_match("/[!#$%&\(\)*+,-./:;<=>?@\[\\\]^_\{|\}~]/", $passwd))
-     luds += 1;
+     $luds += 1;
    if (luds < 3)
      return false;
    return true;

@@ -150,10 +150,10 @@ get(){
     fi
   else
     if [ $force -eq 0 ] && [ $dryrun -ne 0  ]; then
-      echo "[DryRun] curl -o $2 $1"
+      echo "[DryRun] curl -s -o $2 $1"
     else
-      [ $verbose -ne 0 ] && echo "curl -o $2 $1"
-      umask 007 && curl -o $2 $1 2> /dev/null
+      [ $verbose -ne 0 ] && echo "curl -s -o $2 $1"
+      umask 007 && curl -s -o $2 $1 > /dev/null 2>&1
     fi
   fi
 }

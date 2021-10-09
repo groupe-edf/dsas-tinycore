@@ -403,11 +403,19 @@ verifrepo() {
          xmllint --xpath 'string(//repomd/data[@type="primary"]/location/@href)' -)
 
   # Recover a table of the hashtype, hash and file names
-  filetable=$(zcat $DSAS_HAUT/$dir/$unzipfile | \
-          sed -e "s/xmlns=/ignore=/g" | \
-          xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | \
-          sed -e 's:.*href="\(.*\)"/>$:\1:g' \
-            -e 's:.*type="\([^"]*\)"[^>]*>\([0-9a-fA-F]*\)</checksum>:\1 \2:g')
+  if [[ "$f" =~ ".*.gz" ]] || [[ "$f" =~ ".*.bz2" ]]; then
+    filetable=$(zcat $DSAS_HAUT/$dir/$unzipfile | \
+            sed -e "s/xmlns=/ignore=/g" | \
+            xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | \
+            sed -e 's:.*href="\(.*\)"/>$:\1:g' \
+              -e 's:.*type="\([^"]*\)"[^>]*>\([0-9a-fA-F]*\)</checksum>:\1 \2:g')
+  else
+    filetable=$(cat $DSAS_HAUT/$dir/$unzipfile | \
+            sed -e "s/xmlns=/ignore=/g" | \
+            xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | \
+            sed -e 's:.*href="\(.*\)"/>$:\1:g' \
+              -e 's:.*type="\([^"]*\)"[^>]*>\([0-9a-fA-F]*\)</checksum>:\1 \2:g')
+  fi
 
   # Remove the files in $DSAS_BAS and not listed in primary.xml
   for _file in $(cd $DSAS_BAS/$dir; find . -path ./repodata -prune -type f -o -type f); do
