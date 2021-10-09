@@ -412,7 +412,7 @@ addgroup tc repo
 
 # Fix directory and file permissions
 chown -R tc.staff /home/tc
-chown -R tc.verif /var/dsas
+chown -R root.staff /var/dsas
 chmod 775 /var/dsas          # Write perm for verif
 chmod 640 /var/dsas/*.csr /var/dsas/*.pem
 chown tc.repo /var/dsas/*.csr /var/dsas/*.pem

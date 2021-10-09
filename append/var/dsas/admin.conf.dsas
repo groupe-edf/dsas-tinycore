@@ -1,6 +1,6 @@
 server.document-root="/usr/local/share/www/"
-server.errorlog="/var/dsas/web_error.log"
-accesslog.filename = "/var/dsas/web_access.log"
+server.errorlog="/home/dsas/log/web_error.log"
+accesslog.filename = "/home/dsas/log/web_access.log"
 server.modules += ( "mod_openssl", "mod_fastcgi", "mod_accesslog" )
 server.port=5000
 ssl.engine="enable"

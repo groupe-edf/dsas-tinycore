@@ -161,6 +161,9 @@ get_dsas(){
       chmod -R 770 $DISK/dsas/$_user/share
       chown -R $_user.$_user $DISK/dsas/$_user/share
     done
+    mkdir -p $DISK/dsas/log
+    chmod -R 770 $DISK/dsas/log
+    chown -R tc.verif $DISK/dsas/log
     DSAS=$DISK/dsas
   fi
 

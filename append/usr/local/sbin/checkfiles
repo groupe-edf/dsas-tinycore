@@ -8,7 +8,7 @@ else
 fi
 
 # Default options
-logfile="$(dirname $CONF)/dsas_verif.log"
+logfile="$LOG/dsas_verif.log"
 UMASK=640
 
 help() {

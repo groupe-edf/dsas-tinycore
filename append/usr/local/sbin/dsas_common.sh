@@ -1,8 +1,9 @@
 #! /bin/sh
 
 VAR=/var/dsas
+LOG=/home/dsas/log
 CONF=$VAR/dsas_conf.xml.active
-RUNLOG=$VAR/dsas_runlog
+RUNLOG=$LOG/dsas_runlog
 DSAS_HOME=/home/dsas
 
 INTERCO="192.168.192.0"
