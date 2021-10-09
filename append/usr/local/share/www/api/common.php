@@ -117,11 +117,23 @@ function sasl_checkpass($user, $pass){
 }
 
 function complexity_test($passwd) {
-   // FIXME Add more conditions
+   // Passwords must be at least 8 characters long and contain at least 3 of LUDS
    if (strlen($passwd) < 8)
       return false;
-   else
-      return true;
+   # Voir https://owasp.org/www-community/password-special-characters
+   # Don't permit the characters "'` or spaces because however
+   luds = 0;
+   if (preg_match("/[a-z]/", $passwd))
+     luds += 1; 
+   if (preg_match("/[A-Z]/", $passwd))
+     luds += 1;
+   if (preg_match("/[0-9]/", $passwd))
+     luds += 1;   
+   if (preg_match("/[!#$%&\(\)*+,-./:;<=>?@\[\\\]^_\{|\}~]/", $passwd))
+     luds += 1;
+   if (luds < 3)
+     return false;
+   return true;
 }
 
 function dsas_init(){
