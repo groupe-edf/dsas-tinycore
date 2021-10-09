@@ -261,6 +261,8 @@ function dsas_status(){
         body = body + '</div><div class="col-6 container p-3 border">' +
            '<h5>Machine haut:</h5>' + machine_status(obj.haut) + '</div></div>';
       document.getElementById("StatusBar").innerHTML = body;
+      // Automatically refresh the page
+      setTimeout(dsas_status, 5000);
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
         modal_message("Erreur (" + error.status + ") pendant la detection des machines :\n" + error.statusText);
