@@ -912,8 +912,7 @@ le `URI` doit-être de la forme `protocole://site/dossier/` ou bien
 fin des `URI` avec un dossier est optionnelle mais recommandé.
 - `Type de tache` - Le type de tache a utilisé. Les types de tache permis sont
   * `rpm` - Le tache est repositoire en format rpm. l'ensemble des fichiers sont 
-vérifier avec `rpm -K`. Seul les fichiers dit "primary" de la repositoire sont 
-téléchargé
+vérifier avec `rpm -K`. 
   * `repomd` - Comme le type `rpm`, mais le les fichier `repomd.xml` est signé
 permettant d'accelerer les vérifications. 
   * `deb` - Non implementé actuellement
@@ -1053,11 +1052,17 @@ Il y a quatre autres type de vérification
 
 ### Verification - rpm
 
-Dans les verifications des repository RPM le fichier repodata/repodmd.xml est lu et les fichiers
-xml avec la liste des packages à verifier sont lu. Actuellement seulement le repositoire primaire
-est identifié est lu (FIXME: rendre possible la transfert des autre repo). 
+Dans les verifications des repository RPM le fichier repodata/repomd.xml est lu et les fichiers
+xml avec la liste des packages à verifier sont lu. Tous les ficheirs du respositoire sont listé
+avec leur hash, dans le fichier dit "primaire" du repositoire. 
 
-Dand la mode de vérification `rpm`, chaque fichier de package listé dans le fichier xml de repositoire
+Un repositoire pourrait être le repositoire d'un OS comme par example 
+[http://mirror.centos.org/centos/7/os/x86_64/](http://mirror.centos.org/centos/7/os/x86_64/)
+ou d'autre repositoire comme par exemple
+[http://mirror.centos.org/centos/7/extras/x86_64/](http://mirror.centos.org/centos/7/extras/x86_64/).
+
+
+Dans la mode de vérification `rpm`, chaque fichier de package listé dans le fichier xml de repositoire
 primaire est vérifié avec la commande `rpm -k` contre la certificate GPG fournit pour la tache.
 
 ### Vérification - repomd
