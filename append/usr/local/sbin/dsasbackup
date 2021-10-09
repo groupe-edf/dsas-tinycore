@@ -16,33 +16,27 @@ else
   exit 1
 fi
 
+FILES="usr/local/etc/ssh var/dsas home/tc home/bas home/haut home/verif opt"
+
 RESTORE=0
 APPLY=0
 BKP=""
 PASSWD=""
+OPTS=""
 while [ "$#" -gt 0 ]; do
   case $1 in
     -r|--restore) RESTORE=1 ;;
     -b|--backup) RESTORE=0 ;;
     -a|--apply) APPLY=1; ;;
-    -*) 1>&2 echo "Unrecognized option : $1"; help; exit 1 ;;
-    *)
-      if [ -f "$1" ]; then
-        [ -n "$BKP" ] && { 1>&2 echo "Only one backup file allowed"; exit 1; }
-        BKP=$1
-      else
-        [ -n "$PASSWD" ] && { 1>&2 echo "Only one password allowed"; exit 1; }
-        PASSWD=$1
-      fi
-      ;;
+    -p) PASSWD="$2"; shift 1; ;;
+    --password=*) PASSWD=${1#*=}; ;;
+    -*) 1>&2 echo "Unrecognized option : $1"; help; exit 1; ;;
+    *)  BKP="$1"; ;;
   esac
   shift 1
 done
-
+[ "$RESTORE" -eq 1 ] && [ ! -f "$BKP" ] && { 1>&2 echo "Backup file  doesn't exist"; exit 1; }
 [ -z "$BKP" ] && BKP="/tmp/dsas_backup.tgz"
-
-MYDATA=mydata
-[ -r /etc/sysconfig/mydata ] && read MYDATA < /etc/sysconfig/mydata
 
 blowfish_encrypt(){
   cat << EOD | /usr/bin/bcrypt -c $1 2> /dev/null  
@@ -58,12 +52,12 @@ EOD
 }
 
 if [ "$RESTORE" -eq 0 ]; then
-  # Get the backup from the machine haut
-  (umask 077; scp tc@$INTERCO_HAUT:/etc/sysconfig/tcedir/${MYDATA}.tgz /tmp/haut.tgz 2>&1 > /dev/null)
+  # Create the backup on the machine haut
+  (umask 077; ssh tc@$INTERCO_HAUT sudo tar -C / -c -z -f - $FILES > /tmp/haut.tgz)
   [ -n "$PASSWD" ] && (umask 077; cd /tmp; blowfish_encrypt haut.tgz $PASSWD)
   
   # Get the backup for the machine bas
-  (umask 077; cp /etc/sysconfig/tcedir/${MYDATA}.tgz /tmp/bas.tgz)
+  (umask 077; sudo tar -C / -c -z -f - $FILES > /tmp/bas.tgz)
   [ -n "$PASSWD" ] && (umask 077; cd /tmp; blowfish_encrypt bas.tgz $PASSWD)
 
   # Create the backup file
@@ -73,6 +67,9 @@ if [ "$RESTORE" -eq 0 ]; then
   else
     (umask 077; cd /tmp; tar -czf $BKP haut.tgz.bfe bas.tgz.bfe)
   fi
+
+  # Remove temporary files
+  (cd /tmp; /bin/rm -f haut.tgz bas.tgz haut.tgz.bfe bas.tgz.bfe)
 else
   # Remove existing files
   (cd /tmp; /bin/rm -f haut.tgz bas.tgz haut.tgz.bfe bas.tgz.bfe)
@@ -94,27 +91,52 @@ else
     (umask 077; cd /tmp; blowfish_decrypt bas.tgz $PASSWD)
     [ $? -eq 0 ] || { 1>&2 echo "The backup is corrupted"; exit 1; }
   fi
-  
-  # Move backup of machine bas into place
-  /bin/mv /tmp/bas.tgz /etc/sysconfig/tcedir/${MYDATA}.tgz
-  chmod 0660 /etc/sysconfig/tcedir/${MYDATA}.tgz 
-  chgrp staff /etc/sysconfig/tcedir/${MYDATA}.tgz 
-  
-  # Move backup of machine haut into place
-  scp /tmp/haut.tgz tc@$INTERCO_HAUT:/tmp/haut.tgz 2>&1 > /dev/null
-  ssh -T tc@$INTERCO_HAUT << EOF
-/bin/mv /tmp/haut.tgz /etc/sysconfig/tcedir/${MYDATA}.tgz
-chmod 0660 /etc/sysconfig/tcedir/${MYDATA}.tgz 
-chgrp staff /etc/sysconfig/tcedir/${MYDATA}.tgz 
-EOF
-  [ $? -eq 0 ] || { 1>&2 echo "Can not transfert the backup to the machine haut"; exit 1; }
 
-  # Restore the files and apply the configuration if requested
-  /usr/bin/filetool.sh -r 2>&1 > /dev/null
+  # Control the contents of the tar files and only allow files in the given directories
+  for bkp in /tmp/bas.tgz /tmp/haut.tgz; do
+    for file in $(tar tzf $bkp); do
+      for p in $FILES; do
+        [[ "$file" =~ "^$p" ]] && continue 2
+      done
+      { 1>&2 echo "The backup contains illegal files"; exit 1; }
+    done
+  done
+
+  # The value of dsas->config->users->first should be preserved 
+  first=$(xmllint --xpath 'string(dsas/config/users/first)' $VAR/dsas_conf.xml)
+
+  # Unpack the files on machine haut
+  cat /tmp/haut.tgz | (ssh tc@$INTERCO_HAUT sudo tar -C / -x -z -f -)
+  [ $? -eq 0 ] || { 1>&2 echo "Can not transfer the backup to the machine haut"; exit 1; }
+
+  # Unpack the files on machine bas
+  (sudo tar -C / -x -z -f /tmp/bas.tgz)
+
+  # Restore the value of first
+  args="cd /dsas/config/users\nset"
+  if [ -z "$first" ]; then
+    args="$args <first />"
+  else
+    args="$args <first>$first</first>"
+  fi
+  for arg in $(xmllint --xpath "dsas/config/users/*" $VAR/dsas_conf.xml); do
+    [[ "$arg" =~ "^<first" ]] && continue
+    args="$args$arg"
+  done
+  args="$args\nsave"
+  echo -e "$arg" | xmllint --shell $VAR/dsas_conf.xml > /dev/null 2>&1
+
+  # Save the restored files to the active configuration.   
+  /usr/bin/filetool.sh -b 2>&1 > /dev/null
   [ $? -eq 0 ] || { 1>&2 echo "Error running filetool"; exit 1; }
+
+  # Apply the configuration if requested
   if [ "$APPLY" -ne 0 ]; then
     sudo /etc/init.d/services/dsas apply 2>&1 > /dev/null
     [ $? -eq 0 ] || { 1>&2 echo "Error applying the configuration"; exit 1; }
   fi
+
+  # Remove temporary files
+  (cd /tmp; /bin/rm -f haut.tgz bas.tgz haut.tgz.bfe bas.tgz.bfe)
 fi
 
