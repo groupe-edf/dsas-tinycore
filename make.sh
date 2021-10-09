@@ -304,6 +304,7 @@ case $1 in
     shift
   done
 
+  mkdir -p $work
   get_unpack_livecd
 
   [ -d $extract ] || mkdir -p $extract
@@ -317,6 +318,7 @@ case $1 in
   extract=$image
 
   # Get the ISO
+  mkdir -p $work
   get_unpack_livecd
 
   # Unpack squashfs
