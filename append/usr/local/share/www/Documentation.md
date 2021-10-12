@@ -28,16 +28,17 @@ zones de sécurité dans un contexte de défense en profondeur.
 
 ## La principe de vérification des signatures
 
-Le moyen principal de vérification des ichiers transmis par le DSAS est la vérification
+Le moyen principal de vérification des fichiers transmis par le DSAS est la vérification
 des signatures. Chaque fichier permis de passer par le DSAS pourrait être verifier par
 une signature cryptographique. 
 
 Le DSAS n'est pas le premier a proposer ce moyen de vérification dans un sas de transfert
 de fichier et [nous avons déja un produit](https://www.seclab-security.com/seclab-securing-systems/)
-déployé a EDF. Le probleme est que ces moyen requiert quand l'intervention de quelqu'un à EDF 
+déployé a EDF. Le probleme est que ces moyens requiert l'intervention de quelqu'un à EDF 
 afin de signer chaque fichier reçu avant leurs transmission. Un produit comme Symantec 
 End Point Manager produit approximativement 4000 fichiers par jours à transmettre. Donc c'est 
-illusoire à penser que quelqu'un va controller chacun de ses fichier avant de les transmettre.
+illusoire à penser que quelqu'un va controller chacun de ses fichier avant de signer et les 
+transmettre.
 
 Le DSAS prendre un autre approche, en donnant confiance aux signature des fichier fournient par
 certains editeur de logiciel, et permettant le transfert de ces fichiers. En revanche il est 
@@ -55,12 +56,13 @@ est se passe avant l'inclusion des certificates dans la DSAS. Pour les certifica
 norme X509 la chaine de confiance est inclut dans chaque fichier signés. Par exemple la certificate
 utilisé pour la signature d'une fichier est lui-même signé par une certificate intermediaire, et
 cette certificate intermediaire est signé par l'autorité de certification. Le DSAS permet de définir
-des taches de verification limitant des fichiers permis à paasser à une chaine de confiance complete
+des taches de verification limitant des fichiers permis à passer à une chaine de confiance complete
 et pas seulement verifier vis-à-vis des autorités de certification. Malheureusement, [les malveillantes
 peut acheter des certificates de signature aussi](https://duo.com/decipher/attackers-are-signing-malware-with-valid-certificates).
-Si correctement configuré ceci permets de strictement limiter les transfert par le DSAS a pas
-seulement un seul editeur de logiciel, mais souvent un sous-division du editeur de logiciel, minimisant
-les risques.
+est une vérification seulement avec un autorité de certification n'est pas un garantis stricte 
+d'absence de malveillance. Le DSAS, si correctement configuré permets de strictement limiter les 
+transfert à seulement un seul editeur de logiciel, ou même un sous-division du editeur de logiciel, 
+minimisant les risques.
 
 ## Architecture
 
@@ -888,10 +890,28 @@ recommander de regarder les détails de la certificate importée, comme par exem
 
 ## Configuration des taches
 
-Une nouvelle tache pourrait être ajouter en cliquant sur le [](images/DSAS23.png) 
+Une nouvelle tache pourrait être ajouter en cliquant sur le ![](images/DSAS23.png) 
 a droit de la page des taches. 
 
+![Menu d'ajout des taches](images/DSAS26.png)
 
+En cliquant dessus nous sommes présenté avec un formulaire d'jout de tache comme
+
+![Formulaire d'ajout d'un tache](images/DSAS27.png)
+
+- `Nom du tache` : Un nom donné au tache, qui n'est pas forcement unique
+- `Sous-dossier utilisé par le tache` - Les fichiers associé avec chaque tache 
+sont stocké dans un dossier à part sur le DSAS. Ce dossier devrait être unique 
+pour chaque tache.
+- `URI (pas de chargement si vide)` - L'adresse ou le DSAS va chercher les fichiers
+associés avec un tache. De laisser vide est permissible et dans ce cas il est assumé 
+que les fichiers associés avec le taches doit-être déposé sur la DSAS par l'utilisateur.
+le `URI` doit-être de la forme `protocole://site/dossier/` .....
++ `sftp:` -
++ `ftp:` -
++ `http:` -
++ `https:` -
++ `scp:` -
 
 
 
