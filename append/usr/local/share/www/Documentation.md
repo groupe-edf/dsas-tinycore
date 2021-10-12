@@ -922,9 +922,21 @@ permettant d'accelerer les vérifications.
 Symantec LiveUpdate.
   * `openssl` - Tache permettant la transfert des ficheirs signé par openssl
   * `gpg` - Tache peremttant la transfert des fichiers signé par gpg.
-- `Periodicité du tache` -
-- `Ajouter un certificate` -
+- `Periodicité du tache` - A quel rymthe est-ce que la tache est executé
+  * `jamais` - Le jamais n'est jamais éxecuté automatique, mais peut-ête executé manuellement
+  * `par heure` - Le tache est éxecuté un fois par heure
+  * `par jour` - Le tache est éxecuté un fois par jour
+  * `par semaine` - Le tache est éxecuté un fois par semaine
+  * `par mois` - Le tache est éxecuté un fois par mois
+- `Ajouter un certificate` - Les certificates par défaut et les certificates ajouté
+par l'utilisateur sont disponible pour l'ajout à la verification par le tache. Le type
+de certificate doit être adapté à la type de tache. Chaque certificate selectionné est
+ajouté à la liste des certificates pour le tache, et pourrait être supprimé en 
+cliquant sur le "X" à côté du certificate.
 
+Un exemple de tache après ajout est 
+
+![Exemple de tache ajouté](images/???)
 
 
 
@@ -941,7 +953,12 @@ FIXME : Fournir une image de build tinycore preconfiguré
 
 ## Mise à jour binaire
 
+FIXME : Detailler la processus de remplacement de ISO pour les VM
+
 ## Mise à jour source
+
+FIXME : Detailler la processus de build de DSAS et l'ajout de package de build à
+partir d'un source
 
 # Architecture détaillé
 
@@ -966,8 +983,6 @@ de garantir le niveau de sécurité du DSAS.
 | haut            | reseau ouverte  | 60000-65535 | tcp     | ftp      |    -      | tache en ftp - data trigger  |
 | haut            | reseau ouverte  | 80          | tcp/udp | http     |    -      | tache en http                |
 | haut            | reseau ouverte  | 443         | tcp/udp | https    |    -      | tache en https               |
-
-
 
 ## Les comptes utilisateurs sur la DSAS
 
@@ -1305,6 +1320,8 @@ Les signatures sont toujours stockés dans des fichiers séparé, et le DSAS ass
 sont dans un fichier avec un extension .sig. Les deux fichiers doit être fournient au DSAS.
 
 ## Service OpenSSH
+
+FIXME: Discuter la configuration de SSH entre les machines 
 
 ## Service web
 
