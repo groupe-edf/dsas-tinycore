@@ -906,12 +906,24 @@ pour chaque tache.
 - `URI (pas de chargement si vide)` - L'adresse ou le DSAS va chercher les fichiers
 associés avec un tache. De laisser vide est permissible et dans ce cas il est assumé 
 que les fichiers associés avec le taches doit-être déposé sur la DSAS par l'utilisateur.
-le `URI` doit-être de la forme `protocole://site/dossier/` .....
-+ `sftp:` -
-+ `ftp:` -
-+ `http:` -
-+ `https:` -
-+ `scp:` -
+le `URI` doit-être de la forme `protocole://site/dossier/` ou bien 
+`protocole://sit/dossier/fichier`. Les protocole permis sont `sftp:`, `ftp:`, `http:`,
+`https:` et `scp:`. Par exemple `ftp://noeysep3.noe.edf.fr/LiveUpdate/`. Le `/` à la
+fin des `URI` avec un dossier est optionnelle mais recommandé.
+- `Type de tache` - Le type de tache a utilisé. Les types de tache permis sont
+  * `rpm` - Le tache est repositoire en format rpm. l'ensemble des fichiers sont 
+vérifier avec `rpm -K`. Seul les fichiers dit "primary" de la repositoire sont 
+téléchargé
+  * `repomd` - Comme le type `rpm`, mais le les fichier `repomd.xml` est signé
+permettant d'accelerer les vérifications. 
+  * `deb` - Non implementé actuellement
+  * `authenticode` - Les fichiers sont signés avec des signature de type `Microsoft`.
+  * `liveupdate` - Les fichiers correspondant aux fichiers de mise à joir de 
+Symantec LiveUpdate.
+  * `openssl` - Tache permettant la transfert des ficheirs signé par openssl
+  * `gpg` - Tache peremttant la transfert des fichiers signé par gpg.
+- `Periodicité du tache` -
+- `Ajouter un certificate` -
 
 
 
