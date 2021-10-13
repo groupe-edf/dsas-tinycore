@@ -932,14 +932,21 @@ Symantec LiveUpdate.
 par l'utilisateur sont disponible pour l'ajout à la verification par le tache. Le type
 de certificate doit être adapté à la type de tache. Chaque certificate selectionné est
 ajouté à la liste des certificates pour le tache, et pourrait être supprimé en 
-cliquant sur le "X" à côté du certificate.
+cliquant sur le [](images/DSAS35.png) à côté du certificate.
 
 Un exemple de tache après ajout est 
 
-![Exemple de tache ajouté](images/???)
+![Exemple de tache ajouté](images/DSAS31.png)
+
+A côté de chaque tache, l'icone [](images/DSAS33.png) permets de modifier le tache, 
+[](images/DSAS35.png) permet de supprimer le tache, et [](images/DSAS34.png) permets 
+à l'éxecuter immediatement. Le statut de la tache et fornit via la coleur de la titre 
+du tache. En bleu, le tache n'a pas été éxecuté, en vert l'éxecution du tache a réussi,
+et en rouge l'éxecution a échoué. Le dernier éxecution du tache est visible en ouvrant 
+le tache comme
 
 
-
+![Exemple d'éxecution de tache réussi](images/DSAS32.png)
 
 # Mantient en condition de sécurité
 
