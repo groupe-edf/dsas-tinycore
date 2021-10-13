@@ -877,7 +877,7 @@ nottamment le certicate de [Debian Bullseye](https://ftp-master.debian.org/keys/
 ### Importation d'un certicate dans le DSAS
 
 Des certificates X509 et GPG pourraient être ajoutés au DSAS en cliquant sur le
-[](images/DSAS23.png) a droit de chaque categorie de certificate. Un navigateur 
+![](images/DSAS23.png) a droit de chaque categorie de certificate. Un navigateur 
 du poste de travail est ouvert afin de selectionner le fichier à télécharger sur
 le DSAS. Et un importation réussi est signalé par
 
@@ -938,8 +938,8 @@ Un exemple de tache après ajout est
 
 ![Exemple de tache ajouté](images/DSAS31.png)
 
-A côté de chaque tache, l'icone [](images/DSAS33.png) permets de modifier le tache, 
-[](images/DSAS35.png) permet de supprimer le tache, et [](images/DSAS34.png) permets 
+A côté de chaque tache, l'icone ![](images/DSAS33.png) permets de modifier le tache, 
+![](images/DSAS35.png) permet de supprimer le tache, et ![](images/DSAS34.png) permets 
 à l'éxecuter immediatement. Le statut de la tache et fornit via la coleur de la titre 
 du tache. En bleu, le tache n'a pas été éxecuté, en vert l'éxecution du tache a réussi,
 et en rouge l'éxecution a échoué. Le dernier éxecution du tache est visible en ouvrant 
