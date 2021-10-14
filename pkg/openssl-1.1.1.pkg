@@ -1,0 +1,19 @@
+_pkg=openssl-1.1.1
+_version=1.1.1l
+_uri=https://www.openssl.org/source/openssl-1.1.1l.tar.gz
+_dep=""
+_build_dep="compiletc perl5"
+_pkg_path=openssl-1.1.1l
+_conf_cmd="echo ./config --openssldir=/usr/local/etc/ssl"
+_make_cmd="echo make"
+_install_cmd="echo make install DESTDIR="
+_pkgs="main{/usr/local/bin,/usr/local/etc,/usr/local/lib/*.so*,/usr/local/lib/engines-1.1};dev{/usr/local/include,/usr/local/lib/*.a,/usr/local/lib/pkgconfig};doc{/usr/local/share}"
+_post_install=\
+'#! /bin/sh
+[  -d /usr/local/etc/ssl/certs ] || mkdir -p /usr/local/etc/ssl/certs
+[  -d /usr/local/etc/ssl/private ] || mkdir -p /usr/local/etc/ssl/private
+[  -d /usr/local/etc/ssl/crl ] || mkdir -p /usr/local/etc/ssl/crl
+[  -d /usr/local/etc/ssl/newcerts ] || mkdir -p /usr/local/etc/ssl/newcerts
+[  -f /usr/local/etc/ssl/index.txt ] || touch /usr/local/etc/ssl/index.txt
+[  -f /usr/local/etc/ssl/serial ] || echo "01" > /usr/local/etc/ssl/serial
+[  -f /usr/local/etc/ssl/crlnumber ] || echo "01" > /usr/local/etc/ssl/crlnumber'
