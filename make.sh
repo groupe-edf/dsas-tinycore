@@ -81,7 +81,7 @@ get_tcz() {
     dep=$target.dep
     if test ! -f $target; then
       if test -f $pkg_dir/$package.pkg; then
-        (build_pkg $package)
+        (_old=$extract; extract=$build; build_pkg $package; extract=$_old)
       elif test -f $tce_dir/$package.tcz; then
         msg fetching package $package ...
         cp $tce_dir/$package.tcz $target
@@ -193,10 +193,10 @@ build_pkg() {
           [ $? -eq 0 ] || exit -1
         done
         msg "Creating build image"
-        #if [ -d $extract ]; then
-        #  rm -fr $extract
-        #fi
-        cmd mkdir -p $extract
+        if [ -d $extract ]; then
+          rm -fr $extract
+        fi
+        mkdir -p $extract
         zcat $squashfs | { cd $extract; cpio -i -H newc -d; }
         for dep in $_build_dep; do
           install_tcz $dep
@@ -205,7 +205,7 @@ build_pkg() {
         mkdir -p $src_dir
         download $_uri $src_dir
         $as_user mkdir -p $extract/$builddir
-        mkdir -p $extract/$destdir
+        $as_user mkdir -p $extract/$destdir
         unpack $src_dir/$_src $extract/$builddir
         chown -R $SUDO_USER $extract/$builddir
         msg "Configuring $_pkg"
@@ -218,14 +218,22 @@ exit \$?
 EOF
         chmod a+x $extract/tmp/script
         [ -z "$_conf_cmd" ] || chroot --userspec=$SUDO_USER $extract /tmp/script $_conf_cmd 
-        [ $? -eq 0 ] ||  exit -1
+        [ $? -eq 0 ] ||  exit 1
         msg "Building $_pkg"
         [ -z "$_make_cmd" ] || chroot --userspec=$SUDO_USER $extract /tmp/script $_make_cmd 
-        [ $? -eq 0 ] || exit -1
+        [ $? -eq 0 ] || exit 1
         msg "Installing $_pkg"
-        echo $_install_cmd$destdir
         [  -z "$_install_cmd" ] || chroot $extract /tmp/script "$_install_cmd$destdir" 
-        [ $? -eq 0 ] || exit -1
+        [ $? -eq 0 ] || exit 1
+        cat << EOF > $extract/tmp/script
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+cd $destdir
+echo \$*
+\$*
+exit \$?
+EOF
+        [ -z "$post_build" ] || chroot $extract /tmp/script $_post_build
+        [ $? -eq 0 ] || exit 1
         # Create post-install script if needed
         if [ -n "$_post_install" ]; then 
           msg "Creating post install script"
@@ -236,6 +244,7 @@ EOF
         # Create the pkgname and shell escaped list of directories/files and then make TCZ 
         OIFS=$IFS
         IFS=";"
+        [ -z "$_pkg" ] && _pkg="main{.}"
         for arg in $_pkgs; do
           pkg=$(echo "$arg" | sed -e "s/{.*$//" | awk '{$1=$1};1')
           IFS=","
@@ -255,6 +264,7 @@ EOF
           msg "Creating $tcz"
           [ -f $tcz_dir/$tcz ] && rm $tcz_dir/$tcz
           tempdir=$(mktemp -d)
+          chmod 755 $tempdir
           (cd $extract$destdir; tar -cf - $dirs | tar -C $tempdir -x -f -) 
           mksquashfs $tempdir $tcz_dir/$tcz
           rm -fr $tempdir
@@ -271,12 +281,15 @@ EOF
         done
         IFS=$OIFS
         msg "Removing build image"
-        #if [ -d $extract ]; then 
-        #  rm -fr $extract
-        #fi
+        if [ -d $extract ]; then 
+          rm -fr $extract
+        fi
       else
         # Can't rebuild package try getting the tcz
+        _old="$extract"
+        extract="$build"
         get_tcz $pkg
+        extract="$_old"
       fi
     fi
   done
