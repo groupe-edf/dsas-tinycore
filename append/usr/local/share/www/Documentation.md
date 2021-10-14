@@ -430,8 +430,8 @@ archivé ensemble. Si vous ne rentrée pas de mot de passe de sauvegarde, les fi
 sans l'étape de chiffrement.
 
 Il est fortement conseillé de chiffrer ces archives, parce qu'il contient la configuration completement
-du DSAS, y compris les haches des mots de passe, les certificates SSL et les éléemnts secrets SSH.
-Le mot de passe n'a pas besoin être le même mot de passe que le DSAS. 
+du DSAS, les certificates SSL et les éléments secrets SSH. Le mot de passe n'a pas besoin être le même 
+mot de passe que le DSAS. Les mots de passes des utilisateurs ne seraient pas réstauré.
 
 En cas de restauration le même mot de passe sera demander, et donc garder le preciousement. En cas
 de restauration la configuration sera appliqué immediatement. Ceci pourrait empecher l'accès au DSAS, 
@@ -953,9 +953,104 @@ FIXME : Ajouter la liste des logiciels exposé et leurs vesrsion ici
 
 FIXME : Discuter procedure de remplacement de l'iso 
 
-## Processus de pull et build github
+## Processus de build du DSAS
 
-FIXME : Fournir une image de build tinycore preconfiguré
+### Préparation d'une souche de build
+
+Vous auriez besoin une machine de build. Le plus simple est d'utiliser le même souche
+de build que utilisé par le DSAS lui-même. Par exemple la souche 
+[CorePlus v12.x](http://tinycorelinux.net/12.x/x86/release/CorePlus-current.iso)
+est utilisé actuellement pour la build du DSAS. Tant que vous avez mise en place
+cette machine, vous auriez besoin un certain nombre d'outils afin de faire le build.
+
+A ce point si vous êtes derrière un proxy pour l'accès à l'internet, il faut configuré
+l'accès les variable d'environment `http_proxy` et `https_proxy` comme 
+
+```shell
+export http_proxy=http://vip-users.proxy.edf.fr:3131
+export https_proxy=http://vip-users.proxy.edf.fr:3131
+```
+
+Ca sera utile à ajouter ces deux lignes au fichier `~/.profile`  afin qu'il soit
+configuré a chaque fois. Apres, la commande
+
+```shell
+tce-load -wi compiletc rsync coreutils mkisofs-tools squashfs-tools git curl ncursesw-dev
+```
+va installer l'ensemble des outils nécessaire pour la build 
+
+### Préparation d'un abre de source DSAS
+
+Pour cet étape il faut temporairement désativé le proxy http en faissant
+
+```shell
+unset http_proxy
+unset https_proxy
+```
+
+Le gitlab d'EDF est utilisé afin d'herberger la code source du DSAS. Le certificate
+SSL utilisé pour cette site est signé par l'autorité de certificate d'EDF, qui n'est 
+pas installé par défaut dans la souche de build. Il pourrait être récuperer et installé
+pour nos besoins avec les commandes
+
+```shell
+mkdir ~/.git-certs
+wget -P ~/.git-certs http://crl-edf.edf.fr/ac/autorite_racine_groupe_edf.cer
+cat >> ~/.gitconfig << EOF
+[http "https://gitlab.devops-unitep.edf.fr"]
+  sslCAInfo = ~/.git-certs/autorite_racine_groupe_edf.cer
+EOF
+```
+
+Mainenant nous sommes pret à récuperer l'arbre de code source du DSAS avec la commande
+
+```shell
+git clone https://gitlab.devops-unitep.edf.fr/dsao-cyber/dsas---tinycore.git
+```
+
+Finalement, nous pourrions configurer les prochains action action cet arbre d'ignorer
+le proxy http avec les commandes
+
+```shell
+cd dsas---tinycore
+git config --add remote.origin.proxy ""
+```
+
+Nous pourrions maintenant réetablir les valeurs des variables d'environnement du proxy.
+
+### Commande de build du DSAS
+
+Après le build est fait avec le commande
+
+```
+./make.sh
+```
+
+Un image ISO est créé dans le fichier `work/dsas.iso`. Nous pourrait garder les fichiers 
+temporaires du build avec option "-keep". Ceci est utile afin de voir pourquoi quelque
+chose est malinstallé sur le DSAS, afin être obliger à demarrer un serveur avec le DSAS.
+
+Afin de faire la build d'un package à partir du code source (voir les fichiers `pkg/*.pkg`)
+une commande comme
+
+```
+./make.sh -build gnupg
+```
+
+est utilisé. Afin de néttoyer les fichiers utilisé pendant le build vous pouvez faire
+
+```
+./make.sh -clean
+```
+
+Les ISOs du DSAS sont gardés, mais l'ensemble des fichiers intermediaire 
+sont détruit. Afin de completement nettoyer le build utiliser le commande
+
+```
+./make.sh -realclean
+```
+
+est utilisé. 
 
 ## Mise à jour binaire
 
