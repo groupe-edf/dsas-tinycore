@@ -949,9 +949,16 @@ le tache comme
 
 # Mantient en condition de sécurité
 
+FIXME : Discuter la process du MCS
+
 FIXME : Ajouter la liste des logiciels exposé et leurs vesrsion ici
 
-FIXME : Discuter procedure de remplacement de l'iso 
+| logicel     | version  |  source  | risque           | commentaire                     |
+|-------------|----------|----------|------------------|---------------------------------|
+| openssl     | 1.1.1l   | source   | critique         | utilisé entre les machines      |
+| openssh     | 8.8p1    | source   | critique         | utilisé entre les machines      |
+| busybox     | ????     | binaire  | moderé           | besoin d'etre authentiqué       |
+
 
 ## Processus de build du DSAS
 
@@ -1077,22 +1084,65 @@ binaire n'est pas disponible, nous avons la possibilité de créer une package
 pour le DSAS à partir du code source. Nous avons déjà plusieurs packages fait 
 à partir du code source 
 
+- `_pkg` [Requis] -  Le nom du package, ça doit être identique un nom du fichier  
+moins l'extension `.pkg`
+- `_version` [Optionnel] - Le numèro de version du logiciel
+-`_uri` [Requis] - L'adresse auquel de chercher la source package du logiciel
+- `_deps` [Optionnel] - Les dependances nécessaire pour le logiciel tant qu'il 
+est installé
+- `_build_dep` [Optionnel] - Les dependances nécessaire pendant la phase de build 
+du logiciel
+- `_pkg_path` [Optionnel] - Les packages source recuperé depuis `_uri` devrait 
+être dans cette sous dossier. Si vide ou absent on assume que la build est à partir
+du racine du package source. 
+- `_conf_cmd` [Optionnel] - La commande nécessaire pour la configure du logiciel, 
+typiquement `./configure`. La commande pourrait inclure des options si nécessaire 
+pour la build comme `./configure --prefix=/usr/local`.
+- `_make_cmd` [Optionnel] - La commande nécessaire afin de faire la build du logiciel,
+typiquement `make`
+- `_install_cmd` [Optionnel] - La commande nécessaire pour l'installation du logiciel. 
+Il sera  installé dans un dossier temporaire. Il est assumé que la commande 
+`_install_cmd` accepte le nom du dossier temporaire en dernier argument. L'exemple 
+typique de la commande `_install_cmd` est `make install DESTDIR=`
+- `_pkgs` [Optionnel] - Le logiciel pourrait être splitté en plusieurs sous packages.
+Cette variable permettre à definir la maniere quel soit découpé. Un exemple pourrait
+être `main{/usr/local/bin,/usr/local/lib};doc{/usr/local/share/doc}`. Le package 
+principal est définit par `main{...}` et une deuxième package avec l'extension 
+`-doc` sera créé avec les fichiers dans `/usr/local/doc`
+- `_post_install` [Optionnel] - Permets de définir une script qui sera éxécuté 
+pour l'installation du package.
+
+Une exemple complete d'un fichier `pkg/openssl-1.1.1.pkg` est
+
 ```
-_rpm
-_version
-_uri
-_deps
-_build_dep
-_pkg_path
-_conf_cmd
-_make_cmd
-_install_cmd
-_pkgs
+_pkg=openssl-1.1.1
+_version=1.1.1l
+_uri=https://www.openssl.org/source/openssl-1.1.1l.tar.gz
+_dep=""
+_build_dep="compiletc perl5"
+_pkg_path=openssl-1.1.1l
+_conf_cmd="./config --openssldir=/usr/local/etc/ssl"
+_make_cmd="make"
+_install_cmd="make install DESTDIR="
+_pkgs="main{/usr/local/bin,/usr/local/etc,/usr/local/lib/*.so*,/usr/local/lib/engines-1.1};dev{/usr/local/include,/usr/local/lib/*.a,/usr/local/lib/pkgconfig};doc{/usr/local/share}"
+_post_install=\
+'#! /bin/sh
+[  -d /usr/local/etc/ssl/certs ] || mkdir -p /usr/local/etc/ssl/certs
+[  -d /usr/local/etc/ssl/private ] || mkdir -p /usr/local/etc/ssl/private
+[  -d /usr/local/etc/ssl/crl ] || mkdir -p /usr/local/etc/ssl/crl
+[  -d /usr/local/etc/ssl/newcerts ] || mkdir -p /usr/local/etc/ssl/newcerts
+[  -f /usr/local/etc/ssl/index.txt ] || touch /usr/local/etc/ssl/index.txt
+[  -f /usr/local/etc/ssl/serial ] || echo "01" > /usr/local/etc/ssl/serial
+[  -f /usr/local/etc/ssl/crlnumber ] || echo "01" > /usr/local/etc/ssl/crlnumber'
 ```
 
+Avec cette package définit, il pourrait être créer avec la commande
 
-FIXME : Detailler la processus de build de DSAS et l'ajout de package de build à
-partir d'un source
+```shell
+./make.sh -build openssl-1.1.1
+```
+
+Un build du DSAS prendra en compte ce nouveau package pendant sa build.
 
 # Architecture détaillé
 
@@ -1120,24 +1170,35 @@ de garantir le niveau de sécurité du DSAS.
 
 ## Les comptes utilisateurs sur la DSAS
 
+FIXME : Ajoute du texte
+
 ### Les droit d'ecriture de chaque utilisateur
+
+FIXME : Ajoute du texte
 
 ### Les droit de connexion de chaque utilisateur
 
+FIXME : Ajoute du texte
+
 ## Cloissonnement disque 
 
-FIXME : Discuter sur le disque mounter en "noexec"
+Les fichiers téléchargés et vérifiés par le DSAS sont tous stocké sur une disque.
+Ce disque est mounté avec le flag "noexec" et aucun fichiers téléchargé par le
+DSAS sur cette disque pourrait être utilisé afin de compromettre l'integrité du
+DSAS.  Les utilisateurs "haut" et "bas" sont restrient à copier les fichiers seulement 
+sur cette disque. L'ensemble des fichiers executable du DSAS sont sur un "ramdisk" 
+en memoire de la machine et copié depuis l'image ISO à chaque rédemarrage.
 
 Un hardlink sous linux est exactement le même fichier dupliqué à un autre endroit. 
 L'usage des hardlink entre les fichier du gichet haut du sas et le guichet bas 
-pourrait permettre un simplication des l'architecture, car aucun moyen de tracer les
-ficheirs téléchargé sera necessaire et ça sans augmentation de l'espace disque.
+pourrait permettre un simplication de l'architecture, car aucun moyen de tracer les
+fichiers téléchargés sera necessaire et ça sans augmentation de l'espace disque.
 
-En revanche les hardlink doit réspecter les exigences d'acces entre les guichet haut
+En revanche les hardlink doit réspecter les exigences d'acces entre les guichets haut
 et bas. Quand un fichier existe dans les deux zones, il faut que
 
 - L'utilisateur haut ne peut pas modifier le fichier visible dans le guichet bas
-- L'utilisateur haut ne peut pas supprimer l'existance de la fichier dans le 
+- L'utilisateur haut ne peut pas supprimer l'existence de la fichier dans le 
   guichet bas
 - Que l'utilisateur haut pourrait supprimer l'existence de la fichier dans le 
   guichet haut
@@ -1151,7 +1212,7 @@ Avec les permissions suivante
 | drwxrwx--- |  bas   | bas   |  dsas/bas
 | -rw-r----- |  verif | share |  disas/bas/fichier
 
-et un fichier /etc/group centenant 
+et un fichier /etc/group contenant 
 
 ```
 verif:x:2000:
@@ -1160,8 +1221,8 @@ haut:x:2002:verif
 share:x:2003:verif,bas,haut
 ```
 
-les exigences voulu sont respecté. Les script de verification DSAS ont été adapté
-afin d'assurer ces conditions
+les exigences voulu sont respectés. Les scripts de verification du DSAS ont été 
+adapté afin d'assurer ces conditions
 
 ## Moyens de Verification 
 
