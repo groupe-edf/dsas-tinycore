@@ -819,7 +819,7 @@ sauvegarder le certificate en format X.509 encodé en base 64 comme
 
 Un fichier avec le certificate sera sauvegarder sur votre poste de travail.
 
-#### Cas special des certificate Symantec LiveUpdate
+#### Cas special des certificates Symantec LiveUpdate
 
 Les fichiers LiveUpdate de Symantec ne sont pas signées directement, sont sont 
 plutot des archive en format `7z` avec tous les metadonnées signés nécessaire à 
@@ -1054,9 +1054,42 @@ est utilisé.
 
 ## Mise à jour binaire
 
-FIXME : Detailler la processus de remplacement de ISO pour les VM
+Pour un mise à jour binaire du DSAS, il faut aussi mettre à jour la machine de la 
+build, et rebuild le DSAS de zéro avec les commandes
+
+```
+sudo tce-update
+cd dsas-tinycore
+./make.sh -realclean
+./make.sh
+``` 
+
+dans le fichier `work/dsao.iso` un nouveau ISO du DSAS sera disponible. Après la
+mise à jour d'un VM est la simple remplacement du ISO existant avec le nouveau ISO
+comme
+
+![Replacement du ISO pour un mise à jour sur VirtualBox](images/vbox3.png)
 
 ## Mise à jour source
+
+Si une vulnérabilité est identifié sur une package du DSAS est un mise à jour
+binaire n'est pas disponible, nous avons la possibilité de créer une package
+pour le DSAS à partir du code source. Nous avons déjà plusieurs packages fait 
+à partir du code source 
+
+```
+_rpm
+_version
+_uri
+_deps
+_build_dep
+_pkg_path
+_conf_cmd
+_make_cmd
+_install_cmd
+_pkgs
+```
+
 
 FIXME : Detailler la processus de build de DSAS et l'ajout de package de build à
 partir d'un source
