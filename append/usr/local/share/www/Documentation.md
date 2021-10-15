@@ -951,13 +951,61 @@ le tache comme
 
 FIXME : Discuter la process du MCS
 
-FIXME : Ajouter la liste des logiciels exposé et leurs vesrsion ici
+## Analyse des risques principales du DSAS
 
-| logicel     | version  |  source  | risque           | commentaire                     |
-|-------------|----------|----------|------------------|---------------------------------|
-| openssl     | 1.1.1l   | source   | critique         | utilisé entre les machines      |
-| openssh     | 8.8p1    | source   | critique         | utilisé entre les machines      |
-| busybox     | ????     | binaire  | moderé           | besoin d'etre authentiqué       |
+Cette section discute des risques principal sur le DSAS.
+
+### Risque: Compromission de la lien entre les deux machines du DSAS
+
+| Risque      | Compromission da la lien entre les deux machines du DSAS  |
+| Criticitité | Critique                                                  |
+| Commentaire | La rupture su la lien entre les deux machines du DSAS est |
+|             | la protection principale du DSAS. En cas de compromission |
+|             | L'attaquant pourrait prendre la main sur la machine bas   |
+|             | depuis la machine haut. Ceci pourrait mmettre en cause la |
+|             | cloissonnement entre les zones de sensiblité              |
+
+Logiciels impactés par cette risque
+
+| logicel     | version  |  commentaire                                                                      | 
+|-------------|----------|------------------------------------------------------------------------------|
+| openssl     | [1.1.1l](https://www.openssl.org/source/openssl-1.1.1l.tar.gz) | Que la fonctionalité utilisé par ssh impacté |
+| openssh     | [8.8p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-8.8p1.tar.gz] | ssh et sftp utilisé |
+
+### Risque: Attaque sur la verification des signatures 
+
+| Risque      | Attaque sur la vérification des signatures                |
+| Criticitité | Majeur                                                    |
+| Commentaire |  |
+|             |  |
+|             |    |
+|             |    |
+
+Logiciels impactés par cette risque
+
+| logicel     | version  |  commentaire                                                                      | 
+|-------------|----------|------------------------------------------------------------------------------|
+| openssl     | [1.1.1l](https://www.openssl.org/source/openssl-1.1.1l.tar.gz) | Utilisé pour la verification authenticode, LiveUpdate et OpenSSL |
+| gnupg       |   |  |
+
+
+### Risque: Attaque sur le moyen de télécharement des fichiers 
+
+| Risque      | Attaque sur le moyen de téléchargement des fichiers       |
+| Criticitité | Majeur                                                    |
+| Commentaire |  |
+|             |  |
+|             |    |
+|             |    |
+
+### Risque: Attaque contre l'authentification adminsitrateur du DSAS
+
+| Risque      | Attaque contre l'authentification adminsitrateur du DSAS  |
+| Criticitité | Important                                                 |
+| Commentaire |  |
+|             |  |
+|             |    |
+|             |    |
 
 
 ## Processus de build du DSAS
