@@ -16,7 +16,21 @@ else
   exit 1
 fi
 
-FILES="usr/local/etc/ssh var/dsas home/tc home/bas home/haut home/verif opt"
+# Only these specific files are saved. Anything else is forbidden 
+FILES="usr/local/etc/ssh/ssh_host_dsa_key
+usr/local/etc/ssh/ssh_host_dsa_key.pub
+usr/local/etc/ssh/ssh_host_ecdsa_key
+usr/local/etc/ssh/ssh_host_ecdsa_key.pub
+usr/local/etc/ssh/ssh_host_ed25519_key
+usr/local/etc/ssh/ssh_host_ed25519_key.pub
+usr/local/etc/ssh/ssh_host_rsa_key
+usr/local/etc/ssh/ssh_host_rsa_key.pub     
+var/dsas/dsas.csr     
+var/dsas/dsas.pem
+var/dsas/dsas_conf.xml
+var/dsas/dsas_priv.pem
+var/dsas/dsas_pub.pem
+var/dsas/dsas_typ"
 
 RESTORE=0
 APPLY=0
@@ -92,11 +106,11 @@ else
     [ $? -eq 0 ] || { 1>&2 echo "The backup is corrupted"; exit 1; }
   fi
 
-  # Control the contents of the tar files and only allow files in the given directories
+  # Control the contents of the tar files and only allow files in the list $FILES
   for bkp in /tmp/bas.tgz /tmp/haut.tgz; do
     for file in $(tar tzf $bkp); do
       for p in $FILES; do
-        [[ "$file" =~ "^$p" ]] && continue 2
+        [ "$file" == "$p" ] && continue 2
       done
       { 1>&2 echo "The backup contains illegal files"; exit 1; }
     done
