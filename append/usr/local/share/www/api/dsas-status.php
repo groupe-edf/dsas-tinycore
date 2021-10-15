@@ -1,7 +1,7 @@
 <?php
 require_once "common.php";
 
-if (! dsas_loggedin())
+if (! dsas_loggedin(false))
   die(header("HTTP/1.0 403 Forbidden"));
 else {
   $free = shell_exec('free -b');
