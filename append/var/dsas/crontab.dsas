@@ -1,6 +1,6 @@
 # Every hour check if there are tasks to run
-00  */1 *   *   *   /usr/local/sbin/runtask 2>&1 1> /dev/null
+00  */1 *   *   *   sudo tc usr/local/sbin/runtask 1> /dev/null 2>&1
 # Once a week rotate the logs
-00  01  *   *   0   /usr/local/sbin/rotatelogs 2>&1 1> /dev/null
+00  01  *   *   0   /usr/local/sbin/rotatelogs 1> /dev/null 2>&1
 # Set date on machine haut once an hour. Can't use ntp
-00  */1 *   *   *   su tc ssh tc@192.168.192.2 sudo date -c @$(date -u +"%s")
+00  */1 *   *   *   sudo tc ssh tc@192.168.192.2 sudo date -c @$(date -u +"%s")
