@@ -14,7 +14,7 @@ mkdir -p init.d
 cat << EOF > init.d/openssh 
 #!/bin/sh
 # openssh sshd start script
-[ $(id -u) = 0 ] || { echo "must be root" ; exit 1; }
+[ \$(id -u) = 0 ] || { echo "must be root" ; exit 1; }
 
 start(){
    [ -f /usr/local/etc/ssh/sshd_config ] || { echo "config file /usr/local/etc/ssh/sshd_config not found"; exit 1; }
@@ -26,7 +26,7 @@ start(){
 }
 
 stop(){
-   kill $(pidof sshd)
+   kill \$(pidof sshd)
 }
 
 restart(){
@@ -54,13 +54,13 @@ status(){
   fi
 }
 
-case $1 in
+case \$1 in
    start) start;;
    stop) stop;;
    restart) restart;;
    keygen) keygen;;
    status) status;;
-   *) echo "Usage $0 {start|stop|restart|keygen|status}"; exit 1
+   *) echo "Usage \$0 {start|stop|restart|keygen|status}"; exit 1
 esac
 EOF
 chmod a+x init.d/openssh'
@@ -69,4 +69,5 @@ _post_install=\
 "#! /bin/sh
 if [ ! -d /var/lib/sshd ]; then
   mkdir -p /var/lib/sshd
-fi"
+fi
+adduser -s /bin/false -D -H -u 100 sshd"
