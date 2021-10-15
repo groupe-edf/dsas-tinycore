@@ -216,8 +216,7 @@ $_conf_cmd
 exit \$?
 EOF
         chmod a+x $extract/tmp/script
-        [ -z "$_conf_cmd" ] || chroot --userspec=$SUDO_USER $extract /tmp/script
-        [ $? -eq 0 ] ||  exit 1
+        [ -z "$_conf_cmd" ] || chroot --userspec=$SUDO_USER $extract /tmp/script || { error "Unexpected error ($?) in configuration"; exit 1; }
         msg "Building $_pkg"
         cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
@@ -226,8 +225,7 @@ $_make_cmd
 exit \$?
 EOF
         chmod a+x $extract/tmp/script
-        [ -z "$_make_cmd" ] || chroot --userspec=$SUDO_USER $extract /tmp/script $_make_cmd 
-        [ $? -eq 0 ] || exit 1
+        [ -z "$_make_cmd" ] || chroot --userspec=$SUDO_USER $extract /tmp/script $_make_cmd || { error "Unexpected error ($?) in build"; exit 1; }
         msg "Installing $_pkg"
         cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
@@ -236,8 +234,7 @@ $_install_cmd$destdir
 exit \$?
 EOF
         chmod a+x $extract/tmp/script
-        [  -z "$_install_cmd" ] || chroot $extract /tmp/script 
-        [ $? -eq 0 ] || exit 1
+        [  -z "$_install_cmd" ] || chroot $extract /tmp/script || { error "Unexpected error ($?) in install"; exit 1; }
         cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 cd $destdir
@@ -245,8 +242,7 @@ $_post_build
 exit \$?
 EOF
         chmod a+x $extract/tmp/script
-        [ -n "$_post_build" ] && msg "Post build script" && chroot $extract /tmp/script "$_post_build"
-        [ $? -eq 0 ] || exit 1
+        [ -z "$_post_build" ] || { msg "Post build script"; chroot $extract /tmp/script; } || { error "Unexpected error ($?) in post build"; exit 1; }
         # Create post-install script if needed
         if [ -n "$_post_install" ]; then 
           msg "Creating post install script"

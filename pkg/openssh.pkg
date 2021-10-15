@@ -4,9 +4,9 @@ _uri="https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-8.8p1.tar.gz"
 _dep="openssl-1.1.1"
 _build_dep="compiletc openssl-1.1.1 openssl-1.1.1-dev"
 _pkg_path="openssh-8.8p1"
-_conf_cmd="echo ./configure --sysconfdir=/usr/local/etc/ssh --libexecdir=/usr/local/lib/openssh --with-privsep-path=/var/lib/sshd"
-_make_cmd="echo make"
-_install_cmd="echo make install DESTDIR="
+_conf_cmd="./configure --sysconfdir=/usr/local/etc/ssh --libexecdir=/usr/local/lib/openssh --with-privsep-path=/var/lib/sshd"
+_make_cmd="make"
+_install_cmd="make install DESTDIR="
 _post_build='cd usr/local/etc 
 mv ssh/ssh_config ssh/ssh_config.orig
 mv ssh/sshd_config ssh/sshd_config.orig
