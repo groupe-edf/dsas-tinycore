@@ -957,14 +957,12 @@ Cette section discute des risques principal sur le DSAS.
 
 ### Risque: Compromission de la lien entre les deux machines du DSAS
 
-| ----------- | --------------------------------------------------------- |
-| Risque      | Compromission da la lien entre les deux machines du DSAS  |
-| Criticitité | Critique                                                  |
-| Commentaire | La rupture su la lien entre les deux machines du DSAS est 
-                la protection principale du DSAS. En cas de compromission 
-                L'attaquant pourrait prendre la main sur la machine bas   
-                depuis la machine haut. Ceci pourrait mmettre en cause la 
-                cloissonnement entre les zones de sensiblité              |
+<!-- FIXME: Get rid of extra header line in table and better line breaking -->
+|             |                                                            |
+| ----------- | ---------------------------------------------------------- |
+| Risque      | Compromission da la lien entre les deux machines du DSAS   |
+| Criticitité | Critique                                                   |
+| Commentaire | La rupture sur la lien entre les deux machines du DSAS est <br />la protection principale du DSAS. En cas de compromission <br />L'attaquant pourrait prendre la main sur la machine bas <br />depuis la machine haut. Ceci pourrait mmettre en cause la <br />cloissonnement entre les zones de sensiblité. |
 
 Logiciels impactés par cette risque
 
@@ -975,20 +973,21 @@ Logiciels impactés par cette risque
 
 ### Risque: Attaque sur la verification des signatures 
 
-| Risque      | Attaque sur la vérification des signatures                |
-| Criticitité | Majeur                                                    |
-| Commentaire |  |
-|             |  |
-|             |    |
-|             |    |
+|             |                                                            |
+| ----------- | ---------------------------------------------------------- |
+| Risque      | Attaque sur la vérification des signatures                 |
+| Criticitité | Majeur                                                     |
+| Commentaire | Si les logiciels utilisé pour les vérifications de signaturebr <br />sont compris la passage d'un fichier malveillant par le DSAS.<br />Ceci mettra en cause l'objectif principale du DSAS, mais<br />sera limité aux attaques asynchrone.  |
 
 Logiciels impactés par cette risque
 
-| logicel     | version  |  commentaire                                                                      | 
-|-------------|----------|------------------------------------------------------------------------------|
-| openssl     | [1.1.1l](https://www.openssl.org/source/openssl-1.1.1l.tar.gz) | Utilisé pour la verification authenticode, LiveUpdate et OpenSSL |
-| gnupg       |   |  |
-
+| logicel      | version  |  commentaire                                                                      | 
+|--------------|----------|------------------------------------------------------------------------------|
+| openssl      | [1.1.1l](https://www.openssl.org/source/openssl-1.1.1l.tar.gz) | Utilisé pour la verification authenticode, LiveUpdate et OpenSSL |
+| gnupg        | [2.2.27](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.27.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
+| libgcrypt    | [1.9.3](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.9.3.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
+| rpm          | [4.16.1.3](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.16.x/rpm-4.16.1.3.tar.bz2) | Utilisé pour la verification RPM |
+| osslsigncode | [2.2.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.2/osslsigncode-2.2.0.tar.gz) | Utilisé pour la vérification authenicode |
 
 ### Risque: Attaque sur le moyen de télécharement des fichiers 
 
