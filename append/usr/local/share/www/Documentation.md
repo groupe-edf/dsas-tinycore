@@ -957,20 +957,21 @@ Cette section discute des risques principal sur le DSAS.
 
 ### Risque: Compromission de la lien entre les deux machines du DSAS
 
+| ----------- | --------------------------------------------------------- |
 | Risque      | Compromission da la lien entre les deux machines du DSAS  |
 | Criticitité | Critique                                                  |
-| Commentaire | La rupture su la lien entre les deux machines du DSAS est |
-|             | la protection principale du DSAS. En cas de compromission |
-|             | L'attaquant pourrait prendre la main sur la machine bas   |
-|             | depuis la machine haut. Ceci pourrait mmettre en cause la |
-|             | cloissonnement entre les zones de sensiblité              |
+| Commentaire | La rupture su la lien entre les deux machines du DSAS est 
+                la protection principale du DSAS. En cas de compromission 
+                L'attaquant pourrait prendre la main sur la machine bas   
+                depuis la machine haut. Ceci pourrait mmettre en cause la 
+                cloissonnement entre les zones de sensiblité              |
 
 Logiciels impactés par cette risque
 
 | logicel     | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
 | openssl     | [1.1.1l](https://www.openssl.org/source/openssl-1.1.1l.tar.gz) | Que la fonctionalité utilisé par ssh impacté |
-| openssh     | [8.8p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-8.8p1.tar.gz] | ssh et sftp utilisé |
+| openssh     | [8.8p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-8.8p1.tar.gz) | ssh et sftp utilisé |
 
 ### Risque: Attaque sur la verification des signatures 
 
