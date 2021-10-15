@@ -362,7 +362,7 @@ verifrepo() {
     fi
   else
     # For rpm signature verification need to import GPG key
-    sudo rpm --import $tempdir/cert.0 2>&1 1> /dev/null
+    rpm --import $tempdir/cert.0 2>&1 1> /dev/null
   fi 
 
   # Create the destination directory if needed
@@ -430,7 +430,7 @@ verifrepo() {
   [ "$type" == "rpm" ] || verify_packages $dir 0 $filetable
   
   # Remove all RPM signature keys    
-  [ "$type" == "rpm" ] && sudo rpm -e $(rpm -qa)
+  [ "$type" == "rpm" ] && rpm -e $(rpm -qa)
 
   /bin/rm -fr $tempdir
 }

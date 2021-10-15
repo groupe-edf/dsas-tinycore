@@ -8,3 +8,8 @@ _conf_cmd="./configure"
 _make_cmd="make"
 _install_cmd="make install DESTDIR=" 
 _pkgs='main{/usr}'
+_post_install=\
+"#! /bin/sh
+mkdir -p /usr/local/var/lib/rpm
+chgrp verif /usr/local/var/lib/rpm
+chmod 775 /usr/local/var/lib/rpm"
