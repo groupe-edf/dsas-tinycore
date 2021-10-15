@@ -944,23 +944,24 @@ du tache. En bleu, le tache n'a pas été éxecuté, en vert l'éxecution du tac
 et en rouge l'éxecution a échoué. Le dernier éxecution du tache est visible en ouvrant 
 le tache comme
 
-
 ![Exemple d'éxecution de tache réussi](images/DSAS32.png)
 
 # Mantient en condition de sécurité
 
-FIXME : Discuter la process du MCS
-
 ## Analyse des risques principales du DSAS
 
-Cette section discute des risques principal sur le DSAS.
+Cette section discute des risques principal sur le DSAS. D'autres risques existe, par
+exemple la compromission de la site repositoire du DSAS, mais par l'architecture du DSAS
+sont consideré comme negléable.
+
+Les logiciels impacté par ces risques sont détaillés avec les numéros de version de 
+chaque logiciel installé permettant facilement a voir si une mise à niveau d'un 
+logiciel est nécessaire.
 
 ### Risque: Compromission de la lien entre les deux machines du DSAS
 
-<!-- FIXME: Get rid of extra header line in table and better line breaking -->
-|             |                                                            |
-| ----------- | ---------------------------------------------------------- |
 | Risque      | Compromission da la lien entre les deux machines du DSAS   |
+| ----------- | ---------------------------------------------------------- |
 | Criticitité | Critique                                                   |
 | Commentaire | La rupture sur la lien entre les deux machines du DSAS est <br />la protection principale du DSAS. En cas de compromission <br />L'attaquant pourrait prendre la main sur la machine bas <br />depuis la machine haut. Ceci pourrait mmettre en cause la <br />cloissonnement entre les zones de sensiblité. |
 
@@ -973,9 +974,8 @@ Logiciels impactés par cette risque
 
 ### Risque: Attaque sur la verification des signatures 
 
-|             |                                                            |
-| ----------- | ---------------------------------------------------------- |
 | Risque      | Attaque sur la vérification des signatures                 |
+| ----------- | ---------------------------------------------------------- |
 | Criticitité | Majeur                                                     |
 | Commentaire | Si les logiciels utilisé pour les vérifications de signaturebr <br />sont compris la passage d'un fichier malveillant par le DSAS.<br />Ceci mettra en cause l'objectif principale du DSAS, mais<br />sera limité aux attaques asynchrone.  |
 
@@ -992,21 +992,33 @@ Logiciels impactés par cette risque
 ### Risque: Attaque sur le moyen de télécharement des fichiers 
 
 | Risque      | Attaque sur le moyen de téléchargement des fichiers       |
-| Criticitité | Majeur                                                    |
-| Commentaire |  |
-|             |  |
-|             |    |
-|             |    |
+| ----------- | --------------------------------------------------------- |
+| Criticitité | Important                                                 |
+| Commentaire | Tout interconnexion de télécharegement sont initié par le<br />DSAS, donc cette risque ne peut que être utilisé depuis<br />des machines bien specifiques. La risque ne peut pas être<br />utilisé afin de détourner la fonctionne principale du DSAS<br /> |
+
+Logiciels impactés par cette risque
+
+| logicel     | version  |  commentaire                                                                      | 
+|-------------|----------|------------------------------------------------------------------------------|
+| openssl     | [1.1.1l](https://www.openssl.org/source/openssl-1.1.1l.tar.gz) | Que la fonctionalité utilisé par ssh impacté |
+| openssh     | [8.8p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-8.8p1.tar.gz) | scp et sftp utilisé |
+| curl        | [7.79.1](https://curl.se/download/curl-7.79.1.tar.bz2) | Utilisé pour http, https et ftp |
+| libssh2     | [1.9.0](http://tinycorelinux.net/12.x/x86/tcz/libssh2.tcz) | Utilisé si curl sera utilisé pour scp et sftp |  
 
 ### Risque: Attaque contre l'authentification adminsitrateur du DSAS
 
 | Risque      | Attaque contre l'authentification adminsitrateur du DSAS  |
+| ----------- | --------------------------------------------------------- |
 | Criticitité | Important                                                 |
-| Commentaire |  |
-|             |  |
-|             |    |
-|             |    |
+| Commentaire | La site d'adminsitration du DSAS n'est disponible que depuis<br />le reseau sensible, et normallement par configuration du<br />DMZ ou le DSAS est installé accèsible que depuis des machines<br />bien maitrisés. Donc la risque se limite a un attaque depuis<br />un console permis d'aceder au DSAS par quelqu'un non habilité<br />de faire. La risque la reconfiguration du DSAS permettant<br />d'entre des fichiers non voulu ou d'empecher d'entre des<br />fichiers voulu. |
 
+Logiciels impactés par cette risque
+
+| logicel     | version  |  commentaire                                                                      | 
+|-------------|----------|------------------------------------------------------------------------------|
+| php-cgi     | [8.0.1](http://tinycorelinux.net/12.x/x86/tcz/php-8.0-cgi.tcz) | Backend de la site d'adminsitration |
+| lighttpd    | [1.4.58](http://tinycorelinux.net/12.x/x86/tcz/lighttpd.tcz) | Backend de la site d'adminsitration |
+| cyrus-sasl-lite | [2.1.27](http://tinycorelinux.net/12.x/x86/tcz/cyrus-sasl-lite.tcz) | Authentification sur la site d'administration |
 
 ## Processus de build du DSAS
 
