@@ -1607,7 +1607,49 @@ sont dans un fichier avec un extension .sig. Les deux fichiers doit être fourni
 
 ## Service OpenSSH
 
-FIXME: Discuter la configuration de SSH entre les machines 
+L'ensemble des flux ssh possible est
+
+| Source          |  Destination    | Utilisateur | Service  | Optionnel | 
+|-----------------|-----------------|-------------|----------|-----------|
+| reseau sensible | bas             | tc          | ssh      | optionnel |
+| reseau sensible | bas             | bas         | sftp     | optionnel |
+| bas             | haut            | tc          | ssh      | requis    |
+| bas             | haut            | bas         | sftp     | requis    |
+| reseau ouverte  | haut            | haut        | sftp     | non reco. |
+
+ou les service `ssh` correspond à l'ensemble des services de ssh (ssh, scp et sftp). Le
+premier option de durcissement des service sshd, sauf en cas de la presence de la flux
+non recommandé depuis le reseau ouverte, les service n'ecoute que les flux d'origin d'un 
+reseau plus sensible avec l'option de configuration `Listen` d'OpenSSH. Après par défaut
+l'accès est interdit à l'ensemble des l'utilisateur et les permissions de chaque utilisateur
+permis est explicitement ajouté. La configuration pour les utilisateurs `tc` sont de la
+forme
+
+```
+
+Match User tc Address $USER_TC
+	PasswordAuthentication yes
+	PubkeyAuthentication yes
+```
+
+ou `$USER_TC` est une liste d'address IP ou CIDR permis à connecter au serveur. Afin de 
+bien sécurisé cette liste devrait être limité. Pour les autres utilisateur la configuration
+de sshd est
+
+```
+Match User $TYP Address $USER
+	PasswordAuthentication yes
+	PubkeyAuthentication yes
+	ChrootDirectory /home/dsas/$TYP
+	X11Forwarding no
+	AllowTcpForwarding no
+	AllowAgentForwarding no
+	ForceCommand internal-sftp -u 0007 -d /share
+```
+
+les utilisateurs en `sftp` sont limité strictement a ou ils sont accès est le forwarding
+est interdit. Le `umask` par défaut est forcé d'être 007 afin d'assure un accès aux fichiers
+à l'utilisateur `verif`.
 
 ## Service web
 
