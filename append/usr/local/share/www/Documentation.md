@@ -1019,6 +1019,10 @@ Logiciels impactés par cette risque
 | php-cgi     | [8.0.1](http://tinycorelinux.net/12.x/x86/tcz/php-8.0-cgi.tcz) | Backend de la site d'adminsitration |
 | lighttpd    | [1.4.58](http://tinycorelinux.net/12.x/x86/tcz/lighttpd.tcz) | Backend de la site d'adminsitration |
 | cyrus-sasl-lite | [2.1.27](http://tinycorelinux.net/12.x/x86/tcz/cyrus-sasl-lite.tcz) | Authentification sur la site d'administration |
+| site web DSAS |  [-](https://gitlab.devops-unitep.edf.fr/dsao-cyber/dsas---tinycore) | Backend et frontend de la site d'adminsitration |
+
+La site web du DSAS est dévéloppé specialement pour ce projet. Un audit de code est en
+cours et des correctifs proposé sera appliqué.
 
 ## Processus de build du DSAS
 
@@ -1045,6 +1049,16 @@ configuré a chaque fois. Apres, la commande
 tce-load -wi compiletc rsync coreutils mkisofs-tools squashfs-tools git curl ncursesw-dev
 ```
 va installer l'ensemble des outils nécessaire pour la build 
+
+### Clavier français
+
+Si vous avez un clavier francais, le plus est d'ajouter 
+
+```
+setxkmap fr
+```
+
+au fichier `~/.xession` ou d'excuter cette commande depuis un console en X11.
 
 ### Préparation d'un abre de source DSAS
 
@@ -1289,6 +1303,7 @@ verif:x:2000:
 bas:x:2001:verif
 haut:x:2002:verif
 share:x:2003:verif,bas,haut
+repo:x:2004:bas,tc
 ```
 
 les exigences voulu sont respectés. Les scripts de verification du DSAS ont été 
@@ -1596,4 +1611,30 @@ FIXME: Discuter la configuration de SSH entre les machines
 
 ## Service web
 
-FIXME: discuter l'usage de TLS et le group "repo" afin de respecté les droit
+Il y a deux service web; un requis pour l'adminsitration du DSAS et un deuxième optionnel
+pour un répositoire des fichiers. Les deux site partage le certificate TLS, qui sont 
+stocké dans `/var/dsas/`. Les permission du certificate privé est alors (0640), avec une
+groupe `repo` auquel appartienent les deux utilisateurs `tc` et `bas`.
+
+Le serveur d'administration est executé en tant qu'utilisateur `tc` est ne peux aceder
+que des fichiers accesible à l'utilisateur `tc`. Le site est disponible seulement en https 
+sur la port `5000`. Le site est ecrit en `HTML5, JS et bootstrap5` pour le frontend et `PHP8` 
+pour le backend.  l'authetification sur le site est fait avec le connecteur `SASL` aux comptes 
+local à la machine `bas`. `SASL` est configuré de fonctionné que avec des `Unix domain socket` 
+completement local à la machine, donc accèsible que au processus tournant sur la machine.
+Le backend retourne une session identifiant pour un login réussité. Cet identifiant est
+verifié a chaque opération sur le backend, et périmé après dix minutes sans accès à la 
+machine.
+
+Le politique du backend est qu'aucun information venant du frontend est considéré comme 
+sûr est tout est verifié. La fonctionne `proc_open` de `PHP8` est utilisé pour des 
+commande système nécessaire à l'administration, et
+
+- Appellé d'un façon a ne pas demarrer un shell
+- Avec tout argument vérifié est échappé afin d'eviter l'injection de commande
+
+Le site de répositioire optionnel est éxecuté en tant que l'utilisateur `bas` et ne peut
+aceder que des fichiers disponible pour l'utilisateur `bas`. Cette liste de fichiers est
+très limité est inclut en gros que des fichiers preinstallé ou vérifié par le DSAS. Le site 
+est disponible seulement en https sur la port `443`. 
+
