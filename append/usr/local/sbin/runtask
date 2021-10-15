@@ -47,8 +47,8 @@ if [ -z $ids ]; then
     if [ -z "$force" ]; then
       _run=$(xmllint --xpath "string(dsas/tasks/task[$i]/run)" $CONF)
       case "$_run" in
-        hourly|daily|weekly|monthly) :; ;;
-        *) continue; ;;
+        hourly|daily|weekly|monthly) : ;;
+        *) i=$((i + 1)); continue; ;;
       esac
       _last=$(cat $RUNLOG | grep $_id | cut -d' ' -f2) 
       [ -z "$_last" ] || should_run $_last $_run && ids="$ids $_id"    
