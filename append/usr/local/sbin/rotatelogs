@@ -22,7 +22,7 @@ if [ "$#" -gt 0 ]; then
     rotate_logs $logfile
   done
 else
-  for logfile in find $(dirname $CONF) -name "*.log"; do
+  for logfile in find $LOG -name "*.log"; do
     rotate_logs $logfile
   done
 fi
