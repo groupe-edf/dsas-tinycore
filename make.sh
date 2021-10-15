@@ -464,6 +464,10 @@ chmod 770 /opt
 chmod 770 /opt/.filetool.lst
 chmod 644 /usr/local/share/www/* /usr/local/share/www/api/* usr/local/share/www/images/*
 chmod 755 /usr/local/share/www/images /usr/local/share/www/api
+sed -i "s/umask 0[0-7][0-7]/umask 027/" /etc/profile
+echo "
+# Forbid core dumps
+ulimit -c 0" >> /etc/profile
 
 EOF
 
