@@ -1230,7 +1230,17 @@ de garantir le niveau de sécurité du DSAS.
 
 ## Les comptes utilisateurs sur la DSAS
 
-FIXME : Ajoute du texte
+Il existe cinq comptes sur la DSAS, avec seulement un avec les droit de 
+connexion avec un shell.
+
+| compte | shell      | commentaire                                     |
+|--------|------------|-------------------------------------------------|
+| root   | /bin/false |                                                 |
+| tc     | /bin/ash   | Seul utilisateur avec les droits de sudo        | 
+| haut   | /bin/false | Utilisé pour connexion vers zone moins sensible |
+| bas    | /bin/false | Utilisé pour connexion vers zone plus sensible  |
+| verif  | /bin/flase | Utilisé que à l'interieur du DSAS               |
+
 
 ### Les droit d'ecriture de chaque utilisateur
 
