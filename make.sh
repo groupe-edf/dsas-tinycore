@@ -248,6 +248,7 @@ EOF
           msg "Creating post install script"
           mkdir -p $extract$destdir/usr/local/tce.installed
           echo "$_post_install" > $extract$destdir/usr/local/tce.installed/$_pkg
+          chmod 755 $extract$destdir/usr/local/tce.installed/$_pkg
         fi
 
         # Create the pkgname and shell escaped list of directories/files and then make TCZ 
