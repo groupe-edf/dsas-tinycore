@@ -212,27 +212,40 @@ build_pkg() {
         cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 cd $builddir/$_pkg_path
-echo \$*
-\$*
+$_conf_cmd
 exit \$?
 EOF
         chmod a+x $extract/tmp/script
-        [ -z "$_conf_cmd" ] || chroot --userspec=$SUDO_USER $extract /tmp/script $_conf_cmd 
+        [ -z "$_conf_cmd" ] || chroot --userspec=$SUDO_USER $extract /tmp/script
         [ $? -eq 0 ] ||  exit 1
         msg "Building $_pkg"
+        cat << EOF > $extract/tmp/script
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+cd $builddir/$_pkg_path
+$_make_cmd
+exit \$?
+EOF
+        chmod a+x $extract/tmp/script
         [ -z "$_make_cmd" ] || chroot --userspec=$SUDO_USER $extract /tmp/script $_make_cmd 
         [ $? -eq 0 ] || exit 1
         msg "Installing $_pkg"
-        [  -z "$_install_cmd" ] || chroot $extract /tmp/script "$_install_cmd$destdir" 
+        cat << EOF > $extract/tmp/script
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+cd $builddir/$_pkg_path
+$_install_cmd$destdir
+exit \$?
+EOF
+        chmod a+x $extract/tmp/script
+        [  -z "$_install_cmd" ] || chroot $extract /tmp/script 
         [ $? -eq 0 ] || exit 1
         cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 cd $destdir
-echo \$*
-\$*
+$_post_build
 exit \$?
 EOF
-        [ -z "$post_build" ] || chroot $extract /tmp/script $_post_build
+        chmod a+x $extract/tmp/script
+        [ -n "$_post_build" ] && msg "Post build script" && chroot $extract /tmp/script "$_post_build"
         [ $? -eq 0 ] || exit 1
         # Create post-install script if needed
         if [ -n "$_post_install" ]; then 
@@ -438,8 +451,13 @@ addgroup -g 2004 repo
 addgroup bas repo
 addgroup tc repo
 
+# Hardening
 # Fix directory and file permissions
+chmod 440 /etc/sudoers
+chmod 700 /root
+chmod -R g-s /home
 chown -R tc.staff /home/tc
+chmod -R o-rwx /home/tc /home/haut /home/bas /home/verif 
 chown -R root.staff /var/dsas
 chmod 775 /var/dsas          # Write perm for verif
 chmod 640 /var/dsas/*.csr /var/dsas/*.pem

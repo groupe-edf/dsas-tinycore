@@ -4,11 +4,67 @@ _uri="https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-8.8p1.tar.gz"
 _dep="openssl-1.1.1"
 _build_dep="compiletc openssl-1.1.1 openssl-1.1.1-dev"
 _pkg_path="openssh-8.8p1"
-_conf_cmd="./configure --sysconfdir=/usr/local/etc/ssh --libexecdir=/usr/local/lib/openssh --with-privsep-path=/var/lib/sshd"
-_make_cmd="make"
-_install_cmd="make install DESTDIR="
-_post_build="cd usr/local/etc; mv ssh_config ssh_config.orig; mv sshd_config sshd_config.orig"
-_pkgs="main{/usr/local/bin,/usr/local/sbin,};doc{/usr/local/share/man}"
+_conf_cmd="echo ./configure --sysconfdir=/usr/local/etc/ssh --libexecdir=/usr/local/lib/openssh --with-privsep-path=/var/lib/sshd"
+_make_cmd="echo make"
+_install_cmd="echo make install DESTDIR="
+_post_build='cd usr/local/etc 
+mv ssh/ssh_config ssh/ssh_config.orig
+mv ssh/sshd_config ssh/sshd_config.orig
+mkdir -p init.d
+cat << EOF > init.d/openssh 
+#!/bin/sh
+# openssh sshd start script
+[ $(id -u) = 0 ] || { echo "must be root" ; exit 1; }
+
+start(){
+   [ -f /usr/local/etc/ssh/sshd_config ] || { echo "config file /usr/local/etc/ssh/sshd_config not found"; exit 1; }
+   [ -f /usr/local/etc/ssh/ssh_host_rsa_key ] || ssh-keygen -t rsa -N "" -f /usr/local/etc/ssh/ssh_host_rsa_key
+   [ -f /usr/local/etc/ssh/ssh_host_dsa_key ] || ssh-keygen -t dsa -N "" -f /usr/local/etc/ssh/ssh_host_dsa_key
+   [ -f /usr/local/etc/ssh/ssh_host_ecdsa_key ] || ssh-keygen -t ecdsa -N "" -f /usr/local/etc/ssh/ssh_host_ecdsa_key
+   [ -f /usr/local/etc/ssh/ssh_host_ed25519_key ] || ssh-keygen -t ed25519 -N "" -f /usr/local/etc/ssh/ssh_host_ed25519_key
+   /usr/local/sbin/sshd
+}
+
+stop(){
+   kill $(pidof sshd)
+}
+
+restart(){
+   if pidof sshd >/dev/null; then
+      stop && start
+   else
+      start
+   fi
+}
+
+keygen(){
+   ssh-keygen -t rsa -f /usr/local/etc/ssh/ssh_host_rsa_key
+   ssh-keygen -t dsa -f /usr/local/etc/ssh/ssh_host_dsa_key
+   ssh-keygen -t ecdsa -f /usr/local/etc/ssh/ssh_host_ecdsa_key
+   ssh-keygen -t ed25519 -f /usr/local/etc/ssh/ssh_host_ed25519_key
+}
+
+status(){
+  if [ -f /var/run/sshd.pid ]; then
+    echo "OpenSSH daemon is running"
+    exit 0
+  else
+    echo "OpenSSH daemon is not running"
+    exit 1
+  fi
+}
+
+case $1 in
+   start) start;;
+   stop) stop;;
+   restart) restart;;
+   keygen) keygen;;
+   status) status;;
+   *) echo "Usage $0 {start|stop|restart|keygen|status}"; exit 1
+esac
+EOF
+chmod a+x init.d/openssh'
+_pkgs="main{/usr/local/bin,/usr/local/sbin,/usr/local/lib,/usr/local/etc};doc{/usr/local/share/man}"
 _post_install=\
 "#! /bin/sh
 if [ ! -d /var/lib/sshd ]; then
