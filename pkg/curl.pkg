@@ -1,0 +1,12 @@
+_pkg=curl
+_version=7.79.1
+_uri="https://curl.se/download/curl-7.79.1.tar.bz2"
+_dep="ca-certificates openssl"
+_build_dep="compiletc zlib_base-dev openssl-1.1.1-dev ca-certificates libssh2-dev"
+_pkg_path="curl-7.79.1"
+_conf_cmd="./configure --with-openssl --with-zlib --with-libssh2 --with-ca-path=/usr/local/etc/ssl/certs"
+_make_cmd="make"
+_install_cmd="make install DESTDIR="
+_post_build=""
+_pkgs="main{/usr/local/bin/curl,/usr/local/lib/*.so*};dev{/usr/local/bin/curl-config,/usr/local/include,/usr/local/lib/*.la,/usr/local/lib/*.a,/usr/local/lib/pkgconfig,/usr/local/share/aclocal};doc{/usr/local/share/man}"
+_post_install=""
