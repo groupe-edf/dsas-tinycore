@@ -18,12 +18,12 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $x509 = str_replace("\r", "", $x509);   // dos2unix
           $parse = openssl_x509_parse($x509);
           if (! $parse)
-            throw new RuntimeException("Fichier x509 doit-&ecirc;tre en format PEM");
+            throw new RuntimeException("The X509 file must be in PEM format");
           
           foreach ($dsas->certificates->certificate as $certificate) {
             if ($certificate->type == "x509") {
               if (openssl_x509_fingerprint(trim($certificate->pem, "sha256")) == $parse["fingerprint"])
-                throw new RuntimeException("Le certificate X509 existe déja");
+                throw new RuntimeException("The X509 certrificate already exists");
             }
           }
           $newcert = $dsas->certificates->addChild("certificate");
@@ -46,7 +46,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $gpg = str_replace("\r", "", $gpg);   // dos2unix
           $parse = parse_gpg($gpg);
           if (! $parse)
-            throw new RuntimeException("Fichier GPG doit-&ecirc;tre en format PEM");
+            throw new RuntimeException("The GPG file must be in PEM format" );
 
           foreach ($dsas->certificates->certificate as $certificate) {
             if ($certificate->type == "gpg") {
@@ -83,7 +83,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $i++;
         }
         if (! $certok)
-          $errors[] = [ "delete" => "Le certificate n'existe pas"];
+          $errors[] = [ "delete" => "The certificate doesn't exist"];
         else {
           foreach ($dsas->tasks->task as $task) {
             foreach ($task->cert as $cert) {
@@ -104,7 +104,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
     }
   } catch (Exception $e) {
-     $errors[] = ["error" => "Internal server erreur"];
+     $errors[] = ["error" => "Internal server error"];
   }
  
   if ($errors == []) {

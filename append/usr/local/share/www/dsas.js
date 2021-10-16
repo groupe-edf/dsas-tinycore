@@ -47,7 +47,7 @@ function modal_task(action = "dsas_add_task();"){
   else
     modalDSAS.removeAttribute("action");
   modalDSAS.setAttribute("hideonclick", true);
-  modalDSAS.setAttribute("title", "Ajouter un tache");
+  modalDSAS.setAttribute("title", _("Add a task"));
   modalDSAS.setAttribute("size", "lg");
   modalDSAS.show();
 
@@ -59,7 +59,7 @@ function modal_task(action = "dsas_add_task();"){
           statusText: response.statusText});
   }).then(certs => {
     var i = 1;
-    var certbody = '<option id="TaskAddCert0" value="" selected>Selectionner une certificate</option>\n';
+    var certbody = '<option id="TaskAddCert0" value="" selected>' + _("Select a certificate") + '</option>\n';
     for (cert of certs[0].dsas.x509) {
       certbody = certbody + '<option id="TaskAddCert' + i + '" value="' + cert.fingerprint + 
                     '">' + cert_name(cert) + '</option>\n';
@@ -84,24 +84,24 @@ function modal_task(action = "dsas_add_task();"){
   modalDSAS.setAttribute("body", '<form>\n' +
 '  <div class="row">\n' +
 '    <div class="col-6">\n' +
-'      <label for="TaskName">Nom du tache :</label>\n' +
+'      <label for="TaskName">' + _("Task name :") + '</label>\n' +
 '      <input type="text" id="TaskName" value="" class="form-control">\n' +
 '      <div class="invalid-feedback" id="feed_TaskName"></div>\n' +
 '    </div>\n' +
 '    <div class="col-6">\n' +
-'      <label for="TaskDirectory">Sous-dossier utilisé par le tache :</label>\n' +
+'      <label for="TaskDirectory">' + _("Folder used by the task :") + '</label>\n' +
 '      <input type="text" id="TaskDirectory" value="" class="form-control">\n' +
 '      <div class="invalid-feedback" id="feed_Directory"></div>\n' +
 '    </div>\n' +
 '    <div class="col-6">\n' +
-'      <label for="TaskURI">URI (pas de chargement si vide) :</label>\n' +
+'      <label for="TaskURI">' + _("URI (no download if empty) :") + '</label>\n' +
 '      <input type="text" id="TaskURI" value="" class="form-control">\n' +
 '      <div class="invalid-feedback" id="feed_URI"></div>\n' +
 '    </div>\n' +
 '    <div class="col-6">\n' +
-'      <label for="TaskType">Type de tache :</label>\n' +
+'      <label for="TaskType">' + _("Task type :") + '</label>\n' +
 '      <select class="form-select" name="TaskType" id="TaskType">\n' +
-'        <option id="TaskTypeNull" value="" selected>Selectionner un type</option>\n' +
+'        <option id="TaskTypeNull" value="" selected>' + _("Select a type") + '</option>\n' +
 '        <option id="TaskTypeRPM" value="rpm">rpm</option>\n' +
 '        <option id="TaskTypeRepomd" value="repomd">repomd</option>\n' +
 '        <option id="TaskTypeDeb" value="deb">deb</option>\n' +
@@ -112,25 +112,25 @@ function modal_task(action = "dsas_add_task();"){
 '      </select>\n' +
 '    </div>\n' +
 '    <div class="col-6">\n' +
-'      <label for="TaskRun">Periodicit&eacute, du tache :</label>\n' +
+'      <label for="TaskRun">' + _("Periodicity of the task :") + '</label>\n' +
 '      <select class="form-select" name="TaskRun" id="TaskRun">\n' +
-'        <option id="TaskRunNull" value="" selected>Selectionner une periode</option>\n' +
-'        <option id="TaskRunNever" value="never">jamais</option>\n' +
-'        <option id="TaskRunHourly" value="hourly">par heure</option>\n' +
-'        <option id="TaskRunDaily" value="daily">par jour</option>\n' +
-'        <option id="TaskRunWeekly" value="weekly">par semaine</option>\n' +
-'        <option id="TaskRunMonthly" value="monthly">par mois</option>\n' +
+'        <option id="TaskRunNull" value="" selected>' + _("Select a period") + '</option>\n' +
+'        <option id="TaskRunNever" value="never">' + _("never") + '</option>\n' +
+'        <option id="TaskRunHourly" value="hourly">' + _("hourly") + '</option>\n' +
+'        <option id="TaskRunDaily" value="daily">' + _("daily") + '</option>\n' +
+'        <option id="TaskRunWeekly" value="weekly">' + _("weekly") + '</option>\n' +
+'        <option id="TaskRunMonthly" value="monthly">' + _("monthly") + '</option>\n' +
 '      </select>\n' +
 '    </div>\n' +
 '    <div class="col-6">\n' +
-'      <label for="TaskAddCert">Ajouter un certificate :</label>\n' +
+'      <label for="TaskAddCert">' + _("Add a certificate :") + '</label>\n' +
 '      <select class="form-select" name="TaskAddCert" id="TaskAddCert" onchange="dsas_add_task_cert();">\n' +
 '              </select>\n' +
 '    </div>\n' + 
 '  </div>\n' +
 '  <div class="row">\n' +
 '    <div class="col-12">\n' +
-'      <label for="TaskCert">Certificates:</label>\n' +
+'      <label for="TaskCert">' + _("Certificates") + '</label>\n' +
 '      <div class="container my-1 border" id="TaskCert"></div>\n' +
 '    </div>\n' +
 '  </div>\n' +
@@ -149,14 +149,14 @@ function modal_errors(errors, feedback = false){
     var body = "";
     for (err of errors)
       if (typeof err === "string" || err instanceof String)
-        body = body + "<p>" + errors + "</p>"
+        body = body + "<p>" + _(errors) + "</p>"
       else {
         key = Object.keys(err)[0]
         if (key == "error" || ! feedback) {
-          body = body + "<p>" + err[Object.keys(err)] + "</p>";
+          body = body + "<p>" + _(err[Object.keys(err)]) + "</p>";
         } else {
           document.getElementById(key).setAttribute("class", "form-control is-invalid");
-          document.getElementById("feed_" + key).innerHTML = error[key];
+          document.getElementById("feed_" + key).innerHTML = _(err[key]);
         }
       }
     if (body)
@@ -173,14 +173,14 @@ function dsas_loggedin(){
       return Promise.reject({status: response.status, 
           statusText: response.statusText});
   }).catch(error => {
-    modal_message("Vous n'&ecirc;tes pas connect&eacute;.\nCliquer 'Ok' afin de vous reconnecter",
+    modal_message(_("You are not connected. Click 'Ok' to reconnect."),
         "window.location='login.html'");
   });
 }
 
 function fail_loggedin(status){
   if (status === "Forbidden") {
-    modal_message("Vous n'&ecirc;tes pas connect&eacute;.\nCliquer 'Ok' afin de vous reconnecter",
+    modal_message(_("You are not connected. Click 'Ok' to reconnect." ),
         "window.location='login.html'");
     return true;
   } else
@@ -206,13 +206,13 @@ function dsas_login(){
 
   if (! username) {
     document.getElementById("inp_user").setAttribute("class", "form-control is-invalid");    
-    document.getElementById("feed_user").innerHTML ="Entrer le nom d'utilisateur.";
+    document.getElementById("feed_user").innerHTML =_("Enter the username.");
     return;
   }
 
   if (! password) {
     document.getElementById("inp_pass").setAttribute("class", "form-control is-invalid");
-    document.getElementById("feed_pass").innerHTML = "Entrer le mot de passe.";
+    document.getElementById("feed_pass").innerHTML = _("Enter the password.");
     return;
   }
 
@@ -229,7 +229,7 @@ function dsas_login(){
     }).catch(error => {
       document.getElementById("inp_user").setAttribute("class", "form-control is-invalid");
       document.getElementById("inp_pass").setAttribute("class", "form-control is-invalid");
-      document.getElementById("feed_pass").innerHTML = "Utilisateur ou mot de passe invalide.";
+      document.getElementById("feed_pass").innerHTML = _("Username or password invalid.");
     });
 }
 
@@ -238,6 +238,7 @@ function format_space(bytes) {
   if (bytes == 0)
     return "0 B";
   else {
+    // FIXME : Should I translate the units here ?
     symbols = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
     exp = Math.floor(Math.log(bytes)/Math.log(1024));
     return (bytes/Math.pow(1024, Math.floor(exp))).toFixed(2)  + " " + symbols[exp];
@@ -1778,6 +1779,101 @@ function dsas_logout(){
   }).catch(error => { location.href = "login.html"; });
 }
 
+
+class multiLang {
+
+  constructor(url, language="", onLoad = ""){
+    this.phrases = {};
+    this.currentLanguage = language;
+    this.onLoad = onLoad;
+
+    fetch(url).then(response => {
+      if (response.ok) 
+        return response.json();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(obj => {
+      this.phrases = obj;
+
+      // Is the Language cookie set ?
+      let _lang ="";
+      if (empty_obj(this.currentLanguage)) {
+        var cookieArray = document.cookie.split(';');
+        for (let i=0; i < cookieArray.length; i++) {
+          let pos = cookieArray[i].indexOf("Language");
+          if (pos > -1) {
+            _lang = cookieArray[i].substr(10);
+            for (let lang of Object.keys(this.phrases)) {
+              if (lang === _lang) {
+                this.currentLanguage = _lang;
+                break;
+              }
+            } 
+          }
+        }
+      }
+
+      if (empty_obj(this.currentLanguage)) {
+        // The language cookie is not set. Detect browser language as the default
+        this.currentLanguage = Object.keys(this.phrases)[0];
+        let _default = (window.navigator.language || window.navigator.userLanguage)
+        for (let lang of Object.keys(this.phrases)) {
+          if (lang === _default) {
+            this.currentLanguage = lang;
+           break;
+          } 
+        }
+      }
+
+      // Set the cookie with the current language if not already in the cookie
+      if (_lang !== this.currentLanguage)
+        document.cookie = "Language=" + this.currentLanguage + "; expires=Fri 31 Dec 9999 23:59:59;SameSite=Lax";
+
+      // Force reload of heaeder as it might have already been rendered
+      for (let _head of document.getElementsByTagName("dsas-header")) 
+        _head.render();    
+
+      // Callback after JSON loading
+      if (! empty_obj(this.onLoad))
+        this.onLoad();
+
+    }).catch(error => {
+      console.log(error);
+      this.phrases = {};
+    });
+  }
+
+  setLanguage (_lang){
+    for (let lang of Object.keys(this.phrases)) {
+      if (lang === _lang) {
+        if (this.currentLanguage !== _lang) {
+          this.currentLanguage = _lang;
+          document.cookie = "Language=" + _lang + "; expires=Fri 31 Dec 9999 23:59:59;SameSite=Lax";
+          for (let _head of document.getElementsByTagName("dsas-header")) 
+            _head.render();
+          location.reload();
+        }
+        break;
+      } 
+    }
+  }
+
+  translate (key){
+    var str;
+
+    if (this.phrases[this.currentLanguage])
+      str = this.phrases[this.currentLanguage][key]
+
+    return (str || key)
+  }
+}
+
+var ml = new multiLang("languages.json");
+// Use "_" as the function name here to be like in python i8n
+function _ (key) {
+  return ml.translate(key);
+}
 class DSASModal extends HTMLElement {
   constructor(){
     super();
@@ -1893,42 +1989,52 @@ class DSASHeader extends HTMLElement {
   render(){
     var disablenav = this.getAttribute("disablenav"); 
 
+    // FIXME Need to set the allowed languages here from Object.keys(ml.phrases)
+    // For now just French and English
     this.innerHTML = '    <nav class="navbar navbar-expand-sm bg-dark navbar-dark sticky-top">\n' +
 '      <a class="navbar-brand"' + ((disablenav != "disabled") ? ' href="/' : '') + '">DSAS</a>\n' +
 '      <ul class="navbar-nav">\n' +
 '      <li class="nav-item dropdown">\n' +
 '        <a class="nav-link ' + disablenav + ' dropdown-toggle" data-bs-toggle="dropdown">\n' +
-'        Configuration\n' +
+'        ' + _("Configuration") + '\n' +
 '        </a>\n' +
 '        <div class="dropdown-menu">\n' +
-'          <a class="dropdown-item" href="tasks.html">Taches</a>\n' +
-'          <a class="dropdown-item" href="cert.html">Certificates</a>\n' +
-'          <a class="dropdown-item" href="service.html">Services</a>\n' +
-'          <a class="dropdown-item" href="net.html">Reseau</a>\n' +
-'          <a class="dropdown-item" href="web.html">Web</a>\n' +
+'          <a class="dropdown-item" href="tasks.html">' + _("Tasks") + '</a>\n' +
+'          <a class="dropdown-item" href="cert.html">' + _("Certificates") + '</a>\n' +
+'          <a class="dropdown-item" href="service.html">' + _("Services") + '</a>\n' +
+'          <a class="dropdown-item" href="net.html">' + _("Network") + '</a>\n' +
+'          <a class="dropdown-item" href="web.html">' + _("Web") + '</a>\n' +
 '        </div>\n' +
 '      </li>\n' +
 '      <li class="nav-item dropdown">\n' +
 '        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">\n' +
-'        Syst&egrave;me\n' +
+'        ' + _("System") + '\n' +
 '        </a>\n' +
 '        <div class="dropdown-menu">\n' +
-'          <a class="dropdown-item" href="passwd.html">Mot de passe</a>\n' +
-'          <a class="dropdown-item ' + disablenav + '" onclick="dsas_backup();">Sauvegard&eacute;</a>\n' +
-'          <a class="dropdown-item" onclick="dsas_restore();">Restaur&eacute;</a>\n' +
-'          <a class="dropdown-item ' + disablenav + '" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir red&eacute;marrer ?\', \'dsas_reboot();\')">Red&eacute;marrer</a>\n' + 
-'          <a class="dropdown-item ' + disablenav + '" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir arr&ecirc;ter ?\',\'dsas_shutdown();\')">Arr&ecirc;ter</a>\n' +
+'          <a class="dropdown-item" href="passwd.html">' + _("Password") + '</a>\n' +
+'          <a class="dropdown-item ' + disablenav + '" onclick="dsas_backup();">' + _("Backup") + '</a>\n' +
+'          <a class="dropdown-item" onclick="dsas_restore();">' + _("Restore") + '</a>\n' +
+'          <a class="dropdown-item ' + disablenav + '" onclick="modal_action(\'' + _("Are you sure you want to restart ?") + '\', \'dsas_reboot();\')">' + _("Restart") + '</a>\n' + 
+'          <a class="dropdown-item ' + disablenav + '" onclick="modal_action(\'' + _("Are you sure you want to shutdown ?") + '\', \'dsas_shutdown();\')">' + _("Shutdown") + '</a>\n' +
 '        </div>\n' +
 '      </li>\n' +
 '      <li class="nav-item">\n' +
-'        <a class="nav-link ' + disablenav + '" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir quitter ?\', \'dsas_logout();\', true)">Logout</a>\n' +
+'        <a class="nav-link ' + disablenav + '" onclick="modal_action(\'' + _("Are you sure you want to logout ?") + '\', \'dsas_logout();\', true)">' + _("Logout") + '</a>\n' +
 '      </li>\n' +
 '      <li class="nav-item">\n' +
-'        <a class="nav-link ' + disablenav + '" href="help.html">Documentation</a>\n' +
-'      </li>\n' +'      <li class="nav-item">\n' +
-'        <a class="nav-link ' + disablenav + ' btn btn-danger" onclick="modal_action(\'&Ecirc;tre-vous s&ucirc;r de vouloir appliquer ?\', \'dsas_apply();\')">Appliquer</a>\n' +
+'        <a class="nav-link ' + disablenav + '" href="help.html">' + _("Documentation") + '</a>\n' +
 '      </li>\n' +
-'      </ul>\n' +
+'      <li class="nav-item dropdown">\n' +
+'        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">' + _("Language") + '</a>\n' +
+'        <div class="dropdown-menu">\n' +
+'          <a class="dropdown-item" onclick="ml.setLanguage(\'en\');">en</a>\n' +
+'          <a class="dropdown-item" onclick="ml.setLanguage(\'fr\');">fr</a>\n' +
+'        </div>\n' +
+'      </li>\n' +
+'      <li class="nav-item">\n' +
+'        <a class="nav-link ' + disablenav + ' btn btn-danger" onclick="modal_action(\'' + _("Are you sure you want to apply ?") + '\', \'dsas_apply();\')">' + _("Apply") + '</a>\n' +
+'      </li>\n' +
+'      </ul>\n' +   
 '    </nav>' +
 '    <dsas-modal id="modalDSAS" tag="DSAS"  type="Ok"></dsas-modal>\n';
 
@@ -2010,5 +2116,6 @@ class DSASTaskCert extends HTMLElement {
   }
 
 }
+
 
 customElements.define("dsas-task-cert", DSASTaskCert);
