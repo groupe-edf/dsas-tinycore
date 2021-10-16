@@ -116,8 +116,11 @@ function complexity_test($passwd) {
    // Passwords must be at least 8 characters long and contain at least 3 of LUDS
    if (strlen($passwd) < 8)
       return false;
-   # Voir https://owasp.org/www-community/password-special-characters
-   # Don't permit the characters "'` or spaces because however
+   // Don't allow spaces in passwords
+   if (preg_match("/\\s/", $passwd))
+     return false;
+   // Voir https://owasp.org/www-community/password-special-characters
+   // Don't permit the characters "'` or spaces because however
    $luds = 0;
    if (preg_match("/[a-z]/", $passwd))
      $luds += 1; 
