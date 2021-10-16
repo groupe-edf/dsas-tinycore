@@ -13,7 +13,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
     switch ($_POST["op"]){
       case "repo":
         if ($_POST["repo"] != $dsas->config->web->repo)  {
-          $dsas->config->web->repo = $_POST["repo"];
+          $dsas->config->web->repo = ($_POST["repo"] = "true" ? "true" : "false");
           $dsas->asXml(_DSAS_XML);
         }
         break;
