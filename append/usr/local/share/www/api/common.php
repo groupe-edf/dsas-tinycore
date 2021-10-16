@@ -15,7 +15,7 @@ function dsas_ca_file() {
   return "";
 }
 
-function dsas_loggedin($update_timoeout = true) {
+function dsas_loggedin($update_timeout = true) {
   // Initialize the session, ignoring uninitalised session ids
   ini_set("session.use_strict_mode", 1);
   session_start();
