@@ -155,19 +155,23 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
  
      case "delete":   
-        $id =  htmlspecialchars($_POST["id"]);
-        $deltask = false;
-        $i = 0;
-        foreach ($dsas->tasks->task as $task) {
-          if ($task->id == $id) {
-            $deltask = true;
-            unset($dsas->tasks->task[$i]);
-            break;
+        $id =  $_POST["id"];
+        if (! ctype_xdigit($id)) {
+          $errors[] = ["error" => "ID de la tache invalide;"];
+        } else {
+          $deltask = false;
+          $i = 0;
+          foreach ($dsas->tasks->task as $task) {
+            if ($task->id == $id) {
+              $deltask = true;
+              unset($dsas->tasks->task[$i]);
+              break;
+            }
+            $i++;
           }
-          $i++;
+          if (! $deltask)
+            $errors[] = ["error" => "Le tache n'est pas trouv&eacute;"];
         }
-        if (! $deltask)
-           $errors[] = ["error" => "Le tache n'est pas trouv&eacute;"];
         break;
 
      case "run" :
