@@ -70,4 +70,4 @@ _post_install=\
 if [ ! -d /var/lib/sshd ]; then
   mkdir -p /var/lib/sshd
 fi
-adduser -s /bin/false -D -H -u 100 sshd"
+adduser -s /bin/false -S -D -H -u 100 sshd"
