@@ -128,9 +128,9 @@ function complexity_test($passwd) {
      $luds += 1;
    if (preg_match("/[0-9]/", $passwd))
      $luds += 1;   
-   if (preg_match("/[!#$%&\(\)*+,-./:;<=>?@\[\\\]^_\{|\}~]/", $passwd))
+   if (preg_match("/[!#$%&\(\)*+,-.\/:;<=>?@\[\\\]^_\{|\}~]/", $passwd))
      $luds += 1;
-   if (luds < 3)
+   if ($luds < 3)
      return false;
    return true;
 }

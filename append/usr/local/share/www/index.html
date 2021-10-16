@@ -20,16 +20,8 @@
 <div class="container p-3 border" id="StatusBar"></div>
 <script>dsas_status();</script>
 
-<div class="container p-3 border">
-   <div class="row"><div class="col-md-6">
-   <h5>Fichiers filtr&eacute:</h5></div>
-   <div class="col-md-6 text-end">
-     <input type="button" class="btn btn-primary" id="loghide" value="tous les logs" onclick="dsas_togglelogs('all');">
-     <input type="button" class="btn btn-primary" id="refresh" value="refresh" onclick="dsas_display_logs('all');">
-   </div></div>
-   <span id="VerifLogs"></span>
-   <script>dsas_display_logs('all')</script>
-</div>
+<div class="container p-3 border" id="VerifLogs"></div>
+<script>dsas_display_logs('all')</script>
 
 </body>
 </html>

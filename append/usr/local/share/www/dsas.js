@@ -1,3 +1,13 @@
+// Modify the prototype of String to allow formatting
+if (!String.format) {
+  String.format = function(format) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    return format.replace(/{(\d+)}/g, function(match, number) {
+      return typeof args[number] != 'undefined' ? args[number] : match;
+    });
+  };
+}
+
 function modal_message(text, action = null, hide = false){
   var modalDSAS = document.getElementById("modalDSAS");
   modalDSAS.removeAttribute("disable");
@@ -254,10 +264,10 @@ function dsas_status(){
             statusText: response.statusText});
     }).then(obj => {
       var body = '<div class="row"><div class="col-6 container p-3 border">' +
-        '<h5>Machine bas:</h5>' + machine_status(obj.bas);
+        '<h5>' + _("Lower Machine :") + '</h5>' + machine_status(obj.bas);
       if (obj.haut.status == "down")
         body = body + '</div><div class="col-6 container p-3 border text-muted">' +
-           '<h5 class="text-danger">Machine haut: INDISPONIBLE</h5>' + machine_status(obj.haut) + '</div></div>';
+           '<h5 class="text-danger">' + _("Upper Machine :") + ' ' + _("UNAVAILABLE") + '</h5>' + machine_status(obj.haut) + '</div></div>';
       else
         body = body + '</div><div class="col-6 container p-3 border">' +
            '<h5>Machine haut:</h5>' + machine_status(obj.haut) + '</div></div>';
@@ -266,14 +276,17 @@ function dsas_status(){
       setTimeout(dsas_status, 5000);
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
-        modal_message("Erreur (" + error.status + ") pendant la detection des machines :\n" + error.statusText);
+        if (error.status)
+          modal_message(String.format(_("Error ({0}) during the machine detection : {1}"), error.status, error.statusText));
+        else
+          modal_message(_("Lost contact with the lower machine"));
     });
 }
 
 function machine_status(obj){
   var p = 100. - (100. * obj.disk_free) / obj.disk_total;
   var disk = '<div class="d-flex justify-content-between">' +
-    '<div>Disque : ' + obj.disk + '</div>\n' +
+    '<div>' + String.format(_("Disk : {0}"), obj.disk) + '</div>\n' +
     '<div>' + format_space(obj.disk_total - obj.disk_free) + 
     ' / ' + format_space(obj.disk_total) + '</div></div>' +
     '  <div class="col-12 progress">\n' +
@@ -282,7 +295,7 @@ function machine_status(obj){
     '  </div>\n';
   p = (100. * obj.memory_used) / obj.memory_total;
   var memory = '<div class="d-flex justify-content-between">' +
-    '<div>M&eacute;moire :</div>\n' +
+    '<div>' + _("Memory :") + '</div>\n' +
     '<div>' + format_space(obj.memory_used) + 
     ' / ' + format_space(obj.memory_total) + '</div></div>' +
     '  <div class="col-12 progress">\n' +
@@ -298,7 +311,7 @@ function machine_status(obj){
     p = (p > 100 ? 100 : p);
   }
   var load = '<div class="d-flex justify-content-between">' +
-    '<div>Loadavg :</div>\n<div>' + obj.loadavg + '</div></div>' +
+    '<div>' + _("Load average :") + '</div>\n<div>' + obj.loadavg + '</div></div>' +
     '  <div class="col-12 progress">\n' +
     '    <div class="progress-bar" role="progressbar" style="width: ' + p.toFixed() +
     '%" aria-valuenow="' + p.toFixed() + '" aria-valuemin="0" aria-valuemax="100">' + obj.loadavg + '</div>\n' +
@@ -334,9 +347,9 @@ function dsas_check_warnings(disablenav = false, redirect = true){
         var body = "";
         for (const line of obj) {
           if (line["type"] === "warn")
-            warn = warn + "<p>" + line["msg"];
+            warn = warn + "<p>" + _(line["msg"]);
           else 
-            error = error + "<p>" + line["msg"] + "</p>\n";
+            error = error + "<p>" + _(line["msg"]) + "</p>\n";
         }
         if (error) {
           if (disablenav)
@@ -355,11 +368,10 @@ function dsas_check_warnings(disablenav = false, redirect = true){
 
 function dsas_togglelogs(all = false){
    var btn = document.getElementById("loghide");
-   if (btn.value === "tous les logs")
-     btn.value = "que des erreurs";
+   if (btn.value === _("All logs"))
+     dsas_display_logs(false);
    else
-     btn.value = "tous les logs";
-   dsas_display_logs(all);
+     dsas_display_logs(true);
 }
 
 function dsas_display_logs(all = false){
@@ -371,13 +383,18 @@ function dsas_display_logs(all = false){
         return Promise.reject({status: response.status, 
             statusText: response.statusText});
     }).then(logs => {
-      var showall =  (document.getElementById("loghide").value === "tous les logs");
-      var body = "";
+      var body = '   <div class="row"><div class="col-md-6">\n' +
+                 '     <h5>' + _("Filtered file logs :") + '</h5></div>\n' +
+                 '      <div class="col-md-6 text-end">\n' +
+                 '        <input type="button" class="btn btn-primary" id="loghide" value="' + (all ? _("All logs") : _("Errors only")) + '" onclick="dsas_togglelogs(\'all\');">\n' +
+                 '        <input type="button" class="btn btn-primary" id="refresh" value="' + _("Refresh") + '" onclick="dsas_display_logs(' + all + ');">\n' +
+                 '   </div></div>\n';
+
       if (logs) {
         if (!all || logs.length == 1) {
           for (const log of logs[0]) {
             if (log["type"] === "normal") {
-              if (showall) 
+              if (all) 
                 body = body + '<pre class="my-0 text-muted overflow-hidden">' + log["line"] + "</pre>\n";
             } else
               body = body + '<pre class="my-0 text-danger overflow-hidden">' + log["line"] + "</pre>\n";
@@ -391,7 +408,7 @@ function dsas_display_logs(all = false){
             body = body + '<div id="log' + i + '" class="container tab-pane ' + (i === 0 ? 'active' : 'fade') + '">';
             for (const log of logs[i]) {
               if (log["type"] === "normal") {
-                if (showall) 
+                if (all) 
                   body = body + '<pre class="my-0 text-muted overflow-hidden">' + log["line"] + "</pre>\n";
               } else
                 body = body + '<pre class="my-0 text-danger overflow-hidden">' + log["line"] + "</pre>\n";
@@ -402,10 +419,13 @@ function dsas_display_logs(all = false){
         }
         preLog.innerHTML = body;
       } else
-        modal_message("Aucun log rétourné par le DSAS");
+        modal_message(_("No logs returned by the DSAS"));
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
-        modal_message("Erreur (" + error.status + ") pendant la chargement des logs du DSAS :\n" + error.statusText);
+        if (error.statusText)
+          modal_message(String.format(_("Error ({0}) during the download of the logs : {1}"), error.status, error.statusText));
+        else
+          modal_message(String.format(_("Error ({0}) during the download of the logs : {1}"), 0, error));
     });
 }
 
@@ -423,17 +443,17 @@ function dsas_display_passwd(){
         divPasswd.innerHTML = '<div class="alert alert-danger">Aucun utilisateur trouvé !</div>';
       } else {
         body = '<form>\n<dsas-user user="' + users[0] + '" label="' + users[0] + 
-               ' (mot de pass existant)" old="old"></dsas-user>\n'
+               _(" (existing password)") + '" old="old"></dsas-user>\n'
         for (user of Object.values(users))
            body = body + '<dsas-user user="' + user + '"></dsas-user>\n'
         body = body + '<div class="form-group">\n' +
-              '<input type="submit" class="btn btn-primary" value="Modifier les mots de passe"' +
+              '<input type="submit" class="btn btn-primary" value="' + _("Modify the passwords") + '"' +
               ' onclick="dsas_set_passwd(); return false;">\n</div>';     
         divPasswd.innerHTML = body;
       }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
-        modal_message("Erreur (" + error.status + ") pendant la chargement des utilisateurs :\n" + error.statusText);
+        modal_message(String.format(_("Error ({0}) during the download of users : {1}"), error.status, error.statusText));
     });
 }
 
@@ -468,23 +488,23 @@ function dsas_set_passwd(){
         for (err of errors) {
           if (typeof err.old !== "undefined") {
             document.getElementsByClassName("form-control")[0].setAttribute("class", "form-control is-invalid");
-            document.getElementsByClassName("invalid-feedback")[0].innerHTML = err.old;
+            document.getElementsByClassName("invalid-feedback")[0].innerHTML = _(err.old);
           } else if (typeof err.error !== "undefined") {
-            modal_message(err.error);
+            modal_message(_(err.error));
           } else {
             key = Object.keys(err)[0];
             document.getElementById("inp_" + key).setAttribute("class", "form-control is-invalid");
-            document.getElementById("feed_" + key).innerHTML = err[key];
+            document.getElementById("feed_" + key).innerHTML = _(err[key]);
           }
         }
       } catch (e) {
         // Its text => here always just "Ok"
         // Reload page to clear errors 
-        modal_message("Les mots de passe ont &eacute;t&eacute; chang&eacute;s.", "window.location='passwd.html'");
+        modal_message(_("The passwords have been changed"), "window.location='passwd.html'");
       }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
-        modal_message("Erreur pendant le changement des mots de passe: " + error.statusText);
+        modal_message(String.format(_("Error during password change : {0}"), error.statusText));
     });
 }
 
@@ -2016,10 +2036,8 @@ class DSASHeader extends HTMLElement {
 '          <a class="dropdown-item" onclick="dsas_restore();">' + _("Restore") + '</a>\n' +
 '          <a class="dropdown-item ' + disablenav + '" onclick="modal_action(\'' + _("Are you sure you want to restart ?") + '\', \'dsas_reboot();\')">' + _("Restart") + '</a>\n' + 
 '          <a class="dropdown-item ' + disablenav + '" onclick="modal_action(\'' + _("Are you sure you want to shutdown ?") + '\', \'dsas_shutdown();\')">' + _("Shutdown") + '</a>\n' +
+'          <a class="dropdown-item ' + disablenav + '" onclick="modal_action(\'' + _("Are you sure you want to logout ?") + '\', \'dsas_logout();\', true)">' + _("Logout") + '</a>\n' +
 '        </div>\n' +
-'      </li>\n' +
-'      <li class="nav-item">\n' +
-'        <a class="nav-link ' + disablenav + '" onclick="modal_action(\'' + _("Are you sure you want to logout ?") + '\', \'dsas_logout();\', true)">' + _("Logout") + '</a>\n' +
 '      </li>\n' +
 '      <li class="nav-item">\n' +
 '        <a class="nav-link ' + disablenav + '" href="help.html">' + _("Documentation") + '</a>\n' +

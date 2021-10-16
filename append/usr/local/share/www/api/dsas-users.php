@@ -17,7 +17,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
     $i++;
   }
   if ( $old == -1 ) {
-    $errors[] = ["old" => "Le password ancien est requis"];
+    $errors[] = ["old" => "The existing password is required"];
   } else {
     $nempty = 0;
     if (force_passwd()) {
@@ -30,9 +30,9 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
       }
     }
     if ($nempty != 0) {
-      $errors[] = ["error" => "Premiere usage. Tous les mots de passe doit-&ecirc;tre changer"];
+      $errors[] = ["error" => "First use. All of the passwords must be changed."];
     } else if (sasl_checkpass($users[$old]["username"], $users[$old]["password"])) {
-      $errors[] = ["old" => "Mot de passe ancien incorrect"];
+      $errors[] = ["old" => "The existing password is incorrect"];
     } else {
       $count = 0;
       $hash = $dsas->config->users->hash;
@@ -42,10 +42,10 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
          $name = trim($user["username"]);
          $passwd = trim($user["password"]);
          if (!empty($passwd)){
-           if (! complexity_test($passwd))
-             $errors[] = [$name => "Mot de passe pas suffisament complexe"];
-           else if ($passwd != str_replace("/\s+/", "", $passwd))
-             $errors[] = [$name => "Mot de passe ne peut pas contenir des espaces blancs"];
+           if ($passwd != str_replace("/\s+/", "", $passwd))
+             $errors[] = [$name => "The password can not contain white spaces"];
+           else if (! complexity_test($passwd))
+             $errors[] = [$name => "The password is insufficently complex"];
            else {
              $ret = change_passwd($name, $passwd, $hash);
 
@@ -59,7 +59,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
       }
 
       if ($count == 0)
-        $errors[] = ["error" => "Aucun mot de passe chang&eacute;."];
+        $errors[] = ["error" => "No password has been changed."];
       else {
         unset($dsas->config->users->first);
         $dsas->asXml(_DSAS_XML);
