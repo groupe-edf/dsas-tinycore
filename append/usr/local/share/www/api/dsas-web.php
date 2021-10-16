@@ -96,7 +96,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
     }
   } catch (Exception $e) {
-     $error[] = ["error" => "Internal server erreur : " + e];
+     $errors[] = ["error" => "Internal server erreur : " + e];
   }
  
   if ($errors == [])
