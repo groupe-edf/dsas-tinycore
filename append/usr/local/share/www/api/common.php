@@ -45,10 +45,6 @@ function dsas_has_dir(){
   return ((!isempty($d)) && is_dir($d));
 }
 
-function dsas_has_xml() {
-  return is_file(_DSAS_XML); 
-}
-
 function dsas_exec($args, $cwd = null, $stdin = []){
   # Simplify the call to proc_open with the means to avoids spawning a shell
   # and escaping the args integrated. The args MUST be passed as an array to get
@@ -134,79 +130,6 @@ function complexity_test($passwd) {
    if (luds < 3)
      return false;
    return true;
-}
-
-function dsas_init(){
-  if (!is_file(_DSAS_XML)) {
-    $xml = <<< XML
-<?xml version="1.0"?>
-<dsas>
-  <config>
-    <users>
-      <hash>sha512</hash>
-      <first>true</first>
-      <user>tc</user>
-      <user>bas</user>
-      <user>haut</user>
-    </users>
-    <network>
-      <bas>
-        <dhcp>true</dhcp>
-        <cidr />
-        <gateway />
-        <dns>
-          <domain />
-          <nameserver />
-        </dns>
-      </bas>
-      <haut>
-        <dhcp>true</dhcp>
-        <cidr />
-        <gateway />
-        <dns>
-          <domain />
-          <nameserver />
-        </dns>
-      </haut>
-    </network>
-    <web>
-      <ssl>
-        <countryName></countryName>
-        <stateOrProvinceName></stateOrProvinceName> 
-        <localityName></localityName>
-        <organizationName></organizationName>
-        <organizationalUnitName></organizationialUnitName>
-        <commonName></commonName>
-        <emailAddress></emailAddress>
-        <validity></validity>
-      </ssl>
-      <repo>false</repo>
-    </web>
-    <ssh>
-      <active>false</active>
-      <user_tc></user_tc>
-      <user_bas></user_bas>
-      <user_haut></user_haut>
-    </ssh>
-    <ntp>
-      <active>false</active>
-      <server></server>
-    </ntp>
-    <syslog>
-      <active>false</active>
-      <server></server>
-    </syslog>
-    <disk></disk>
-  </config>
-  <tasks>
-  </tasks>
-  <certificates>
-  </certificates>
-</dsas>
-XML;
-
-    file_put_contents(_DSAS_XML, $xml);
-  }
 }
 
 function interco_haut(){
@@ -373,54 +296,6 @@ function dsas_get_logs() {
   return $logs;
 }
 
-function format_dsas_log($log, $hide){
-  $fp = fopen($log, "r");
-  $out = "";
-  if ($fp){
-    while (($line = fgets($fp)) !== false){
-      if (substr($line,0,2) === "  ") {
-        if (!$hide) $out = $out . "<span class='text-muted'>" . substr($line,0,-1) . "</span>" . PHP_EOL;
-      } else
-        $out = $out . "<span class='text-danger'>" . substr($line,0,-1) . "</span>" . PHP_EOL;
-    }
-    fclose($fp);
-    return $out;
-  } else
-    return '<div class="alert alert-warning">Journal ' . $log . ' de DSAS pas trouv&eacute;.';
-}
-
-function format_space($bytes) {
-  $symbols = array('B', 'KB', 'MB', 'GB', 'TB', 'PB');
-  $exp = floor(log($bytes)/log(1000));
-  return sprintf("%.2f %s", ($bytes/pow(1000, floor($exp))), $symbols[$exp]); 
-}
-
-function dsas_disk_space($device) {
-  $d = substr($device, 5);
-  if (trim($d, "0..9") === $d) {
-    $f = "/sys/block/" . $d . "/size";
-  } else {
-    $f = "/sys/block/" . trim($d, "0..9") . "/" . $d . "/size";
-  }
-  if (is_file($f)) {
-    $bytes = file_get_contents($f) * 512;
-    return sprintf("%20s %s", $device, format_space($bytes));
-  } else {
-    return sprintf("%20s : Device not found", $device);
-  }
-}
-
-function dsas_space() {
-  $d = dsas_dir();
-  if (is_dir ($d)) {
-    $tot = format_space(disk_total_space($d));
-    $fre = format_space(disk_free_space($d));
-    return sprintf("Dir : %20s, Total Space : %s, Free Space : %s", $d, $tot, $fre); 
-  } else {
-    return sprintf("Dir : %20s, does not exist", $d);
-  }
-}
-
 function renew_web_cert($options, $days){
   foreach (array('countryName', 'stateOrProvinceName', 'localityName',
                  'organizationName', 'organizationalUnitName', 'commonName',
@@ -518,15 +393,6 @@ function parse_gpg($cert){
   return $retval;
 }
 
-function append_simplexml(&$to, $from) {
-  foreach ($from as $child) {
-    $tmp = $to->addChild($child->getName(), (string) $child);
-    foreach ($child->attributes() as $attr_key => $attr_value)
-      $tmp->addAttribute($attr_key, $attr_value);
-    append_simplexml($tmp, $child);
-  }
-}
-
 function is_valid_domain($d){
   return (preg_match("/^([a-z\d](-*[a-z\d])*)(\.([a-z\d](-*[a-z\d])*))*$/", $d)
     && preg_match("/^.{1,253}$/", $d)
@@ -569,7 +435,7 @@ function dsas_run_log($id){
 
 // Check the $_FILES variable for possible attacks
 function check_files($files, $mime_type){
-  // Protect against correupted $_FILES array
+  // Protect against corrupted $_FILES array
   if (!isset($files["error"]) || is_array($files["error"]))
     throw new RuntimeException("Invalid parameter");
 
