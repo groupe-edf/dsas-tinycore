@@ -1,4 +1,5 @@
 <dsas>
+  <version>0.5</version>
   <config>
     <users>
       <hash>sha512</hash>

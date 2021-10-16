@@ -12,6 +12,9 @@ INTERCO_MASK="255.255.255.0"
 INTERCO_BAS="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 1)) )"
 INTERCO_HAUT="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 2)) )"
 
+# The vesrion of the DSAS xml file supported by this version
+DSAS_XML_VERSION="0.5"
+
 VAR=/var/dsas
 as_tc="sudo -E -u tc"
 as_bas="sudo -E -u bas"
@@ -590,11 +593,34 @@ save_config(){
   $as_tc filetool.sh -b
 }
 
+check_xml_version(){
+  _ver=$(xmllint --xpath "string(dsas/version)" $VAR/dsas_conf.xml)
+  # If no XML version set to first XML file with version number
+  if [ -z "$_ver" ]; then
+    echo "XML version added"
+    # Don't use xmllint here as can't easily add nodes. Just use sed
+    mv $VAR/dsas_conf.xml $VAR/dsas_conf.xml.old
+    cat $VAR/dsas_conf.xml.old | sed -e "s:<dsas>:<dsas>\n  <version>0.5</version>:" > $VAR/dsas_conf.xml
+    chown tc.staff $VAR/dsas_conf.xml
+    chmod 644 $VAR/dsas_conf.xml
+    _ver="0.5"
+  fi
+  # FIXME : When the XML versions change add code here for the upgrade
+
+
+  # Now that the XML is upgraded, save the new version number
+  if [ "$_ver" != "$DSAS_XML_VERSION" ]; then
+    echo "XML version updated"
+    echo -e "cd dsas/version\nset $DSAS_XML_VERSION\nsave" | xmllint --shell $VAR/dsas_conf.xml
+  fi
+}
+
 case "${1}" in
   start)
     init_disk || reboot_required
     get_dsas
     mount_dsas
+    check_xml_version
 
     NETDEVICES="$(awk -F: '/eth.:|tr.:/{print $1}' /proc/net/dev 2>/dev/null)"
     if [ $(echo $NETDEVICES | wc -w) -lt 2 ]; then
