@@ -1253,13 +1253,22 @@ connexion avec un shell.
 | bas    | /bin/false | Utilisé pour connexion vers zone plus sensible  |
 | verif  | /bin/false | Utilisé que à l'intérieur du DSAS               |
 
-### Les droit d'écriture de chaque utilisateur
+### Les droits d'écriture de chaque utilisateur
 
-FIXME : Ajoute du texte
+Les droits d’écriture de chacun des utilisateurs est comme selon le tableau ci-dessous
 
-### Les droit de connexion de chaque utilisateur
+| compte | Dossier avec des droits d’écriture                    |
+|--------|-------------------------------------------------------|
+| tc     | /tmp, /var/*, /home/tc, /home/dsas/log, /dev, /mnt, /opt, /run |
+| verif | /tmp, /home/verif, /home/dsas/haut, /home/dsas/bas, /home/dsas/log, /usr/local/var/lib/rpm  |
+| haut  | /tmp, /home/haut, /home/dsas/haut |
+| bas   | /tmp, /home/bas, /home/dsas/bas |
 
-FIXME : Ajoute du texte
+L’utilisateur `tc` a besoin d’accès a certains dossiers afin de faire opération d’administration. 
+L’utilisateur `verif` a accès aux fichiers des utilisateurs `bas` et `haut` mais également pour l’écriture
+des logs et à `/usr/local/var/lib/rpm` afin que l`utilisateur `verif` pourrait installer des certificats GPG 
+pour `rpm` sans avoir les droits de `sudo`. Les certificats préexistant de rpm sont effacés à chaque
+usage, et ce droit pour l’`utilisateur `verif` est sans risque.
 
 ## Cloisonnement disque 
 
@@ -1591,14 +1600,14 @@ $ openssl genrsa -out key.pem 4096
 $ openssl rsa -in key.pem -pubout > key.pub
 ```
 
-Et la clef publique dans le fichier key.pub doit être associé avec le tache dans le DSAS. Les fichiers
+Et la clef publique dans le fichier key.pub doit être associé avec la tâche dans le DSAS. Les fichiers
 sont signés comme
 
 ```shell
 $ openssl dgst -sign key.pem -keyform PEM -sha256 -out <file>.sig -binary <file>
 ```
 
-Les signatures sont toujours stockées dans des fichiers séparé, et le DSAS assume que les signatures
+Les signatures sont toujours stockées dans des fichiers séparés, et le DSAS assume que les signatures
 sont dans un fichier avec un extension .sig. Les deux fichiers doivent être fournis au DSAS.
 
 ## Service OpenSSH
@@ -1651,14 +1660,14 @@ est interdit. Le `umask` par défaut est forcé d'être 007 afin d'assure un acc
 
 Il y a deux service web; un requis pour l'administration du DSAS et un deuxième optionnel
 pour un dépôt des fichiers. Les deux sites partagent le certificat TLS, qui sont 
-stocké dans `/var/dsas/`. Les permissions du certificat privé est alors (0640), avec une
+stocké dans `/var/dsas/`. Les permissions du certificat privé sont alors (0640), avec une
 groupe `repo` auquel appartiennent les deux utilisateurs `tc` et `bas`.
 
 Le serveur d'administration est exécuté en tant qu'utilisateur `tc` est ne peux accéder
 que des fichiers accessible à l'utilisateur `tc`. Le site est disponible seulement en https 
 sur la port `5000`. Le site est écrit en `HTML5, JS et bootstrap5` pour le frontend et `PHP8` 
-pour le backend.  L’authentification sur le site est fait avec le connecteur `SASL` aux comptes 
-local à la machine `bas`. `SASL` est configuré de fonctionner que avec des `Unix domain socket` 
+pour le backend.  L’authentification sur le site est faite avec le connecteur `SASL` aux comptes 
+local à la machine `bas`. `SASL` est configuré de fonctionner qu’avec des `Unix domain socket` 
 complétement local à la machine, donc accessible que au processus tournant sur la machine.
 Le backend retourne une session identifiant pour un login réussite. Cet identifiant est
 vérifié a chaque opération sur le backend, et périmé après dix minutes sans accès à la 
@@ -1668,7 +1677,7 @@ Le politique du backend est qu’aucune information venant du frontend est consi
 sûr est tout est vérifié. La fonctionne `proc_open` de `PHP8` est utilisé pour des 
 commande système nécessaire à l'administration, et
 
-- Appelé d'un façon à ne pas démarrer un shell
+- Appelé d'une façon à ne pas démarrer un shell
 - Avec tout argument vérifié est échappé afin d'éviter l'injection de commande
 
 Le site de dépôt optionnel est exécuté en tant que l'utilisateur `bas` et ne peut
