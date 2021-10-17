@@ -1434,9 +1434,9 @@ function b64toBlob(b64Data, contentType='', sliceSize=512){
 function dsas_backup(){
   var modalDSAS = document.getElementById("modalDSAS");
   var body = "";
-  modal_action("Sauvegarde de la configuration du DSAS", 'dsas_real_backup();', true);
+  modal_action(_("Backup the DSAS configuration"), 'dsas_real_backup();', true);
   body = '    <div class="col-9 d-flex justify-content-center">\n' +
-         '      <label for="BackupPassword">Mot de passe de la sauvegarde :</label>\n' +
+         '      <label for="BackupPassword">' + _("Backup password :") + '</label>\n' +
          '      <input type="password" id="BackupPassword" value="" class="form-control" onkeypress="if (event.key === \'Enter\'){ modalDSAS.hide(); dsas_real_backup();}">\n' +
          '    </div>';
   modalDSAS.setAttribute("body", body);
@@ -1468,6 +1468,7 @@ function dsas_real_backup(){
       }());
       saveBase64(backup, "dsas_backup.tgz");
     }).catch(error => {
+      // Don't translate error.statusText here
       if (! fail_loggedin(error.statusText))
         modal_message("Error : " + error.statusText);
     });     
@@ -1487,9 +1488,9 @@ function dsas_restore(){
 function dsas_passwd_restore(){
   var modalDSAS = document.getElementById("modalDSAS");
   var body = "";
-  modal_action("Restauration de la configuration du DSAS", 'dsas_real_restore();', true);
+  modal_action(_("Restoration of the DSAS configuration"), 'dsas_real_restore();', true);
   body = '    <div class="col-9 d-flex justify-content-center">\n' +
-         '      <label for="RestorePassword">Mot de passe de la sauvegarde :</label>\n' +
+         '      <label for="RestorePassword">' + _("Restoration password :") + '</label>\n' +
          '      <input type="password" id="RestorePassword" value="" class="form-control" onkeypress="if (event.key === \'Enter\') {modalDSAS.hide(); dsas_real_restore();}">\n' +
          '    </div>';
   modalDSAS.setAttribute("body", body);
@@ -1524,7 +1525,7 @@ function dsas_real_restore() {
         modalDSAS.removeAttribute("size");
         modalDSAS.removeAttribute("hideonclick");
         modalDSAS.setAttribute("action", "");
-        modalDSAS.setAttribute("title", "Appliquer le configuration");
+        modalDSAS.setAttribute("title", _("Apply the configuration"));
         modalDSAS.setAttribute("type", "Ok");
         modalDSAS.show();
         dsas_apply();
@@ -1925,11 +1926,11 @@ class DSASModal extends HTMLElement {
        '              ' + (body === null ? '<div id="body' + tag + '"></div>' : '<div class="modal-body" id="body' + tag + '">' + body + '</div>') + '\n' +
        '              <div class="modal-footer">\n' +
        (type !== "Ok" ? '                <button type="button" id="cancel' + tag  +'" class="btn btn-secondary" data-bs-dismiss="modal"' +
-       (disable === null ? '' : ' disable') + '>Annuler</button>\n' : '') +
+       (disable === null ? '' : ' disable') + '>' + _("Cancel") + '</button>\n' : '') +
        '                <button type="button" id="ok'  + tag + '" class="btn btn-primary"' + 
        ( ! action ? 'data-bs-dismiss="modal"' : 'onclick="' + action + '"' + 
            (hideonclick === null ? '' : ' data-bs-dismiss="modal"')) +
-       (disable === null ? '' : ' disable') + '>' + (type === "Ok" ? 'Ok' : 'Confirmer') + '</button>\n' +
+       (disable === null ? '' : ' disable') + '>' + (type === "Ok" ? _("Ok") : _("Confirm")) + '</button>\n' +
        '              </div>\n' +
        '            </div>\n' +
        '          </div>';

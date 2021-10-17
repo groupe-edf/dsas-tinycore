@@ -74,8 +74,15 @@
     "Unknown error" : "",
     "Invalid file format" : "",
     "First use. All of the passwords must be changed." : "",
-    "No tasks are configured." : ""
-
+    "No tasks are configured." : "",
+    "Backup the DSAS configuration" : "",
+    "Backup password :" : "",
+    "Restoration of the DSAS configuration" : "",
+    "Restoration password :" : "",
+    "Apply the configuration" : "",
+    "Ok" : "",
+    "Cancel" : "",
+    "Confirm" : ""
   },
   "fr" : {
     "Add a task" : "Ajouter un tâche",
@@ -154,6 +161,14 @@
     "Unknown error" : "Erreur inconnu",
     "Invalid file format" : "Format de fichier invalide",
     "First use. All of the passwords must be changed." : "Premiere utilisation. Tous les mots de passe sont à changer.",
-    "No tasks are configured." : "Aucune tache configuré."
+    "No tasks are configured." : "Aucune tâche configuré.",
+    "Backup the DSAS configuration" : "Sauvegarde de la configuration du DSAS",
+    "Backup password :" : "Mot de passe de la sauvegarde :",
+    "Restoration of the DSAS configuration" : "Restauration de la configuration du DSAS",
+    "Restoration password :" : "Mot de passe de la sauvegarde :",
+    "Apply the configuration" : "Appliquer le configuration",
+    "Ok" : "Ok",
+    "Cancel" : "Annuler",
+    "Confirm" : "Confirmer"
   }
 }
