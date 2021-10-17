@@ -921,7 +921,7 @@ function dsas_change_service(what) {
              dsas_display_service(what);
            }
          }).catch(error => {
-           modal_message("Error : " + error.statusText);
+           modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
          });
      }).catch(error => {
        fail_loggedin(error.statusText);
@@ -963,9 +963,9 @@ function treat_gpg_certs(certs) {
       'aria-controls="gpg' + i + '" aria-expanded="false">' +
       '<i class="text-collapsed"><img src="caret-right.svg"/></i>' +
       '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + name + 
-      '&nbsp;<a data-toggle="tooltip" title="T&eacute;l&eacute;charger" href="' + url + '" download="' + name.replace(/ /g,"_") + '.gpg">' + 
+      '&nbsp;<a data-toggle="tooltip" title="' + _("Download") + '" href="' + url + '" download="' + name.replace(/ /g,"_") + '.gpg">' + 
       '<img src="save.svg"></a>';
-    body = body + '&nbsp;<a data-toggle="tooltip" title="Supprimer" onclick="dsas_cert_delete(\'' + name + '\',\'' + 
+    body = body + '&nbsp;<a data-toggle="tooltip" title="' + _("Delete") + '" onclick="dsas_cert_delete(\'' + name + '\',\'' + 
         cert.fingerprint + '\');"><img src="x-lg.svg"></a>';
     body = body + 
       '</p><div class="collapse" id="gpg' + i + '"><div class="card card-body">' +
@@ -985,7 +985,7 @@ function gpg_body(cert) {
 
 function time_t_to_date(t) {
   if (t <= 0)
-    return "Toujours";
+    return _("always");
   else {
   d = new Date(t * 1000);
   return d.toUTCString();
@@ -1006,10 +1006,10 @@ function treat_x509_certs(certs, added = false) {
       'aria-controls="ca' + i + '" aria-expanded="false">' +
       '<i class="text-collapsed"><img src="caret-right.svg"/></i>' +
       '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + name + 
-      '&nbsp;<a data-toggle="tooltip" title="T&eacute;l&eacute;charger" href="' + url + '" download="' + name.replace(/ /g,"_") + '.crt">' + 
+      '&nbsp;<a data-toggle="tooltip" title="' + _("Download") + '" href="' + url + '" download="' + name.replace(/ /g,"_") + '.crt">' + 
       '<img src="save.svg"></a>';
     if (added)
-      body = body + '&nbsp;<a data-toggle="tooltip" title="Supprimer" onclick="dsas_cert_delete(\'' + name + '\',\'' + 
+      body = body + '&nbsp;<a data-toggle="tooltip" title="' + _("Delete") + '" onclick="dsas_cert_delete(\'' + name + '\',\'' + 
         cert.fingerprint + '\');"><img src="x-lg.svg"></a>';
     body = body + 
       '</p><div class="collapse" id="' + (added ? 'add' : 'ca') + i + '"><div class="card card-body">' +
@@ -1020,7 +1020,7 @@ function treat_x509_certs(certs, added = false) {
 }
 
 function dsas_cert_delete(name, finger){
-  modal_action("Delete le certificate ?<br><small>&nbsp;&nbsp;Name : " + name + "<br>&nbsp;&nbsp;ID : " + finger.substr(0,50) + "...</small>",
+  modal_action(_("Delete the certificate ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, finger.substr(0,50)),
      "dsas_cert_real_delete('" + name + "','" + finger + "');", true);
 }
 
@@ -1045,7 +1045,7 @@ function dsas_cert_real_delete(name, finger) {
         dsas_display_cert("gpg");
       }
     }).catch(error => {
-      modal_message("Error : " + error.statusText);
+        modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
     });
 }
 
@@ -1132,11 +1132,11 @@ function dsas_upload_cert(type = "x509") {
         modal_errors(errors);
       } catch (e) {
         // Its text => here always just "Ok"
-        modal_message("Certificate envoy&eacute; avec sucess", "dsas_display_cert();", true);
+        modal_message(_("Certificate sucessfully sent"), "dsas_display_cert();", true);
       }
     }).catch(error => {
       if (!fail_loggedin(error.statusText))
-        modal_message("Error : " + error.statusText);
+        modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
     }); 
 }
 
@@ -1150,7 +1150,12 @@ function dsas_display_tasks(what = "all") {
             statusText: response.statusText});
     }).then(tasks => {
       var i = 0;
-      var body = "";
+      var body = '<div class="row"><div class="col-md-10"><h5><a class="text-toggle" data-bs-toggle="collapse" href="#Tasks"\n' +
+    '  role="button" aria-controls="Tasks" aria-expanded="false">\n' +
+    '  <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded">\n' +
+    '  <img src="caret-down.svg"/></i></a>' + _("Tasks") + '</h5></div>\n' +
+    '  <div class="col-md-2 text-end"><img src="plus-lg.svg" data-toggle="tooltip" title="' + _("Add") + '" onclick="dsas_task_new();"></div></div>\n' +
+    '  <div class="collapse" id="Tasks">\n';
 
       if (tasks.task) {
         for (task of (tasks.task.constructor === Object ? [tasks.task] : tasks.task)) { 
@@ -1160,11 +1165,11 @@ function dsas_display_tasks(what = "all") {
               'aria-controls="task' + i + '" aria-expanded="false">' +
               '<i class="text-collapsed"><img src="caret-right.svg"/></i>' +
               '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + task.name +
-              '&nbsp;<a data-toggle="tooltip" title="Modifier" onclick="dsas_task_modify(\'' + task.id + '\');">' + 
+              '&nbsp;<a data-toggle="tooltip" title="' + _("Edit") +'" onclick="dsas_task_modify(\'' + task.id + '\');">' + 
               '<img src="pencil-square.svg"></a>';
-          body = body + '&nbsp;<a data-toggle="tooltip" title="Supprimer" onclick="dsas_task_delete(\'' + task.id + 
+          body = body + '&nbsp;<a data-toggle="tooltip" title="' + _("Delete") + '" onclick="dsas_task_delete(\'' + task.id + 
               '\', \'' + task.name + '\');"><img src="x-lg.svg"></a>';
-          body = body + '&nbsp;<a data-toogle="tooltip" title="Ex&eacute;cuter" onclick="dsas_task_run(\'' + task.id + 
+          body = body + '&nbsp;<a data-toogle="tooltip" title="' + _("Run") + '" onclick="dsas_task_run(\'' + task.id + 
               '\', \'' + task.name + '\');"><img src="play.svg" width="20" height="20"></a>';
           body = body + 
               '</p><div class="collapse" id="task' + i + '"><div class="card card-body">' +
@@ -1172,6 +1177,7 @@ function dsas_display_tasks(what = "all") {
           i++;
         }
       }
+      body = body + "</div>";
       document.getElementById("Tasks").innerHTML = body;
     }).catch(error => {
       fail_loggedin(error.statusText);
@@ -1192,9 +1198,24 @@ function empty_obj(obj) {
 
 function date_to_locale(d){
   if (d == "never")
-    return "Jamais"
-  var l = new Date(d.substr(0,4) + "-" + d.substr(4,2) + "-" + d.substr(6,2) + "T" + d.substr(8,2) + ":" + d.substr(10,2) + ":" + d.substr(12,2) + "Z");
-  return l.toString() 
+    return _("never");
+  c = new Intl.DateTimeFormat(ml.currentLanguage, {
+    year : "numeric",
+    month : "short",
+    day : "numeric",
+    hour : "numeric",
+    minute : "numeric",
+    second : "numeric"});
+  if (typeof(d) === "string") {
+    return c.format(new Date(d.substr(0,4) + "-" + d.substr(4,2) + "-" + d.substr(6,2) + "T" + 
+           d.substr(8,2) + ":" + d.substr(10,2) + ":" + d.substr(12,2) + "Z"));
+  } else {
+    var _r = [];
+    for (_d of d)
+      _r.push(c.format(new Date(_d.substr(0,4) + "-" + _d.substr(4,2) + "-" + _d.substr(6,2) + "T" + 
+           _d.substr(8,2) + ":" + _d.substr(10,2) + ":" + _d.substr(12,2) + "Z")));
+    return _r;
+  }
 }
 
 function task_body(task) {
@@ -1204,15 +1225,15 @@ function task_body(task) {
     '<div class="container">' +
     '<div class="row">' +
     '<div class="col-6 overflow-hidden">' +
-    '<p class="my-0">Directory : ' + print_obj(task.directory) + '</p>' +
-    '<p class="my-0">URI : ' + print_obj(task.uri) + '</p>' +
-    '<p class="my-0">Type : ' + print_obj(task.type) + '</p>' +
-    '<p class="my-0">Run : ' + print_obj(task.run) + '</p>' +
-    '<p class="my-0">Last : ' + date_to_locale(task.last) + '</p>' +
-    '<p class="my-0">Status : ' + print_obj(task.status) + '</p>' +
+    '<p class="my-0">' + _("Directory :") + ' ' + print_obj(task.directory) + '</p>' +
+    '<p class="my-0">' + _("URI :") + ' ' + print_obj(task.uri) + '</p>' +
+    '<p class="my-0">' + _("Task type :") + ' ' + print_obj(task.type) + '</p>' +
+    '<p class="my-0">' + _("Periodicity :") + ' ' + print_obj(task.run) + '</p>' +
+    '<p class="my-0">' + _("Last :") + ' ' + date_to_locale(task.last) + '</p>' +
+    '<p class="my-0">' + _("Status :") + ' ' + print_obj(task.status) + '</p>' +
     '</div>' +
     '<div class="col-6  overflow-hidden">' +
-    '<p class="my-1">Certificates:</p>' +
+    '<p class="my-1">' + _("Certificates :") + '</p>' +
     '<div class="container p-1 my-1 border overflow-hidden">';
 
   if (empty_obj(task.cert))
@@ -1232,7 +1253,7 @@ function task_body(task) {
 }
 
 function dsas_task_delete(id, name){
-  modal_action("Delete le tache ?<br><small>&nbsp;&nbsp;Nom : " + name + "<br>&nbsp;&nbsp;ID : " + id,
+  modal_action(_("Delete the task ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, id),
      "dsas_task_real_delete('" + id + "');", true);
 }
 
@@ -1257,7 +1278,7 @@ function dsas_task_real_delete(id) {
       }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
-        modal_message("Error : " + error.statusText);
+        modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
     });
 }
 
@@ -1332,7 +1353,7 @@ function dsas_task_modify(id) {
 }
 
 function dsas_task_run(id, name){
-  modal_action("Exécuter le tache ?<br><small>&nbsp;&nbsp;Nom : " + name + "<br>&nbsp;&nbsp;ID : " + id,
+  modal_action(_("Run the task ?&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}", name, id),
      "dsas_task_real_run('" + id + "');", true);
 }
 
@@ -1357,7 +1378,7 @@ function dsas_task_real_run(id) {
       }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
-        modal_message("Error : " + error.statusText);
+        modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
     });
 }
 
@@ -1442,7 +1463,7 @@ function dsas_add_task() {
       }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
-        modal_message("Error : " + error.statusText);
+        modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
     });
 }
 
@@ -1505,7 +1526,7 @@ function dsas_real_backup(){
     }).catch(error => {
       // Don't translate error.statusText here
       if (! fail_loggedin(error.statusText))
-        modal_message("Error : " + error.statusText);
+        modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
     });     
 }
 
@@ -1567,7 +1588,7 @@ function dsas_real_restore() {
       } 
     }).catch(error => {
       if (!fail_loggedin(error.statusText))
-        modal_message("Error : " + error.statusText);
+        modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
     });
 }
 
@@ -1661,19 +1682,19 @@ function dsas_apply(){
       modalApply.removeAttribute("disable");
       modalApply.removeAttribute("body");  
       modalApply.hide();
-      modal_message("Configuration appliqu&eacute;e");
+      modal_message(_("Configuration applied"));
     }).catch(error => {
       modalApply.removeAttribute("disable");
       modalApply.removeAttribute("body");  
       modalApply.hide();
-      modal_message("Erreur pendant application de la configuration");
+      modal_message(_("Error during application of the configuration"));
     });
   }).catch(error => {
     modalApply.removeAttribute("disable");
     modalApply.removeAttribute("body");  
     modalApply.hide();
     if (!fail_loggedin(error.statusText))
-      modal_message("Erreur pendant la sauvegarde de la configuration");
+      modal_message(_("Error during save of the configuration"));
   });
 }
 
@@ -1703,7 +1724,7 @@ function dsas_reboot(){
     modalReboot.removeAttribute("disable");
     modalReboot.hide();
     if (! fail_loggedin(error.statusText))
-      modal_message("Erreur pendant le red&eacute;marrage");
+      modal_message(_("Error during the reboot"));
   });
 }
 
@@ -1770,7 +1791,7 @@ function waitreboot(counter = 0) {
     }).catch(error => {
       modalReboot.removeAttribute("disable");
       modalReboot.hide();  
-      modal_message("Timeout sur r&eacute;demarrage !");    
+      modal_message(_("Timeout during restart"));    
     });
   }
 }
@@ -1800,7 +1821,7 @@ function dsas_shutdown(){
     modalShutdown.removeAttribute("disable");
     modalShutdown.hide();
     if (! fail_loggedin(error.statusText))
-      modal_message("Erreur pendant l'arr&ecirc;t !");
+      modal_message(_("Error during shutdown"));
   });
 }
 
@@ -1819,11 +1840,11 @@ function waitshutdown(counter = 0) {
     chkdown(location.host).then(response => {
       modalShutdown.removeAttribute("disable");
       modalShutdown.hide();
-      modal_message("DSAS arr&ecirc;t&eacute;. Vous pouvez fermer cette fenetre !");
+      modal_message(_("The DSAS has shutown. You can close this window"));
     }).catch(error => {
       modalShutdown.removeAttribute("disable");
       modalShutdown.hide();  
-      modal_message("Timeout sur r&eacute;demarrage !");    
+      modal_message(_("Timeout during shutdown"));    
     });
   }
 }
@@ -1838,7 +1859,7 @@ function dsas_logout(){
 
 class multiLang {
 
-  constructor(url, language="", onLoad = ""){
+  constructor(url, onLoad="", language=""){
     this.phrases = {};
     this.currentLanguage = language;
     this.onLoad = onLoad;
@@ -1891,7 +1912,7 @@ class multiLang {
         _head.render();    
 
       // Callback after JSON loading
-      if (! empty_obj(this.onLoad))
+      if (this.onLoad)
         this.onLoad();
 
     }).catch(error => {
@@ -1935,10 +1956,16 @@ if (!String.format) {
   };
 }
 
-var ml = new multiLang("languages.json");
+// Global ml variable for the translation. Use "translate" callback to force
+// translation of the page with the "translate" function below. Only elements
+// with the "data-i18n" property are translated.
+var ml = new multiLang("languages.json", translate);
+
 // Use "_" as the function name here to be like in python i8n
 function _ (key, ...args) {
-  if (typeof(key) === "string") {
+  if (empty_obj(key))
+    return key;
+  else if (typeof(key) === "string") {
     if (empty_obj(args))
       return ml.translate(key);
     else
@@ -1950,6 +1977,18 @@ function _ (key, ...args) {
     else
       return String.format(...key, ...args);
   }
+}
+
+function translate(){
+  for (let el of document.querySelectorAll("[data-i18n]")) 
+     if (el.innerHTML)
+       el.innerHTML = _(el.innerHTML);
+  for (let el of document.querySelectorAll("[data-i18n-value]")) 
+     if (el.value)
+       el.value = _(el.value);
+  for (let el of document.querySelectorAll("[data-i18n-title]")) 
+     if (el.title)
+       el.title = _(el.title);
 }
 
 class DSASModal extends HTMLElement {

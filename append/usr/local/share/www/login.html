@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>DSAS Login</title>
@@ -11,20 +11,20 @@
     <script>if (dsas_init_loggedin()) window.location = "index.html";</script>
     <div class="container p-3 my-3 border">
       <form>
-        <h1>Site de management du DSAS</h1>
-        <h2>Login ci-dessous</h2>
+        <h1 data-i18n>DSAS Management Site</h1>
+        <h2 data-i18n>Login below</h2>
         <div class="form-group">
-            <label>Utilisateur : </label>
+            <label data-i18n>Username :</label>
             <input type="text" id="inp_user" name="username" class="form-control" value="">
             <div id="feed_user" class="invalid-feedback"></div>
         </div>
         <div class="form-group">
-            <label>Mot de passe : </label>
+            <label data-i18n>Password :</label>
             <input type="password" id="inp_pass" name="password" class="form-control" value="">
             <div id="feed_pass" class="invalid-feedback"></div>
         </div>
         <div class="form-group">
-            <input type="submit" class="btn btn-primary" value="Login" onclick="dsas_login(); return false;">
+            <input type="submit" class="btn btn-primary" value="Login" onclick="dsas_login(); return false;" data-i18n-value>
         </div>
       </form>
     </div>

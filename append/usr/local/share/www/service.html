@@ -18,30 +18,30 @@
 </script>
 
 <div class="container p-3 my-3 border">
-  <h5>Configuration des services :</h5>
+  <h5 data-i18n>Service configuration :</h5>
   <form class="g-2">
     <div class="row">
       <div class="col-6">
         <div class="row">
           <div class="col-12">
             <input class="form-check-input" type="checkbox" value="" id="ssh" onchange="dsas_change_service('ssh');">
-            <label class="form-check-label" for="ssh">Serveur SSH active</label>
+            <label class="form-check-label" for="ssh" data-i18n>SSH server active</label>
           </div>
           <div class="col-12">
-            <label data-toggle="tooltip" title="Les adresses d'&eacute;coute empeche des connexions ailleurs qu'&agrave; partir de ces adresses. L'utilisateur 'tc' peut faire ssh et sftp, et les autres utilisateurs sont limité à sftp. Avec un valeur vide le service est d&eacute;sactiv&eacute;. Un exemple complexe pourrait être '10.0.2.1,10.0.2.128/25,!10.0.2.129'">Adresse d'&eacute;coute :</label>
+            <label data-toggle="tooltip" title="The listening addresses prevent connection from other addresses. The user 'tc' can use ssh and sftp, and the other users are limited to sftp. With an empty value the service is deactivated. A complex example might be '10.0.2.1,10.0.2.128/25,!10.0.2.129'" data-i18n data-i18n-title>Listening address :</label>
           </div>
           <div class="col-12">
-            <label for="user_tc">Utilisateur tc</label>
+            <label for="user_tc" data-i18n>User tc</label>
             <input type="text" id="user_tc" value="" class="form-control">
             <div class="invalid-feedback" id="feed_user_tc"></div>
           </div>
           <div class="col-12">
-            <label for="user_bas">Utilisateur bas</label>
+            <label for="user_bas" data-i18n>User bas</label>
             <input type="text" id="user_bas" value="" class="form-control">
             <div class="invalid-feedback" id="feed_user_bas"></div>
           </div>
           <div class="col-12">
-            <label for="user_haut">Utilisateur haut</label>
+            <label for="user_haut" data-i18n>User haut</label>
             <input type="text" id="user_haut" value="" class="form-control">
             <div class="invalid-feedback" id="feed_user_haut"></div>
           </div>
@@ -51,26 +51,26 @@
         <div class="row">
           <div class="col-12">
             <input class="form-check-input" type="checkbox" value="" id="syslog" onchange="dsas_change_service('syslog');">
-            <label class="form-check-label" for="syslog">Rsyslogd</label>
+            <label class="form-check-label" for="syslog" data-i18n>Syslogd</label>
           </div>
           <div class="col-12">
-            <label for="syslog_server">Rsyslogd server</label>
+            <label for="syslog_server" data-i18n>Syslogd server</label>
             <input type="text" id="syslog_server" value="" class="form-control">
             <div class="invalid-feedback" id="feed_syslog_server"></div>
           </div>
           <div class="col-12">
             <input class="form-check-input" type="checkbox" value="" id="ntp" onchange="dsas_change_service('ntp');">
-            <label class="form-check-label" for="ntp">Service NTP aux hosts sur l'interface bas</label>
+            <label class="form-check-label" for="ntp" data-i18n>NTP service for the host on 'bas' interface</label>
           </div>
           <div class="form-check col-12">
-            <label for="ntp_pool">NTP pool serveurs :</label>     
+            <label for="ntp_pool" data-i18n>NTP server pool :</label>     
             <textarea name="ntp_pool" rows="3" id="ntp_pool" value="" class="form-control"></textarea>
             <div class="invalid-feedback" id="feed_ntp_pool"></div>
           </div>     
         </div>
       </div>
       <div class="form-group">
-        <input type="submit" class="btn btn-primary" value="Sauvegarder des changements" onclick="dsas_change_service(); return false;">
+        <input type="submit" class="btn btn-primary" value="Save changes" onclick="dsas_change_service(); return false;" data-i18n-value>
       </div>
     </div>
   </form>
