@@ -2111,8 +2111,6 @@ class DSASHeader extends HTMLElement {
       langs = langs + '          <a class="dropdown-item" onclick="ml.setLanguage(\'' + 
               lang + '\');">' + lang + '</a>\n';
 
-    // FIXME Need to set the allowed languages here from Object.keys(ml.phrases)
-    // For now just French and English
     this.innerHTML = '    <div class="row g-0 sticky-top"><div class="col-9"><nav class="navbar navbar-expand-sm bg-dark navbar-dark">\n' +
 '      <a class="navbar-brand px-2"' + ((disablenav != "disabled") ? ' href="/' : '') + '">DSAS</a>\n' +
 '      <ul class="navbar-nav">\n' +
