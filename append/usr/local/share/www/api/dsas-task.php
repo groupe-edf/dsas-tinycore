@@ -13,18 +13,18 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         $data = json_decode($_POST["data"], true);
         $name = htmlspecialchars($data["name"]);
         if (trim($name) == "")
-          $errors[] = ["error" => "Le nom ne peut pas être vide"];
+          $errors[] = ["error" => "The name can not be empty"];
         $directory = htmlspecialchars($data["directory"]);
         if (trim($directory) == "")
-          $errors[] = ["error" => "Le directoire ne peut pas être vide"];
+          $errors[] = ["error" => "The directory name can not be empty"];
         $uri =  htmlspecialchars($data["uri"]);
         $type = $data["type"];
         if ($type !== "rpm" && $type !== "repomd" && $type !== "deb" && $type !== "authenticode" &&
             $type !== "openssl" && $type !== "gpg" && $type !== "liveupdate")
-          $errors[] = ["error" => "Le type de la tache est illegale"];
+          $errors[] = ["error" => "The task type ie illegal"];
         $run = $data["run"];
         if ($run !== "never" && $run !== "hourly" && $run !== "daily" && $run !== "weekly" && $run !== "monthly")
-          $errors[] = ["error" => "Le periode entre les executions de la tache est illegale"];
+          $errors[] = ["error" => "The period between execution of the task is illegal"];
         $certs = array();
         $have_ca = false;
         foreach ($data["certs"] as $cert) {
@@ -35,15 +35,14 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
               if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $cert["fingerprint"]) {
                 if ($certificate->authority == "true") {
                   if ($have_ca) {
-                    $errors[] = ["error" => "Les taches de type " . $type . 
-                                 " ne supporte un seul certificate raçine"];
+                    $errors[] = ["error" => ["The task type '{0}' only supports one root certificate", $type]];
                     break 2;
                   }
                   $have_ca = true;
                 }
                 if ($type === "rpm" || $type === "repomd" || $type === "deb" || $type === "gpg") {
-                  $errors[] = ["error" => "Les taches de type " . $type . 
-                            " ne supporte pas des certificates X509"];
+                  $errors[] = ["error" => ["The task type '{0}' does not support {1} certificates", $type, "X509"]];
+
                   break 2;
                 }
 
@@ -66,13 +65,12 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
               $gpg_cert =  parse_gpg(trim($certificate->pem));
               if ($gpg_cert["fingerprint"] == $cert["fingerprint"]) {
                 if ($type === "authenticode" || $type === "openssl" || $type === "liveupdate") {
-                  $errors[] = ["error" => "Les taches de type " . $type . 
-                            " ne supporte pas des certificates GPG"];
+                  $errors[] = ["error" => ["The task type '{0}' does not support {1} certificates", $type, "GPG"]];
                   break 2;
                 }
                 if ($have_ca) {
-                  $errors[] = ["error" => "Les taches de type " . $type . 
-                               " ont besoin un seul certificate GPG"];
+                  $errors[] = ["error" => ["The task type '{0}' only supports one GPG certificate", $type]];
+
                   break 2;
                 }
                 $certname = $gpg_cert["uid"];
@@ -90,13 +88,11 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
               foreach ($ca as $x509_cert) {
                 if ($x509_cert["fingerprint"] == $cert["fingerprint"]) {
                   if ($type === "rpm" || $type === "repomd" || $type === "deb" || $type === "gpg") {
-                    $errors[] = ["error" => "Les taches de type " . $type . 
-                              " ne supporte pas des certificates X509"];
+                    $errors[] = ["error" => ["The task type '{0}' does not support {1} certificates", $type, "X509"]];
                     break 2;
                   }
                   if ($have_ca) {
-                    $errors[] = ["error" => "Les taches de type " . $type . 
-                                 " ne supporte un seul certificate raçine"];
+                    $errors[] = ["error" => ["The task type '{0}' only supports one root certificate", $type]];
                     break 2;
                   }
                   $have_ca = true;
@@ -121,13 +117,12 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           if ($certok)
             $certs[] = ["name" => $certname, "fingerprint" => $cert["fingerprint"]];
           else
-            $errors[] = ["error" => "Un des certificates n'existe pas"];
+            $errors[] = ["error" => "One of the certificates does not exist"];
         }
 
         if ($type === "rpm" || $type === "repomd" || $type === "deb" || $type === "gpg") {
 	  if (count($certs) != 1)
-            $errors[] = ["error" => "Les taches de type " . $type . 
-                         " ont besoin un certificate GPG"];
+            $errors[] = ["error" => ["The task type '{0}' requires a GPG certificate", $type]]; 
         }
 
         if ($errors == []) {
@@ -157,7 +152,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
      case "delete":   
         $id =  $_POST["id"];
         if (! ctype_xdigit($id)) {
-          $errors[] = ["error" => "ID de la tache invalide;"];
+          $errors[] = ["error" => "The task ID is invalid"];
         } else {
           $deltask = false;
           $i = 0;
@@ -170,14 +165,14 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $i++;
           }
           if (! $deltask)
-            $errors[] = ["error" => "Le tache n'est pas trouv&eacute;"];
+            $errors[] = ["error" => "The task was not found"];
         }
         break;
 
      case "run" :
         $id = $_POST["id"];;
         if (! ctype_xdigit($id)) {
-          $errors[] = ["error" => "ID de la tache invalide;"];
+          $errors[] = ["error" => "The task ID is invalid"];
         } else {
           $dsas_active = simplexml_load_file(_DSAS_XML . ".active");
           $runtask = false;
@@ -188,12 +183,12 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             }
           }
           if ( ! $runtask) {
-            $errors[] = ["error" => "La tache (" . $id . ") n'est pas active. Essaye d'appliquer avant"];
+            $errors[] = ["error" => ["The task '{0}' is not active. Try applying before use",  $id]];
           } else {
             // Force the execution of the task with the "-f" flag
             exec("runtask -f " . escapeshellarg($id) . " > /dev/null &", $output, $retval);
             if ($retval != 0)
-              $errors[] = ["error" => "Execution de la tache (" . $id . ") a &eacute;chouch&eacute;"];
+              $errors[] = ["error" => ["The task '{0}' has failed", $id]];
           }
         }
 

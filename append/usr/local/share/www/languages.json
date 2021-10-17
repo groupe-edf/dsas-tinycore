@@ -124,8 +124,20 @@
     "Domain is invalid" : "",
     "Error during the generation of the certificates" : "",
     "Error while saving the certiciates" : "",
-
-    "Error while saving the CRT" : ""
+    "Error while saving the CRT" : "",
+    "The name can not be empty" : "",
+    "The directory name can not be empty" : "",
+    "The task type ie illegal" : "",
+    "The period between execution of the task is illegal" : "",
+    "The task type '{0}' does not support {1} certificates" : "",
+    "The task type '{0}' only supports one root certificate" : "",
+    "The task type '{0}' only supports one GPG certificate" : "",
+    "One of the certificates does not exist" : "",
+    "The task type '{0}' requires a GPG certificate" : "",
+    "The task ID is invalid" : "",
+    "The task was not found" : "",
+    "The task '{0}' is not active. Try applying before use" : "",
+    "The task '{0}' has failed" : ""
   },
   "fr" : {
     "Add a task" : "Ajouter un tâche",
@@ -245,7 +257,7 @@
     "Backup the DSAS configuration" : "Sauvegarde de la configuration du DSAS",
     "Backup password :" : "Mot de passe de la sauvegarde :",
     "Restoration of the DSAS configuration" : "Restauration de la configuration du DSAS",
-    "Restoration password :" : "Mot de passe de la sauvegarde :",
+    "Restoration password :" : "Mot de passe de la sauvegarde :Th",
     "Apply the configuration" : "Appliquer le configuration",
     "Ok" : "Ok",
     "Cancel" : "Annuler",
@@ -257,6 +269,19 @@
     "Error during the generation of the certificates" : "Erreur pendant la generation des certificats",
     "Error while saving the certificates" : "Erreur pendant la sauvegarde de certificats",
     "The CRT file must be in PEM format" : "Fichier CRT doit-être en format PEM",
-    "Error while saving the CRT" : "Erreur pendant la sauvegarde du CRT"
+    "Error while saving the CRT" : "Erreur pendant la sauvegarde du CRT",
+    "The name can not be empty" : "Le nom ne peut pas être vide",
+    "The directory name can not be empty" : "Le nom du directoire ne peut pas être vide",
+    "The task type ie illegal" : "Le type de la tâche est illegale",
+    "The period between execution of the task is illegal" : "La période entre l'execution de la tâche est illegale",
+    "The task type '{0}' does not support {1} certificates" : "Les tâches de type '{0}' ne supportent pas des certificats {1}",
+    "The task type '{0}' only supports one root certificate" : "Les tâches de type '{0}' ne supporte un seul certificat raçine",
+    "The task type '{0}' only supports one GPG certificate" : "Les tâches de type '{0}' ne supporte un seul certificat GPG",
+    "One of the certificates does not exist" : "Un des certificats n'existe pas",
+    "The task type '{0}' requires a GPG certificate" : "Les tâches de type '{0}' ont besoin un certificat GPG",
+    "The task ID is invalid" : "ID de la tâche est invalide",
+    "The task was not found" : "La tâche n'a pas été trouvé",
+    "The task '{0}' is not active. Try applying before use" : "La tâche '{0}' n'est pas active. Essayer d'appliquer avant d'utiliser",
+    "The task '{0}' has failed" : "Execution de la tâche '{0}' a échouché"
   }
 }
