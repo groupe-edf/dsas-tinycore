@@ -1060,7 +1060,7 @@ au fichier `~/.xession` ou d'exécuter cette commande depuis un console en X11.
 
 ### Préparation d'un arbre de source DSAS
 
-Pour cette étape il faut temporairement désactivé le proxy http en faisant
+Pour cette étape il faut temporairement désactiver le proxy http en faisant
 
 ```shell
 unset http_proxy
@@ -1068,7 +1068,7 @@ unset https_proxy
 ```
 
 Le gitlab d'EDF est utilisé afin d'héberger la code source du DSAS. Le certificat
-SSL utilisé pour cette site est signé par l'autorité de certification d'EDF, qui n'est 
+SSL utilisé pour ce site est signé par l'autorité de certification d'EDF, qui n'est 
 pas installé par défaut dans la souche de build. Il pourrait être récupérer et installé
 pour nos besoins avec les commandes
 
@@ -1116,7 +1116,7 @@ une commande comme
 ./make.sh -build gnupg
 ```
 
-est utilisé. Afin de néttoyer les fichiers utilisé pendant le build vous pouvez faire
+est utilisé. Afin de nettoyer les fichiers utilisé pendant le build vous pouvez faire
 
 ```
 ./make.sh -clean
@@ -1151,7 +1151,7 @@ comme
 
 ## Mise à jour source
 
-Si une vulnérabilité est identifiée sur une package du DSAS est un mise à jour
+Si une vulnérabilité est identifiée sur une package du DSAS est une mise à jour
 binaire n'est pas disponible, nous avons la possibilité de créer une package
 pour le DSAS à partir du code source. Nous avons déjà plusieurs packages fait 
 à partir du code source 
@@ -1164,7 +1164,7 @@ moins l'extension `.pkg`
 est installé
 - `_build_dep` [Optionnel] - Les dépendances nécessaire pendant la phase de build 
 du logiciel
-- `_pkg_path` [Optionnel] - Les packages source récupéré depuis `_uri` devrait 
+- `_pkg_path` [Optionnel] - Les packages source récupérée depuis `_uri` devrait 
 être dans cette sous dossier. Si vide ou absent on assume que le build est à partir
 du racine du package source. 
 - `_conf_cmd` [Optionnel] - La commande nécessaire pour la configure du logiciel, 
@@ -1173,7 +1173,7 @@ pour la build comme `./configure --prefix=/usr/local`.
 - `_make_cmd` [Optionnel] - La commande nécessaire afin de faire le build du logiciel,
 typiquement `make`
 - `_install_cmd` [Optionnel] - La commande nécessaire pour l'installation du logiciel. 
-Il sera  installé dans un dossier temporaire. Il est assumé que la commande 
+Il sera installé dans un dossier temporaire. Il est assumé que la commande 
 `_install_cmd` accepte le nom du dossier temporaire en dernier argument. L'exemple 
 typique de la commande `_install_cmd` est `make install DESTDIR=`
 - `_pkgs` [Optionnel] - Le logiciel pourrait être splitté en plusieurs sous packages.
@@ -1308,10 +1308,10 @@ adapté afin d'assurer ces conditions
 
 ## Moyens de Vérification 
 
-Il y a 3 type de vérification des dépôts linux
+Il y a 3 types de vérification des dépôts linux
 
 * rpm - La signature de chaque fichier RPM est vérifié avec "rpm -K"
-* repomd - Le fichier repomd.xml est vérifié et seulement les hashes to chaque fichier est vérifié
+* repomd - Le fichier repomd.xml est vérifié et seulement les haches de chaque fichier est vérifié
 * deb - Actuellement non implémenté
 
 Il y a quatre autres types de vérification 
@@ -1323,9 +1323,9 @@ Il y a quatre autres types de vérification
 
 ### Vérification - rpm
 
-Dans les vérifications des repository RPM le fichier repodata/repomd.xml est lu et les fichiers
+Dans les vérifications des dépôts RPM le fichier repodata/repomd.xml est lu et les fichiers
 xml avec la liste des packages à vérifier sont lu. Tous les fichiers du dépôt sont listés
-avec leur hash, dans le fichier dit "primaire" du dépôt. 
+avec leur hache, dans le fichier dit "primaire" du dépôt. 
 
 Un dépôt pourrait être le dépôt d'un OS comme par exemple 
 [http://mirror.centos.org/centos/7/os/x86_64/](http://mirror.centos.org/centos/7/os/x86_64/)
@@ -1338,11 +1338,11 @@ primaire est vérifié avec la commande `rpm -k` contre le certificat GPG fourni
 ### Vérification - repomd
 
 La mode `repomd` est comme la mode `rpm` avec l'exception que le fichier `repodata/repomd.xml` est
-signé directement avec GPG. Le fait que ce fichier de metadonnées est signé et il contient la 
-hash du fichier xml primaire, et les hashes de chaque package est inclut dans le fichier xml de
+signé directement avec GPG. Le fait que ce fichier de métadonnées est signé et il contient la 
+hache du fichier xml primaire, et les haches de chaque package est inclut dans le fichier xml de
 dépôt primaire. De cette façon, une seule vérification de signature et des vérifications de
 hash de chaque fichier de package, permets de cryptographiquement vérifier l'ensemble des fichiers
-du d&pôt. Ceci est plus rapide est aussi sûr que la vérification de type `rpm`.
+du dépôt. Ceci est plus rapide est aussi sûr que la vérification de type `rpm`.
 
 ### Vérification - authenticode
 
@@ -1351,8 +1351,8 @@ certificats spécifiés. Si aucune autorité de certification est spécifiée, l
 utilisé incluant tous les certificats dans le store. Ceci pourrait augmenter les risques et il est 
 beaucoup mieux de spécifier un seul certificat autorité pour la vérification
 
-Si les signatures sont valables et signées par les certificats spécifiés, les fichiers sont mise à 
-disponibilité sur le sas du bas de DSAS. Aucun sous-dossier est traité
+Si les signatures sont valables et signées par les certificats spécifiés, les fichiers sont rendus 
+disponible sur le sas du bas de DSAS. Aucun sous-dossier est traité
 
 Le logiciel osslsigncode [https://github.com/mtrojnar/osslsigncode] est utilisé pour la vérification.
 La commande
@@ -1372,12 +1372,12 @@ ou le fichier `inter.der` est la certificat intermédiaire à utiliser pour la v
 
 ### Vérification - Symantec LiveUpdate
 
-Les fichiers IntelligentUpdate de Symantec sont en authenticode, donc ils sont exclu de cette discussion.
+Les fichiers IntelligentUpdate de Symantec sont en authenticode, donc ils sont exclus de cette discussion.
 Le format Symantec LiveUpdate est utilisé par `Symantec Endpoint Protection Manager` (SEPM) pour les mises
-à jour. Le format de signature des fichier de LiveUpdate sont très complexe avec des fichiers signés selon 
+à jour. Le format de signature des fichiers de LiveUpdate sont très complexe avec des fichiers signés selon 
 [la méthode détaillée dans la section suivante](#signature-des-fichiers-liveupdate), et des fichiers vérifiés
-que par leurs hash dans un autre fichier signé, l'ensemble des fichier en format LiveUpdate peut-être 
-identifiées selon leurs nom comme
+que par leurs hash dans un autre fichier signé, l'ensemble des fichiers en format LiveUpdate peut-être 
+identifiés selon leurs nom comme
 
 - `*.livetri.zip` - des fichiers signés de type LiveUpdate faisant références à d'autre fichiers non-signés
 - `NNNNNNNNNN*.*` - des fichiers non-signés avec le champ `NNNNNNNNNN` représentant la date en nombre de secondes
@@ -1385,10 +1385,10 @@ depuis l'epoche Unix (1 janvier 1970, 00:00:00 UTC). Ces fichiers ne sont pas si
 dans un fichier `*livtri.zip`. Ça semble que `SEPM` laisse des fichiers de ce type qui ne sont plus utilisé dans
 un fichier `*livetri.zip` et dans ce cas les fichiers pourraient être ignorés.
 - `minitri.flg` - Un fichier d’un seul octet avec le caractère `0x20` (un espace) dedans. La présence ou pas
-du fichiers pourrait modifier la comportement de `SEPM`. Le fichier ne pourrait pas être malveillante. Dans le
+du fichier pourrait modifier la comportement de `SEPM`. Le fichier ne pourrait pas être malveillante. Dans le
 contexte de faire rentre des fichiers depuis un zone non sensible vers un zone sensible il ne pourrait pas 
 être utilisé pour un canal cache pour la fuite d'information non plus. Ce fichier est transmis sans test
-- `SymantecProductCatalog.zip` - les dates des fichiers dans cette archive sont tous tous avant 2009.  Mais la
+- `SymantecProductCatalog.zip` - les dates des fichiers dans cette archive sont tous avant 2009.  Mais la
 date de l'archive est toujours mise à jour par `SEPM`, le fichier est signé est des vieux certificat de
 Symantec. Ce fichier est vérifié est transmis par le DSAS
 - `*.jdb`- [Les fichiers JDB sont pour des mise à jour de `SEPM` ou des clients 
@@ -1401,9 +1401,9 @@ Le DSAS est capable de transmettre l'ensemble de ce type de fichiers avec l'exce
 #### Signature des fichiers LiveUpdate
 
 Les fichiers de LiveUpdate, et les fichier JDB, de Symantec ne sont pas signés directement. En revanche 
-l'ensemble de ces fichiers sont des archive en format `7z` ou `ZIP`, et ces acrhives contient deux fichiers,
-typiquement nommés `v.grd` et `v.sig`. C'est fichiers pourraient avoir d'autre nom, mais les extensions
-`.grd` et `.sig` sont toujours utilisé
+l'ensemble de ces fichiers sont des archives en format `7z` ou `ZIP`, et ces archives contient deux fichiers,
+typiquement nommés `v.grd` et `v.sig`. Ces fichiers pourraient avoir d'autre nom, mais les extensions
+`.grd` et `.sig` sont toujours utilisés
 
 Le contenu de la fichier `.grd` est en format comme
 
@@ -1421,18 +1421,18 @@ SHA256=721473abd9d240d5170c9952a8a1d1644f177c1dbbef01b105e1d44705188db4
 ...
 ```
 
-Avec des hashes de l'ensmeble des fichiers contenu dans l'archive. Dans le cas des fichiers `*livetri.zip`
-les hashes des fichiers pourrait correspondre egalement à un autre fichiers pas inclut directement dans
+Avec des haches de l'ensemble des fichiers contenu dans l'archive. Dans le cas des fichiers `*livetri.zip`
+les haches des fichiers pourraient correspondre également à un autre fichiers pas inclut directement dans
 l'archive mais à côté avec un nom comme `NNNNNNNNNN*.*`. La commande
 
 ```shell
 $ openssl asn1parse -i -inform der -in v.sig
 ```
 
-permettre de voir facilement que la fichier sig contient, au moins deux certificates,
-un hache de la fichier `.grd` et la signature en binaire lui-même. La texte "pkcs7-signedData"
-permettre d'identifier le type de signature utilisé. Le probleme est que la chaine de 
-confiance des ficheirs `.sig` sont typiquement
+permettre de voir facilement que la fichier `.sig` contient, au moins deux certificats,
+une hache de la fichier `.grd` et la signature en binaire lui-même. La texte "pkcs7-signedData"
+permettre d'identifier le type de signature utilisé. Le problème est que la chaine de 
+confiance des fichiers `.sig` sont typiquement
 
 ```
 Symantec Internal RSA IT Root
@@ -1456,8 +1456,8 @@ Symantec Root CA
   -> Symantec Corporation
 ```
 
-pour des vielles fichiers. Aucun de c'est certificates est publiquement disponible, est ils sont 
-embarquées directement dans le logiciel SEPM à son installation. La chaine des certificates 
+pour des vielles fichiers. Aucun de ces certificats est publiquement disponible, est ils sont 
+embarquées directement dans le logiciel SEPM à son installation. La chaine des certificats 
 utilisés sont inclut dans les fichiers `.sig` et nous pourrions les sortir en format PEM avec une 
 commande
 
@@ -1465,13 +1465,13 @@ commande
 $ openssl pkcs7 -inform der -in v.sig -outform pem -print_certs | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if(length($0) > 0) print > "cert" n ".pem"}
 ```
 
-cette commande va créer deux fichier, `cert.pem` et `cert1.pem` avec la certificate signateur et les 
-certificates intermediaires utilisées. Ces certificates peuvent être importé  dans le DSAS. Malheureusement, 
-ceci va permettre de sortir que les certificates intermediaires et la certificate utilisé pour la signature. 
-La certfiicate raçine n'est pas inclut dans les fichiers signature. Il faut retourner vers l'executable de SEP 
-afin de retrouver les trois certificates raçines utilisées par SEPM. 
+cette commande va créer deux fichier, `cert.pem` et `cert1.pem` avec la certificat signataire et les 
+certificats intermédiaires utilisés. Ces certificats peuvent être importé dans le DSAS. Malheureusement, 
+ceci va permettre de sortir que les certificats intermédiaires et la certificat utilisé pour la signature. 
+La certificat racine n'est pas inclut dans les fichiers de signature. Il faut retourner vers l'exécutable de SEP 
+afin de retrouver les trois certificats racines utilisées par SEPM. 
 
-Tous les postes clients 64bit de SEP inclut l'executable `sepWscSvc64.exe`. En regardant avec la commande
+Tous les postes clients 64bit de SEP inclut l'exécutable `sepWscSvc64.exe`. En regardant avec la commande
 
 ```shell
 $ LANG=C grep -obUaP "\x30\x82..\x30\x82" sepWscSvc64.exe
@@ -1483,11 +1483,11 @@ ou si ta version de grep inclut pas de regexp de type perl
 $ echo -e "\x30\x82..\x30\x82" | LANG=C xargs -i grep -obUa {} sepWscSvc64.exe
 ``` 
 
-c'est possible d'indentifiés la debut des certificates. le string "\x30\x82" correspond à la code ASN.1
-pour une `SEQUENCE`. Une sequence est toujour suivi par une longeur codé sur deux octets, et une 
-certificate demarre toujour avec deux `SEQUENCE`. Donc le regexp "\x30\x82..\x30\x82" est adapté à
-trouver les debut des certificates, mais pas que.  Cette commande trouver les offsets binaires des
-endroit correspondant à des certificates comme
+c'est possible d'identifier la début des certificats. Le texte "\x30\x82" correspond à la code ASN.1
+pour une `SEQUENCE`. Une séquence est toujours suivi par une longueur codé sur deux octets, et un 
+certificat démarre toujours avec deux `SEQUENCE`. Donc le regexp "\x30\x82..\x30\x82" est adapté à
+trouver les débuts des certificats, mais pas que.  Cette commande trouver les offsets binaires des
+endroit correspondant à des certificats comme
 
 ```
 $ echo -e "\x30\x82..\x30\x82" | LANG=C xargs -i grep -obUa {} sepWscSvc64.exe
@@ -1509,14 +1509,14 @@ $ echo -e "\x30\x82..\x30\x82" | LANG=C xargs -i grep -obUa {} sepWscSvc64.exe
 1820193:0▒▒0▒
 ```
 
-mais le string du regexp pourrait egalement être une partie du binaire et pas un certificate de tout. 
+mais le texte du regexp pourrait également être une partie du binaire et pas un certificat de tout. 
 Il faut les tester tous ces valeurs avec
 
 ```shell
 $ dd bs=1666048 skip=1 if=sepWscSVC64.exe | openssl -inform der -in - -noout -text | less
 ```
 
-et quand les certificates `Symantec Internal RSA IT Root`, `Symantec Root 2005 CA` et `Symantec Root CA` sont identifiés, les sauver avec
+et quand les certificats `Symantec Internal RSA IT Root`, `Symantec Root 2005 CA` et `Symantec Root CA` sont identifiés, les sauver avec
 
 ```shell
 $ dd bs=1665104 skip=1 if=sepWscSvc64.exe | openssl x509 -inform der -in - -outform pem -out Symantec_Internal_RSA_IT_ROOT.pem
@@ -1524,43 +1524,43 @@ $ dd bs=1666048 skip=1 if=sepWscSvc64.exe | openssl x509 -inform der -in - -outf
 $ dd bs=1667008 skip=1 if=sepWscSvc64.exe | openssl x509 -inform der -in - -outform pem -out Symantec_Root_CA.pem
 ```
 
-Maintenant le format `PKCS7` est la format utilisé par `SMIME`, et ici la signature est en 
-format `DER`. La commande normale de verification de signature smime est
+Maintenant le format `PKCS7` est le format utilisé par `SMIME`, et ici la signature est en 
+format `DER`. La commande normale de vérification de signature `SMIME` est
 
 ```shell
 $ openssl cms -verify -inform der -in v.sig -content v.grd
 ```
 
-cette commande va verifier les signatures contenu dans `v.sig' contre les certificates raçines 
-installé sur la machine et comparé contre le hache du fichier `v.grd`. La certficate raçine 
-typiquement utilisé est `Symantec Root 2005 CA`, et donc le vrai verification à mettre en place 
+cette commande va vérifier les signatures contenu dans `v.sig' contre les certificats racines 
+installé sur la machine et comparer contre le hache du fichier `v.grd`. Le certificat racine 
+typiquement utilisé est `Symantec Root 2005 CA`, et donc le vrai vérification à mettre en place 
 est 
 
 ```shell
 $ openssl cms -verify -CAfile SymantecRoot2005CA.pem -inform der -in v.sig -content v.grd
 ```
 
-qu'on va trouver deux autres probleme avec les chaines de signature de Symantec. Les deux certificates
-raçines utilisés par Symantec pour les signatures ont tous les deux expiré, et Symantec n'ont pas utilisé
+qu'on va trouver deux autres problème avec les chaines de signature de Symantec. Deux des trois certificats
+racines utilisés par Symantec pour les signatures ont expiré, et Symantec n'ont pas utilisé
 des signatures horodaté avec un server de temps openssl. Donc, òpenssl` va réfuser de valider les fichiers
-fournaient par Symantec. Le deuxieme probleme est dans les champs `X509v3 Key Usage` et `X509v3 Extended
-Key Usage`. `openssl` demande que l'ensemble des certificates de la chaine de confiance support les mêmes
-options de signature, mais la certificate `Code Signing CA` support l'option `Code Signing', mais les
-deux atres certificates dans la chaine ne le supportent pas. Deux autres option de `openssl` sont
-necessaire afin de détoruner ces problemes, comme
+fournis par Symantec. Le deuxième problème est dans les champs `X509v3 Key Usage` et `X509v3 Extended
+Key Usage`. `openssl` demande que l'ensemble des certificats de la chaine de confiance support les mêmes
+options de signature, mais le certificat `Code Signing CA` support l'option `Code Signing', mais les
+deux autres certificats dans la chaine ne le supportent pas. Deux autres options de `openssl` sont
+nécessaire afin de détourner ces problèmes, comme
 
 ```shell
 $ openssl cms -verify -purpose any -no_check_time -CAfile SymantecRoot2005CA.pem -inform der -in v.sig -content v.grd
 ```
 
-Ceci suffit afin de verifier que les fichiers de SYmantec sont bien signés par un certificate avec la
-raçine `Symantec Root 2005 CA`, mais rien veut dire Symantec n'as pas autorisé un autre certifcate 
-intermediate sur cette raçine. Donc ca sera plus propre de verifier la signature contre une chaine
-de confiance complete que nous contrôle. Pour ça le DSAS nous doit ignorer les certificates dans 
-`v.sig` en prennant en compte que les données de signature, et nous sommes obligé à fournir les deux
-autres certificates utilisé pour les signatures, `cert.pem` et `cert1.pem` créé ci-dessus. L'argument
-`-certfile` pourrait être utilisé afin de faire, mais `openssl` n'accepte qu'une seul argument de 
-type `-certfile`, donc les deux certficates doit être remise dans un seul fichier et verifier comme
+Ceci suffit afin de vérifier que les fichiers de Symantec sont bien signés par un certificat avec la
+racine `Symantec Root 2005 CA`, mais rien veut dire Symantec n'as pas autorisé un autre certificat 
+intermédiate sur cette racine. Donc ça sera plus propre de vérifier la signature contre une chaine
+de confiance complète que nous contrôle. Pour ça le DSAS nous doit ignorer les certificats dans 
+`v.sig` en prenant en compte que les données de signature, et nous sommes obligé à fournir les deux
+autres certificats utilisés pour les signatures, `cert.pem` et `cert1.pem` créé ci-dessus. L'argument
+`-certfile` pourrait être utilisé afin de faire, mais `openssl` n'accepte qu’un seul argument de 
+type `-certfile`, donc les deux certificats doit être remise dans un seul fichier et vérifier comme
 
 ```shell
 $ cat cert.pem cert1.pem > certs.pem
@@ -1569,7 +1569,7 @@ $ openssl cms -verify -CAfile SymantecRoot2005CA.pem -certfile certs.pem -nointe
 
 ### Vérification - gpg
 
-Les signatures GPG pourrait être integré dans le fichier signé ou dans un fichier à part. Le DSAS
+Les signatures GPG pourrait être intégré dans le fichier signé ou dans un fichier à part. Le DSAS
 assume qu'un des moyens suivant est utilisé afin de signé un fichier
 
 ```shell
@@ -1578,28 +1578,28 @@ $ gpg --output <file>.sig --detach-sig <file>
 $ gpg --output <file>.sig -a --detach-sig <file>
 ```
 
-Donc des signature detaché sont en deux fichiers <file> et <file>.sig, et des signature integrés 
-sont dans des fichiers terminant comme <file>.gpg. Le DSAS traite les deux type de signatrue. Dans le
-cas de signature detaché, les deux fichiers doit être fournient au DSAS.
+Donc des signature détaché sont en deux fichiers <file> et <file>.sig, et des signature intégrés 
+sont dans des fichiers terminant comme <file>.gpg. Le DSAS traite les deux types de signature. Dans le
+cas de signature détaché, les deux fichiers doit être fournis au DSAS.
 
-### Verification - openssl
+### Vérification - openssl
 
-L'utilisateur doit avoir déja generé des clefs publique et privé pour la signature avec 
+L'utilisateur doit avoir déjà généré des clefs publiques et privés pour la signature avec 
 
 ```shell
 $ openssl genrsa -out key.pem 4096
 $ openssl rsa -in key.pem -pubout > key.pub
 ```
 
-Et le clef publique dans le fichier key.pub doit être associé avec le tache dans le DSAS. Les fichiers
+Et la clef publique dans le fichier key.pub doit être associé avec le tache dans le DSAS. Les fichiers
 sont signés comme
 
 ```shell
 $ openssl dgst -sign key.pem -keyform PEM -sha256 -out <file>.sig -binary <file>
 ```
 
-Les signatures sont toujours stockés dans des fichiers séparé, et le DSAS assume que les signature
-sont dans un fichier avec un extension .sig. Les deux fichiers doit être fournient au DSAS.
+Les signatures sont toujours stockées dans des fichiers séparé, et le DSAS assume que les signatures
+sont dans un fichier avec un extension .sig. Les deux fichiers doivent être fournis au DSAS.
 
 ## Service OpenSSH
 
@@ -1607,17 +1607,17 @@ L'ensemble des flux ssh possible est
 
 | Source          |  Destination    | Utilisateur | Service  | Optionnel | 
 |-----------------|-----------------|-------------|----------|-----------|
-| reseau sensible | bas             | tc          | ssh      | optionnel |
-| reseau sensible | bas             | bas         | sftp     | optionnel |
+| réseau sensible | bas             | tc          | ssh      | optionnel |
+| réseau sensible | bas             | bas         | sftp     | optionnel |
 | bas             | haut            | tc          | ssh      | requis    |
 | bas             | haut            | bas         | sftp     | requis    |
-| reseau ouverte  | haut            | haut        | sftp     | non reco. |
+| réseau ouverte  | haut            | haut        | sftp     | non reco. |
 
 ou les service `ssh` correspond à l'ensemble des services de ssh (ssh, scp et sftp). Le
-premier option de durcissement des service sshd, sauf en cas de la presence de la flux
-non recommandé depuis le reseau ouverte, les service n'ecoute que les flux d'origin d'un 
-reseau plus sensible avec l'option de configuration `Listen` d'OpenSSH. Après par défaut
-l'accès est interdit à l'ensemble des l'utilisateur et les permissions de chaque utilisateur
+premier option de durcissement des service sshd, sauf en cas de la présence de la flux
+non recommandé depuis le réseau ouverte, les service n'écoute que les flux d’origine d'un 
+réseau plus sensible avec l'option de configuration `Listen` d'OpenSSH. Après par défaut
+l'accès est interdit à l'ensemble dès l'utilisateur et les permissions de chaque utilisateur
 permis est explicitement ajouté. La configuration pour les utilisateurs `tc` sont de la
 forme
 
@@ -1628,7 +1628,7 @@ Match User tc Address $USER_TC
 	PubkeyAuthentication yes
 ```
 
-ou `$USER_TC` est une liste d'address IP ou CIDR permis à connecter au serveur. Afin de 
+ou `$USER_TC` est une liste d'adresse IP ou CIDR permis à connecter au serveur. Afin de 
 bien sécurisé cette liste devrait être limité. Pour les autres utilisateur la configuration
 de sshd est
 
@@ -1643,36 +1643,37 @@ Match User $TYP Address $USER
 	ForceCommand internal-sftp -u 0007 -d /share
 ```
 
-les utilisateurs en `sftp` sont limité strictement a ou ils sont accès est le forwarding
+les utilisateurs en `sftp` sont limité strictement a ou ils sont accès est le `forwarding`
 est interdit. Le `umask` par défaut est forcé d'être 007 afin d'assure un accès aux fichiers
 à l'utilisateur `verif`.
 
 ## Service web
 
-Il y a deux service web; un requis pour l'adminsitration du DSAS et un deuxième optionnel
-pour un répositoire des fichiers. Les deux site partage le certificate TLS, qui sont 
-stocké dans `/var/dsas/`. Les permission du certificate privé est alors (0640), avec une
-groupe `repo` auquel appartienent les deux utilisateurs `tc` et `bas`.
+Il y a deux service web; un requis pour l'administration du DSAS et un deuxième optionnel
+pour un dépôt des fichiers. Les deux sites partagent le certificat TLS, qui sont 
+stocké dans `/var/dsas/`. Les permissions du certificat privé est alors (0640), avec une
+groupe `repo` auquel appartiennent les deux utilisateurs `tc` et `bas`.
 
-Le serveur d'administration est executé en tant qu'utilisateur `tc` est ne peux aceder
-que des fichiers accesible à l'utilisateur `tc`. Le site est disponible seulement en https 
-sur la port `5000`. Le site est ecrit en `HTML5, JS et bootstrap5` pour le frontend et `PHP8` 
-pour le backend.  l'authetification sur le site est fait avec le connecteur `SASL` aux comptes 
-local à la machine `bas`. `SASL` est configuré de fonctionné que avec des `Unix domain socket` 
-completement local à la machine, donc accèsible que au processus tournant sur la machine.
-Le backend retourne une session identifiant pour un login réussité. Cet identifiant est
-verifié a chaque opération sur le backend, et périmé après dix minutes sans accès à la 
+Le serveur d'administration est exécuté en tant qu'utilisateur `tc` est ne peux accéder
+que des fichiers accessible à l'utilisateur `tc`. Le site est disponible seulement en https 
+sur la port `5000`. Le site est écrit en `HTML5, JS et bootstrap5` pour le frontend et `PHP8` 
+pour le backend.  L’authentification sur le site est fait avec le connecteur `SASL` aux comptes 
+local à la machine `bas`. `SASL` est configuré de fonctionner que avec des `Unix domain socket` 
+complétement local à la machine, donc accessible que au processus tournant sur la machine.
+Le backend retourne une session identifiant pour un login réussite. Cet identifiant est
+vérifié a chaque opération sur le backend, et périmé après dix minutes sans accès à la 
 machine.
 
-Le politique du backend est qu'aucun information venant du frontend est considéré comme 
-sûr est tout est verifié. La fonctionne `proc_open` de `PHP8` est utilisé pour des 
+Le politique du backend est qu’aucune information venant du frontend est considéré comme 
+sûr est tout est vérifié. La fonctionne `proc_open` de `PHP8` est utilisé pour des 
 commande système nécessaire à l'administration, et
 
-- Appellé d'un façon a ne pas demarrer un shell
-- Avec tout argument vérifié est échappé afin d'eviter l'injection de commande
+- Appelé d'un façon à ne pas démarrer un shell
+- Avec tout argument vérifié est échappé afin d'éviter l'injection de commande
 
-Le site de répositioire optionnel est éxecuté en tant que l'utilisateur `bas` et ne peut
-aceder que des fichiers disponible pour l'utilisateur `bas`. Cette liste de fichiers est
-très limité est inclut en gros que des fichiers preinstallé ou vérifié par le DSAS. Le site 
-est disponible seulement en https sur la port `443`. 
+Le site de dépôt optionnel est exécuté en tant que l'utilisateur `bas` et ne peut
+accéder que des fichiers disponible pour l'utilisateur `bas`. Cette liste de fichiers est
+très limité est inclut en gros que des fichiers préinstallé ou vérifié par le DSAS. Le site 
+est disponible seulement en https sur la port `443`. Les utilisateurs du dépôt n’ont que le droit
+de télécharger des fichiers et en aucun cas, ils auraient le droit d’ajouter des fichiers au dépôt.
 
