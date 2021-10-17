@@ -1705,7 +1705,7 @@ function dsas_reboot(){
   modalReboot.setAttribute("disable", true);
   modalReboot.setAttribute("body", '  <div class="row">\n'+
                  '    <div class="col-8">\n' +
-                 '      <span class="spinner-border spinner-border-sm"></span> &nbsp; R&eacute;demarrage de DSAS en cours.' +
+                 '      <span class="spinner-border spinner-border-sm"></span>&nbsp;' + _("Rebooting the DSAS") +
                  '    </div>' +
                  '    <div class="col-4">' +
                  '      <div class="progress">' +
@@ -1724,7 +1724,7 @@ function dsas_reboot(){
     modalReboot.removeAttribute("disable");
     modalReboot.hide();
     if (! fail_loggedin(error.statusText))
-      modal_message(_("Error during the reboot"));
+      modal_message(_("Error during reboot"));
   });
 }
 
@@ -1802,7 +1802,7 @@ function dsas_shutdown(){
   modalShutdown.setAttribute("disable", true);
   modalShutdown.setAttribute("body", '  <div class="row">\n'+
                  '    <div class="col-8">\n' +
-                 '      <span class="spinner-border spinner-border-sm"></span> &nbsp; Arr&ecirc;t de DSAS en cours.' +
+                 '      <span class="spinner-border spinner-border-sm"></span> &nbsp;' + _("Shutting down the DSAS") +
                  '    </div>' +
                  '    <div class="col-4">' +
                  '      <div class="progress">' +
@@ -2111,7 +2111,7 @@ class DSASHeader extends HTMLElement {
       langs = langs + '          <a class="dropdown-item" onclick="ml.setLanguage(\'' + 
               lang + '\');">' + lang + '</a>\n';
 
-    this.innerHTML = '    <div class="row g-0 sticky-top"><div class="col-9"><nav class="navbar navbar-expand-sm bg-dark navbar-dark">\n' +
+    this.innerHTML = '    <div class="row g-0 sticky-top"><div class="col-8"><nav class="navbar navbar-expand-sm bg-dark navbar-dark">\n' +
 '      <a class="navbar-brand px-2"' + ((disablenav != "disabled") ? ' href="/' : '') + '">DSAS</a>\n' +
 '      <ul class="navbar-nav">\n' +
 '      <li class="nav-item dropdown">\n' +
