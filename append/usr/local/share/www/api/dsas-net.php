@@ -30,16 +30,19 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $errors[] = [ "iface_cidr" . $j => $cidr_err];
 
           $gateway = htmlspecialchars(trim($net["gateway"]));
-          $gateway_err = ip_valid($gateway, true);
+          if (empty($gateway))
+            $gateway_err = "";
+          else
+            $gateway_err = ip_valid($gateway, true);
           if (empty($gateway_err))
             $dsas->config->network->{$iface}->gateway = $gateway;
           else
             $errors[] = [ "iface_gateway" . $j => $gateway_err];
 
-          if (is_valid_domain($net["dns"]["domain"]))
+          if (empty($net["dns"]["domain"]) || is_valid_domain($net["dns"]["domain"]))
              $dsas->config->network->{$iface}->dns->domain = $net["dns"]["domain"];
           else
-             $errors[] = [ "iface_dns_domain" . $j => $gateway_err];
+             $errors[] = [ "iface_dns_domain" . $j => "Domain is invalid"];
           
           foreach ($net["dns"]["nameserver"] as $server) {
             if (!empty($dns_err = ip_valid($server, true)))
@@ -57,11 +60,11 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
 
       default:
-        $errors[] = ["error" => "Operation '" . $_POST["op"] . "' demand&eacute; inconnu"]; 
+        $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]]; 
         break;
     }
   } catch (Exception $e) {
-     $errors[] = ["error" => "Internal server error : " + e];
+     $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
   }
  
   if ($errors == []) {

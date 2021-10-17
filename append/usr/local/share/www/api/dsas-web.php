@@ -46,7 +46,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         $priv = $out["priv"];
 
         if (empty($csr) || empty($cert) || empty($priv))
-          $errors[] =  ["renew" => "Erreur pendant la generation des certificates"];
+          $errors[] =  ["renew" => "Error during the generation of the certificates"];
         else {
           $retval = file_put_contents(_DSAS_VAR . "/dsas.csr", $csr);
           chmod (_DSAS_VAR . "/dsas.csr", 0640);
@@ -61,7 +61,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           chmod (_DSAS_VAR . "/dsas.pem", 0640);
           chgrp (_DSAS_VAR . "/dsas.csr", "repo");
           if ($retval === 0 || $retval === false) 
-            $errors[] = ["renew" => "Erreur pendant la sauvegarde des certificates"];  
+            $errors[] = ["renew" => "Error while saving the certiciates"];  
           else
             $dsas->asXml(_DSAS_XML);
         }
@@ -75,7 +75,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $crt = htmlspecialchars(file_get_contents($_FILES["file"]["tmp_name"]));
           $crt = str_replace("\r", "", $crt);   // dos2unix
           if (!openssl_x509_parse($crt))
-            throw new RunetimeException("Fichier CRT doit-&ecirc;tre en format PEM");
+            throw new RuntimeException("The CRT file must be in PEM format");
           
           $priv = file_get_contents(_DSAS_VAR . "/dsas_priv.pem");
           $retval = file_put_contents(_DSAS_VAR . "/dsas_pub.pem", $crt);
@@ -84,7 +84,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $retval = file_put_contents(_DSAS_VAR . "/dsas.pem", $priv . PHP_EOL . $crt);
           chmod (_DSAS_VAR . "/dsas.pem", 0600);
           if ($retval === 0 || $retval === false) 
-            throw new RuntimeException("Erreur pendant la sauvegarde du CRT");
+            throw new RuntimeException("Error while saving the CRT");
 
         } catch (RuntimeException $e) {
           $errors[] = ["upload" => $e->getMessage()];
@@ -92,11 +92,11 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
 
       default:
-        $errors[] = ["error" => "Operation '" . $_POST["op"] . "' demand&eacute; inconnu"]; 
+        $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]]; 
         break;
     }
   } catch (Exception $e) {
-     $errors[] = ["error" => "Internal server erreur : " + e];
+     $errors[] = ["error" => ["Internal server error : {0}" + $e->getMessage()]];
   }
  
   if ($errors == [])

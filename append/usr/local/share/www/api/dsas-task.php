@@ -200,11 +200,11 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
 
       default:
-        $errors[] = ["error" => "Operation '" . $_POST["op"] . "' demand&eacute; inconnu"]; 
+        $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]]; 
         break;
     }
   } catch (Exception $e) {
-     $errors[] = ["error" => "Internal server erreur"];
+     $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
   }
  
   if ($errors == []) {

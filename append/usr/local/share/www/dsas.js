@@ -1,13 +1,3 @@
-// Modify the prototype of String to allow formatting
-if (!String.format) {
-  String.format = function(format) {
-    var args = Array.prototype.slice.call(arguments, 1);
-    return format.replace(/{(\d+)}/g, function(match, number) {
-      return typeof args[number] != 'undefined' ? args[number] : match;
-    });
-  };
-}
-
 function modal_message(text, action = null, hide = false){
   var modalDSAS = document.getElementById("modalDSAS");
   modalDSAS.removeAttribute("disable");
@@ -277,7 +267,7 @@ function dsas_status(){
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
         if (error.status)
-          modal_message(String.format(_("Error ({0}) during the machine detection : {1}"), error.status, error.statusText));
+          modal_message(_("Error ({0}) during the machine detection : {1}", error.status, error.statusText));
         else
           modal_message(_("Lost contact with the lower machine"));
     });
@@ -286,7 +276,7 @@ function dsas_status(){
 function machine_status(obj){
   var p = 100. - (100. * obj.disk_free) / obj.disk_total;
   var disk = '<div class="d-flex justify-content-between">' +
-    '<div>' + String.format(_("Disk : {0}"), obj.disk) + '</div>\n' +
+    '<div>' + _("Disk : {0}", obj.disk) + '</div>\n' +
     '<div>' + format_space(obj.disk_total - obj.disk_free) + 
     ' / ' + format_space(obj.disk_total) + '</div></div>' +
     '  <div class="col-12 progress">\n' +
@@ -423,9 +413,9 @@ function dsas_display_logs(all = false){
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
         if (error.statusText)
-          modal_message(String.format(_("Error ({0}) during the download of the logs : {1}"), error.status, error.statusText));
+          modal_message(_("Error ({0}) during the download of the logs : {1}", error.status, error.statusText));
         else
-          modal_message(String.format(_("Error ({0}) during the download of the logs : {1}"), 0, error));
+          modal_message(_("Error ({0}) during the download of the logs : {1}", 0, error));
     });
 }
 
@@ -453,7 +443,7 @@ function dsas_display_passwd(){
       }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
-        modal_message(String.format(_("Error ({0}) during the download of users : {1}"), error.status, error.statusText));
+        modal_message(_("Error ({0}) during the download of users : {1}", error.status, error.statusText));
     });
 }
 
@@ -504,7 +494,7 @@ function dsas_set_passwd(){
       }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
-        modal_message(String.format(_("Error during password change : {0}"), error.statusText));
+        modal_message(_("Error during password change : {0}", error.statusText));
     });
 }
 
@@ -517,21 +507,59 @@ function dsas_display_web(what = "all"){
             statusText: response.statusText});
     }).then(web => {
       if (what === "all" || what === "repo") {
-        document.getElementById("repolabel").innerHTML = 
-           "La publication de la r&eacute;positoire par HTTPS est " +
-           (web.repo  === "true" ? "Activ&eacute;" : "D&eacute;sactiv&eacute;") + " :";
-        document.getElementById("reposubmit").value = (web.repo === "true"  ? "Desactiver" : "Activer");
+        document.getElementById("web_repo").innerHTML = _("Repository publication");
+        document.getElementById("repolabel").innerHTML = _("Publication of the repository by HTTPS is {0}",
+            (web.repo  === "true" ? _("Active") : _("Inactive"))) + " :";
+        document.getElementById("reposubmit").value = (web.repo === "true"  ? _("Deactivate") : _("Activate"));
       }
       if (what === "all" || what === "cert") {
+        document.getElementById("web_csr").innerHTML = '  <h5><a class="text-toggle" data-bs-toggle="collapse" href="#csr"\n' +
+            '    role="button" aria-controls="csr" aria-expanded="false"> \n' +
+            '    <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded">\n' +
+            '    <img src="caret-down.svg"/></i></a>' + _("Certificate Signing Request") + '\n' +
+            '    <a data-toggle="tooltip" title="' + _("Download") + '" id="getcsr" download="dsas.csr"><img src="save.svg"></a></h5>\n' +
+            '  <div class="collapse" id="csr">\n' +
+            '     <div class="card card-body">\n' +
+            '        <pre id="csr_body" style="height : 300px"></pre>\n' +
+            '        <form id="crtupload">\n' +
+            '            <label for="upload" data-toggle="tooltip" title="' + _("CSR file signed by a CA") + '">' + _("Upload CRT") + '</label>\n' +
+            '            <input type="file" name="crtfile" id="crtfile" style="display: none"\n' +
+            '              accept="text/plain,application/x-x509-user-cert" onchange="dsas_upload_crt();">\n' +
+            '            <input type="submit" class="btn btn-primary btn-sm" name="upload" value="' + _("Upload") + '"\n' +
+            '              onclick="document.getElementById(\'crtfile\').click(); return false;">\n' +
+            '        </form></div></div>\n';
+
         var csrblob = new Blob([web.ssl.csr], {type : "application/x-x509-user-cert"});
         var csrurl = window.URL.createObjectURL(csrblob);
-        var pemblob = new Blob([web.ssl.pem], {type : "application/x-x509-user-cert"});
-        var pemurl = window.URL.createObjectURL(pemblob);
-
         document.getElementById("csr_body").innerHTML = web.ssl.csr;
         document.getElementById("getcsr").setAttribute("href", csrurl);
+
+        document.getElementById("web_pem").innerHTML = '  <h5><a class="text-toggle" data-bs-toggle="collapse" href="#cert"\n' +
+            '    role="button" aria-controls="cert" aria-expanded="false">\n' +
+            '    <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded">\n' +
+            '    <img src="caret-down.svg"/></i></a>' + _("Public Certificate") + 
+            '    <a data-toggle="tooltip" title="' + _("Download") + '" id="getpem" download="dsas.crt"><img src="save.svg"></a></h5>\n' +
+            '  <div class="collapse" id="cert">\n' +
+            '    <div class="card card-body">\n' +
+            '      <pre id="pem_body" style="height : 300px"></pre>\n' +
+            '    </div>\n' +
+            '  </div>';
+        var pemblob = new Blob([web.ssl.pem], {type : "application/x-x509-user-cert"});
+        var pemurl = window.URL.createObjectURL(pemblob);
         document.getElementById("pem_body").innerHTML = web.ssl.pem;
         document.getElementById("getpem").setAttribute("href", pemurl);
+
+        document.getElementById("web_renew").innerHTML = _("Renew certificate");
+        document.getElementById("web_email").innerHTML = _("email");
+        document.getElementById("web_validity").innerHTML = _("Validity");
+        document.getElementById("web_renew2").value = _("Renew certificate");
+        document.getElementById("validity").innerHTML = '<option id="valid0" value="0" selected>' + _("Years") + '</option>\n' +     
+              '<option id="valid1" value="1">' + _("One year") + '</option>\n' +
+              '<option id="valid2" value="2">' + _("Two years") + '</option>\n' +
+              '<option id="valid3" value="3">' + _("Three years") + '</option>\n' +
+              '<option id="valid4" value="4">' + _("Four years") + '</option>\n' +
+              '<option id="valid5" value="5">' + _("Five years") + '</option>\n';                 
+
         for (fld of ["countryName", "stateOrProvinceName", "localityName", 
               "organizationName", "organizationalUnitName", "commonName", "emailAddress"]) {
           if (Object.keys(web.ssl[fld]).length !== 0)
@@ -547,7 +575,7 @@ function dsas_display_web(what = "all"){
       }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
-        modal_message("Erreur pendant le chanrgement de la page : " + error.statusText);
+        modal_message(_("Error while loading the page : {0}", (error.statusText ? error.statusText : error)));
     });
 }
 
@@ -568,12 +596,12 @@ function dsas_toggle_repo(){
         });
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
-        modal_message("Erreur pendant le chanrgement de la page : " + error.statusText);
+        modal_message(_("Error while loading the page : {0}", (error.statusText ? error.statusText : error)));
     });
 }
 
 function dsas_renew_cert(){
-    modal_action("&Ecirc;tes-vous s&ucirc;r de vouloir renouveller la certificate ?",
+    modal_action(_("Are you sure you want to renew the certificate ?"),
         "dsas_renew_cert_real();", true);
 }
 
@@ -618,7 +646,7 @@ function dsas_renew_cert_real(){
         });
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
-        modal_message("Erreur pendant le chanrgement de la page : " + error.statusText);
+        modal_message(_("Error while loading the page : {0}", (error.statusText ? error.statusText : error)));
     });
 }
 
@@ -642,11 +670,11 @@ function dsas_upload_crt() {
         modal_errors(errors);
       } catch (e) {
         // Its text => here always just "Ok"
-        modal_message("CRT envoy&eacute; avec sucess", "dsas_display_web('cert');", true);
+        modal_message(_("CRT sucessfully uploaded"), "dsas_display_web('cert');", true);
       }
     }).catch(error => {
       if (!fail_loggedin(error.statusText))
-        modal_message("Error : " + error.statusText);
+        modal_message(_("Error while loading the page : {0}", (error.statusText ? error.statusText : error)));
     }); 
 }
 
@@ -660,20 +688,27 @@ function dsas_display_net(what = "all"){
     }).then(net => {
      if (what === "ifaces" || what === "all") {
        var i = 0;
-       var body = "";
+       var body = '<h5>' +_("Network configuration") + '</h5>\n' + 
+           '<form class="row g-2">\n' +
+           '  <div class="container p-3 my-3 border" id="IFaces">';
        for (iface2 of ["bas", "haut"]) {
          iface = net[iface2];
          body = body +
             '<p class="my-0"><a class="text-toggle" data-bs-toggle="collapse" href="#iface' + i +
             '" role="button"' + 'aria-controls="iface' + i + '" aria-expanded="false">' +
             '<i class="text-collapsed"><img src="caret-right.svg"/></i>' +
-            '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + iface2;
+            '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + 
+             (iface2 == "bas" ? _("Lower Machine") : _("Upper Machine"));
          body = body + 
             '</p><div class="collapse" id="iface' + i + '"><div class="card card-body">' +
             iface_body(iface, i) + '</div></div>\n';
          i++;
        }
-       document.getElementById("IFaces").innerHTML = body;
+       body = body + '</div><div class="form-group">\n' +
+           '  <input type="submit" class="btn btn-primary" value="' + _("Save the changes") + '" onclick="dsas_change_net(); return false;">\n' +
+           '</div></form>';  
+
+       document.getElementById("network").innerHTML = body;
 
        // Why can't I include this in the declaration of the body ?
        i = 0; 
@@ -689,7 +724,7 @@ function dsas_display_net(what = "all"){
      }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
-        modal_message("Erreur pendant le chanrgement de la page : " + error.statusText);
+        modal_message(_("Error while loading the page : {0}", (error.statusText ? error.statusText : error)));
     });
 }
 
@@ -702,15 +737,15 @@ function iface_body(iface, i) {
     '      <div class="col-12">\n' +
     '        <input class="form-check-input" type="checkbox"' + (dhcp ? ' checked=""' : '') + ' id="iface_dhcp' + i + 
               '" onchange="dsas_change_net(\'dhcp\', ' + i + ');">\n' +
-    '        <label class="form-check-label" for="iface_dhcp' + i + '">Utiliser DHCP</label>\n' +
+    '        <label class="form-check-label" for="iface_dhcp' + i + '">' + _("Use DHCP") + '</label>\n' +
     '      </div>\n' +
     '      <div class="col-12">\n' +
-    '        <label for="iface_cidr' + i + '">Adresse IP/Mask (format CIDR)</label>\n' +
+    '        <label for="iface_cidr' + i + '">' + _("IP address and mask (CIDR format)") + '</label>\n' +
     '        <input type="text" id="iface_cidr' + i + '"' + (dhcp ? ' disabled=""' : '') + ' value="' + print_obj(iface.cidr) + '" class="form-control">\n' +
     '        <div class="invalid-feedback" id="feed_iface_cidr' + i + '"></div>\n' +
     '      </div>\n' +
     '      <div class="col-12">\n' +
-    '        <label for="iface_gateway' + i + '">Passerelle </label>\n' +
+    '        <label for="iface_gateway' + i + '">' + _("Gateway") + '</label>\n' +
     '        <input type="text" id="iface_gateway' + i + '"' + (dhcp ? ' disabled=""' : '') + ' value="' + print_obj(iface.gateway) + '" class="form-control">\n' +
     '        <div class="invalid-feedback" id="feed_iface_gateway' + i + '"></div>\n' +
     '      </div>\n' +
@@ -719,12 +754,12 @@ function iface_body(iface, i) {
     '  <div class="col-6">\n' +
     '    <div class="row">\n' +
     '      <div class="col-12">\n' +
-    '        <label for="iface_dns_domain' + i + '">DNS Domain</label>\n' +
+    '        <label for="iface_dns_domain' + i + '">' + _("DNS domain") + '</label>\n' +
     '        <input type="text" id="iface_dns_domain' + i + '"' + (dhcp ? ' disabled=""' : '') + ' value="' + print_obj(iface.dns.domain) + '" class="form-control">\n' +
     '        <div class="invalid-feedback" id="feed_iface_dns_domain' + i + '"></div>\n' +
     '      </div>\n' +
     '      <div class="form-check col-12">\n' +
-    '        <label for="iface_nameserver' + i + '">Serveur de nom (DNS) :</label>\n' +
+    '        <label for="iface_nameserver' + i + '">' + _("DNS name servers") + '</label>\n' +
     '        <textarea name="iface_nameserver' + i + '"' + (dhcp ? ' disabled=""' : '') + ' rows="3" id="iface_nameserver' + i + '" class="form-control"></textarea>\n' +
     '        <div class="invalid-feedback" id="feed_iface_nameserver' + i + '"></div>\n' +
     '      </div>\n' +
@@ -785,7 +820,7 @@ function dsas_change_net(what= "all", i = 0) {
               dsas_display_net("all");
             }
           }).catch(error => {
-            modal_message("Error : " + error.statusText);
+            modal_message(_("Error while loading the page : {0}", (error.statusText ? error.statusText : error)));
           });
 
       }).catch(error => {
@@ -1890,11 +1925,33 @@ class multiLang {
   }
 }
 
+// Modify the prototype of String to allow formatting
+if (!String.format) {
+  String.format = function(format) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    return format.replace(/{(\d+)}/g, function(match, number) {
+      return typeof args[number] != 'undefined' ? args[number] : match;
+    });
+  };
+}
+
 var ml = new multiLang("languages.json");
 // Use "_" as the function name here to be like in python i8n
-function _ (key) {
-  return ml.translate(key);
+function _ (key, ...args) {
+  if (typeof(key) === "string") {
+    if (empty_obj(args))
+      return ml.translate(key);
+    else
+      return String.format(ml.translate(key), ...args);
+  } else {
+    key[0] = ml.translate(key[0]);
+    if (empty_obj(args))
+      return String.format(...key);
+    else
+      return String.format(...key, ...args);
+  }
 }
+
 class DSASModal extends HTMLElement {
   constructor(){
     super();

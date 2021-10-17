@@ -17,16 +17,8 @@
   dsas_check_warnings();
 </script>
 
-<div class="container p-3 my-3 border">
-  <h5>Configuration r&eacute;seau</h5>
-  <form class="row g-2">
-    <div class="container p-3 my-3 border" id="IFaces"></div>
-    <div class="form-group">
-      <input type="submit" class="btn btn-primary" value="Sauvegarder des changements" onclick="dsas_change_net(); return false;">
-    </div>
-  </form>
-  <script>dsas_display_net("all");</script>
-</div>
+<div class="container p-3 my-3 border" id="network"></div>
+<script>dsas_display_net("all");</script>
 
 </body>
 </html>

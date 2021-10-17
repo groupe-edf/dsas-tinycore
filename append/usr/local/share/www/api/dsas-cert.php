@@ -23,7 +23,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           foreach ($dsas->certificates->certificate as $certificate) {
             if ($certificate->type == "x509") {
               if (openssl_x509_fingerprint(trim($certificate->pem, "sha256")) == $parse["fingerprint"])
-                throw new RuntimeException("The X509 certrificate already exists");
+                throw new RuntimeException("The X509 certificate already exists");
             }
           }
           $newcert = $dsas->certificates->addChild("certificate");
@@ -52,7 +52,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             if ($certificate->type == "gpg") {
               $cert =  parse_gpg(trim($certificate->pem));
               if ($cert["fingerprint"] == $parse["fingerprint"])
-                throw new RuntimeException("Le certificate GPG existe déja");
+                throw new RuntimeException("The GPG certificate already exists");
             }
           }
           $newcert = $dsas->certificates->addChild("certificate");
@@ -89,7 +89,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             foreach ($task->cert as $cert) {
               if ($cert->fingerprint == $_POST["finger"]) {
                 $certok = false;
-                $errors[] = [ "delete" => "Le certificate est utilisé par le tache '" . $task->name . "'"];
+                $errors[] = [ "delete" => ["The certificate is used by the task '{0}'", (string)$task->name]];
               }
             }
           }
@@ -100,11 +100,11 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
 
       default:
-        $errors[] = ["error" => "Operation '" . $_POST["op"] . "' demand&eacute; inconnu"]; 
+        $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]]; 
         break;
     }
   } catch (Exception $e) {
-     $errors[] = ["error" => "Internal server error"];
+     $errors[] = ["error" => ["Internal server error : {0}"; $e->getMessage()]];
   }
  
   if ($errors == []) {

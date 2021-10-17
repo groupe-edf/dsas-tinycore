@@ -249,23 +249,23 @@ function ip_valid($addr, $nomask){
     if (is_numeric($mask)){
       // Check for float value
       if (!empty(strpos($mask, ".")))
-        return "Mask est invalid.";
+        return "The mask is invalid";
       $mask = intval($mask);
       if ($mask < 0 || $mask > 32)
-        return "Mask est invalid.";
+        return "The mask is invalid";
     } else
-      return "Mask est invalid.";
+      return "The mask is invalid";
   }
   $arr = explode(".", $net);
   if (count($arr) != 4)
-    return "Address est invalid.";
+    return "The address is invalid";
   else {
     foreach ($arr as $value) {
       if (!is_numeric($value))
-        return "Address est invalid.";
+        return "The address is invalid";
       $val = intval($value);
       if ($val < 0 || $val > 255)
-        return "Address est invalid;";
+        return "The address is invalid";
     }
   }
   return "";
@@ -276,7 +276,7 @@ function inet_valid($addr){
   if (is_numeric($addr[0]))
     return ip_valid($addr, true);
   else
-    return (is_valid_domain($addr) ? "" : "Address est invalid");
+    return (is_valid_domain($addr) ? "" : "The address is invalid");
 }
 
 function dsas_get_logs() {
