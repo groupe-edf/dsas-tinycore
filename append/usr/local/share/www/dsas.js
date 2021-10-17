@@ -2105,11 +2105,16 @@ class DSASHeader extends HTMLElement {
 
   render(){
     var disablenav = this.getAttribute("disablenav"); 
+    var langs = "";
+
+    for (let lang of Object.keys(ml.phrases))
+      langs = langs + '          <a class="dropdown-item" onclick="ml.setLanguage(\'' + 
+              lang + '\');">' + lang + '</a>\n';
 
     // FIXME Need to set the allowed languages here from Object.keys(ml.phrases)
     // For now just French and English
-    this.innerHTML = '    <nav class="navbar navbar-expand-sm bg-dark navbar-dark sticky-top">\n' +
-'      <a class="navbar-brand"' + ((disablenav != "disabled") ? ' href="/' : '') + '">DSAS</a>\n' +
+    this.innerHTML = '    <div class="row g-0 sticky-top"><div class="col-9"><nav class="navbar navbar-expand-sm bg-dark navbar-dark">\n' +
+'      <a class="navbar-brand px-2"' + ((disablenav != "disabled") ? ' href="/' : '') + '">DSAS</a>\n' +
 '      <ul class="navbar-nav">\n' +
 '      <li class="nav-item dropdown">\n' +
 '        <a class="nav-link ' + disablenav + ' dropdown-toggle" data-bs-toggle="dropdown">\n' +
@@ -2139,18 +2144,19 @@ class DSASHeader extends HTMLElement {
 '      <li class="nav-item">\n' +
 '        <a class="nav-link ' + disablenav + '" href="help.html">' + _("Documentation") + '</a>\n' +
 '      </li>\n' +
+'      </ul>\n' +   
+'    </nav></div>' +
+'    <div class="col-4"><nav class="navbar navbar-expand-sm bg-dark navbar-dark">\n' +
+'      <ul class="navbar-nav ms-auto">\n' +
 '      <li class="nav-item dropdown">\n' +
-'        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">' + _("Language") + '</a>\n' +
-'        <div class="dropdown-menu">\n' +
-'          <a class="dropdown-item" onclick="ml.setLanguage(\'en\');">en</a>\n' +
-'          <a class="dropdown-item" onclick="ml.setLanguage(\'fr\');">fr</a>\n' +
-'        </div>\n' +
+'        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">' + ml.currentLanguage + '</a>\n' +
+'        <div class="dropdown-menu">\n' + langs + '        </div>\n' +
 '      </li>\n' +
-'      <li class="nav-item">\n' +
-'        <a class="nav-link ' + disablenav + ' btn btn-danger" onclick="modal_action(\'' + _("Are you sure you want to apply ?") + '\', \'dsas_apply();\')">' + _("Apply") + '</a>\n' +
+'      <li class="nav-item px-2">\n' +
+'        <a class="nav-link ' + disablenav + ' btn btn-sm btn-danger" onclick="modal_action(\'' + _("Are you sure you want to apply ?") + '\', \'dsas_apply();\')">' + _("Apply") + '</a>\n' +
 '      </li>\n' +
 '      </ul>\n' +   
-'    </nav>' +
+'    </nav></div></div>' +
 '    <dsas-modal id="modalDSAS" tag="DSAS"  type="Ok"></dsas-modal>\n';
 
   }
