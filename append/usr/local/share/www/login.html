@@ -11,7 +11,16 @@
     <script>if (dsas_init_loggedin()) window.location = "index.html";</script>
     <div class="container p-3 my-3 border">
       <form>
-        <h1 data-i18n>DSAS Management Site</h1>
+        <div class="row">
+          <div class="col-10">
+            <h1 data-i18n>DSAS Management Site</h1>
+          </div>
+          <div class="col-2">
+            <nav class="navbar navbar-expand-sm">
+              <ul class="navbar-nav ms-auto" data-i18n-navbar-lang></ul>
+            </nav>
+          </div>
+        </div>
         <h2 data-i18n>Login below</h2>
         <div class="form-group">
             <label data-i18n>Username :</label>

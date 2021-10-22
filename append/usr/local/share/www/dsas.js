@@ -1989,6 +1989,20 @@ function translate(){
   for (let el of document.querySelectorAll("[data-i18n-title]")) 
      if (el.title)
        el.title = _(el.title);
+
+  // Insert language navbar dropdown
+  for (let el of  document.querySelectorAll("[data-i18n-navbar-lang]")) {
+    var langs = "";
+
+    for (let lang of Object.keys(ml.phrases))
+      langs = langs + '          <a class="dropdown-item" onclick="ml.setLanguage(\'' + 
+              lang + '\');">' + lang + '</a>\n';
+
+    el.innerHTML = '      <li class="nav-item dropdown">\n' +
+                   '        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">' + ml.currentLanguage + '</a>\n' +
+                   '        <div class="dropdown-menu">\n' + langs + '        </div>\n' +
+                   '      </li>\n';
+  }
 }
 
 class DSASModal extends HTMLElement {
@@ -2105,11 +2119,6 @@ class DSASHeader extends HTMLElement {
 
   render(){
     var disablenav = this.getAttribute("disablenav"); 
-    var langs = "";
-
-    for (let lang of Object.keys(ml.phrases))
-      langs = langs + '          <a class="dropdown-item" onclick="ml.setLanguage(\'' + 
-              lang + '\');">' + lang + '</a>\n';
 
     this.innerHTML = '    <div class="row g-0 sticky-top"><div class="col-8"><nav class="navbar navbar-expand-sm bg-dark navbar-dark">\n' +
 '      <a class="navbar-brand px-2"' + ((disablenav != "disabled") ? ' href="/' : '') + '">DSAS</a>\n' +
@@ -2146,10 +2155,7 @@ class DSASHeader extends HTMLElement {
 '    </nav></div>' +
 '    <div class="col-4"><nav class="navbar navbar-expand-sm bg-dark navbar-dark">\n' +
 '      <ul class="navbar-nav ms-auto">\n' +
-'      <li class="nav-item dropdown">\n' +
-'        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">' + ml.currentLanguage + '</a>\n' +
-'        <div class="dropdown-menu">\n' + langs + '        </div>\n' +
-'      </li>\n' +
+'      <span data-i18n-navbar-lang></span>\n' +
 '      <li class="nav-item px-2">\n' +
 '        <a class="nav-link ' + disablenav + ' btn btn-sm btn-danger" onclick="modal_action(\'' + _("Are you sure you want to apply ?") + '\', \'dsas_apply();\')">' + _("Apply") + '</a>\n' +
 '      </li>\n' +
