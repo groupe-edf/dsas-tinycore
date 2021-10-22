@@ -36,6 +36,9 @@ mount_dsas(){
     mount -o remount,noexec ${DSAS:0:-5}
     mount --noexec --nobind $DSAS /home/dsas
   fi
+
+  # For persistent /var/log. Do this before launching syslog
+  [ -d ${DSAS:0:-5}/log ] && [ ! $(mounted /var/log) ] && mount ${DSAS:0:-5}/log /var/log
 }
 
 init_disk(){
@@ -167,6 +170,9 @@ get_dsas(){
     mkdir -p $DISK/dsas/log
     chmod -R 770 $DISK/dsas/log
     chown -R tc.verif $DISK/dsas/log
+    mkdir -p $DISK/log
+    chmod 750 $DISK/log
+    chown root.staff $DISK/log
     DSAS=$DISK/dsas
   fi
 
