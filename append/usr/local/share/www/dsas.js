@@ -180,8 +180,8 @@ function dsas_loggedin(update_timeout = true){
       return Promise.reject({status: response.status, 
           statusText: response.statusText});
     else {
-      // Check if logged in once a minute, but don't update the timeout
-      setTimeout(dsas_loggedin, 60000, false);
+      // Check if logged in once evry 15 seconds, but don't update the timeout
+      setTimeout(dsas_loggedin, 15000, false);
     }
   }).catch(error => {
     modal_message(_("You are not connected. Click 'Ok' to reconnect."),
