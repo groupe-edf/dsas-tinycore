@@ -41,7 +41,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     }
 } else {
    // No connection attempt so don't log anything to syslog
-   if (! dsas_loggedin())
+   if (! empty($_GET["timeout"]) && (! $_GET["timeout"])) {
+     if (! dsas_loggedin(false))
+       die(header("HTTP/1.0 403 Forbidden"));
+   } else if (! dsas_loggedin())
      die(header("HTTP/1.0 403 Forbidden"));
    else
      echo "Ok";

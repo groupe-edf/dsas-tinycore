@@ -167,11 +167,22 @@ function modal_errors(errors, feedback = false){
   }
 }
 
-function dsas_loggedin(){
-  fetch("api/login.php").then(response => {
+function dsas_loggedin(update_timeout = true){
+  var uri;
+  if (update_timeout) 
+    uri = "api/login.php";
+  else {
+    uri  = new URL("api/login.php", window.location.origin);
+    uri.search = new URLSearchParams({timeout: false});
+  }
+  fetch(uri).then(response => {
     if (! response.ok)
       return Promise.reject({status: response.status, 
           statusText: response.statusText});
+    else {
+      // Check if logged in once a minute, but don't update the timeout
+      setTimeout(dsas_loggedin(false), 60000);
+    }
   }).catch(error => {
     modal_message(_("You are not connected. Click 'Ok' to reconnect."),
         "window.location='login.html'");
