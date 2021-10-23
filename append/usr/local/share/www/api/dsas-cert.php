@@ -17,12 +17,13 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $x509 = htmlspecialchars(file_get_contents($_FILES["file"]["tmp_name"]));
           $x509 = str_replace("\r", "", $x509);   // dos2unix
           $parse = openssl_x509_parse($x509);
+          $finger = openssl_x509_fingerprint(trim($x509), "sha256");
           if (! $parse)
             throw new RuntimeException("The X509 file must be in PEM format");
           
           foreach ($dsas->certificates->certificate as $certificate) {
             if ($certificate->type == "x509") {
-              if (openssl_x509_fingerprint(trim($certificate->pem, "sha256")) == $parse["fingerprint"])
+              if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $finger)
                 throw new RuntimeException("The X509 certificate already exists");
             }
           }
