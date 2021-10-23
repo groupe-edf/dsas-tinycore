@@ -181,7 +181,7 @@ function dsas_loggedin(update_timeout = true){
           statusText: response.statusText});
     else {
       // Check if logged in once a minute, but don't update the timeout
-      setTimeout(dsas_loggedin(false), 60000);
+      setTimeout(dsas_loggedin, 60000, false);
     }
   }).catch(error => {
     modal_message(_("You are not connected. Click 'Ok' to reconnect."),
