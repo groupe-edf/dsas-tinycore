@@ -550,7 +550,7 @@ start_syslog(){
   server=$(xmllint --xpath "string(dsas/config/syslog/server)" $VAR/dsas_conf.xml)
 
   if [ "$syslog" == "true" ]; then
-    [ -z $server ] || sopts=" -R $server -L "
+    [ "$TYP" == "bas" ] && [ -n $server ] &&| sopts=" -R $server -L "
     /sbin/syslogd ${sopts} && echo "${GREEN}syslogd started.${NORMAL}"
     /sbin/klogd && echo "${GREEN}klogd started.${NORMAL}"
   fi
@@ -652,11 +652,11 @@ case "${1}" in
     [ "$TYP" == "haut" ] && echo "192.168.192.1 bas" >> /etc/hosts
     start_network
     start_sshd
+    start_syslog
     if [ "$TYP" == "bas" ]; then
       [ -n "$CONFIG_SSH" ] && config_sshd
       start_web_admin
       start_repo
-      start_syslog
       start_ntp
       # Put root crontab file in place so it only runs on the machine bas
       /bin/cp $VAR/crontab.dsas /var/spool/cron/crontabs/root
@@ -673,10 +673,10 @@ case "${1}" in
     fi
     if [ "$TYP" == "bas" ]; then
       stop_ntp
-      stop_syslog
       stop_repo
       stop_web_admin
     fi
+    stop_syslog
     stop_sshd
     stop_network
     ;;
@@ -719,11 +719,11 @@ case "${1}" in
     fi
 
     # The other services can be restarted without risk
+    stop_syslog
+    start_syslog
     if [ "$TYP" == "bas" ]; then    
       stop_ntp
       start_ntp
-      stop_syslog
-      start_syslog
       stop_repo
       start_repo
     fi
