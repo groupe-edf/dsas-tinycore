@@ -228,7 +228,7 @@
     "The password can not contain white spaces" : "Mot de passe ne peut pas contenir des espaces blancs",
     "The password is insufficently complex" : "Mot de passe pas suffisament complexe",
     "No password has been changed." : "Aucun mot de passe changé.",
-    "The passwords have been changed" : "Les mots de passe ont été; changés",
+    "The passwords have been changed" : "Les mots de passe ont été changés",
     "Error during password change : {0}" : "Erreur pendant le changement des mots de passe: {0}", 
     "Publication of the repository by HTTPS is {0}" : "La publication de la r&eacute;positoire par HTTPS est ",
     "Active" : "Activé",
