@@ -235,7 +235,7 @@
     "Inactive" : "Désactivé",
     "Activate" : "Activer",
     "Deactivate" : "Désactiver",
-    "Certificate Signing Request" : "Certificate Signing Request",
+    "Certificate Signing Request" : "Requ�te de Signature (CSR)",
     "Download" : "Télécharger",
     "CSR file signed by a CA" : "Fichier CSR signé par un CA", 
     "Upload CRT" : "Upload CRT",
