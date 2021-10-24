@@ -499,7 +499,7 @@ config_sshd(){
     $as_haut ssh-keygen -b 4096 -t rsa -f /home/haut/.ssh/id_rsa -q -N ''
 
     echo "Copying public keys to machine haut"
-    $as_tc ssh-keyscan -H $INTERCO_HAUT >> /home/tc/.ssh/known_hosts
+    $as_tc ssh-keyscan $INTERCO_HAUT >> /home/tc/.ssh/known_hosts
     cp /home/tc/.ssh/known_hosts /home/haut/.ssh/known_hosts
     chown tc.staff /home/tc/.ssh/known_hosts
     chown haut.haut /home/haut/.ssh/known_hosts

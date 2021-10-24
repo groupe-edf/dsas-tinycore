@@ -462,6 +462,8 @@ chown -R root.staff /var/dsas
 chmod 775 /var/dsas          # Write perm for verif
 chmod 640 /var/dsas/*.csr /var/dsas/*.pem
 chown tc.repo /var/dsas/*.csr /var/dsas/*.pem
+chmod 664 /var/dsas/dsas_conf.xml
+chown tc.staff /var/dsas/dsas_conf.xml
 chown -R root.staff /opt
 chmod 770 /opt
 chmod 770 /opt/.filetool.lst
