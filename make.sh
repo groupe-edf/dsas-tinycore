@@ -237,6 +237,9 @@ EOF
         [  -z "$_install_cmd" ] || chroot $extract /tmp/script || { error "Unexpected error ($?) in install"; exit 1; }
         cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+destdir=$destdir
+builddir=$builddir
+_pkg_path=$_pkg_path
 cd $destdir
 $_post_build
 exit \$?
@@ -406,7 +409,7 @@ case $1 in
   cp /dev/null $create_users
 
   msg WARNING: Change default password for 'tc' user and run 'filetool.sh -b'
-  echo tc:dSa02021cTf >> $passfile
+  echo tc:dSaO2021DSAS >> $passfile
 cat << EOF >> $create_users
 echo tc:dSaO2021DSAS | chpasswd -c sha512
 EOF

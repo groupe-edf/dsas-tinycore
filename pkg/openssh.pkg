@@ -7,7 +7,10 @@ _pkg_path="openssh-8.8p1"
 _conf_cmd="./configure --sysconfdir=/usr/local/etc/ssh --libexecdir=/usr/local/lib/openssh --with-privsep-path=/var/lib/sshd"
 _make_cmd="make"
 _install_cmd="make install DESTDIR="
-_post_build='cd usr/local/etc 
+_post_build='cp "$builddir/$_pkg_path/contrib/ssh-copy-id" usr/local/bin
+chmod 755 usr/local/bin/ssh-copy-id
+cp "$builddir/$_pkg_path/contrib/ssh-copy-id.1" usr/local/share/man/cat1
+cd usr/local/etc 
 mv ssh/ssh_config ssh/ssh_config.orig
 mv ssh/sshd_config ssh/sshd_config.orig
 mkdir -p init.d
