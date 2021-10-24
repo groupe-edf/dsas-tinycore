@@ -271,7 +271,7 @@ function dsas_status(){
            '<h5 class="text-danger">' + _("Upper Machine :") + ' ' + _("UNAVAILABLE") + '</h5>' + machine_status(obj.haut) + '</div></div>';
       else
         body = body + '</div><div class="col-6 container p-3 border">' +
-           '<h5>Machine haut:</h5>' + machine_status(obj.haut) + '</div></div>';
+           '<h5>' + _("Upper Machine :") + '</h5>' + machine_status(obj.haut) + '</div></div>';
       document.getElementById("StatusBar").innerHTML = body;
       // Automatically refresh the page
       setTimeout(dsas_status, 5000);
