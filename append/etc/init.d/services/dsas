@@ -111,6 +111,9 @@ EOF
     mkdir -p ${MNT}1
     echo "Mounting  ${GREEN}${DEV}1${NORMAL} on  ${GREEN}${MNT}1${NORMAL}"
     mount ${DEV}1 ${MNT}1
+    mkdir -p ${MNT}1/tce
+    chmod 770 ${MNT}1/tce
+    chown root.staff ${MNT}1/tce
  
     return 1
   else
@@ -256,7 +259,7 @@ config_network(){
     d=$(xmllint --xpath 'string(dsas/config/network/bas/dns/domain)' $VAR/dsas_conf.xml)
     while :; do
       DOMAIN="$(dialog --stdout --no-cancel --title 'DNS search domain' --inputbox 'Domain:' 0 0 $d)"
-      [ -z "$DOMAIN" ] || break
+      [ -z "$DOMAIN" ] && break
       valid_domain $DOMAIN && break
       dialog --msgbox "Domain invalid" 0 0
     done
@@ -310,6 +313,17 @@ start_network(){
   ETH0=$(echo $NETDEVICES | cut -d" " -f1)
   ETH1=$(echo $NETDEVICES | cut -d" " -f2)
 
+  if [ -z "$NO_INTERCO" ]; then
+    echo "Using static IP for ${GREEN}$ETH1${NORMAL}."
+    if [ "$TYP" == "bas" ]; then
+      /sbin/ifconfig $ETH1 $INTERCO_BAS netmask $INTERCO_MASK up
+      /sbin/route add $INTERCO_HAUT $ETH1 &
+    else
+      /sbin/ifconfig $ETH1 $INTERCO_HAUT netmask $INTERCO_MASK up
+      /sbin/route add $INTERCO_BAS $ETH1 &
+    fi
+  fi
+
   dhcp=$(xmllint --xpath "string(dsas/config/network/${TYP}/dhcp)" $VAR/dsas_conf.xml)
   if [ "$dhcp" == "true" ]; then
     echo -n "Using DHCP broadcast for ${GREEN}$ETH0${NORMAL}..."
@@ -342,17 +356,6 @@ start_network(){
       NS=$(xmllint --xpath "string(dsas/config/network/${TYP}/dns/nameserver[$i])" $VAR/dsas_conf.xml)
       i=$((i + 1))
     done
-  fi
-
-  if [ -z "$NO_INTERCO" ]; then
-    echo "Using static IP for ${GREEN}$ETH1${NORMAL}."
-    if [ "$TYP" == "bas" ]; then
-      /sbin/ifconfig $ETH1 $INTERCO_BAS netmask $INTERCO_MASK up
-      /sbin/route add $INTERCO_HAUT $ETH1 &
-    else
-      /sbin/ifconfig $ETH1 $INTERCO_HAUT netmask $INTERCO_MASK up
-      /sbin/route add $INTERCO_BAS $ETH1 &
-    fi
   fi
 }
 
@@ -496,14 +499,18 @@ config_sshd(){
     $as_haut ssh-keygen -b 4096 -t rsa -f /home/haut/.ssh/id_rsa -q -N ''
 
     echo "Copying public keys to machine haut"
-    $as_tc ssh-keyscan -t rsa -H $INTERCO_HAUT >> /home/tc/.ssh/known_hosts
+    $as_tc ssh-keyscan -H $INTERCO_HAUT >> /home/tc/.ssh/known_hosts
     cp /home/tc/.ssh/known_hosts /home/haut/.ssh/known_hosts
     chown tc.staff /home/tc/.ssh/known_hosts
     chown haut.haut /home/haut/.ssh/known_hosts
 
     while :; do
       PASSWD="$(dialog --stdout --no-cancel --insecure --passwordbox 'Password user tc:' 0 0)"
-      $as_tc sshpass -p $PASSWD ssh-copy-id -i /home/tc/.ssh/id_rsa.pub -f tc@$INTERCO_HAUT && break
+      # Don't use $as_tc here as don't want the "-E"
+      sudo -u tc /usr/local/bin/sshpass -p $PASSWD ssh-copy-id -i /home/tc/.ssh/id_rsa.pub -f tc@$INTERCO_HAUT && break
+      # FIXME Sleep to allow any error messages to be seen. Maybe remove later
+      sleep 5
+      dialog --msgbox "Password incorrect" 0 0
     done
 
     cp /home/haut/.ssh/id_rsa.pub /tmp/authorized_keys
@@ -515,6 +522,12 @@ sudo mv /tmp/authorized_keys /home/bas/.ssh/authorized_keys
 sudo chown -R bas.bas /home/bas/.ssh
 sudo chmod -R 700 /home/bas/.ssh
 EOF
+
+    echo "Creating ssh keys"
+    [ -f /usr/local/etc/ssh/ssh_host_rsa_key ] || /usr/local/bin/ssh-keygen -t rsa -N "" -f /usr/local/etc/ssh/ssh_host_rsa_key
+    [ -f /usr/local/etc/ssh/ssh_host_dsa_key ] || /usr/local/bin/ssh-keygen -t dsa -N "" -f /usr/local/etc/ssh/ssh_host_dsa_key
+    [ -f /usr/local/etc/ssh/ssh_host_ecdsa_key ] || /usr/local/bin/ssh-keygen -t ecdsa -N "" -f /usr/local/etc/ssh/ssh_host_ecdsa_key
+    [ -f /usr/local/etc/ssh/ssh_host_ed25519_key ] || /usr/local/bin/ssh-keygen -t ed25519 -N "" -f /usr/local/etc/ssh/ssh_host_ed25519_key
 
     echo "Backing up authorized keys on machine haut"
     $as_tc ssh -i /home/tc/.ssh/id_rsa tc@$INTERCO_HAUT filetool.sh -b
