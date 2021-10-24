@@ -1,0 +1,88 @@
+#!/bin/bash
+
+# This script need bash  to access /dev/udp/HOST/PORT. Could write a simple
+# C program to replace this if needed. Don't use netcat or socat as too much
+# risk to have them on the DSAS
+
+# if root rerun as user tc
+if [ $(id -u) == 0 ]; then
+  sudo -E -u tc $0 $*
+  exit $?
+fi
+
+# if not user tc, quit
+[ "$(whoami)" != "tc" ] && { 1>&2 echo "$0: Must be run as user 'tc'"; exit 1; }
+
+if [ -f "$(dirname $0)/dsas_common.sh" ]; then
+  . $(dirname $0)/dsas_common.sh
+else
+  1>&2 echo "Common functions not found !!"
+  exit -1
+fi
+
+VAR="/var/dsas"
+LAST=$LOG/syslog.haut
+HLOG="/var/log/messages"
+HLOG0="/var/log/messages.0"
+
+syslog=$(xmllint --xpath "string(dsas/config/syslog/active)" $VAR/dsas_conf.xml)
+server=$(xmllint --xpath "string(dsas/config/syslog/server)" $VAR/dsas_conf.xml)
+[ "$syslog" != "true" ] || [ -z "$server" ] || exit 0 
+
+# Get the status of the last run
+HLOGSZ=0
+HLOGH=""
+HLOGSZ0=0
+HLOGH0=""
+if [ -f "$LAST" ]; then
+  last="";
+  while IFS= read -r line; do
+    if [ -z "$last" ]; then
+      IFS=' ' read HLOG HLOGSZ HLOGH << EOF
+$line
+EOF
+      last="true"
+    else
+      IFS=' ' read HLOG0 HLOGSZ0 HLOGH0 << EOF
+$line
+EOF
+      break
+    fi
+  done < $LAST
+fi
+
+# Get /var/log/messages from the machine haut
+tempdir=$(mktemp -d)
+scp tc@$INTERCO_HAUT:$HLOG $tempdir/$(basename $HLOG)
+
+# Is it different ? 
+if [ "$(sha256sum $tempdir/$(basename $HLOG) | cut -d' ' -f1)" != "$HLOGH" ]; then
+  # Fetch $HLOG0 as well
+  
+  if scp tc@$INTERCO_HAUT:$HLOG0 $tempdir/$(basename $HLOG0) && \
+      [ "$(sha256sum $tempdir/$(basename $HLOG0) | cut -d' ' -f1)" != "$HLOGH0" ]; then
+    # The machine haut has rotated its logs
+    if [ "$(sha256sum $tempdir/$(basename $HLOG0) | cut -d' ' -f1)" != "$HLOGH" ]; then
+      # There are lines in $HLOG0 to treat
+      dd status=none bs=1 skip=$HLOGSZ0 if=$tempdir/$(basename $HLOG0) | while read -r line; do
+        echo $line > /dev/udp/$server/514
+      done
+    fi
+    HLOGH0="$(sha256sum $tempdir/$(basename $HLOG0) | cut -d' ' -f1)"
+    HLOGSZ0="$(stat -c%s $tempdir/$(basename $HLOG0))"
+    HLOGSZ=0
+  fi
+  # Treat the lines in $HLOG
+  dd status=none bs=1 skip=$HLOGSZ if=$tempdir/$(basename $HLOG) | while read -r line; do
+    echo $line > /dev/udp/$server/514
+  done
+
+  # Update the status file
+  HLOGH="$(sha256sum $tempdir/$(basename $HLOG) | cut -d' ' -f1)"
+  HLOGSZ="$(stat -c%s $tempdir/$(basename $HLOG))"
+  echo "$HLOG $HLOGSZ $HLOGH" > $LAST
+  echo "$HLOG0 $HLOGSZ0 $HLOGH0" >> $LAST
+fi
+
+# Remove temporary files
+/bin/rm -fr $tempdir
