@@ -1100,9 +1100,9 @@ function cert_name(cert) {
   if (cert.subject.CN)
     return cert.subject.CN;
   if (cert.subject.OU)
-    return cert.subject.OU
+    return cert.subject.OU;
   if (cert.subject.O)
-    return cert.subject.O
+    return cert.subject.O;
   if (cert.extensions.subjectKeyIdentifier)
     return cert.extensions.subjectKeyIdentifier;
   return "name";
