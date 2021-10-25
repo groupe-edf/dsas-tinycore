@@ -9,6 +9,7 @@ MNT=/mnt
 # FIXME : Make this configurable ?
 INTERCO="192.168.192.0"
 INTERCO_MASK="255.255.255.0"
+INTERCO_CIDR="$INTERCO/24"
 INTERCO_BAS="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 1)) )"
 INTERCO_HAUT="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 2)) )"
 
@@ -409,6 +410,8 @@ start_sshd(){
       LISTEN="$INTERCO_HAUT"
     else
       LISTEN="0.0.0.0"
+      # Exclude the interconnexion network !!
+      [[ "$USER" =~ "/0$" ]] && USER="$USER,!$INTERCO_CIDR"
     fi
   fi
   [ -z $USER_TC ] && [ -z $USER ] && return 0
@@ -499,7 +502,7 @@ config_sshd(){
     $as_haut ssh-keygen -b 4096 -t rsa -f /home/haut/.ssh/id_rsa -q -N ''
 
     echo "Copying public keys to machine haut"
-    $as_tc ssh-keyscan $INTERCO_HAUT >> /home/tc/.ssh/known_hosts
+    $as_tc ssh-keyscan $INTERCO_HAUT > /home/tc/.ssh/known_hosts
     cp /home/tc/.ssh/known_hosts /home/haut/.ssh/known_hosts
     chown tc.staff /home/tc/.ssh/known_hosts
     chown haut.haut /home/haut/.ssh/known_hosts
@@ -514,11 +517,13 @@ config_sshd(){
     done
 
     cp /home/haut/.ssh/id_rsa.pub /tmp/authorized_keys
+    chown tc.staff /tmp/authorized_keys
+    chmod 600 /tmp/authorized_keys
     $as_tc scp /tmp/authorized_keys tc@$INTERCO_HAUT:/tmp/authorized_keys
     rm /tmp/authorized_keys
     $as_tc ssh tc@$INTERCO_HAUT << EOF
 sudo mkdir -p /home/bas/.ssh
-sudo mv /tmp/authorized_keys /home/bas/.ssh/authorized_keys
+sudo mv -f /tmp/authorized_keys /home/bas/.ssh/authorized_keys
 sudo chown -R bas.bas /home/bas/.ssh
 sudo chmod -R 700 /home/bas/.ssh
 EOF
