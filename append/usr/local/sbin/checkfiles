@@ -35,7 +35,7 @@ cleanup_and_exit() {
 }
 
 verifauthenticode(){
-  local fingerprint
+  local _file hash hashes sigdir
   local id=$1
   local tempdir=$2
   local file=$3
@@ -48,24 +48,30 @@ verifauthenticode(){
     osslsigncode verify $file 2>&1 > /dev/null || return $?
   fi
 
-  for _file in $(ls $tempdir); do
-    [ "$(basename $_file)" == "cert.0" ] && continue
-    hash=$(openssl x509 -in $tempdir/$_file -noout -fingerprint -sha256 -inform pem 2>&1 | cut -d= -f2 | sed -e "s/://g" | tr "[A-Z]" "[a-z]")
+  if [ -f "$tempdir/cert.1" ]; then
     # Don't use the -require-leaf-hash of osslsigncode as it only checks the leaves and not the
     # intermediate certificates. Extract all of the certificates from the file and check them
-    # against the hash
-    if [ ! -f "$tempdir/sig.pkcs7" ]; then
-      osslsigncode extract-signature -pem -out $tempdir/sig.pkcs7 -in $file 2>&1 > /dev/null
-      openssl pkcs7 -inform pem -in $tempdir/sig.pkcs7 -print_certs | \ 
-          awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if (length($0) > 50) print > "$tempdir/sig" n ".pem"}'
-    fi
-    found=""
-    for _sig in $(ls "$tempdir/sig*.pem"); do
-      [ "$(openssl x509 -in $tempdir/$_sig -noout -fingerprint -sha256 -inform pem 2>&1 | cut -d= -f2 \
-          | sed -e 's/://g' | tr '[A-Z]' '[a-z]')" == "$hash" ] && found="1" && break
+    # against the hash 
+    sigdir=$(mktemp -d)
+    osslsigncode extract-signature -pem -out $sigdir/sig.pkcs7 -in $file 2>&1 > /dev/null
+    openssl pkcs7 -inform pem -in $sigdir/sig.pkcs7 -print_certs | \
+        awk -v tmp="$sigdir" 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if (length($0) > 0) print > tmp "/sig" n ".pem"}'
+
+    hashes=""
+    for _file in $(find "$sigdir" -name "sig*.pem"); do
+      hashes="$hashes $(openssl x509 -in $_file -noout -fingerprint -sha256 -inform pem 2>&1 | \
+          cut -d= -f2 | sed -e 's/://g' | tr '[A-Z]' '[a-z]')"
     done
-    [ -z "$found" ] && return 3
-  done
+    rm -fr $sigdir
+
+    for _file in $(ls "$tempdir"); do
+      [ "$(basename $_file)" == "cert.0" ] && continue
+      hash="$(openssl x509 -in $tempdir/$_file -noout -fingerprint -sha256 -inform pem 2>&1 | \
+          cut -d= -f2 | sed -e 's/://g' | tr '[A-Z]' '[a-z]')"
+      [[ "$hashes" =~ "$hash" ]] || return 3
+    done
+  fi
+
   return 0
 }
 
@@ -256,7 +262,7 @@ verifdirectory() {
   fi
 
   # Create directory if needed
-  [ -d $DSAS_BAS/$dir ] || $(umask 007 && mkdir -p $DSAS_BAS/$dir && chgrp -R $grp $DSAS_BAS )
+  [ -d $DSAS_BAS/$dir ] || $(umask 007 && mkdir -p $DSAS_BAS/$dir && chgrp -R $grp $DSAS_BAS/$(echo $dir | cut -d/ -f1))
 
   # Remove the files in our tree bas and not in haut.
   filetable=$(ls -1 $DSAS_HAUT/$dir)
@@ -377,7 +383,7 @@ verifrepo() {
   fi 
 
   # Create the destination directory if needed
-  [ -d $DSAS_BAS/$dir ] || $(umask 007 && mkdir -p $DSAS_BAS/$dir && chgrp $grp -R $DSAS_BAS)
+  [ -d $DSAS_BAS/$dir ] || $(umask 007 && mkdir -p $DSAS_BAS/$dir && chgrp $grp -R $DSAS_BAS/$(echo $dir | cut -d/ -f1))
 
   # Copy repomd.xml* to $bas
   ln $DSAS_HAUT/$dir/repodata/repomd.xml $DSAS_BAS/$dir/repodata/repomd.xml
@@ -452,7 +458,7 @@ passdirectory(){
   local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
 
   # Create directory if needed
-  [ -d $DSAS_BAS/$dir ] ||  $(umask 007 && mkdir -p $DSAS_BAS/$dir && chgrp $grp -R $DSAS_BAS)
+  [ -d $DSAS_BAS/$dir ] ||  $(umask 007 && mkdir -p $DSAS_BAS/$dir && chgrp $grp -R $DSAS_BAS/$(echo $dir | cut -d/ -f1))
 
   # Remove the files in our tree bas and not in haut.
   filetable=$(ls -1 $DSAS_HAUT/$dir)
