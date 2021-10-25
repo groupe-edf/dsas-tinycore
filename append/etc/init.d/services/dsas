@@ -568,7 +568,7 @@ start_syslog(){
   server=$(xmllint --xpath "string(dsas/config/syslog/server)" $VAR/dsas_conf.xml)
 
   if [ "$syslog" == "true" ]; then
-    [ "$TYP" == "bas" ] && [ -n $server ] && sopts=" -R $server -L "
+    [ "$TYP" == "bas" ] && [ -n "$server" ] && sopts=" -R $server -L "
     /sbin/syslogd ${sopts} && echo "${GREEN}syslogd started.${NORMAL}"
     /sbin/klogd && echo "${GREEN}klogd started.${NORMAL}"
   fi
