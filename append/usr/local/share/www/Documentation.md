@@ -840,7 +840,7 @@ mais intégrés directement dans SEP, voir [discuté ci-dessus](#vérification-s
 
 Afin de faciliter l'utilisation de Symantec LiveUpdate, et les autres éditeur de logiciel
 typiquement utilisé avec le DSAS, les 10 certificats à installer sur le DSAS sont disponible
-dans [le bundle de certificats ci-jointe](certificates.zip).
+dans [le bundle de certificats ci-jointe](Certificates.zip).
 
 ### Gestion des certificats GPG
 
