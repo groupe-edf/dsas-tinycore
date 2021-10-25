@@ -41,7 +41,9 @@ verifauthenticode(){
   local file=$3
 
   if [ -f "$tempdir/cert.0" ]; then
-    osslsigncode verify -CAfile $tempdir/cert.0 $file 2>&1 > /dev/null || return $?
+    osslsigncode verify -CAfile $tempdir/cert.0 $file 2>&1 > /dev/null || \
+        osslsigncode verify -CAfile $tempdir/cert.0 -TSA-CAfile $tempdir/cert.0 $file 2>&1 > /dev/null || \
+        return $?
   else
     osslsigncode verify $file 2>&1 > /dev/null || return $?
   fi
@@ -49,11 +51,20 @@ verifauthenticode(){
   for _file in $(ls $tempdir); do
     [ "$(basename $_file)" == "cert.0" ] && continue
     hash=$(openssl x509 -in $tempdir/$_file -noout -fingerprint -sha256 -inform pem 2>&1 | cut -d= -f2 | sed -e "s/://g" | tr "[A-Z]" "[a-z]")
-    if [ -f "$tempdir/cert.0" ]; then
-      osslsigncode verify -CAfile $tempdir/cert.0 -require-leaf-hash sha256:$hash $file 2>&1 > /dev/null || return 3
-    else
-      osslsigncode verify -require-leaf-hash sha256:$hash $file 2>&1 > /dev/null || return 3
+    # Don't use the -require-leaf-hash of osslsigncode as it only checks the leaves and not the
+    # intermediate certificates. Extract all of the certificates from the file and check them
+    # against the hash
+    if [ ! -f "$tempdir/sig.pkcs7" ]; then
+      osslsigncode extract-signature -pem -out $tempdir/sig.pkcs7 -in $file 2>&1 > /dev/null
+      openssl pkcs7 -inform pem -in $tempdir/sig.pkcs7 -print_certs | \ 
+          awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if (length($0) > 50) print > "$tempdir/sig" n ".pem"}'
     fi
+    found=""
+    for _sig in $(ls "$tempdir/sig*.pem"); do
+      [ "$(openssl x509 -in $tempdir/$_sig -noout -fingerprint -sha256 -inform pem 2>&1 | cut -d= -f2 \
+          | sed -e 's/://g' | tr '[A-Z]' '[a-z]')" == "$hash" ] && found="1" && break
+    done
+    [ -z "$found" ] && return 3
   done
   return 0
 }
@@ -245,7 +256,7 @@ verifdirectory() {
   fi
 
   # Create directory if needed
-  [ -d $DSAS_BAS/$dir ] || $(umask 007 && mkdir -p $DSAS_BAS/$dir && chgrp $grp $DSAS_BAS/$dir )
+  [ -d $DSAS_BAS/$dir ] || $(umask 007 && mkdir -p $DSAS_BAS/$dir && chgrp -R $grp $DSAS_BAS )
 
   # Remove the files in our tree bas and not in haut.
   filetable=$(ls -1 $DSAS_HAUT/$dir)
@@ -366,7 +377,7 @@ verifrepo() {
   fi 
 
   # Create the destination directory if needed
-  [ -d $DSAS_BAS/$dir ] || $(umask 007 && mkdir -p $DSAS_BAS/$dir && chgrp $grp $DSAS_BAS/$dir)
+  [ -d $DSAS_BAS/$dir ] || $(umask 007 && mkdir -p $DSAS_BAS/$dir && chgrp $grp -R $DSAS_BAS)
 
   # Copy repomd.xml* to $bas
   ln $DSAS_HAUT/$dir/repodata/repomd.xml $DSAS_BAS/$dir/repodata/repomd.xml
@@ -441,7 +452,7 @@ passdirectory(){
   local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
 
   # Create directory if needed
-  [ -d $DSAS_BAS/$dir ] ||  $(umask 007 && mkdir -p $DSAS_BAS/$dir && chgrp $grp $DSAS_BAS/$dir)
+  [ -d $DSAS_BAS/$dir ] ||  $(umask 007 && mkdir -p $DSAS_BAS/$dir && chgrp $grp -R $DSAS_BAS)
 
   # Remove the files in our tree bas and not in haut.
   filetable=$(ls -1 $DSAS_HAUT/$dir)
