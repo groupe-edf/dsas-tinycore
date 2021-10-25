@@ -1196,7 +1196,7 @@ function dsas_display_tasks(what = "all") {
         }
       }
       body = body + "</div>";
-      document.getElementById("Tasks").innerHTML = body;
+      document.getElementById("Task").innerHTML = body;
     }).catch(error => {
       fail_loggedin(error.statusText);
     });
