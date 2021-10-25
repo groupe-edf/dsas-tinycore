@@ -100,7 +100,7 @@ function sasl_checkpass($user, $pass){
 
   $cwd = "/tmp";
   // Call command as an array to avoid creating a shell
-  $process = proc_open(["/usr/local/sbin/testsaslauthd", "-u", $user, "-p", $pass], $descriptorspec, $pipes, $cwd);
+  $process = proc_open(["/usr/local/sbin/testsaslauthd", "-s", "dsas", "-u", $user, "-p", $pass], $descriptorspec, $pipes, $cwd);
   if (is_resource($process)) {
     fclose($pipes[0]);
     fclose($pipes[1]);
