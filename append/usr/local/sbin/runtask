@@ -82,7 +82,7 @@ fi
 
 logfile="$LOG/dsas_verif.log"
 [ -f "$logfile" ] || ( umask 0007; touch $logfile; )
-chgrp verif $logfile
+[ "$(stat -c '%G' $logfile)" == "verif" ] || chgrp verif $logfile
 
 [ -z "$ids" ] && 1>&2 myecho "$0: No tasks to run !!"
 
