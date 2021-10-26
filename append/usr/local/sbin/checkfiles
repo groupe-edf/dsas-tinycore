@@ -54,13 +54,24 @@ verifauthenticode(){
     # against the hash 
     sigdir=$(mktemp -d)
     osslsigncode extract-signature -pem -out $sigdir/sig.pkcs7 -in $file 2>&1 > /dev/null
-    openssl pkcs7 -inform pem -in $sigdir/sig.pkcs7 -print_certs | \
-        awk -v tmp="$sigdir" 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if (length($0) > 0) print > tmp "/sig" n ".pem"}'
+
+    # There can be multiple signatures in the PKCS7 file. openssl will only treat the 
+    # first one normally. Find the offsets in the file for each signature block, and treat
+    # each seperately
+    offsets="0 $(openssl asn1parse -inform pem -in $sigdir/sig.pkcs7 | grep -B 1 pkcs7-signedData | \
+        grep -x -A 1 '\-\-' | grep ':' | cut -d: -f1)"
 
     hashes=""
-    for _file in $(find "$sigdir" -name "sig*.pem"); do
-      hashes="$hashes $(openssl x509 -in $_file -noout -fingerprint -sha256 -inform pem 2>&1 | \
-          cut -d= -f2 | sed -e 's/://g' | tr '[A-Z]' '[a-z]')"
+    for offset in $offsets; do
+      openssl pkcs7 -inform pem -in $sigdir/sig.pkcs7 -outform der | dd bs=1 skip=$offset | \
+          openssl pkcs7 -inform der -print_certs | \
+          awk -v tmp="$sigdir" 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if (length($0) > 0) print > tmp "/sig" n ".pem"}'
+
+      for _file in $(find "$sigdir" -name "sig*.pem"); do
+        hashes="$hashes $(openssl x509 -in $_file -noout -fingerprint -sha256 -inform pem 2>&1 | \
+            cut -d= -f2 | sed -e 's/://g' | tr '[A-Z]' '[a-z]')"
+      done
+      rm -f "$sigdir/sig*.pem"
     done
     rm -fr $sigdir
 
