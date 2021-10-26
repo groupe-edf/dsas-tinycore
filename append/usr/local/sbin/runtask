@@ -80,9 +80,9 @@ elif [ -z "$force" ]; then
   ids=$newids
 fi
 
-LOG="$(dirname $CONF)/dsas_verif.log"
-[ -f "$LOG" ] || ( umask 0007; touch $LOG; )
-chgrp verif $LOG
+logfile="$LOG/dsas_verif.log"
+[ -f "$logfile" ] || ( umask 0007; touch $logfile; )
+chgrp verif $logfile
 
 [ -z "$ids" ] && 1>&2 myecho "$0: No tasks to run !!"
 
@@ -96,11 +96,11 @@ for _id in $ids; do
   [ $? -eq 0 ] && ssh tc@$INTERCO_HAUT sudo sudo -u verif $(dirname $0)/checkfiles $opts $_id
   [ $? -eq 0 ] && 1>&2 myecho "$0: #### Tasks on machine BAS ####"
   [ $? -eq 0 ] && sudo sudo -u haut $(dirname $0)/getfiles $opts $_id
-  [ $? -eq 0 ] && sudo sudo -u verif $(dirname $0)/checkfiles $opts -o $LOG $_id
+  [ $? -eq 0 ] && sudo sudo -u verif $(dirname $0)/checkfiles $opts -o $logfile $_id
 
   # Log the run date and exit status of the task
   _str=$(printf "%-26s %-16s %d" "$_id" "$(utc_date)" $?)
-  grep -q $_id $RUNLOG && sed -e "s/^$_id.*$/$_str/" $RUNLOG > $RUNLOG 
+  grep -q $_id $RUNLOG && sed -i -e "s/^$_id.*$/$_str/" $RUNLOG 
   grep -q $_id $RUNLOG || echo $_str >> $RUNLOG
 
 done
