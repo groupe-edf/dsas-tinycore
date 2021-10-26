@@ -64,7 +64,7 @@ verifauthenticode(){
 
     hashes=""
     for offset in $offsets; do
-      openssl pkcs7 -inform pem -in $sigdir/sig.pkcs7 -outform der | dd bs=1 skip=$offset | \
+      openssl pkcs7 -inform pem -in $sigdir/sig.pkcs7 -outform der | dd bs=1 skip=$offset status=none | \
           openssl pkcs7 -inform der -print_certs | \
           awk -v tmp="$sigdir" 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if (length($0) > 0) print > tmp "/sig" n ".pem"}'
 
