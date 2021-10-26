@@ -50,8 +50,9 @@ verifauthenticode(){
 
   if [ -f "$tempdir/cert.1" ]; then
     # Don't use the -require-leaf-hash of osslsigncode as it only checks the leaves and not the
-    # intermediate certificates. Extract all of the certificates from the file and check them
-    # against the hash 
+    # intermediate certificates since version 2.2. Extract all of the certificates from the file 
+    # and check them against the hash. If osslsigncode goes back to the behavior of version 2.1 
+    # this block can be replaced with one line with the -require-leaf_ash option
     sigdir=$(mktemp -d)
     osslsigncode extract-signature -pem -out $sigdir/sig.pkcs7 -in $file 2>&1 > /dev/null
 
