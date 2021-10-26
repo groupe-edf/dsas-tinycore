@@ -125,7 +125,7 @@ L'architecture du DSAS simplifiée est alors
 où les flèches représentent des flux réseau ou applicatifs et les directions de ces flèches
 sont le sens de l'initiation de ces flux
 
-Un utilisateur administrateur "tc" est également ajouté. Cet utilisateur ne peut que connecté
+Un utilisateur administrateur est également ajouté. Cet utilisateur ne peut que connecté
 depuis le zone sensible et un filtrage forte sur les machine avec les droits de connecter
 sur cette compte est implémenté. Ceci est le seul compte avec les droits d'administration
 sur les deux machines, et le compte root n'est accessible que depuis ce compte.
@@ -307,14 +307,8 @@ liste de  serveurs de noms en ordre de leur préférence d'usage.
 
 ### Configuration SSH
 
-Il n'y a aucun utilisateur SSH sur la machine haute de base, même si un
-compte sftp pour l'utilisateur "haut" pourrait être créé de manière optionnelle.
-Celui-ci pourrait servir au dépôt de fichiers sur la machine haute pour une tâche sans 
-URI. Bien que cette configuration soit non recommandée, une telle configuration est 
-possible depuis l'interface d'administration.  La machine haute n'a pas besoin de 
-configuration SSH en phase initiale.
-
-Le configuration du SSH requiert la création de clefs SSH pour deux utilisateurs du DSAS;
+La machine haute n'a pas besoin de configuration SSH en phase initiale. Le configuration du SSH 
+requiert la création de clefs SSH pour deux utilisateurs du DSAS;
 
 - l'utilisateur __tc__ en tant que compte à privilèges permettant de travailler en shell 
 avec les deux machines, et 
@@ -479,7 +473,7 @@ fonctionnalité est fortement déconseillés__ car elle ouvre la possibilité d'
 Donc, en configuration normale seulement l'utilisateur __tc__ est à utiliser. Mais les trois
 mots de passe sont néanmoins à modifier afin d'éliminer l'ensemble des éléments secrets par 
 défaut. Les mots de passe des utilisateurs __bas__ et __haut__ peuvent toujours être modifiés 
-depuis cette interface et si vous ne pensez pas utiliser les fonctions `sftp`, ilets recommander 
+depuis cette interface et si vous ne pensez pas utiliser les fonctions `sftp`, il est recommander 
 de choisir des mots de passe longs et aléatoires pour ces utilisateurs __bas__ et __haut__.
 
 Les limitations imposées sur les mots de passe sont 
@@ -507,14 +501,14 @@ en cliquant dessus l'écran suivant vous sera présenté
 
 ![Ecran de configuration réseau du DSAS](images/DSAS6.png)
 
-La configuration réseau du DSAS est séparée en deux parties. Le réseau connecté vers le réseau 
-sensible dénommé __bas__ et le réseau vers le réseau non sensible dénommé __haut__.  Chacune
-de ces deux configurations pourront être accédées en cliquant sur la flèche située à côté du type
+Le configuration réseau du DSAS est séparé en deux parties. Le réseau connecté vers le réseau 
+sensible dénommé __bas__ et le réseau vers le réseau non sensible dénommé __haut__.  Chacun
+de ces deux configurations pourraient être accédés en cliquant sur la flèche située à côté du type
 de réseau, comme
 
 ![Ecran de configuration réseau du DSAS déroulé](images/DSAS7.png)
 
-La configuration du réseau __bas__, précédemment entrée est visible dans ce menu. Vérifier les
+Le configuration du réseau __bas__, précédemment entré est visible dans ce menu. Vérifier les
 configurations, modifier si nécessaire et appuyer sur  `Sauvegarder des changements`.
 
 Une synthèse des formats des entrées sur cette pages sont
@@ -534,8 +528,8 @@ serveurs de noms en ordre de leur préférence d'usage.
 
 Comme [discuté ci-dessus](#première-connexion-à-linterface-dadministration), le certificat SSL
 utilisé par le DSAS par défaut est auto-signé. Ceci est également un élément secret à remplacer 
-à la mise en service. L'interface d'administration of le serveur web est dans le sous-menu `Web`
-du ment `Configuration` et se présente comme
+à la mise en service. L'interface d'administration du serveur web est dans le sous-menu `Web`
+de l'onglet `Configuration` et se présente comme
 
 ![Menu de configuration du serveur web](images/DSAS9.png)
 
@@ -560,7 +554,7 @@ signés par l'ONS d'EDF utilise tous '0002 552081317', le KBIS d'EDF.
 Vous pouvez maintenant cliquer sur le bouton `Renouvellement certificat` et un certificat
 sera généré. En revanche il ne sera pas utilisé par le serveur jusqu'au prochaine fois que 
 vous avez cliqué sur `Appliquer`. Le certificat publique et Requête de signature (CSR) pourrait
-téléchargé en cliquant sur le bouton ![](images/DSAS11.png).
+être téléchargé en cliquant sur le bouton ![](images/DSAS11.png).
 
 ## Configuration des services
 
@@ -631,7 +625,7 @@ vers une serveur distante.
 ### Client ntpd
 
 Le DSAS inclut la possibilité de synchroniser via le protocole ntp. Un ou plusieurs hôtes ntp
-pourraient être configuré. Les adresses des hôtes ntp pourrait être des adresses IP ou des
+pourraient être configuré. Les adresses des hôtes ntp pourraient être des adresses IP ou des
 nom de hôte comme fournit par le DNS. Dans le deuxième cas le DNS doit-être configuré 
 comme discuté dans la section [Configuration des réseaux](configuration-des-réseaux).
 
