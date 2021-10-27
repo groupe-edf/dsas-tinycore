@@ -159,7 +159,8 @@ utilisés par les sites externes est nécessaire, plus un peu de marge.
 
 Les mises à jour de Windows des "Patch Tuesday" sont souvent une centaine de mégaoctets en
 taille, donc multiplier ça par le nombre à garder représente potentiellement plusieurs 
-gigaoctets. Pour les mises à jour de Symantec le besoin est de l'ordre de 150 mégaoctets.
+gigaoctets. Pour les mises à jour de Symantec le besoin est de l'ordre de 150 mégaoctets
+pour IntelligentUpdate mais de l'ordre de 50 gigaoctets pour LiveUpdate.
 
 Chaque repositoire de Linux pourrait avoir jusqu'à 50 gigaoctets, donc si on 
 transfère des mises à jour de linux notre besoin de disque peut vite exploser. Dans Les
