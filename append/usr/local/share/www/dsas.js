@@ -1711,7 +1711,7 @@ function dsas_help_toc(){
 function dsas_display_help(){
   const urlParams = new URLSearchParams(window.location.search);
   const lang = urlParams.get('language');
-  var uri = (lang ? lang + "/Documentation.md" : "en/Documentation.md");
+  var uri = (lang ? "Documentation_" + lang + ".md" : "Documentation_en.md");
 
   fetch(uri).then(response => {
     if (response.ok) 
