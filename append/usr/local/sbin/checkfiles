@@ -244,7 +244,7 @@ verifliveupdate(){
   1>&2 myecho "Archive $(basename $file) correctly verified"
 
   # Repack the zip file before returning to avoid potentiel hidden files
-  if [[ "${file##.*}" != "7z" ]]; then 
+  if [[ "${file##.*}" == "7z" ]]; then 
     (cd $zipdir; 7z a /tmp/liveupdate.$$ *) 
   else
     (cd $zipdir; zip /tmp/liveupdate.$$ *)
