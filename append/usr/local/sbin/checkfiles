@@ -103,14 +103,32 @@ verifopenssl(){
   local id=$1
   local tempdir=$2
   local file=$3
-  local args=""
-  for _file in $(ls $tempdir); do
-    [ "$(basename $_file)" == "cert.0" ] && continue
-    args="$args $tempdir/$_file"
-  done
-  [ -n "$args" ] && args="-untrusted $args"
-  [ -f "$tempdir/cert.0" ] && args="-CAfile $tempdir/cert.0 $args"
-  openssl dgst -verify "$tempdir/cert.1" -keyform PEM -sha256 -signature $file.sig -binary $file $args
+  local CAfile Leaf
+
+  if [ -f "$tempdir/cert.0" ] && grep -q "PUBLIC KEY-----" "$tempdir/cert.0"; then
+    # We have directly a public key
+    openssl dgst -verify "$tempdir/cert.0" -signature "$file.sig" -binary $file 2> /dev/null
+  else
+    for _file in $(ls $tempdir); do
+      # Is the certificate the leaf certificate. If not add to CAFile
+      if openssl x509 -inform pem -noout -ext keyUsage -in '$tempfile/$_file' 2>/dev/null | \
+          grep -q -i "Certificate Sign"; then
+        [ -z "$CAfile" ] && CAfile=$(mktemp)
+        cat "$tempdir/$_file" >> $CAfile
+      else
+        Leaf="$tempdir/$_file"
+      fi
+    done
+    # Verify the key chain
+    # FIXME: At this point the complete key chain is needed
+    openssl verify -CAfile $CAfile $Leaf || return 1
+
+    # Extract the public key
+    openssl x509 -pubkey -inform pem -in "$Leaf" -outform pem -out "$tempdir/pubkey"
+    
+    # Verify with the public key
+    openssl dgst -verify "$tempdir/pubkey" -signature "$file.sig" -binary $file
+  fi
   return $?
 }
 
@@ -350,7 +368,7 @@ verifdirectory() {
           verifcyberwatch $id "$tempdir" "$DSAS_HAUT/$file"
           ;;
         openssl) 
-          [ "${file##.*}" == "asc" ]  && continue 
+          [ "${file##.*}" == "sig" ]  && continue 
           verifopenssl $id "$tempdir" "$DSAS_HAUT/$file"
           ;;
         gpg)
@@ -363,7 +381,7 @@ verifdirectory() {
       if [ $status -eq 0 ]; then
         ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
         [ "$type" == "gpg" ] && [ "${file##.*}" != "gpg" ] && ln "$DSAS_HAUT/$file.sig" "$DSAS_BAS/$file.sig"
-        [ "$type" == "openssl" ] && ln "$DSAS_HAUT/$file.asc" "$DSAS_BAS/$file.asc"
+        [ "$type" == "openssl" ] && ln "$DSAS_HAUT/$file.sig" "$DSAS_BAS/$file.sig"
       fi
     done
   fi

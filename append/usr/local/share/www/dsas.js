@@ -113,8 +113,8 @@ function modal_task(action = "dsas_add_task();"){
 '        <option id="TaskTypeAuth" value="authenticode">authenticode</option>\n' +
 '        <option id="TaskTypeLive" value="liveupdate">liveupdate</option>\n' +
 '        <option id="TaskTypeCyber" value="cyberwatch">cyberwatch</option>\n' +
-'        <option id="TaskTypeSsl" value="deb">openssl</option>\n' +
-'        <option id="TaskTypeGpg" value="deb">gpg</option>\n' +
+'        <option id="TaskTypeSsl" value="openssl">openssl</option>\n' +
+'        <option id="TaskTypeGpg" value="gpg">gpg</option>\n' +
 '      </select>\n' +
 '    </div>\n' +
 '    <div class="col-6">\n' +
