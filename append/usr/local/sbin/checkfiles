@@ -118,11 +118,23 @@ verifcyberwatch(){
   local id=$1
   local tempdir=$2
   local file=$3
-  local zipdir
+  local zipdir=$(mktemp -d)
+  local status
 
-  ## A faire
+  # Unzip the file
+  unzip -d $zipdir $file
 
-  return $?
+  # Check the signature
+  head -c -1 $zipdir/cyberwatch.sig > $tempdir/signature
+  openssl dgst -sha256 -verify $tempdir/cert.1 -signature $tempdir/signature \
+      $(head -c -1 $zipdir/cyberwatch.db | sha256sum | cut -f1 -d' ' | tr -d '\n')
+  status=$?
+
+  # Repack the zipfile so as to avoid potentially hidden files
+  (cd $zipdir; zip /tmp/cyberwatch.$$ cyberwatch.sig syberwatch.db)
+  /bin/mv /tmp/cyberwatch.$$ $file
+
+  return $status
 }
 
 verifliveupdate(){
@@ -230,6 +242,15 @@ verifliveupdate(){
   done
 
   1>&2 myecho "Archive $(basename $file) correctly verified"
+
+  # Repack the zip file before returning to avoid potentiel hidden files
+  if [[ "${file##.*}" != "7z" ]]; then 
+    (cd $zipdir; 7z a /tmp/liveupdate.$$ *) 
+  else
+    (cd $zipdir; zip /tmp/liveupdate.$$ *)
+  fi
+  /bin/mv /tmp/liveupdate.$$ $src/$file
+
   return 0
 }
 
