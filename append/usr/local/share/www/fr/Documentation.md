@@ -120,7 +120,7 @@ machine.
 
 L'architecture du DSAS simplifiée est alors
 
-![DSAS architecture](images/DSAS.png)
+![DSAS architecture](fr/DSAS.png)
 
 où les flèches représentent des flux réseau ou applicatifs et les directions de ces flèches
 sont le sens de l'initiation de ces flux
@@ -176,7 +176,7 @@ par l'arrêt du DSAS, le remplacement de l'ISO et le redémarrage.
 L'ISO du DSAS est une souche linux en 32 bits, et la machine virtuelle est à configurer
 en conséquence. Par exemple sous VirtualBox la configuration initiale devrait être
 
-![Création d'une VM sous VirtualBox](images/vbox1.png)
+![Création d'une VM sous VirtualBox](fr/vbox1.png)
 
 un minimum de 256 mégaoctets est nécessaire afin de démarrer le DSAS. Mais en 
 fonctionnement le DSAS pourrait utiliser plus de ressources et nous recommandons
@@ -185,12 +185,12 @@ l'utilisation de 1 gigaoctet de mémoire.
 Le DSAS n'a pas besoin d'un format spécifique de disque. Nous avons choisi ici d'utiliser 
 le format par défaut proposé par VirtualBox.
 
-![Configuration du disque sous VirtualBox](images/vbox2.png)
+![Configuration du disque sous VirtualBox](fr/vbox2.png)
 
 Après il faut configurer le disque de démarrage du DSAS en mettant le disque ISO du
 DSAS en maître primaire IDE
 
-![Boot sur l'ISO sous VirtualBox](images/vbox3.png)
+![Boot sur l'ISO sous VirtualBox](fr/vbox3.png)
 
 Si le disque de démarrage est mal configuré, le DSAS ne pourrait pas démarrer. 
 
@@ -207,7 +207,7 @@ d'interconnexion, notamment si un pare-feu supplémentaire est à placer sur ce
 lien (ceci ne semble néanmoins pas vraiment nécessaire). Nous conseillons l'usage un 
 réseau interne à l'hyperviseur configuré en VirtualBox comme
 
-![Configuration réseau d'interconnexion sous VirtualBox](images/vbox4.png)
+![Configuration réseau d'interconnexion sous VirtualBox](fr/vbox4.png)
 
 Nous sommes maintenant prêts a démarrer la machine pour la première fois. 
 
@@ -227,7 +227,7 @@ Au premier démarrage le DSAS nous demande de formatter son disque. Un menu est
 présenté avec l'ensemble des disques trouvés connectés au DSAS. Ceci se présente
 comme
 
-![Formatage des disques DSAS](images/init1.png)
+![Formatage des disques DSAS](fr/init1.png)
 
 La navigation dans ce type de menu est faite avec les clefs suivantes
 
@@ -244,13 +244,13 @@ redémarrera automatiquement avant de continuer
 La prochaine étape consiste à sélectionner si la machine du DSAS va être configurée 
 en machine haute ou basse. Le menu 
 
-![Sélection du type de machine](images/init3.png)
+![Sélection du type de machine](fr/init3.png)
 
 est utilisé afin de présenter la sélection du type de machine. Si la machine 
 a été configurée avec seulement une carte réseau à ce point le DSAS va arrêter
 sa configuration avec l'erreur
 
-![L'erreur si deux interfaces réseau ne sont pas configurées](images/init2.png)
+![L'erreur si deux interfaces réseau ne sont pas configurées](fr/init2.png)
 
 Dans ce cas arrêter la machine et ajouter une carte réseau dans l'hyperviseur.
 
@@ -266,7 +266,7 @@ de la machine.
 La première étape consiste à choisir si le réseau est statique ou s'il utilise DHCP pour sa 
 configuration. Le menu suivant est utilisé afin de confirmer ce choix
 
-![Sélection du réseau DHCP ou statique](images/init4.png)
+![Sélection du réseau DHCP ou statique](fr/init4.png)
 
 A ce point si le DHCP a été choisi aucune autre configuration réseau n'est nécessaire et 
 vous pouvez passer au section suivante.
@@ -279,7 +279,7 @@ Par exemple le netmask "255.255.255.0" est répresenté en format CIDR par "/24"
 le netmask "255.255.255.128" par "/25". Donc si notre ip est "10.0.2.15" et notre
 netmask est "255.255.255.0" il est rentré comme
 
-![Configuration IP et netmask d'un IP static](images/init6.png)
+![Configuration IP et netmask d'un IP static](fr/init6.png)
 
 dans l'interface de configuration au démarrage. La syntaxe de l'adresse IP rentrée est 
 validée avant de continuer. Si elle n'est pas dans un format acceptable le même menu vous 
@@ -289,18 +289,18 @@ Si la machine d'administration n'est pas sur le même sous-réseau que le DSAS i
 configurer une passerelle par défaut. Sinon laisser vide afin d'empêcher toute connexion 
 au DSAS depuis l'extérieur du sous-réseau.
 
-![Configuration du passerelle avec une IP statique](images/init7.png)
+![Configuration du passerelle avec une IP statique](fr/init7.png)
 
 Deux éléments sont nécessaires pour la configuration du DNS. Premièrement le domaine
 de recherche. Ici un domaine de recherche "edf.fr" est utilisé
 
-![Configuration DNS avec une IP statique](images/init8.png)
+![Configuration DNS avec une IP statique](fr/init8.png)
 
 avec ce domaine de recherche les hosts "ntp1" et "ntp1.edf.fr" seront équivalents.
 Après il faut définir des serveurs de noms, responsables pour la conversion des 
 adresses DNS en IP. Par exemple 
 
-![Configuration DNS avec une IP statique](images/init9.png)
+![Configuration DNS avec une IP statique](fr/init9.png)
 
 Plusieurs adresses IP séparées par des espaces pourraient être rentrés, donnant une 
 liste de  serveurs de noms en ordre de leur préférence d'usage.
@@ -319,7 +319,7 @@ La création des clefs est automatique, mais il faut transférer les clefs autor
 machine haute. Si la machine haute n'est pas visible de la machine basse elle va attendre 
 avec le message
 
-![Attente machine basse pour la machine haute](images/init11.png)
+![Attente machine basse pour la machine haute](fr/init11.png)
 
 La raison principale afin de voir cet écran pourrait être que la machine haute n'est
 pas démarrée. Mais l'interconnexion réseau entre les deux machines pourrait également être
@@ -328,7 +328,7 @@ pas démarrée. Mais l'interconnexion réseau entre les deux machines pourrait �
 Dans la phase initiale, il n'y a aucune clef SSH pour les SSH sans mot de passe. Donc il 
 faut entrer le mot de passe utilisateur à privilège __tc__ dans la fenêtre.
 
-![Entrée du mot de passe pendant la configuration SSH](images/init10.png)
+![Entrée du mot de passe pendant la configuration SSH](fr/init10.png)
 
 Par défaut le mot de passe du DSAS est __dSa02021DSAS__ mais à la première utilisation de
 l'interface d'administration vous serez forcé de changer ce mot de passe.
@@ -386,7 +386,7 @@ Le certificat SSL utilisé par le DSAS en phase initiale est auto-signé et il s
 d'accepter son usage dans votre navigateur. Si vous avez réussi à vous connecter à l'interface
 d'administration du DSAS l'écran de connexion suivant vous sera présenté :
 
-![Ecran de connexion du DSAS](images/DSAS1.png)
+![Ecran de connexion du DSAS](fr/DSAS1.png)
 
 L'utilisateur privilégié sur le DSAS est l'utilisateur __tc__, et le mot de passe par défaut
 est le __dSaO2021DSAS__. A ce point connectez-vous sur l'interface d'administration.
@@ -409,7 +409,7 @@ sur l'image ISO du DSAS. Les taches du DSAS en cours seront interrompues, mais s
 redémarrage. Les fonctions d'arrêt et redémarrage sont disponibles dans le menu `Système` du
 DSAS, comme
 
-![Menu système du DSAS](images/DSAS8.png)
+![Menu système du DSAS](fr/DSAS8.png)
 
 #### Sauvegarde et Restauration
 
@@ -417,7 +417,7 @@ La configuration actuellement appliqué du DSAS peut être sauvegardée en utili
 la menu ci-dessus. En sélectionnant vous seriez demandé d'entrée un mot de passe pour la 
 sauvegarde, comme
 
-![Menu d'entrée de mot de passe de sauvegarde](images/DSAS24.png)
+![Menu d'entrée de mot de passe de sauvegarde](fr/DSAS24.png)
 
 Les sauvegardes des deux machines du DSAS sont alors chiffré en `bcrypt` avec ce mot de passe et
 archivé ensemble. Si vous ne rentrée pas de mot de passe de sauvegarde, les fichiers sera archivés
@@ -438,7 +438,7 @@ Le DSAS est configuré afin de vérifier les droits de connexion à chaque opér
 10 minutes séparent une opération de la suivante, vous serez automatiquement déconnecté avec
 la message suivant :
 
-![Ecran de déconnexion automatique du DSAS](images/DSAS3.png)
+![Ecran de déconnexion automatique du DSAS](fr/DSAS3.png)
 
 En cliquant `Ok` sur ce message vous serez redirigé vers l'écran de connexion du DSAS.
 
@@ -447,7 +447,7 @@ En cliquant `Ok` sur ce message vous serez redirigé vers l'écran de connexion 
 Si ceci est votre première connexion au DSAS, un message d'erreur sera affiché et après, 
 l'écran suivant vous sera présenté :
 
-![Ecran de changement des mots de passe initiale](images/DSAS2.png)
+![Ecran de changement des mots de passe initiale](fr/DSAS2.png)
 
 A votre première connexion, tous les mots de passe sont à changer. Il est impossible de 
 continuer avec l'interface d'administration sans modifier les mots de passes. 
@@ -484,7 +484,7 @@ Les limitations imposées sur les mots de passe sont
 
 Rentrez vos nouveaux mots de passe et cliquez sur `Modifier les mots de passe`. 
 
-![Ecran en cas de modification réussie de changement des mots de passe](images/DSAS4.png)
+![Ecran en cas de modification réussie de changement des mots de passe](fr/DSAS4.png)
 
 A ce point il est recommandé d'appuyer sur le bouton `Appliquer` afin de rendre ces 
 modifications permanentes. Sinon au prochain redémarrage les anciens mots de passe seront 
@@ -495,18 +495,18 @@ demandés.
 L'écran de configuration du réseau est accédé depuis le menu `Configuration` du DSAS, comme 
 suivant :
 
-![Menu de configuration réseau du DSAS](images/DSAS5.png)
+![Menu de configuration réseau du DSAS](fr/DSAS5.png)
 
 en cliquant dessus l'écran suivant vous sera présenté 
 
-![Ecran de configuration réseau du DSAS](images/DSAS6.png)
+![Ecran de configuration réseau du DSAS](fr/DSAS6.png)
 
 Le configuration réseau du DSAS est séparé en deux parties. Le réseau connecté vers le réseau 
 sensible dénommé __bas__ et le réseau vers le réseau non sensible dénommé __haut__.  Chacun
 de ces deux configurations pourraient être accédés en cliquant sur la flèche située à côté du type
 de réseau, comme
 
-![Ecran de configuration réseau du DSAS déroulé](images/DSAS7.png)
+![Ecran de configuration réseau du DSAS déroulé](fr/DSAS7.png)
 
 Le configuration du réseau __bas__, précédemment entré est visible dans ce menu. Vérifier les
 configurations, modifier si nécessaire et appuyer sur  `Sauvegarder des changements`.
@@ -531,12 +531,12 @@ utilisé par le DSAS par défaut est auto-signé. Ceci est également un éléme
 à la mise en service. L'interface d'administration du serveur web est dans le sous-menu `Web`
 de l'onglet `Configuration` et se présente comme
 
-![Menu de configuration du serveur web](images/DSAS9.png)
+![Menu de configuration du serveur web](fr/DSAS9.png)
 
 L'onglet de renouvellement est accédé en cliquant sur la flèche à gauche de `Renouvellement du 
 certificat, et se présente comme
 
-![Menu de configuration du serveur web](images/DSAS13.png)
+![Menu de configuration du serveur web](fr/DSAS13.png)
 
 Les champs à remplir pour le renouvellement sont des champs définis par la norme [RFC5280]
 (https://datatracker.ietf.org/doc/html/rfc5280.html).
@@ -554,7 +554,7 @@ signés par l'ONS d'EDF utilise tous '0002 552081317', le KBIS d'EDF.
 Vous pouvez maintenant cliquer sur le bouton `Renouvellement certificat` et un certificat
 sera généré. En revanche il ne sera pas utilisé par le serveur jusqu'au prochaine fois que 
 vous avez cliqué sur `Appliquer`. Le certificat publique et Requête de signature (CSR) pourrait
-être téléchargé en cliquant sur le bouton ![](images/DSAS11.png).
+être téléchargé en cliquant sur le bouton ![](fr/DSAS11.png).
 
 ## Configuration des services
 
@@ -565,7 +565,7 @@ qui pourrait être démarrer sur les machines du DSAS;
 - Un client ntpd pour la mise à l'heure des machines, et
 - Un client syslogd pour les logs d'administration locale et distante
 
-![Menu de configuration du serveur web](images/DSAS16.png)
+![Menu de configuration du serveur web](fr/DSAS16.png)
 
 ### Configuration de la service OpenSSH
 
@@ -640,7 +640,7 @@ La page de statut des taches et les machines et la page d'entrée dans la DSAS e
 principale. Elle est accédée en cliquant sur `DSAS` dans la menu en tête des pages et se 
 présente commande
 
-![Page de statut des taches et les machines](images/DSAS14.png)
+![Page de statut des taches et les machines](fr/DSAS14.png)
 
 La page est divisé en deux section; en haut la statut des machines du DSAS en en bas la statut
 des taches du DSAS. Trois statistiques sont donnés pour les deux machines du DSAS.
@@ -671,14 +671,14 @@ Si la machine basse du DSAS n'est pas disponible vous seriez en impossibilité d
 à l'interface d'administration. En revanche si la machine haute est défaillante, la page 
 de statut vous informe avec l'écran suivante
 
-![Page de statut, machine haute indisponible](images/DSAS15.png)
+![Page de statut, machine haute indisponible](fr/DSAS15.png)
 
 ## Statut des fichiers vérifiés 
 
 Le statut des fichiers vérifiés est disponible directement en dessous les statuts des machines 
 du DSAS, comme
 
-![Page de statut des fichiers vérifiés](images/DSAS25.png)
+![Page de statut des fichiers vérifiés](fr/DSAS25.png)
 
 Le statut des vérifications des fichiers pourrait être sur plusieurs onglet. Le numéro de
 l'onglet est croissant avec l’âge des vérifications. Le premier onglet est la semaine en cours,
@@ -716,16 +716,16 @@ Le DSAS est préconfiguré avec l'ensemble de certificats racines d'un souche li
 L'ensemble de ces certificats et d'autres certificats importés sont disponible depuis onglet
 Configuration/Certificats comme vue ci-dessous
 
-![Page de configuration des certificats](images/DSAS17.png)
+![Page de configuration des certificats](fr/DSAS17.png)
 
 Les certificats installés dans chaque catégorie pourraient être vue en cliquant sur la
 flèche à gauche de chaque catégorie et les détails de chaque certificat sont disponible
 comme
 
-![Page de configuration des certificats](images/DSAS19.png)
+![Page de configuration des certificats](fr/DSAS19.png)
 
 Chaque certificat pourrait être téléchargé sur la poste d'administration en cliquant 
-sur le bouton ![](images/DSAS11.png). 
+sur le bouton ![](fr/DSAS11.png). 
 
 Les certificats sont soulignés de 4 façon différentes dépendant sur les caractéristiques
 du certificat. 
@@ -776,12 +776,12 @@ Les certificats X509 sont utilisé dans la vérification des binaires Windows, m
 Depuis un poste de travail en Windows, avec un clic droit et en sélectionnant l'option
 `Propriétés` nous pourrions voir le menu suivant
 
-![Menu propriétés d'un binaire signé](images/CERT1.png)
+![Menu propriétés d'un binaire signé](fr/CERT1.png)
 
 En cliquant sur `Détails` et après `Afficher le certificat` nous pourrions voir la
 chaine de confiance suivante
 
-![Chaine de confiance d'un binaire signé](images/CERT4.png)
+![Chaine de confiance d'un binaire signé](fr/CERT4.png)
 
 Ceci permet de valider le certificat racine et l'ensemble des certificats utilisés
 pendant la signature des binaires.
@@ -801,13 +801,13 @@ source de certificat.
 
 Sur le même menu que ci-dessous sur l'onglet `Détails` nous pourrions voir
 
-![Détails d'un certificat](images/CERT5.png)
+![Détails d'un certificat](fr/CERT5.png)
 
 avec l'option de `copier dans un fichier`. Cette option permettre de Sauvegarder 
 l'ensemble des certificats de la chaine de confiance. Il faut sélectionner de
 sauvegarder le certificat en format X.509 encodé en base 64 comme 
 
-![Export d'un certificat en base 64](images/CERT7.png)
+![Export d'un certificat en base 64](fr/CERT7.png)
 
 Un fichier avec le certificat sera sauvegardé sur votre poste de travail.
 
@@ -879,27 +879,27 @@ notamment le certicat de [Debian Bullseye](https://ftp-master.debian.org/keys/ar
 ### Importation d'un certificat dans le DSAS
 
 Des certificats X509 et GPG pourraient être ajoutés au DSAS en cliquant sur le
-![](images/DSAS23.png) a droit de chaque catégorie de certificat. Un navigateur 
+![](fr/DSAS23.png) a droit de chaque catégorie de certificat. Un navigateur 
 du poste de travail est ouvert afin de sélectionner le fichier à télécharger sur
 le DSAS. Et une importation réussie est signalé par
 
-![Importation de certificat réussi](images/DSAS20.png)
+![Importation de certificat réussi](fr/DSAS20.png)
 
 Afin de confirmer la bonne importation du certificat dans le DSAS, il est 
 recommander de regarder les détails du certificat importé, comme par exemple
 
-![Détails du certificat importé](images/DSAS21.png)
+![Détails du certificat importé](fr/DSAS21.png)
 
 ## Configuration des taches
 
-Une nouvelle tâche pourrait être ajouter en cliquant sur le ![](images/DSAS23.png) 
+Une nouvelle tâche pourrait être ajouter en cliquant sur le ![](fr/DSAS23.png) 
 a droit de la page des taches. 
 
-![Menu d'ajout des taches](images/DSAS26.png)
+![Menu d'ajout des taches](fr/DSAS26.png)
 
 En cliquant dessus nous sommes présentés avec un formulaire d'ajout de tâche comme
 
-![Formulaire d'ajout d'un tache](images/DSAS27.png)
+![Formulaire d'ajout d'un tache](fr/DSAS27.png)
 
 - `Nom de la tâche` : Un nom donné à la tâche, qui n'est pas forcement unique
 - `Sous-dossier utilisé par la tâche` - Les fichiers associé avec chaque tâche 
@@ -935,20 +935,20 @@ Symantec LiveUpdate.
 par l'utilisateur sont disponible pour l'ajout à la vérification par le tache. Le type
 de certificat doit être adapté à la type de tache. Chaque certificat sélectionné est
 ajouté à la liste des certificats pour le tache, et pourrait être supprimé en 
-cliquant sur le [](images/DSAS35.png) à côté du certificat.
+cliquant sur le [](fr/DSAS35.png) à côté du certificat.
 
 Un exemple de tache après ajout est 
 
-![Exemple de tache ajouté](images/DSAS31.png)
+![Exemple de tache ajouté](fr/DSAS31.png)
 
-A côté de chaque tache, l'icone ![](images/DSAS33.png) permets de modifier le tache, 
-![](images/DSAS35.png) permet de supprimer le tache, et ![](images/DSAS34.png) permets 
+A côté de chaque tache, l'icone ![](fr/DSAS33.png) permets de modifier le tache, 
+![](fr/DSAS35.png) permet de supprimer le tache, et ![](fr/DSAS34.png) permets 
 à l'exécuter immédiatement. Le statut de la tâche et fournit via la couleur du titre 
 de la tâche. En bleu, la tâche n'a pas été exécuté, en vert l'exécution de la tâche a réussi,
 et en rouge l'exécution a échoué. La dernière exécution de la tâche est visible en ouvrant 
 la tâche comme
 
-![Exemple d'éxecution de tache réussi](images/DSAS32.png)
+![Exemple d'éxecution de tache réussi](fr/DSAS32.png)
 
 # Maintien en condition de sécurité
 
@@ -1153,7 +1153,7 @@ dans le fichier `work/dsao.iso` un nouveau ISO du DSAS sera disponible. Après l
 mise à jour d'un VM est la simple remplacement du ISO existant avec le nouveau ISO
 comme
 
-![Replacement du ISO pour un mise à jour sur VirtualBox](images/vbox3.png)
+![Replacement du ISO pour un mise à jour sur VirtualBox](fr/vbox3.png)
 
 ## Mise à jour source
 
@@ -1329,12 +1329,13 @@ Il y a 3 types de vérification des dépôts linux
 * repomd - Le fichier repomd.xml est vérifié et seulement les haches de chaque fichier est vérifié
 * deb - Actuellement non implémenté
 
-Il y a quatre autres types de vérification 
+Il y a cinq autres types de vérification 
 
 * authenticode - Vérifier avec Microsoft Authenticode signatures. 
 * liveupdate - Symantec LiveUpdate signatures
+* cyberwatch - CyberWatch fichiers de signature
 * gpg - Signature d'un fichier avec gpg
-* openssl - signature d'un fichier avec 
+* openssl - Signature d'un fichier avec openssl
 
 ### Vérification - rpm
 

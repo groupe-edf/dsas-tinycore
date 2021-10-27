@@ -1709,14 +1709,18 @@ function dsas_help_toc(){
 }
 
 function dsas_display_help(){
-  fetch("Documentation.md").then(response => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const lang = urlParams.get('language');
+  var uri = (lang ? lang + "/Documentation.md" : "en/Documentation.md");
+
+  fetch(uri).then(response => {
     if (response.ok) 
       return response.text();
     else
       return Promise.reject({status: response.status, 
           statusText: response.statusText});
   }).then(text => {
-    // If user text was parsed here we'd need to sanitize it, but le documentation
+    // If user text was passed here we'd need to sanitize it, but the documentation
     // is supplied with the DSAS.  
     document.getElementById("Documentation").innerHTML = '<article class="markdown-body">' + 
         marked(text) + '</article>';
@@ -1998,7 +2002,12 @@ class multiLang {
           document.cookie = "Language=" + _lang + "; expires=Fri 31 Dec 9999 23:59:59;SameSite=Lax";
           for (let _head of document.getElementsByTagName("dsas-header")) 
             _head.render();
-          location.reload();
+          if (window.location.pathname === "/help.html") {
+            // Special case for help.html
+            window.location = "help.html?language=" + this.currentLanguage;
+          } else {
+            location.reload();
+          }
         }
         break;
       } 
@@ -2218,7 +2227,7 @@ class DSASHeader extends HTMLElement {
 '        </div>\n' +
 '      </li>\n' +
 '      <li class="nav-item">\n' +
-'        <a class="nav-link ' + disablenav + '" href="help.html">' + _("Documentation") + '</a>\n' +
+'        <a class="nav-link ' + disablenav + '" href="help.html' + (ml.currentLanguage ? '?language=' + ml.currentLanguage : '') + '">' + _("Documentation") + '</a>\n' +
 '      </li>\n' +
 '      </ul>\n' +   
 '    </nav></div>' +
