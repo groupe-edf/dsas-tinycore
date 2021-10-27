@@ -245,6 +245,11 @@ get_certificate(){
       gpg)
         gpg -v < /tmp/cert.$$ 2>&1 | grep -q $1 && { echo $i; return; }
         ;;
+      pubkey)
+        tr -d '\n' /tmp/cert.$$ | tr -d '\r' | sed -e 's/^-----BEGIN [A-Z ]*PUBLIC KEY-----//' | \
+            sed -e '-----END [A-Z ]*PUBLIC KEY-----$//' | base64 -d | sha256sum [ cut -f1 -d' ' | \
+            grep -q $1 && { echo $i; return; }
+        ;;
       *)
         1>&2 echo "Unknown certificate type"
         ;;

@@ -110,7 +110,18 @@ verifopenssl(){
   done
   [ -n "$args" ] && args="-untrusted $args"
   [ -f "$tempdir/cert.0" ] && args="-CAfile $tempdir/cert.0 $args"
-  openssl dgst -verify -keyform PEM -sha256 -signature $file.sig -binary $file $args
+  openssl dgst -verify "$tempdir/cert.1" -keyform PEM -sha256 -signature $file.sig -binary $file $args
+  return $?
+}
+
+verifcyberwatch(){
+  local id=$1
+  local tempdir=$2
+  local file=$3
+  local zipdir
+
+  ## A faire
+
   return $?
 }
 
@@ -313,6 +324,10 @@ verifdirectory() {
 
       case $type in
         authenticode) verifauthenticode $id "$tempdir" "$DSAS_HAUT/$file" ;;
+        cyberwatch)
+          [ "${file##.*}" != "zip" ]  && continue 
+          verifcyberwatch $id "$tempdir" "$DSAS_HAUT/$file"
+          ;;
         openssl) 
           [ "${file##.*}" == "asc" ]  && continue 
           verifopenssl $id "$tempdir" "$DSAS_HAUT/$file"

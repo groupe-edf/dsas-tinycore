@@ -217,7 +217,7 @@ for _idx in $idx; do
   case $type in
     rpm|repomd) getrepo $_idx; ;;
     deb) 1>&2 echo "DEB files are not yet implemented"; exit 1; ;;
-    authenticode|openssl|gpg|liveupdate) getdirectory $_idx; ;;
+    authenticode|openssl|gpg|liveupdate|cyberwatch) getdirectory $_idx; ;;
     *) 1>&2 echo "Unknown task type : $type"; exit 1; ;;
   esac
 done

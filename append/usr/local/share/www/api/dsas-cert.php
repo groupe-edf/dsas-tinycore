@@ -39,6 +39,38 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
         break;
  
+     case "pubkey_upload":
+        try {
+          // PEM files are detected as text/plain
+          check_files($_FILES["file"], "text/plain");
+          $pubkey = htmlspecialchars(trim(file_get_contents($_FILES["file"]["tmp_name"])));
+          $pubkey = str_replace("\r", "", $pubkey);   // dos2unix
+          $pubkeynowrap = preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pubkey);
+          if (($pubkey === $pubkeynowrap) || empty($pubkeynowrap))
+            throw new RuntimeException("The public key must be in PEM format");
+          $pubkeynowrap = preg_replace('/\\s+/', '', $pubkeynowrap);
+          $finger = hash("sha256", base64_decode($pubkeynowrap));
+          
+          foreach ($dsas->certificates->certificate as $certificate) {
+            if ($certificate->type == "pubkey") {
+              $pem = htmlspecialchars(trim($certificate->pem));
+              $pemnowrap = preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pem);
+              $pemnowrap = preg_replace('/\\s+/', '', $pemnowrap);
+              if (hash("sha256", base64_decode($pemnowrap)) == $finger)
+                throw new RuntimeException("The public key already exists");
+            }
+          }
+
+          $newcert = $dsas->certificates->addChild("certificate");
+          $newcert->type = "pubkey";
+          $newcert->name = htmlspecialchars(trim($_POST["name"]));
+          $newcert->pem = $pubkey;
+          $newcert->authority = "true";
+        } catch (RuntimeException $e) {
+          $errors[] = ["pubkey_upload" => $e->getMessage()];
+        }
+        break;
+
      case "gpg_upload":
         try {
           check_files($_FILES["file"], "application/pgp-keys");
@@ -72,6 +104,15 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           if ($certificate->type == "x509") {
             if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $_POST["finger"]) {
               $certok = true;
+              break;
+            }
+
+          } else if ($certificate->type == "pubkey") {
+            $pem = htmlspecialchars(trim($certificate->pem));
+            $pemnowrap = preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pem);
+            $pemnowrap = preg_replace('/\\s+/', '', $pemnowrap);
+            if (hash("sha256", base64_decode($pemnowrap)) == $_POST["finger"]) {
+              $certok = "true";
               break;
             }
           } else {
@@ -124,6 +165,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
     $ca = array();
   $dsas_x509 = array();
   $dsas_gpg = array();
+  $dsas_pubkey = array();
   foreach ($dsas->certificates->certificate as $certificate) {
     if ($certificate->type == "x509") {
       $cert =  utf8ize(openssl_x509_parse(trim($certificate->pem)));
@@ -136,10 +178,19 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
       $cert["pem"] = trim($certificate->pem[0]);
       $cert["authority"] = trim($certificate->authority);
       $dsas_gpg[] = $cert;
-    }
+    } else if ($certificate->type == "pubkey") {
+      $cert = array();
+      $cert["pem"] = trim($certificate->pem[0]);
+      $cert["name"] = trim($certificate->name);
+      $cert["authority"] = trim($certificate->authority);
+      $pemnowrap = preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $certificate->pem[0]);
+      $pemnowrap = preg_replace('/\\s+/', '', $pemnowrap);
+      $cert["fingerprint"] = hash("sha256", base64_decode($pemnowrap));
+      $dsas_pubkey[] = $cert;
+    } 
   }
   header("Content-Type: application/json");
-  echo json_encode([["dsas" => ["x509" => $dsas_x509, "gpg" => $dsas_gpg], "ca" => $ca]]);
+  echo json_encode([["dsas" => ["x509" => $dsas_x509, "pubkey" => $dsas_pubkey, "gpg" => $dsas_gpg], "ca" => $ca]]);
 }
 
 ?>

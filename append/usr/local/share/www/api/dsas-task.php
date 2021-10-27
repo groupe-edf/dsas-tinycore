@@ -20,13 +20,15 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         $uri =  htmlspecialchars($data["uri"]);
         $type = $data["type"];
         if ($type !== "rpm" && $type !== "repomd" && $type !== "deb" && $type !== "authenticode" &&
-            $type !== "openssl" && $type !== "gpg" && $type !== "liveupdate")
-          $errors[] = ["error" => "The task type ie illegal"];
+            $type !== "openssl" && $type !== "gpg" && $type !== "liveupdate" && $type !== "cyberwatch")
+          $errors[] = ["error" => "The task type is illegal"];
         $run = $data["run"];
         if ($run !== "never" && $run !== "hourly" && $run !== "daily" && $run !== "weekly" && $run !== "monthly")
           $errors[] = ["error" => "The period between execution of the task is illegal"];
         $certs = array();
         $have_ca = false;
+        $have_pubkey = false;
+        $have_x509 = false;
         foreach ($data["certs"] as $cert) {
           $certok = false;
           $certname = "";
@@ -42,11 +44,15 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
                 }
                 if ($type === "rpm" || $type === "repomd" || $type === "deb" || $type === "gpg") {
                   $errors[] = ["error" => ["The task type '{0}' does not support {1} certificates", $type, "X509"]];
-
                   break 2;
                 }
+                if ($have_pubkey && ($type === "cyberwatch" || type === "openssl")) {
+                  $errors[] = ["error" => ["The task type '{0}' can not include both public keys and X509 certificates", $type]];
+                  break 2;
+                } 
 
                 $certok = true;
+                $have_x509 = true;
                 $x509_cert = openssl_x509_parse(trim($certificate->pem));
                 if ($x509_cert["subject"]["CN"])
                   $certname = $x509_cert["subject"]["CN"];
@@ -70,12 +76,37 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
                 }
                 if ($have_ca) {
                   $errors[] = ["error" => ["The task type '{0}' only supports one GPG certificate", $type]];
-
                   break 2;
                 }
                 $certname = $gpg_cert["uid"];
                 $certok = true;
                 $have_ca = true;
+                break;
+              }
+            }
+
+            if ($certificate->type == "pubkey") {
+              $pem = trim($certificate->pem[0]);
+              $pemnowrap = preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pem);
+              $pemnowrap = preg_replace('/\\s+/', '', $pemnowrap);
+              if (hash("sha256", base64_decode($pemnowrap)) == $cert["fingerprint"]) {
+                if ($type === "rpm" || $type === "repomd" || $type === "deb" || 
+                    $type === "authenticode" || $type === "gpg" || $type === "liveupdate") {
+                  $errors[] = ["error" => ["The task type '{0}' does not support public keys", $type]];
+                  break 2;
+                }
+                if ($have_x509) {
+                  $errors[] = ["error" => ["The task type '{0}' can not include both public keys and X509 certificates", $type]];
+                  break 2;
+                }
+                if ($have_pubkey) {
+                  $errors[] = ["error" => ["The task type '{0}' can only support a single public key", $type]];
+                  break 2;
+                }
+
+                $certname = $certificate->name;
+                $certok = true;
+                $have_pubkey = true;
                 break;
               }
             }
@@ -95,6 +126,10 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
                     $errors[] = ["error" => ["The task type '{0}' only supports one root certificate", $type]];
                     break 2;
                   }
+                  if ($have_pubkey) {
+                    $errors[] = ["error" => ["The task type '{0}' can not include both public keys and X509 certificates", $type]];
+                    break 2;
+                  } 
                   $have_ca = true;
                   $certok = true;
 
@@ -123,6 +158,11 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         if ($type === "rpm" || $type === "repomd" || $type === "deb" || $type === "gpg") {
 	  if (count($certs) != 1)
             $errors[] = ["error" => ["The task type '{0}' requires a GPG certificate", $type]]; 
+        }
+
+        if ($type === "openssl" || $type === "cyberwatch") {
+	  if (count($certs) < 1)
+            $errors[] = ["error" => ["The task type '{0}' at least one certificate or public key", $type]]; 
         }
 
         if ($errors == []) {

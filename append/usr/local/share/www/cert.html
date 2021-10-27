@@ -31,6 +31,19 @@
     <div class="collapse" id="cert"></div>
 </div>
 
+<form id ="pubkeyupload">
+  <input type="file" name="pubkeyfile" id="pubkeyfile" style="display: none"
+         accept="text/plain,application/x-pem-file" onchange="dsas_pubkey_name();">
+</form>
+<div class="container p-3 my-3 border">
+    <div class="row"><div class="col-md-6"><h5><a class="text-toggle" data-bs-toggle="collapse" href="#pubkey"
+    role="button" aria-controls="pubkey" aria-expanded="false">
+    <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded">
+    <img src="caret-down.svg"/></i></a><span data-i18n>SSL public keys added :</h5></div>
+    <div class="col-md-6 text-end"><img src="plus-lg.svg"  data-toggle="tooltip" title="Add" onclick="document.getElementById('pubkeyfile').click();" data-i18n-title></div></div>
+    <div class="collapse" id="pubkey"></div></div>
+</div>
+
 <form id ="gpgupload">
   <input type="file" name="gpgfile" id="gpgfile" style="display: none"
          accept="text/plain,application/pgp-keys" onchange="dsas_upload_cert('gpg');">

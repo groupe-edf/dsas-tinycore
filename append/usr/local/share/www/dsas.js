@@ -65,6 +65,11 @@ function modal_task(action = "dsas_add_task();"){
                     '">' + cert_name(cert) + '</option>\n';
       i++;
     }
+    for (cert of certs[0].dsas.pubkey) {
+      certbody = certbody + '<option id="TaskAddCert' + i + '" value="' + cert.fingerprint  + 
+                    '">' + cert.name + '</option>\n';
+      i++;
+    }
     for (cert of certs[0].dsas.gpg) {
       certbody = certbody + '<option id="TaskAddCert' + i + '" value="' + cert.fingerprint  + 
                     '">' + cert.uid + '</option>\n';
@@ -107,6 +112,7 @@ function modal_task(action = "dsas_add_task();"){
 '        <option id="TaskTypeDeb" value="deb">deb</option>\n' +
 '        <option id="TaskTypeAuth" value="authenticode">authenticode</option>\n' +
 '        <option id="TaskTypeLive" value="liveupdate">liveupdate</option>\n' +
+'        <option id="TaskTypeCyber" value="cyberwatch">cyberwatch</option>\n' +
 '        <option id="TaskTypeSsl" value="deb">openssl</option>\n' +
 '        <option id="TaskTypeGpg" value="deb">gpg</option>\n' +
 '      </select>\n' +
@@ -959,6 +965,8 @@ function dsas_display_cert(what = "all"){
         document.getElementById("ca").innerHTML = treat_x509_certs(certs[0].ca);
       if (what === "all" || what === "cert")
         document.getElementById("cert").innerHTML = treat_x509_certs(certs[0].dsas.x509, true);
+      if (what === "all" || what === "pubkey")
+        document.getElementById("pubkey").innerHTML = treat_ssl_pubkeys(certs[0].dsas.pubkey, true);
       if (what === "all" || what === "gpg")
         document.getElementById("gpg").innerHTML = treat_gpg_certs(certs[0].dsas.gpg);
   
@@ -1008,6 +1016,30 @@ function time_t_to_date(t) {
   d = new Date(t * 1000);
   return d.toUTCString();
   }
+}
+
+function treat_ssl_pubkeys(pubkeys) {
+  body = "";
+  i = 0;
+  for (pubkey of pubkeys) {
+    var pemblob = new Blob([pubkey.pem], {type : "application/x-pem-file"});
+    var url = window.URL.createObjectURL(pemblob);
+    name = pubkey.name;
+    body = body +
+      '<p class="my-0"><a class="text-toggle" data-bs-toggle="collapse" href="#pubkey' + i + '" role="button"' + 
+      'aria-controls="pubkey' + i + '" aria-expanded="false">' +
+      '<i class="text-collapsed"><img src="caret-right.svg"/></i>' +
+      '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + name + 
+      '&nbsp;<a data-toggle="tooltip" title="' + _("Download") + '" href="' + url + '" download="' + name.replace(/ /g,"_")  + '.pem">' + 
+      '<img src="save.svg"></a>';
+    body = body + '&nbsp;<a data-toggle="tooltip" title="' + _("Delete") + '" onclick="dsas_cert_delete(\'' + name + '\',\'' + 
+        pubkey.fingerprint + '\');"><img src="x-lg.svg"></a>';
+    body = body + 
+      '</p><div class="collapse" id="pubkey' + i + '"><div class="card card-body">' +
+      '<pre style="height : 20px">fingerprint : ' + pubkey.fingerprint + '</pre></div></div>\n';
+    i++;
+  }
+  return body;
 }
 
 function treat_x509_certs(certs, added = false) {
@@ -1060,6 +1092,7 @@ function dsas_cert_real_delete(name, finger) {
       } catch (e) {
         // Its text => here always just "Ok"
         dsas_display_cert("cert");
+        dsas_display_cert("pubkey");
         dsas_display_cert("gpg");
       }
     }).catch(error => {
@@ -1130,11 +1163,23 @@ function date_to_str(d) {
       d.substr(0,2) + " " + d.substr(6,2) + ":" + d.substr(8,2) + ":" + d.substr(10,2) + " UTC";
 }
 
-function dsas_upload_cert(type = "x509") {
+function dsas_pubkey_name(){
+  var modalDSAS = document.getElementById("modalDSAS");
+  var body = "";
+  modal_action(_("Enter name for public key"), 'dsas_upload_cert("pubkey", document.getElementById("PubkeyName").value);', true);
+  body = '    <div class="col-9 d-flex justify-content-center">\n' +
+         '      <label for="PubkeyName">' + _("Name :") + '</label>\n' +
+         '      <input type="text" id="PubkeyName" value="" class="form-control" onkeypress="if (event.key === \'Enter\'){ modalDSAS.hide(); dsas_upload_cert(\'pubkey\', document.getElementById(\'PubkeyName\').value);}">\n' +
+         '    </div>';
+  modalDSAS.setAttribute("body", body);
+}
+
+function dsas_upload_cert(type = "x509", name ="") {
   var cert = document.getElementById(type + "upload");
   var formData = new FormData();
   formData.append("op", type + "_upload");
   formData.append("file", cert[0].files[0]);
+  formData.append("name", name);
 
   fetch("api/dsas-cert.php", {
     method: 'POST',
@@ -1325,7 +1370,7 @@ function dsas_task_modify(id) {
     if (tasks.task) {
       for (task of (tasks.task.constructor === Object ? [tasks.task] : tasks.task)) {
         if (id === task.id) {
-          modal_task();
+          modal_task("dsas_add_task(task.name, task.id);");
           document.getElementById('TaskName').value = print_obj(task.name);
           document.getElementById('TaskDirectory').value = print_obj(task.directory);
           document.getElementById('TaskURI').value = print_obj(task.uri);
@@ -1438,13 +1483,19 @@ function dsas_task_cert_delete(fingerprint){
   document.getElementById("TaskCert").innerHTML = body;
 }
 
-function dsas_add_task() {
+function dsas_add_task(oldname = "", oldid="") {
   var name = document.getElementById("TaskName").value;
   var directory = document.getElementById("TaskDirectory").value;
   var uri = document.getElementById("TaskURI").value;
   var type = "";
   var run = "";
   var certs= [];
+
+  // If the old name is not empty and different than the new name, then we're
+  // modifying a task and we've changed the name. Delete the original task
+  // before adding the new one
+  if (oldname && oldname != name)
+    dsas_task_real_delete(oldid); 
 
   for (opt of document.getElementsByTagName("option"))
     if (opt.id.substr(0,8) === "TaskType" && opt.selected)
