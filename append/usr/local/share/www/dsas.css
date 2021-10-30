@@ -7,7 +7,6 @@
 .sticky-offset {
   top: 58px;
   z-index: 1000;
-  position: relative;
 }
 .markdown-body {
   box-sizing: border-box;
