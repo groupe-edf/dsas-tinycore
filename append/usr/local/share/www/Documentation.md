@@ -842,6 +842,16 @@ Afin de faciliter l'utilisation de Symantec LiveUpdate, et les autres éditeur d
 typiquement utilisé avec le DSAS, les 10 certificats à installer sur le DSAS sont disponible
 dans [le bundle de certificats ci-jointe](Certificates.zip).
 
+### Gestion des clefs publiques SSL
+
+Des clefs publiques ne sont pas vraiment des certificates, cas ils ne contient que l'object
+cryptographique permettant verification de signature ou déchiffrement. Aucun information sur 
+les organisation responasable pour les clefs, les limitation sur leurs utilisations est inclut
+dans les clefs publiques SSL. Ces clefs sont utilisés dans les tâches __openssl__ ou __cyberwatch__
+
+Parce-qu'il existe aucun chaine de confiance pour des clefs publique, il est essentiel de 
+maitrise la manière que les clefs utilisé avec le DSAS sont récuperés.
+
 ### Gestion des certificats GPG
 
 Les certificats GPG sont utilisé notamment pour la vérification des binaires
