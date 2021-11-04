@@ -921,6 +921,8 @@ permettant d'accélérer les vérifications.
   * `authenticode` - Les fichiers sont signés avec des signature de type `Microsoft`.
   * `liveupdate` - Les fichiers correspondant aux fichiers de mise à jour de 
 Symantec LiveUpdate.
+  * `cyberwatch` - les fichiers correspondant aux fichiers de signature fournit par 
+  [CyberWatch](https://docs.cyberwatch.fr/fr/9_advanced_administration_guides/offline_administration/swarm/import_securitydb.html)
   * `openssl` - Tache permettant le transfert des fichiers signé par openssl
   * `gpg` - Tache permettant le transfert des fichiers signé par gpg.
 - `Périodicité de la tâche` - A quel rythme est-ce que la tâche est exécuté
