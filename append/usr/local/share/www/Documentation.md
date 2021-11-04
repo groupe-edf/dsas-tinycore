@@ -1614,6 +1614,35 @@ $ openssl dgst -sign key.pem -keyform PEM -sha256 -out <file>.sig -binary <file>
 Les signatures sont toujours stockées dans des fichiers séparés, et le DSAS assume que les signatures
 sont dans un fichier avec un extension .sig. Les deux fichiers doivent être fournis au DSAS.
 
+### Cas special - fichier zip non signé
+
+Dans la cas des tâches __openssl__ et __cyberwatch__ les fichiers signé sont contenu dans un fichier
+zip non signé. Le probleme avec cette situation est que même si l'ensemble des fichiers dans le fichier
+zip sont signé, le zip peuvent caché d'autre données n'appartentient pas au fichier zip. Ceci est 
+voulu dans le désign des fichiers zip afin de permettre la création d'autre format de zip, comme les 
+fichiers __JAR__, mais egalement afin d'inclure des zip dans des executable (des zips auto-extractant).
+Il y a également des façon d'abuser le format des fichiers zip afin de cacher des données.
+
+Un fichier zip est compris de __N__ objets compressé suivi par une index des fichiers contenu dans le 
+zip avec les positionnes pour chaque objet compressé du fichier zip relatives aux positionne de l'index.
+Ceci ouvre 4 possible endroit à cacher des données dans une fichier zip
+
+- ajouter au début : parce que les postionnes des objets compressé sont rélative à l'index il est tout
+à fait possible d'avoir des données avant ces objets
+- ajouter à la fin : de même façon des données pourrait être caché après l'index du fichier zip
+- intercaler entre les objets compressé : Les objets non pas besoin d'occupé tout espaces du fichiers, il
+suffit simplement que les positionnes dans l'index soit correcte
+- Dans le zone de commentaire de l'index : le format zip permets jusqu'au 65536 caracteres dans le zone
+de commentaire de l'index lui-même.
+
+En utilisant le fichier zip aucun de ces zones sera regarder. Mais si on laisse passer le fichier zip
+quelqu'un dans le zone sensible pourrait abuser de cette comportement afin de faire passer des fichiers
+non vérifier à traverse du DSAS.
+
+Ceci ne concerne que des fichiers zip non signé, car quelqu'un capable de signer le zip est egalement
+capable de signer le contenu. Donc la parade est relativement simple, et consist à reconstruire les 
+fichiers zip non signé à partir de son contenu. Le DSAS implemente cette comportement 
+
 ## Service OpenSSH
 
 L'ensemble des flux ssh possible est
