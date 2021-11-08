@@ -9,7 +9,7 @@ send to sensitive systems.
 
 The means to transfer files to sensitive systems is often the use of USB keys.
 This mode of transfer requires time consuming human intervention and exposes 
-the industrial system to viral contamination at each time USB connection. 
+the industrial system to viral contamination at each USB connection. 
 Organizational means could be put in place to control USB keys each time they
 are used, but the risk of contamination is impossible to exclude.
 
@@ -60,7 +60,7 @@ to be defined limiting the files allowed to pass to have a particular chain of t
 not just verify the file is signed by a valid certification authority. Unfortunately, 
 [malicious actors can also buy signing certiciates](https://duo.com/decipher/attackers-are-signing-malware-with-valid-certificates)
 et a verification solely based on the certification authority is not a strict guarantee 
-that a file is not malicious. The DSAS, if correctly configred, allows the transfers to be
+that a file is not malicious. The DSAS, if correctly configured, allows the transfers to be
 strictly limited to a single software editor, or even a particular division of this editor,
 so that the risks are minimised.
 
@@ -1588,7 +1588,7 @@ are in a file with a .sig extension. Both files must be provided to DSAS.
 
 ### Special case - unsigned zip file
 
-In the case of the __openssl__ and __cyberwatch__ tasks the signed files are contained in an unsigned 
+In the case of the __liveupdate__ and __cyberwatch__ tasks the signed files are contained in an unsigned 
 zip file. The problem with this situation is that even though all of the files in the zip file
 are signed, the zip can hide other data that does not belong to the zip file. this is
 desired in the design of zip files in order to allow the creation of other zip formats, such as

@@ -1620,7 +1620,7 @@ sont dans un fichier avec un extension .sig. Les deux fichiers doivent être fou
 
 ### Cas special - fichier zip non signé
 
-Dans la cas des tâches __openssl__ et __cyberwatch__ les fichiers signé sont contenu dans un fichier
+Dans la cas des tâches __liveupdate__ et __cyberwatch__ les fichiers signé sont contenu dans un fichier
 zip non signé. Le probleme avec cette situation est que même si l'ensemble des fichiers dans le fichier
 zip sont signé, le zip peuvent caché d'autre données n'appartentient pas au fichier zip. Ceci est 
 voulu dans le désign des fichiers zip afin de permettre la création d'autre format de zip, comme les 
