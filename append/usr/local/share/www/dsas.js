@@ -421,11 +421,18 @@ function dsas_display_logs(all = false){
           for (let i = 0; i < logs.length; i++) {
             body = body + '<div id="log' + i + '" class="container tab-pane ' + (i === 0 ? 'active' : 'fade') + '">';
             for (const log of logs[i]) {
+              var str = log["line"];
+              var res = _(str.substr(4,15).trim()).padEnd(15);
+              var sa = str.substr(20).split(/(\s+)/);
+              var hash = sa[0];
+              var date = date_to_locale(sa[2]).padEnd(25);
+              var path = str.substr(19+sa[0].length+sa[1].length+sa[2].length+sa[3].length);
+
               if (log["type"] === "normal") {
                 if (all) 
-                  body = body + '<pre class="my-0 text-muted overflow-hidden">' + log["line"] + "</pre>\n";
+                  body = body + '<pre class="my-0 text-muted overflow-hidden">' + res + ' ' + hash + ' ' + date + ' ' + path + '</pre>\n';
               } else
-                body = body + '<pre class="my-0 text-danger overflow-hidden">' + log["line"] + "</pre>\n";
+                body = body + '<pre class="my-0 text-danger overflow-hidden">'  + res + ' ' + hash + ' ' + date + ' ' + path + '</pre>\n';
             }
             body = body + '</div>';
           }
