@@ -952,14 +952,14 @@ Software impacted by this risk
 ### Risk: Attack on signature verification
 
 | Risk | Attack on signature verification |
-| ----------- | -------------------------------------------------- -------- |
+| ----------- | ---------------------------------------------------------- |
 | Criticality | Major |
 | Comment | If the software used for signature verification <br />are compromised, malicious files might be passed through the DSAS. <br /> This will undermine the primary purpose of the DSAS, but <br />will be limited to asynchronous attacks. |
 
 Software impacted by this risk
 
 | software | version | comment |
-| -------------- | ---------- | ----------------------- -------------------------------------------------- ----- |
+| -------------- | ---------- | ------------------------------------------------------------------------------ |
 | openssl | [1.1.1l](https://www.openssl.org/source/openssl-1.1.1l.tar.gz) | Used for authenticode, LiveUpdate and OpenSSL verification |
 | gnupg | [2.2.27](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.27.tar.bz2) | Used for RPM, DEB and GPG verification |
 | libgcrypt | [1.9.3](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.9.3.tar.bz2) | Used for RPM, DEB and GPG verification |
@@ -969,14 +969,14 @@ Software impacted by this risk
 ### Risk: Attack on the means of downloading files
 
 | Risk | Attack on the means of downloading files |
-| ----------- | -------------------------------------------------- ------- |
+| ----------- | --------------------------------------------------------- |
 | Criticality | Important |
 | Comment | All download connections are initiated by the <br />DSAS, so this risk can only be used from specific <br />machines. The risk cannot be <br />used to hijack the main function of the DSAS<br /> |
 
 Software impacted by this risk
 
 | software | version | comment |
-| ------------- | ---------- | ------------------------ -------------------------------------------------- ---- |
+| ------------- | ---------- | ------------------------------------------------------------------------------ |
 | openssl | [1.1.1l](https://www.openssl.org/source/openssl-1.1.1l.tar.gz) | only the functionality used by ssh impacted |
 | openssh | [8.8p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-8.8p1.tar.gz) | scp and sftp used |
 | curl | [7.79.1](https://curl.se/download/curl-7.79.1.tar.bz2) | Used for http, https and ftp |
@@ -985,14 +985,14 @@ Software impacted by this risk
 ### Risk: Attack against DSAS administrator authentication
 
 | Risk | Attack against DSAS administrator authentication |
-| ----------- | -------------------------------------------------- ------- |
+| ----------- | --------------------------------------------------------- |
 | Criticality | Important |
 | Comment | The DSAS administration site is only available <br />from the sensitive network, and normally by configuring the <br />DMZ where the DSAS is installed accessible only from well-controlled <br />machines. So the risk is limited to an attack from a <br />console allowed to access the DSAS by someone not <br />authorized to do so. The risk of reconfiguring the DSAS to allow <br />unwanted files to enter or to prevent wanted files from <br />doing so. |
 
 Software impacted by this risk
 
 | software | version | comment |
-| ------------- | ---------- | ------------------------ -------------------------------------------------- ---- |
+| ------------- | ---------- | ------------------------------------------------------------------------------ |
 | php-cgi | [8.0.1](http://tinycorelinux.net/12.x/x86/tcz/php-8.0-cgi.tcz) | Backend of the administration site |
 | lighttpd | [1.4.58](http://tinycorelinux.net/12.x/x86/tcz/lighttpd.tcz) | Backend of the administration site |
 | cyrus-sasl-lite | [2.1.27](http://tinycorelinux.net/12.x/x86/tcz/cyrus-sasl-lite.tcz) | Authentication on the administration site |
@@ -1032,9 +1032,9 @@ will install all the tools necessary for the build
 
 If you have a French keyboard, the easier is to add
 
-`` `
-setxkmap en
-`` `
+```shell
+setxkmap fr
+```
 
 to the `~/.xession` file or run this command from an X11 console. 
 
