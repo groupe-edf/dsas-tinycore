@@ -400,18 +400,12 @@ function dsas_display_logs(all = false){
       if (logs) {
         if (!all || logs.length == 1) {
           for (const log of logs[0]) {
-            var str = log["line"];
-            var res = _(str.substr(4,15).trim()).padEnd(15);
-            var sa = str.substr(20).split(/(\s+)/);
-            var hash = sa[0];
-            var date = date_to_locale(sa[2]).padEnd(25);
-            var path = str.substr(19+sa[0].length+sa[1].length+sa[2].length+sa[3].length);
-            
+            var str = dsas_verify_line(log["line"]);            
             if (log["type"] === "normal") {
               if (all) 
-                body = body + '<pre class="my-0 text-muted overflow-hidden">' + res + ' ' + hash + ' ' + date + ' ' + path + '</pre>\n';
+                body = body + '<pre class="my-0 text-muted overflow-hidden">' + str + '</pre>\n';
             } else
-              body = body + '<pre class="my-0 text-danger overflow-hidden">'  + res + ' ' + hash + ' ' + date + ' ' + path + '</pre>\n';
+              body = body + '<pre class="my-0 text-danger overflow-hidden">'  + str + '</pre>\n';
           }
         } else {
           body = body + '<ul class="nav nav-tabs" id="logs" role="tablist">\n';
@@ -421,18 +415,12 @@ function dsas_display_logs(all = false){
           for (let i = 0; i < logs.length; i++) {
             body = body + '<div id="log' + i + '" class="container tab-pane ' + (i === 0 ? 'active' : 'fade') + '">';
             for (const log of logs[i]) {
-              var str = log["line"];
-              var res = _(str.substr(4,15).trim()).padEnd(15);
-              var sa = str.substr(20).split(/(\s+)/);
-              var hash = sa[0];
-              var date = date_to_locale(sa[2]).padEnd(25);
-              var path = str.substr(19+sa[0].length+sa[1].length+sa[2].length+sa[3].length);
-
+              var str = dsas_verify_line(log["line"]);
               if (log["type"] === "normal") {
                 if (all) 
-                  body = body + '<pre class="my-0 text-muted overflow-hidden">' + res + ' ' + hash + ' ' + date + ' ' + path + '</pre>\n';
+                  body = body + '<pre class="my-0 text-muted overflow-hidden">' + str + '</pre>\n';
               } else
-                body = body + '<pre class="my-0 text-danger overflow-hidden">'  + res + ' ' + hash + ' ' + date + ' ' + path + '</pre>\n';
+                body = body + '<pre class="my-0 text-danger overflow-hidden">'  + str + '</pre>\n';
             }
             body = body + '</div>';
           }
@@ -448,6 +436,19 @@ function dsas_display_logs(all = false){
         else
           modal_message(_("Error ({0}) during the download of the logs : {1}", 0, error));
     });
+}
+
+function dsas_verify_line(str){
+  var ret = str;
+  try {
+    var res = _(str.substr(4,15).trim()).padEnd(15);
+    var sa = str.substr(20).split(/(\s+)/);
+    var hash = sa[0];
+    var date = date_to_locale(sa[2]).padEnd(25);
+    var path = str.substr(19+sa[0].length+sa[1].length+sa[2].length+sa[3].length);
+    ret = res + ' ' + hash + '' + date + ' ' + path;
+  } catch (e) { }
+  return ret;
 }
 
 function dsas_display_passwd(){
