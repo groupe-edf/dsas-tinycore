@@ -91,7 +91,7 @@ verifgpg(){
   local id=$1
   local tempdir=$2
   local file=$3
-  if [ "${file##.*}" == "gpg" ]; then
+  if [ "${file##*.}" == "gpg" ]; then
     gpg --no-default-keyring --keyring $tempdir/cert.0.gpg --verify $file
   else
     gpg --no-default-keyring --keyring $tempdir/cert.0.gpg --verify $file.sig $file
@@ -140,17 +140,20 @@ verifcyberwatch(){
   local status
 
   # Unzip the file
-  unzip -d $zipdir $file
+  unzip -q -d $zipdir $file
 
   # Check the signature
   head -c -1 $zipdir/cyberwatch.sig > $tempdir/signature
-  openssl dgst -sha256 -verify $tempdir/cert.1 -signature $tempdir/signature \
-      $(head -c -1 $zipdir/cyberwatch.db | sha256sum | cut -f1 -d' ' | tr -d '\n')
+  head -c -1 $zipdir/cyberwatch.db | sha256sum | cut -f1 -d' ' | tr -d '\n' > $tempdir/cyberwatch.db.sha256
+  openssl dgst -sha256 -verify $tempdir/cert.0 -signature $tempdir/signature $tempdir/cyberwatch.db.sha256 > /dev/null
   status=$?
 
   # Repack the zipfile so as to avoid potentially hidden files
-  (cd $zipdir; zip /tmp/cyberwatch.$$ cyberwatch.sig syberwatch.db)
-  /bin/mv /tmp/cyberwatch.$$ $file
+  if [ "$status" == "0" ]; then
+    (cd $zipdir; zip -q $file.$$ cyberwatch.sig cyberwatch.db)
+    /bin/mv -f $file.$$ $file
+  fi
+  /bin/rm -fr $zipdir
 
   return $status
 }
@@ -262,12 +265,12 @@ verifliveupdate(){
   1>&2 myecho "Archive $(basename $file) correctly verified"
 
   # Repack the zip file before returning to avoid potentiel hidden files
-  if [[ "${file##.*}" == "7z" ]]; then 
-    (cd $zipdir; 7z a /tmp/liveupdate.$$ *) 
+  if [[ "${file##*.}" == "7z" ]]; then 
+    (cd $zipdir; 7z a $src/$file.$$ *) 
   else
-    (cd $zipdir; zip /tmp/liveupdate.$$ *)
+    (cd $zipdir; zip -q $src/$file.$$ *)
   fi
-  /bin/mv /tmp/liveupdate.$$ $src/$file
+  /bin/mv $src/$file.$$ $src/$file
 
   return 0
 }
@@ -280,7 +283,7 @@ verifdirectory() {
 
   # Validate check type
   case $type in
-    authenticode|openssl|gpg|liveupdate) : ;;
+    authenticode|openssl|gpg|liveupdate|cyberwatch) : ;;
     *) 1>&2 echo "Unknown file checking type"; exit 1 ;;
   esac
 
@@ -364,15 +367,15 @@ verifdirectory() {
       case $type in
         authenticode) verifauthenticode $id "$tempdir" "$DSAS_HAUT/$file" ;;
         cyberwatch)
-          [ "${file##.*}" != "zip" ]  && continue 
+          [ "${file##*.}" != "zip" ]  && continue 
           verifcyberwatch $id "$tempdir" "$DSAS_HAUT/$file"
           ;;
         openssl) 
-          [ "${file##.*}" == "sig" ]  && continue 
+          [ "${file##*.}" == "sig" ]  && continue 
           verifopenssl $id "$tempdir" "$DSAS_HAUT/$file"
           ;;
         gpg)
-          [ "${file##.*}" == "sig" ]  && continue 
+          [ "${file##*.}" == "sig" ]  && continue 
           verifgpg $id "$tempdir" "$DSAS_HAUT/$file"
           ;;
       esac
@@ -380,7 +383,7 @@ verifdirectory() {
       msgline $DSAS_HAUT/$file $status
       if [ $status -eq 0 ]; then
         ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
-        [ "$type" == "gpg" ] && [ "${file##.*}" != "gpg" ] && ln "$DSAS_HAUT/$file.sig" "$DSAS_BAS/$file.sig"
+        [ "$type" == "gpg" ] && [ "${file##*.}" != "gpg" ] && ln "$DSAS_HAUT/$file.sig" "$DSAS_BAS/$file.sig"
         [ "$type" == "openssl" ] && ln "$DSAS_HAUT/$file.sig" "$DSAS_BAS/$file.sig"
       fi
     done
@@ -589,7 +592,7 @@ for _id in $idx; do
     case $type in
       rpm|repomd) verifrepo $_id; ;;
       deb) 1>&2 echo "DEB files are  are not yet implemented"; exit 1; ;;
-      authenticode|openssl|gpg|liveupdate) verifdirectory $_id; ;; 
+      authenticode|openssl|gpg|liveupdate|cyberwatch) verifdirectory $_id; ;; 
       *) 1>&2 echo "Unknown task type : $type"; exit 1 ;;
     esac
   fi
