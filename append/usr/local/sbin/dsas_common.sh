@@ -78,7 +78,7 @@ msgline() {
     0)   msg "  "  "Ok"              $md5 $d $_file ;;
     -1)  msg "XX"  "Unknown type"   $md5  $d $_file ;;
     1)   msg "**"  "Bad Sig"        $md5  $d $_file ;;
-    2)   msg "$$"  "Checksum fail"  $md5  $d $_file ;;
+    2)   msg "--"  "Checksum fail"  $md5  $d $_file ;;
     3)   msg "**"  "Bad Interm Sig" $md5  $d $_file ;;
     4)   msg "**"  "Fail virus chk" $md5  $d $_file ;;
     5)   msg "**"  "Bad RPM Sig"    $md5  $d $_file ;;
