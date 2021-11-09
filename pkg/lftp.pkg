@@ -1,0 +1,25 @@
+_pkg=lftp
+_version=4.9.2
+_uri="https://lftp.yar.ru/ftp/lftp-4.9.2.tar.bz2"
+_dep="openssl-1.1.1 readline libidn2"
+_build_dep="compiletc openssl-1.1.1-dev readline-dev libidn2-dev"
+_pkg_path="lftp-4.9.2"
+_conf_cmd="
+sed -i -e 's:ac_header in curses.h term.h ncurses/curses.h ncurses/term.h termcap.h:ac_header in curses.h term.h ncursesw/curses.h ncursesw/term.h termcap.h:' configure
+sed -i -e 's/HAVE_NCURSES_CURSES_H/HAVE_NCURSESW_CURSES_H/' lib/config.h.in
+sed -i -e 's/HAVE_NCURSES_TERM_H/HAVE_NCURSESW_TERM_H/' lib/config.h.in
+sed -i -e 's/HAVE_NCURSES_CURSES_H/HAVE_NCURSESW_CURSES_H/' src/lftp_tinfo.cc
+sed -i -e 's/HAVE_NCURSES_TERM_H/HAVE_NCURSESW_TERM_H/' src/lftp_tinfo.cc
+sed -i -e 's:include <ncurses/:include <ncursesw/:' src/lftp_tinfo.cc
+LIBS='-lncursesw' CC='gcc -flto -mtune=generic -Os -pipe' \
+CXX='g++ -flto -mtune=generic -Os -pipe -fno-exceptions -fno-rtti' \
+./configure --prefix=/usr/local --localstatedir=/var --enable-static --disable-shared --with-openssl
+"
+_make_cmd="
+find . -name Makefile -type f -exec sed -i 's/-g -O2//g' \;
+find . -name Makefile -type f -exec sed -i 's/-O2//g' \;
+make"
+_install_cmd="make install DESTDIR="
+_post_build=""
+_pkgs="main{/usr/local/bin,/usr/local/etc,/usr/local/share/application,/usr/local/share/icons,/usr/local/share/lftp,/usr/local/share/locale};doc{/usr/local/share/man};dev{/usr/local/lib}"
+_post_install=""

@@ -368,7 +368,8 @@ case $1 in
 
   # Install the needed packages
   install_tcz openssl-1.1.1  # explicitly install openssl first so avail to ca-certificate
-  install_tcz curl
+  install_tcz curl           # FIXME TOBERM when curl is removed from scripts
+  install_tcz lftp 
   install_tcz kmaps
   install_tcz openssh
   install_tcz sshpass
