@@ -8,65 +8,49 @@ else
 fi
 
 getdirectory() {
-  local status dirlist files file
+  local isdir
   local id=$1
   local uri=$(get_uri $id)
-  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
-  local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" $CONF)
+  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
+  local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" "$CONF")
 
   if [ -z "$uri" ]; then
     # The URI can be empty. gracefully exit
-    myecho "Empty Uri for task $name"
+    myecho "Empty uri for task $name"
     return
   fi
 
   # Create directory if needed
-  [ -d ${DSAS_HAUT}/$dir ] || $(umask 007 && mkdir -p ${DSAS_HAUT}/$dir)
+  [ -d "${DSAS_HAUT}/$dir" ] || $(umask 007 && mkdir -p "${DSAS_HAUT}/$dir")
 
-  # If no trailing "/" or "\" assume we have a file and not a directory
-  # Special case for scp, because it can only have one file
-  status=1
-  if [ "${uri:0:4}" == "scp:" ] || ([ "${uri: -1}" != "/" ] &&  [ "${uri: -1}" == "\\" ]); then
-    myecho "Downloading file: $(basename $uri)"
-    get "${uri}" "${DSAS_HAUT}/${dir}/${basename $uri}"
-    status=$?
-  fi
+  # Test whether we have a file or a directory
+  isdir=""
+  [ "${uri: -1}" == "/" ] && isdir="1"
+  [ "${uri: -1}" == "\\" ] && isdir="1"
+  [ -z "$isdir" ] && $(lftp -c "open '$uri'") && isdir="1"
 
-  # If uri ends in "/" or the fetch of a file above fails, its probably à directory
-  if [ "${uri:0:4}" != "scp:" ] && [ "$status" -ne "0" ]; then
-    myecho "Downloading directory listing : $uri"
-    files=$(get_dirlist $uri) || { 1>&2 echo "error fetching directory listing"; exit 1; }
+  if [ -z "$isdir" ]; then
+    myecho "Downloading file : $(basename "$uri")"
+    # FIXME shouldn't always download here !!!
+    [ "$dryrun" == "0" ] && lftp -c "get -e -O '${DSAS_HAUT}/${dir}' '$uri'" >& /dev/null
+    [ "$dryrun" == "0" ] || lftp -c "get -e -O '${DSAS_HAUT}/${dir}' '$uri'"
+  else
+    myecho "Mirroring site : $uri"
+    [ "$dryrun" == "0" ] && (cd "$DSAS_HAUT"; lftp -c "open '$uri'; mirror -e -c -O '$DSAS_HAUT/$dir'" >& /dev/null)
+    [ "$dryrun" == "0" ] || (cd "$DSAS_HAUT"; lftp -c "open '$uri'; mirror -e -c -O '$DSAS_HAUT/$dir'")
 
-    # Remove files locally that are no longer available sur le URI
-    for file in $(ls -1 $DSAS_HAUT/$dir); do
-      # Ignore directories for now
-      [ "${file: -1}" == "/" ] && continue
-      
-      if [[ "$files" != *"$file"* ]]; then
-        myecho "Removing stale file: $file"
-        /bin/rm -f $DSAS_HAUT/$dir/$file
-      fi
-    done
-
-    # Download the missing files
-    for file in $files; do
-      # Ignore directories for now
-      [ "${file: -1}" == "/" ] && continue
-      if [ ! -f "$DSAS_HAUT/$dir/$file" ]; then
-        myecho "Downloading file: $file"
-        get "${uri}${file}" "${DSAS_HAUT}/${dir}/${file}"
-      fi
-    done
+    # Correct directory permissions
+    find "$DSAS_HAUT/$dir" -type d -exec chmod 770 {} \;
   fi
 }
 
 get_packages() {
   local file chktype chksum
-  local dest=$1
-  local uri=$2
+  local dest="$1"
+  local uri="$2"
   shift 2
   while [ "$#" -gt 2 ]; do
-    if [ ${1: -3} == "rpm" ]; then
+    if [ "${1: -3}" == "rpm" ]; then
       file=$1
       chktype=$2
       chksum=$3
@@ -76,18 +60,20 @@ get_packages() {
      chksum=$2
     fi
     if [ -f "$dest/$file" ]; then
-      if check_checksum $dest/$file $chksum $chktype; then
+      if check_checksum "$dest/$file" $chksum $chktype; then
         # Checksum of file is different redownload the file
         myecho "Downloading file $file [Checksum different!!]"
-        [ -d "$(dirname $dest/$file)" ] || $(umask 007 && mkdir -p $(dirname $dest/$file))
-        get $uri/$file $dest/$file
+        [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && mkdir -p $(dirname "$dest/$file"))
+        [ "$dryrun" == "0" ] && lftp -c "get -e -o '$dest/$file' '$uri/$file'" >& /dev/null
+        [ "$dryrun" == "0" ] || lftp -c "get -e -o '$dest/$file' '$uri/$file'"
       else
         myecho "Skipping file $file"
       fi
     else
       myecho "Downloading file $file"
-      [ -d "$(dirname $dest/$file)" ] || $(umask 007 && mkdir -p $(dirname $dest/$file))
-      get $uri/$file $dest/$file
+      [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && mkdir -p $(dirname "$dest/$file"))
+      [ "$dryrun" == "0" ] && lftp -c "get -o '$dest/$file' '$uri/$file'" >& /dev/null
+      [ "$dryrun" == "0" ] || lftp -c "get -o '$dest/$file' '$uri/$file'"
     fi
     shift 3
   done
@@ -97,40 +83,41 @@ getrepo() {
   local i filelist chksum chktype filetable _file
   local id=$1
   local uri=$(get_uri $id)
-  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
-  local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" $CONF)
-  local type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" $CONF)
+  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
+  local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" "$CONF")
+  local type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
 
   case $type in
     repomd|rpm)
        # Create the destination directory if needed
-       [ -d "$DSAS_HAUT/$dir" ] || $(umask 007 && mkdir -p $DSAS_HAUT/$dir)
+       [ -d "$DSAS_HAUT/$dir" ] || $(umask 007 && mkdir -p "$DSAS_HAUT/$dir")
 
        myecho "Downloading repodata/repomd.xml from $name"
-       [ -d $DSAS_HAUT/$dir/repodata ] || $(umask 007 && mkdir -p $DSAS_HAUT/$dir/repodata)
+       [ -d "$DSAS_HAUT/$dir/repodata" ] || $(umask 007 && mkdir -p "$DSAS_HAUT/$dir/repodata")
 
-       get -force "$uri/repodata/repomd.xml" "$DSAS_HAUT/$dir/repodata/repomd.xml" 
-       [ "$type" == "rpm" ] || get -force "$uri/repodata/repomd.xml.asc" "$DSAS_HAUT/$dir/repodata/repomd.xml.asc" 
+       lftp -c "get -e -o '$DSAS_HAUT/$dir/repodata/repomd.xml' '$uri/repodata/repomd.xml'" >& /dev/null
+       [ "$type" == "rpm" ] || lftp -c "get -e -o '$DSAS_HAUT/$dir/repodata/repomd.xml.asc' '$uri/repodata/repomd.xml.asc'" >& /dev/null
 
        # Identify all files listed in repomd.xml and download them
        i=1
        while :; do
          # Note that we have to ignore the xml namespace (initial cat/sed)
-         f=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
+         f=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
              sed -e "s:repomd xmlns:repomd ignore:g" | \
              xmllint --xpath 'string(//repomd/data[$i]/location/@href)' -)
          [ -z "$f" ] && break
          myecho "Downloading file $f listed in repomd.xml for $name"
-         get -force "$uri/$f" "$DSAS_HAUT/$dir/$f"
+         [ "$dryrun" == "0" ] && lftp -c "get -e -o '$DSAS_HAUT/$dir/$f' '$uri/$f'" >& /dev/null
+         [ "$dryrun" == "0" ] || lftp -c "get -e -o '$DSAS_HAUT/$dir/$f' '$uri/$f'"
 
          # Verify its checksum
-         chksum=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
+         chksum=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
              sed -e "s:repomd xmlns:repomd ignore:g" | \
              xmllint --xpath 'string(//repomd/data[$i]/checksum)' - )
-         chktype=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
+         chktype=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
              sed -e "s:repomd xmlns:repomd ignore:g" | \
              xmllint --xpath 'string(//repomd/data[$i]/checksum/@type)' - )
-         if  check_checksum $DSAS_HAUT/$dir/$f $chksum $chktype; then
+         if  check_checksum "$DSAS_HAUT/$dir/$f" $chksum $chktype; then
              1>&2 echo "Error verifiying checksum of $f"
            cleanup_and_exit 1 $tempdir
          fi
@@ -139,19 +126,19 @@ getrepo() {
 
        # Identify the primary file list and download it
        # Note that we have to ignore the xml namespace (initial cat/sed)
-       filelist=$(cat $DSAS_HAUT/$dir/repodata/repomd.xml | \
+       filelist=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
          sed -e "s:repomd xmlns:repomd ignore:g" | \
          xmllint --xpath 'string(//repomd/data[@type="primary"]/location/@href)' - )
 
        # Recover a table of the hashtype, hash and file names
        if [[ "$f" =~ ".*.gz" ]] || [[ "$f" =~ ".*.bz2" ]]; then
-         filetable=$(zcat $DSAS_HAUT/$dir/$filelist | \
+         filetable=$(zcat "$DSAS_HAUT/$dir/$filelist" | \
             sed -e "s/xmlns=/ignore=/g" | \
             xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | \
             sed -e 's:.*href="\(.*\)"/>$:\1:g' \
               -e 's:.*type="\([^"]*\)"[^>]*>\([0-9a-fA-F]*\)</checksum>:\1 \2:g')
        else
-         filetable=$(cat $DSAS_HAUT/$dir/$filelist | \
+         filetable=$(cat "$DSAS_HAUT/$dir/$filelist" | \
             sed -e "s/xmlns=/ignore=/g" | \
             xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | \
             sed -e 's:.*href="\(.*\)"/>$:\1:g' \
@@ -159,10 +146,10 @@ getrepo() {
        fi
 
        # Remove the files in our tree not listed in primary.xml
-       for _file in $(cd $DSAS_HAUT/$dir; find . -path ./repodata -prune -type f -o -type f); do
+       for _file in $(cd "$DSAS_HAUT/$dir"; find . -path ./repodata -prune -type f -o -type f); do
          if [[ "$filetable" != *"${_file:2}"* ]]; then
            myecho "Removing stale file ${_file:2}"
-           /bin/rm -f $DSAS_HAUT/$dir/${_file:2}
+           rm -f "$DSAS_HAUT/$dir/${_file:2}"
          fi
        done
 

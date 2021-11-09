@@ -1006,10 +1006,8 @@ Logiciels impactés par ce risque
 | logiciel     | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
 | openssl     | [1.1.1l](https://www.openssl.org/source/openssl-1.1.1l.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
-| openssh     | [8.8p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-8.8p1.tar.gz) | scp et sftp utilisé |
-| curl        | [7.79.1](https://curl.se/download/curl-7.79.1.tar.bz2) | Utilisé pour http, https et ftp |
-| libssh2     | [1.9.0](http://tinycorelinux.net/12.x/x86/tcz/libssh2.tcz) | Utilisé si curl sera utilisé pour scp et sftp |  
-
+| lftp    | [4.9.2](https://lftp.yar.ru/ftp/lftp-4.9.2.tar.bz2) | Utilsé pour http, https, ftp, ftps, sftp |
+ 
 ### Risque : Attaque contre l'authentification administrateur du DSAS
 
 | Risque      | Attaque contre l'authentification administrateur du DSAS  |

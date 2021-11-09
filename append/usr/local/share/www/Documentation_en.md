@@ -978,10 +978,8 @@ Software impacted by this risk
 | software | version | comment |
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
 | openssl | [1.1.1l](https://www.openssl.org/source/openssl-1.1.1l.tar.gz) | only the functionality used by ssh impacted |
-| openssh | [8.8p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-8.8p1.tar.gz) | scp and sftp used |
-| curl | [7.79.1](https://curl.se/download/curl-7.79.1.tar.bz2) | Used for http, https and ftp |
-| libssh2 | [1.9.0](http://tinycorelinux.net/12.x/x86/tcz/libssh2.tcz) | Used if curl is used for scp and sftp | 
-
+| lftp    | [4.9.2](https://lftp.yar.ru/ftp/lftp-4.9.2.tar.bz2) | Used for http, https, ftp, ftps, sftp |
+ 
 ### Risk: Attack against DSAS administrator authentication
 
 | Risk | Attack against DSAS administrator authentication |

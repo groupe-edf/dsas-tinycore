@@ -1,10 +1,10 @@
 #! /bin/sh
 
-VAR=/var/dsas
-LOG=/home/dsas/log
-CONF=$VAR/dsas_conf.xml.active
-RUNLOG=$LOG/dsas_runlog
-DSAS_HOME=/home/dsas
+VAR="/var/dsas"
+LOG="/home/dsas/log"
+CONF="$VAR/dsas_conf.xml.active"
+RUNLOG="$LOG/dsas_runlog"
+DSAS_HOME="/home/dsas"
 
 INTERCO="192.168.192.0"
 INTERCO_MASK="255.255.255.0"
@@ -15,7 +15,7 @@ DSAS_HAUT=$DSAS_HOME/haut/share
 DSAS_BAS=$DSAS_HOME/bas/share
 
 if [ -f $VAR/dsas_typ ]; then
-  TYP="$(cat $VAR/dsas_typ)"
+  TYP="$(cat "$VAR/dsas_typ")"
 else
   TYP="haut"
 fi
@@ -28,8 +28,8 @@ grp="share"
 
 check_dsas(){
   [ -d $DSAS_HOME ] || { echo "DSAS home directory missing"; exit 1; }
-  [ "$(whoami)" == "bas" ] || [ -d $DSAS_HAUT ] || { echo "DSAS haut directory missing"; exit -1; }
-  [ "$(whoami)" == "haut" ] || [ -d $DSAS_BAS ] || { echo "DSAS bas directory missing"; exit -1; }
+  [ "$(whoami)" == "bas" ] || [ -d "$DSAS_HAUT" ] || { echo "DSAS haut directory missing"; exit -1; }
+  [ "$(whoami)" == "haut" ] || [ -d "$DSAS_BAS" ] || { echo "DSAS bas directory missing"; exit -1; }
 }
 
 myecho(){
@@ -92,23 +92,23 @@ check_checksum() {
 
   case $3 in
     sha512)
-      chk=$(cat $1 | sha512sum - | sed -e "s/ -//g")
+      chk=$(cat "$1" | sha512sum - | sed -e "s/ -//g")
       ;;
     sha256)
-      chk=$(cat $1 | sha256sum - | sed -e "s/ -//g")
+      chk=$(cat "$1" | sha256sum - | sed -e "s/ -//g")
       ;;
     sha)
-      chk=$(cat $1 | sha1sum - | sed -e "s/ -$//g")
+      chk=$(cat "$1" | sha1sum - | sed -e "s/ -$//g")
       ;;
     md5)
-      chk=$(cat $1 | md5sum - | sed -e "s/ -$//g")
+      chk=$(cat "$1" | md5sum - | sed -e "s/ -$//g")
       ;;
     *)
      return 0
      ;;
   esac
 
-  if [ $chk != $2 ]; then
+  if [ $chk != "$2" ]; then
     return 0
   fi
   return 1
@@ -118,68 +118,23 @@ task_id_to_idx(){
   local _task_id
   local i=1
   while :; do
-    _task_id=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" $CONF)
+    _task_id=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" "$CONF")
     [ -z "$_task_id" ] && return 1;
     [ "$1" == "$_task_id" ] && echo $i && return 
     i=$(($i + 1))
   done
 }
 
-get(){
-  local force=0
-  if [ "$1" == "-force" ]; then
-    shift 1
-    force=1
-  fi
-  if [ "${1:0:4}" == "scp:" ]; then
-    # Curl not built with scp support
-    if [ $force -eq 0 ] && [ $dryrun -ne 0  ]; then
-      echo "[DryRun] scp ${1:4} $2"
-    else
-      [ $verbose -ne 0 ] && echo "scp ${1:4} $2"
-      umask 007 && scp ${1:4} $2 2> /dev/null
-    fi
-  elif  [ "${1:0:5}" == "sftp:" ]; then
-    # Curl not built with sftp support
-    if [ $force -eq 0 ] && [ $dryrun -ne 0  ]; then
-      echo "[DryRun] sftp ${1:5} $2"
-    else
-      [ $verbose -ne 0 ] && echo "sftp ${1:5} $2"
-      umask 007 && sftp ${1:5} $2 2> /dev/null
-    fi
-  else
-    if [ $force -eq 0 ] && [ $dryrun -ne 0  ]; then
-      echo "[DryRun] curl -s -o $2 $1"
-    else
-      [ $verbose -ne 0 ] && echo "curl -s -o $2 $1"
-      umask 007 && curl -s -o $2 $1 > /dev/null 2>&1
-    fi
-  fi
-}
-
-mv() {
-  if [ $dryrun == "0" ]; then
-    [ -d $(dirname $2) ] || ( mkdir -m 770 -p $(dirname $2); chgrp -R $grp $(dirname $2))
-    # We can't change the owner of the file as we aren't root. So a 
-    # move must be treated as a copy and delete
-    /bin/cp $1 $2
-    chgrp bas $2
-    /bin/rm $1
-  else
-    echo "[DryRun] mv $*"
-  fi
-}
-
 ln() {
-  if [ $dryrun == "0" ]; then
-    [ -d $(dirname $2) ] || ( mkdir -m 770 -p $(dirname $2); chgrp -R $grp $(dirname $2))
+  if [ "$dryrun" == "0" ]; then
+    [ -d $(dirname "$2") ] || ( mkdir -m 770 -p $(dirname "$2"); chgrp -R $grp $(dirname "$2"))
     # This script is not running as root so can't change the owner. We
     # first have to copy the file
-    cp $1 $1.tmp.$$
-    /bin/mv -f $1.tmp.$$ $1
-    chmod 0640 $1
-    chgrp $grp $1
-    /bin/ln -f $* 
+    cp -p "$1" "$1.tmp.$$"
+    /bin/mv -f "$1.tmp.$$" "$1"
+    chmod 0640 "$1"
+    chgrp $grp "$1"
+    /bin/ln -f "$1" "$2" 
   else
     [ -d $(dirname $2) ] || echo "[DryRun] mkdir -p $(dirname $2)"
     echo "[DryRun] ln $*"
@@ -187,8 +142,12 @@ ln() {
 }
 
 rm() {
-  if [ $dryrun == "0" ]; then
-    /bin/rm $*
+  if [ "$dryrun" == "0" ]; then
+    #FIXME is there a better way of handling spaces in the args ?
+    while [ "$#" -gt 0 ]; do
+      /bin/rm -fr "$1"
+      shift
+    done
   else
     echo "[DryRun] rm $*"
   fi
@@ -196,12 +155,12 @@ rm() {
 
 get_uri(){
   if [ "$TYP" == "haut" ]; then
-    echo $(xmllint --xpath "string(dsas/tasks/task[$1]/uri)" $CONF) 
+    echo $(xmllint --xpath "string(dsas/tasks/task[$1]/uri)" "$CONF") 
   else
-    local _dir=$(xmllint --xpath "string(dsas/tasks/task[$1]/directory)" $CONF)
+    local _dir=$(xmllint --xpath "string(dsas/tasks/task[$1]/directory)" "$CONF")
     local _uri="$DSAS_HOME/bas"
     _uri=${DSAS_BAS:${#_uri}}
-    echo "sftp:bas@$INTERCO_HAUT:$_uri/$_dir/"
+    echo "sftp://bas:@$INTERCO_HAUT$_uri/$_dir/"
   fi
 }
 
@@ -213,27 +172,15 @@ while [ "$#" -gt 3 ]; do
 done
 }
 
-# FIXME : There seems to be heaps of ways the directory list can be returned. This function
-# will need work to ensure it works in all cases
-get_dirlist(){
-  if [ "${1:0:5}" == "sftp:" ]; then
-    echo "$(echo 'ls' | sftp -q ${1:5} 2> /dev/null | sed 1d)"
-  elif [ "${1:0:4}" == "ftp:" ]; then
-    echo $(fileargs $(curl $1 2> /dev/null))
-  else
-    $(curl $1 2> /dev/null | grep -o '<a .*href=.*>' | sed -e 's/<a /\n<a /g' | sed -e 's/<a .*href=['"'"'"]//' -e 's/["'"'"'].*$//' -e '/^$/d' -e '/^?/d' -e '/^\?.*/d')
-  fi
-}
-
-# Usage getcertificate fingerprint
+# Usage get_certificate fingerprint
 get_certificate(){
   local cert type
   local i=1
   local incert="false"
   while :; do
-    cert=$(xmllint --xpath "string(dsas/certificates/certificate[$i]/pem)" $CONF)
+    cert=$(xmllint --xpath "string(dsas/certificates/certificate[$i]/pem)" "$CONF")
     [ -z "$cert" ] && break
-    type=$(xmllint --xpath "string(dsas/certificates/certificate[$i]/type)" $CONF)
+    type=$(xmllint --xpath "string(dsas/certificates/certificate[$i]/type)" "$CONF")
     echo "$cert" > /tmp/cert.$$
 
     case $type in
