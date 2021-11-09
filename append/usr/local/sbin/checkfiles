@@ -52,7 +52,7 @@ verifauthenticode(){
     # Don't use the -require-leaf-hash of osslsigncode as it only checks the leaves and not the
     # intermediate certificates since version 2.2. Extract all of the certificates from the file 
     # and check them against the hash. If osslsigncode goes back to the behavior of version 2.1 
-    # this block can be replaced with one line with the -require-leaf_ash option
+    # this block can be replaced with one line with the -require-leaf-hash option
     sigdir=$(mktemp -d)
     osslsigncode extract-signature -pem -out $sigdir/sig.pkcs7 -in $file 2>&1 > /dev/null
 
@@ -230,7 +230,7 @@ verifliveupdate(){
               { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename $file)"; return 2; }
           [ -z "$s1" ] || sha1sum $basedir/$f | grep -q $s1 || \
               { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename $file)"; return 2; }
-          [ -z "$256" ] && [ -z "$s1" ] && { 1>&2 myecho "File $f from the archive $(basename $file) has no checksum"; return 2; }
+          [ -z "$s256" ] && [ -z "$s1" ] && { 1>&2 myecho "File $f from the archive $(basename $file) has no checksum"; return 2; }
           1>&2 myecho "File $f from the archive $(basename $file) verified"
         elif [ -f "$src/$filedir/$f" ]; then
           # Only reverify the hash if its not already done.
@@ -239,7 +239,7 @@ verifliveupdate(){
                 { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename $file)"; return 2; }
             [ -z "$s1" ] || sha1sum $src/$filedir/$f | grep -q $s1 || \
                 { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename $file)"; return 2; }
-            [ -z "$256" ] && [ -z "$s1" ] && { 1>&2 myecho "File $f from the archive $(basename $file) has no checksum"; return 2; }
+            [ -z "$s256" ] && [ -z "$s1" ] && { 1>&2 myecho "File $f from the archive $(basename $file) has no checksum"; return 2; }
             if [ -n "$livetri" ]; then
               msgline $src/$filedir/$f 0
               ln $src/$filedir/$f $dest/$filedir/$f
@@ -341,15 +341,15 @@ verifdirectory() {
   # If LiveUpdate, test files *livetri.zip first as they can sign other files
   if [ "$type" == "liveupdate" ]; then
     for file in $(cd $DSAS_HAUT; find $dir -type f -name "*livetri.zip" -o -name "minitri.flg" \
-        -o -name "SymantecProductCatalog.zip"); do
+        -o -name "SymantecProductCatalog.zip" -o -name "*.jdb"); do
       # If file exists in bas skip. Hardlinked, so test is fast
       [ $DSAS_HAUT/$file -ef $DSAS_BAS/$file ] && continue
 
       zipdir=$(mktemp -d)
       if [[ "$file" == "*livetri.zip" ]]; then
         verifliveupdate $id "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS" "true"
-      elif [ "$file" == "minitri.flg" ]; then
-        # mintri.flg is one byte with a single 0x20 character
+      elif [[ "$file" == "*minitri.flg" ]]; then
+        # minitri.flg is one byte with a single 0x20 character
         [ "$(cat $DSAS_HAUT/$file)" == " " ]
       else
         verifliveupdate $id "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS"

@@ -67,7 +67,6 @@ msg() {
   fi
 }
 
-
 msgline() {
   local file=$1
   local status=$2
