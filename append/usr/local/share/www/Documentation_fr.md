@@ -910,8 +910,8 @@ pour chaque tache.
 associés avec une tâche. De laisser vide est permissible et dans ce cas il est assumé 
 que les fichiers associés avec le taches doit-être déposé sur la DSAS par l'utilisateur.
 le `URI` doit-être de la forme `protocole://site/dossier/` ou bien 
-`protocole://sit/dossier/fichier`. Les protocole permis sont `sftp:`, `ftp:`, `http:`,
-`https:` et `scp:`. Par exemple `ftp://noeysep3.noe.edf.fr/LiveUpdate/`. Le `/` à la
+`protocole://sit/dossier/fichier`. Les protocole permis sont `sftp:`, `ftp:`, `ftps:`, 
+`http:` et `https:`. Par exemple `ftp://noeysep3.noe.edf.fr/LiveUpdate/`. Le `/` à la
 fin des `URI` avec un dossier est optionnelle mais recommandé.
 - `Type de tache` - Le type de tache a utilisé. Les types de tache permis sont
   * `rpm` - La tâche est un dépôt de fichier en format rpm. L’ensemble des fichiers sont 
