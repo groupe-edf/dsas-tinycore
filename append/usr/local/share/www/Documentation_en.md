@@ -882,8 +882,8 @@ for each task.
 associated with a task. Leaving this empty is permissible and in this case it
 is assumed that the files associated with the tasks must be deposited on the DSAS
 by the user. the `URI` must be of the form` protocol://site/folder/ `or else
-`protocol://site/folder/ file`. Allowed protocols are `sftp:`, `ftp:`, `http:`,
-`https:` and `scp:`. For example `ftp://noeysep3.noe.edf.fr/LiveUpdate/`. The `/` 
+`protocol://site/folder/ file`. Allowed protocols are `sftp:`, `ftp:`, `ftps:` 
+`http:` and `https:`. For example `ftp://noeysep3.noe.edf.fr/LiveUpdate/`. The `/` 
 at the end of the `URI` with a folder is optional but recommended.
 - `Task type` - The type of task used. The types of tasks allowed are
   * `rpm` - The task is a file repository in rpm format. All files are
