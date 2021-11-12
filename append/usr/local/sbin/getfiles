@@ -32,12 +32,12 @@ getdirectory() {
   if [ -z "$isdir" ]; then
     myecho "Downloading file : $(basename "$uri")"
     # FIXME shouldn't always download here !!!
-    [ "$dryrun" == "0" ] && lftp -c "get -e -O '${DSAS_HAUT}/${dir}' '$uri'" >& /dev/null
-    [ "$dryrun" == "0" ] || lftp -c "get -e -O '${DSAS_HAUT}/${dir}' '$uri'"
+    [ "$verbose" -eq 0 ] && lftp -c "get -e -O '${DSAS_HAUT}/${dir}' '$uri'" >& /dev/null
+    [ "$verbose" -ne 0 ] || lftp -c "get -e -O '${DSAS_HAUT}/${dir}' '$uri'"
   else
     myecho "Mirroring site : $uri"
-    [ "$dryrun" == "0" ] && (cd "$DSAS_HAUT"; lftp -c "open '$uri'; mirror -e -c -O '$DSAS_HAUT/$dir'" >& /dev/null)
-    [ "$dryrun" == "0" ] || (cd "$DSAS_HAUT"; lftp -c "open '$uri'; mirror -e -c -O '$DSAS_HAUT/$dir'")
+    [ "$verbose" -eq 0 ] && (cd "$DSAS_HAUT"; lftp -c "open '$uri'; mirror -e -c -O '$DSAS_HAUT/$dir'" >& /dev/null)
+    [ "$verbose" -ne 0 ] || (cd "$DSAS_HAUT"; lftp -c "open '$uri'; mirror -e -c -O '$DSAS_HAUT/$dir'")
 
     # Correct directory permissions
     find "$DSAS_HAUT/$dir" -type d -exec chmod 770 {} \;
@@ -64,16 +64,16 @@ get_packages() {
         # Checksum of file is different redownload the file
         myecho "Downloading file $file [Checksum different!!]"
         [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && mkdir -p $(dirname "$dest/$file"))
-        [ "$dryrun" == "0" ] && lftp -c "get -e -o '$dest/$file' '$uri/$file'" >& /dev/null
-        [ "$dryrun" == "0" ] || lftp -c "get -e -o '$dest/$file' '$uri/$file'"
+        [ "$verbose" -eq 0 ] && lftp -c "get -e -o '$dest/$file' '$uri/$file'" >& /dev/null
+        [ "$verbose" -ne 0 ] || lftp -c "get -e -o '$dest/$file' '$uri/$file'"
       else
         myecho "Skipping file $file"
       fi
     else
       myecho "Downloading file $file"
       [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && mkdir -p $(dirname "$dest/$file"))
-      [ "$dryrun" == "0" ] && lftp -c "get -o '$dest/$file' '$uri/$file'" >& /dev/null
-      [ "$dryrun" == "0" ] || lftp -c "get -o '$dest/$file' '$uri/$file'"
+      [ "$verbose" -eq 0 ] && lftp -c "get -o '$dest/$file' '$uri/$file'" >& /dev/null
+      [ "$verbose" -ne 0"] || lftp -c "get -o '$dest/$file' '$uri/$file'"
     fi
     shift 3
   done
@@ -107,8 +107,8 @@ getrepo() {
              xmllint --xpath 'string(//repomd/data[$i]/location/@href)' -)
          [ -z "$f" ] && break
          myecho "Downloading file $f listed in repomd.xml for $name"
-         [ "$dryrun" == "0" ] && lftp -c "get -e -o '$DSAS_HAUT/$dir/$f' '$uri/$f'" >& /dev/null
-         [ "$dryrun" == "0" ] || lftp -c "get -e -o '$DSAS_HAUT/$dir/$f' '$uri/$f'"
+         [ "$verbose" -eq 0 ] && lftp -c "get -e -o '$DSAS_HAUT/$dir/$f' '$uri/$f'" >& /dev/null
+         [ "$verbose" -ne 0 ] || lftp -c "get -e -o '$DSAS_HAUT/$dir/$f' '$uri/$f'"
 
          # Verify its checksum
          chksum=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
