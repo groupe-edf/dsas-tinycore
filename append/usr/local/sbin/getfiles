@@ -36,8 +36,8 @@ getdirectory() {
     [ "$verbose" -ne 0 ] || lftp -c "get -e -O '${DSAS_HAUT}/${dir}' '$uri'"
   else
     myecho "Mirroring site : $uri"
-    [ "$verbose" -eq 0 ] && (cd "$DSAS_HAUT"; lftp -c "open '$uri'; mirror -e -c -O '$DSAS_HAUT/$dir'" >& /dev/null)
-    [ "$verbose" -ne 0 ] || (cd "$DSAS_HAUT"; lftp -c "open '$uri'; mirror -e -c -O '$DSAS_HAUT/$dir'")
+    [ "$verbose" -eq 0 ] && (cd "$DSAS_HAUT"; lftp -c "open '$uri'; mirror --delete-first -e -c -O '$DSAS_HAUT/$dir'" >& /dev/null)
+    [ "$verbose" -ne 0 ] || (cd "$DSAS_HAUT"; lftp -c "open '$uri'; mirror --delete-first -e -c -O '$DSAS_HAUT/$dir'")
 
     # Correct directory permissions
     find "$DSAS_HAUT/$dir" -type d -exec chmod 770 {} \;
