@@ -73,7 +73,7 @@ get_packages() {
       myecho "Downloading file $file"
       [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && mkdir -p $(dirname "$dest/$file"))
       [ "$verbose" -eq 0 ] && lftp -c "get -o '$dest/$file' '$uri/$file'" >& /dev/null
-      [ "$verbose" -ne 0"] || lftp -c "get -o '$dest/$file' '$uri/$file'"
+      [ "$verbose" -ne 0 ] || lftp -c "get -o '$dest/$file' '$uri/$file'"
     fi
     shift 3
   done
