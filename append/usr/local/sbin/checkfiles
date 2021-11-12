@@ -181,8 +181,8 @@ verifliveupdate(){
 
   # Assumes all of the CA are in $termpdir/cert.0 and the other certificates in $tempdir/cert.1
   args="-purpose any -no_check_time"
-  [ -f "$tempdir/cert.0" ] && args="$args -CAfile \"$tempdir/cert.0\""
-  [ -f "$tempdir/ceirt.1" ] && args="$args -nointern -certfile \"$tempdir/cert.1\""
+  [ -f "$tempdir/cert.0" ] && args="$args -CAfile $tempdir/cert.0"
+  [ -f "$tempdir/cert.1" ] && args="$args -nointern -certfile $tempdir/cert.1"
     
   # Verify the signature of the  file *.grd...  
   for s in $sig; do
@@ -278,8 +278,8 @@ verifliveupdate(){
     fi
   else
     if [ "$dryrun" == "0" ]; then
-      (cd "$zipdir"; zip -q "$src/$file.$$" *)
-      /bin/mv "$src/$file.$$" "$src/$file"
+      (cd "$zipdir"; zip -q "$src/$file.$$" * >& /dev/null)
+      /bin/mv -f "$src/$file.$$" "$src/$file"
     else
       echo "[DryRun] : cd \"$zipdir\"; zip -q \"$src/$file.$$\" \*"
     fi
