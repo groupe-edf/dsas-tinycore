@@ -36,7 +36,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             if ($certificate->type == "x509") {
               if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $cert["fingerprint"]) {
                 if ($certificate->authority == "true") {
-                  if ($have_ca) {
+                  if ($have_ca && $type !== "liveupdate") {
                     $errors[] = ["error" => ["The task type '{0}' only supports one root certificate", $type]];
                     break 2;
                   }
