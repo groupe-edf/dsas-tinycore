@@ -33,11 +33,11 @@ getdirectory() {
     myecho "Downloading file : $(basename "$uri")"
     # FIXME shouldn't always download here !!!
     [ "$verbose" -eq 0 ] && lftp -c "get -e -O '${DSAS_HAUT}/${dir}' '$uri'" >& /dev/null
-    [ "$verbose" -ne 0 ] || lftp -c "get -e -O '${DSAS_HAUT}/${dir}' '$uri'"
+    [ "$verbose" -eq 0 ] || lftp -c "get -e -O '${DSAS_HAUT}/${dir}' '$uri'"
   else
     myecho "Mirroring site : $uri"
     [ "$verbose" -eq 0 ] && (cd "$DSAS_HAUT"; lftp -c "open '$uri'; mirror --delete-first -e -c -O '$DSAS_HAUT/$dir'" >& /dev/null)
-    [ "$verbose" -ne 0 ] || (cd "$DSAS_HAUT"; lftp -c "open '$uri'; mirror --delete-first -e -c -O '$DSAS_HAUT/$dir'")
+    [ "$verbose" -eq 0 ] || (cd "$DSAS_HAUT"; lftp -c "open '$uri'; mirror --delete-first -e -c -O '$DSAS_HAUT/$dir'")
 
     # Correct directory permissions
     find "$DSAS_HAUT/$dir" -type d -exec chmod 770 {} \;
@@ -65,7 +65,7 @@ get_packages() {
         myecho "Downloading file $file [Checksum different!!]"
         [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && mkdir -p $(dirname "$dest/$file"))
         [ "$verbose" -eq 0 ] && lftp -c "get -e -o '$dest/$file' '$uri/$file'" >& /dev/null
-        [ "$verbose" -ne 0 ] || lftp -c "get -e -o '$dest/$file' '$uri/$file'"
+        [ "$verbose" -eq 0 ] || lftp -c "get -e -o '$dest/$file' '$uri/$file'"
       else
         myecho "Skipping file $file"
       fi
@@ -73,7 +73,7 @@ get_packages() {
       myecho "Downloading file $file"
       [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && mkdir -p $(dirname "$dest/$file"))
       [ "$verbose" -eq 0 ] && lftp -c "get -o '$dest/$file' '$uri/$file'" >& /dev/null
-      [ "$verbose" -ne 0 ] || lftp -c "get -o '$dest/$file' '$uri/$file'"
+      [ "$verbose" -eq 0 ] || lftp -c "get -o '$dest/$file' '$uri/$file'"
     fi
     shift 3
   done
@@ -108,7 +108,7 @@ getrepo() {
          [ -z "$f" ] && break
          myecho "Downloading file $f listed in repomd.xml for $name"
          [ "$verbose" -eq 0 ] && lftp -c "get -e -o '$DSAS_HAUT/$dir/$f' '$uri/$f'" >& /dev/null
-         [ "$verbose" -ne 0 ] || lftp -c "get -e -o '$DSAS_HAUT/$dir/$f' '$uri/$f'"
+         [ "$verbose" -eq 0 ] || lftp -c "get -e -o '$DSAS_HAUT/$dir/$f' '$uri/$f'"
 
          # Verify its checksum
          chksum=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
