@@ -556,7 +556,7 @@ passdirectory(){
     # If file exists in bas skip. Hardlinked, so test is fast
     [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
 
-    # Don't log the transfers with msgline for the mache haut as
+    # Don't log the transfers with msgline for the machine haut as
     # the logs aren't yet used
     ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
   done
