@@ -398,7 +398,7 @@ function dsas_display_logs(all = false){
                  '   </div></div>\n';
 
       if (logs) {
-        if (!all || logs.length == 1) {
+        if (logs.length == 1) {
           for (const log of logs[0]) {
             var str = dsas_verify_line(log["line"]);            
             if (log["type"] === "normal") {
