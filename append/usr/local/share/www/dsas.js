@@ -446,7 +446,7 @@ function dsas_verify_line(str){
     var hash = sa[0];
     var date = date_to_locale(sa[2]).padEnd(25);
     var path = str.substr(19+sa[0].length+sa[1].length+sa[2].length+sa[3].length);
-    ret = res + ' ' + hash + '' + date + ' ' + path;
+    ret = res + ' ' + hash + ' ' + date + ' ' + path;
   } catch (e) { }
   return ret;
 }
