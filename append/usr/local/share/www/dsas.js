@@ -38,7 +38,7 @@ function modal_action(text, action = null, hide = false){
   modalDSAS.show();
 }
 
-function modal_task(action = "dsas_add_task();"){
+function modal_task(action = "dsas_add_task();", ca = ""){
   var modalDSAS = document.getElementById("modalDSAS");
   modalDSAS.removeAttribute("disable");
   modalDSAS.removeAttribute("type");
@@ -66,7 +66,7 @@ function modal_task(action = "dsas_add_task();"){
       i++;
     }
     for (cert of certs[0].dsas.pubkey) {
-      certbody = certbody + '<option id="TaskAddCert' + i + '" value="' + cert.fingerprint  + 
+      certbody = certbody + '<option  id="TaskAddCert' + i + '" value="' + cert.fingerprint  + 
                     '">' + cert.name + '</option>\n';
       i++;
     }
@@ -81,6 +81,15 @@ function modal_task(action = "dsas_add_task();"){
       i++;
     }
     document.getElementById("TaskAddCert").innerHTML = certbody;
+
+    certbody = '        <option id="TaskCA_Base" value=""' + (empty_obj(ca) ? ' selected' : '') + '>' + _("Base CA") + '</option>\n' +
+      '        <option id="TaskCA_Self" value="self"' + (ca == "self" ? ' selected' : '') + '>' + _("Self-signed") + '</option>\n';
+    for (cert of certs[0].dsas.x509) {
+      if (cert_is_ca(cert)) 
+        certbody = certbody + '<option id="TaskCACert_' + cert.fingerprint + '" value="' + cert.fingerprint + 
+                  '"' + (ca == cert.fingerprint ? ' selected' : '') + '>' + cert_name(cert) + '</option>\n';
+    }
+    document.getElementById("TaskCA").innerHTML = certbody;
   }).catch(error => {
     if (! fail_loggedin(error.statusText))
       modal_message("Erreur (" + error.status + ") pendant chargement des certificates :\n" + error.statusText);
@@ -104,9 +113,13 @@ function modal_task(action = "dsas_add_task();"){
 '      <div class="invalid-feedback" id="feed_URI"></div>\n' +
 '    </div>\n' +
 '    <div class="col-6">\n' +
+'      <label for="TaskCA">' + _("URI Certification Authority") + '</label>\n' +
+'      <select class="form-select" name="TaskCA" id="TaskCA"></select>\n' +
+'    </div>\n' +
+'    <div class="col-6">\n' +
 '      <label for="TaskType">' + _("Task type :") + '</label>\n' +
 '      <select class="form-select" name="TaskType" id="TaskType">\n' +
-'        <option id="TaskTypeNull" value="" selected>' + _("Select a type") + '</option>\n' +
+'        <option id="TaskTypeNull" value="">' + _("Select a type") + '</option>\n' +
 '        <option id="TaskTypeRPM" value="rpm">rpm</option>\n' +
 '        <option id="TaskTypeRepomd" value="repomd">repomd</option>\n' +
 '        <option id="TaskTypeDeb" value="deb">deb</option>\n' +
@@ -120,7 +133,7 @@ function modal_task(action = "dsas_add_task();"){
 '    <div class="col-6">\n' +
 '      <label for="TaskRun">' + _("Periodicity of the task :") + '</label>\n' +
 '      <select class="form-select" name="TaskRun" id="TaskRun">\n' +
-'        <option id="TaskRunNull" value="" selected>' + _("Select a period") + '</option>\n' +
+'        <option id="TaskRunNull" value="">' + _("Select a period") + '</option>\n' +
 '        <option id="TaskRunNever" value="never">' + _("never") + '</option>\n' +
 '        <option id="TaskRunHourly" value="hourly">' + _("hourly") + '</option>\n' +
 '        <option id="TaskRunDaily" value="daily">' + _("daily") + '</option>\n' +
@@ -1257,7 +1270,7 @@ function dsas_display_tasks(what = "all") {
 }
 
 function print_obj(obj) {
-  return (empty_obj(obj) ? "" : obj);
+  return (empty_obj(obj) ? "" : _(obj));
 }
 
 function empty_obj(obj) {
@@ -1298,6 +1311,8 @@ function task_body(task) {
     '<div class="col-6 overflow-hidden">' +
     '<p class="my-0">' + _("Directory :") + ' ' + print_obj(task.directory) + '</p>' +
     '<p class="my-0">' + _("URI :") + ' ' + print_obj(task.uri) + '</p>' +
+    '<p class="my-0">' + _("URI Certification Authority :") + ' ' +
+      (empty_obj(task.ca.name) ? _("Base") : print_obj(task.ca.name)) + '</p>' +
     '<p class="my-0">' + _("Task type :") + ' ' + print_obj(task.type) + '</p>' +
     '<p class="my-0">' + _("Periodicity :") + ' ' + print_obj(task.run) + '</p>' +
     '<p class="my-0">' + _("Last :") + ' ' + date_to_locale(task.last) + '</p>' +
@@ -1360,7 +1375,7 @@ function dsas_task_new() {
   document.getElementById('TaskURI').value = "";
 
   for (opt of document.getElementsByTagName("option"))
-    if (opt.id === "TaskTypeNull" || opt.id === "TaskRunNull" || opt.id === "TaskAddCert0")
+    if (opt.id === "TaskTypeNull" || opt.id === "TaskRunNull" || opt.id === "TaskAddCert0" || opt.id === "TaskCA_Base")
       opt.selected = true;
     else
       opt.selected = false;
@@ -1378,10 +1393,11 @@ function dsas_task_modify(id) {
     if (tasks.task) {
       for (task of (tasks.task.constructor === Object ? [tasks.task] : tasks.task)) {
         if (id === task.id) {
-          modal_task("dsas_add_task(task.name, task.id);");
+          modal_task("dsas_add_task(task.name, task.id);", task.ca.fingerprint);
           document.getElementById('TaskName').value = print_obj(task.name);
           document.getElementById('TaskDirectory').value = print_obj(task.directory);
           document.getElementById('TaskURI').value = print_obj(task.uri);
+
           for (opt of document.getElementsByTagName("option")) {
             if (opt.id.substr(0,8) === "TaskType") {
               if (opt.value === task.type)
@@ -1393,7 +1409,7 @@ function dsas_task_modify(id) {
               if (opt.value === task.run)
                 opt.selected = true;
               else
-                opt.selected = false;
+                 opt.selected = false;
             }
             if (opt.id.substr(0,11) === "TaskAddCert") {
               if (opt.id === "TaskAddCert0")
@@ -1413,7 +1429,6 @@ function dsas_task_modify(id) {
                 '" fingerprint="' + cert.fingerprint + '"></dsas-task-cert>';
             }
           }
-
           break;
         }
       }
@@ -1497,6 +1512,7 @@ function dsas_add_task(oldname = "", oldid="") {
   var uri = document.getElementById("TaskURI").value;
   var type = "";
   var run = "";
+  var ca = {};
   var certs= [];
 
   // If the old name is not empty and different than the new name, then we're
@@ -1511,6 +1527,16 @@ function dsas_add_task(oldname = "", oldid="") {
   for (opt of document.getElementsByTagName("option"))
     if (opt.id.substr(0,7) === "TaskRun" && opt.selected)
       run = opt.value;
+  for (opt of document.getElementsByTagName("option"))
+    if (opt.id.substr(0,6) === "TaskCA" && opt.selected) {
+      if (opt.id === "TaskCA_Base")
+        ca = {fingerprint : opt.value, name : "Base"};
+      else if (opt.id === "TaskCA_Self")
+        ca = {fingerprint : opt.value, name : "Self-Signed"};
+      else
+        ca = {fingerprint : opt.value, name : opt.innerHTML};
+    }
+
   for (cert of document.getElementsByTagName("dsas-task-cert"))
     certs.push({name : cert.getAttribute("name"), fingerprint: cert.getAttribute("fingerprint")});
 
@@ -1522,6 +1548,7 @@ function dsas_add_task(oldname = "", oldid="") {
              uri: uri,
              type: type,
              run: run,
+             ca: ca,
              certs: certs}));
   fetch("api/dsas-task.php", {method: "POST", body: formData 
     }).then( response => {

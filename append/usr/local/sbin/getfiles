@@ -7,12 +7,33 @@ else
   exit -1
 fi
 
+lftp_ca_options() {
+  local id=$1
+  local opt=""
+
+  if [ "$TYP" == "haut" ]; then
+    # Setup the LFTP CA if needed
+    ca_finger=$(xmllint --xpath "string(dsas/tasks/task[$id]/ca/fingerprint)" $CONF)
+
+    case $ca_finger in
+      "")  opt="" ;;
+      "self") opt="set ssl:verify-certificate false; " ;;
+      *)
+        idx=$(get_certificate $ca_finger)
+        [ $idx -eq 0 ] && opt="set ssl:cs-file /tmp/cert.$$; "
+        ;;
+    esac
+  fi
+  echo $opt
+}
+
 getdirectory() {
   local isdir
   local id=$1
   local uri=$(get_uri $id)
   local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
   local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" "$CONF")
+  local opt=$(lftp_ca_options $id)
 
   if [ -z "$uri" ]; then
     # The URI can be empty. gracefully exit
@@ -32,23 +53,26 @@ getdirectory() {
   if [ -z "$isdir" ]; then
     myecho "Downloading file : $(basename "$uri")"
     # FIXME shouldn't always download here !!!
-    [ "$verbose" -eq 0 ] && lftp -c "get -e -O '${DSAS_HAUT}/${dir}' '$uri'" >& /dev/null
-    [ "$verbose" -eq 0 ] || lftp -c "get -e -O '${DSAS_HAUT}/${dir}' '$uri'"
+    [ "$verbose" -eq 0 ] && lftp -c "$opt get -e -O '${DSAS_HAUT}/${dir}' '$uri'" >& /dev/null
+    [ "$verbose" -eq 0 ] || lftp -c "$opt get -e -O '${DSAS_HAUT}/${dir}' '$uri'"
   else
     myecho "Mirroring site : $uri"
-    [ "$verbose" -eq 0 ] && (cd "$DSAS_HAUT"; lftp -c "open '$uri'; mirror --delete-first -e -c -O '$DSAS_HAUT/$dir'" >& /dev/null)
-    [ "$verbose" -eq 0 ] || (cd "$DSAS_HAUT"; lftp -c "open '$uri'; mirror --delete-first -e -c -O '$DSAS_HAUT/$dir'")
+    [ "$verbose" -eq 0 ] && (cd "$DSAS_HAUT"; lftp -c "$opt open '$uri'; mirror --delete-first -e -c -O '$DSAS_HAUT/$dir'" >& /dev/null)
+    [ "$verbose" -eq 0 ] || (cd "$DSAS_HAUT"; lftp -c "$opt open '$uri'; mirror --delete-first -e -c -O '$DSAS_HAUT/$dir'")
 
     # Correct directory permissions
     find "$DSAS_HAUT/$dir" -type d -exec chmod 770 {} \;
   fi
+
+  [ -f "/tmp/cert.$$" ] && rm /tmp/cert.$$
 }
 
 get_packages() {
   local file chktype chksum
   local dest="$1"
   local uri="$2"
-  shift 2
+  local opt="$3"
+  shift 3
   while [ "$#" -gt 2 ]; do
     if [ "${1: -3}" == "rpm" ]; then
       file=$1
@@ -64,16 +88,16 @@ get_packages() {
         # Checksum of file is different redownload the file
         myecho "Downloading file $file [Checksum different!!]"
         [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && mkdir -p $(dirname "$dest/$file"))
-        [ "$verbose" -eq 0 ] && lftp -c "get -e -o '$dest/$file' '$uri/$file'" >& /dev/null
-        [ "$verbose" -eq 0 ] || lftp -c "get -e -o '$dest/$file' '$uri/$file'"
+        [ "$verbose" -eq 0 ] && lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" >& /dev/null
+        [ "$verbose" -eq 0 ] || lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'"
       else
         myecho "Skipping file $file"
       fi
     else
       myecho "Downloading file $file"
       [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && mkdir -p $(dirname "$dest/$file"))
-      [ "$verbose" -eq 0 ] && lftp -c "get -o '$dest/$file' '$uri/$file'" >& /dev/null
-      [ "$verbose" -eq 0 ] || lftp -c "get -o '$dest/$file' '$uri/$file'"
+      [ "$verbose" -eq 0 ] && lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" >& /dev/null
+      [ "$verbose" -eq 0 ] || lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'"
     fi
     shift 3
   done
@@ -86,6 +110,7 @@ getrepo() {
   local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
   local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" "$CONF")
   local type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
+  local opt=$(lftp_ca_options $id)
 
   case $type in
     repomd|rpm)
@@ -95,8 +120,8 @@ getrepo() {
        myecho "Downloading repodata/repomd.xml from $name"
        [ -d "$DSAS_HAUT/$dir/repodata" ] || $(umask 007 && mkdir -p "$DSAS_HAUT/$dir/repodata")
 
-       lftp -c "get -e -o '$DSAS_HAUT/$dir/repodata/repomd.xml' '$uri/repodata/repomd.xml'" >& /dev/null
-       [ "$type" == "rpm" ] || lftp -c "get -e -o '$DSAS_HAUT/$dir/repodata/repomd.xml.asc' '$uri/repodata/repomd.xml.asc'" >& /dev/null
+       lftp -c "$opt get -e '$uri/repodata/repomd.xml' -o '$DSAS_HAUT/$dir/repodata/repomd.xml'" >& /dev/null
+       [ "$type" == "rpm" ] || lftp -c "$opt get -e '$uri/repodata/repomd.xml.asc' -o '$DSAS_HAUT/$dir/repodata/repomd.xml.asc'" >& /dev/null
 
        # Identify all files listed in repomd.xml and download them
        i=1
@@ -104,19 +129,19 @@ getrepo() {
          # Note that we have to ignore the xml namespace (initial cat/sed)
          f=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
              sed -e "s:repomd xmlns:repomd ignore:g" | \
-             xmllint --xpath 'string(//repomd/data[$i]/location/@href)' -)
+             xmllint --xpath "string(//repomd/data[$i]/location/@href)" -)
          [ -z "$f" ] && break
          myecho "Downloading file $f listed in repomd.xml for $name"
-         [ "$verbose" -eq 0 ] && lftp -c "get -e -o '$DSAS_HAUT/$dir/$f' '$uri/$f'" >& /dev/null
-         [ "$verbose" -eq 0 ] || lftp -c "get -e -o '$DSAS_HAUT/$dir/$f' '$uri/$f'"
+         [ "$verbose" -eq 0 ] && lftp -c "$opt get -e '$uri/$f' -o '$DSAS_HAUT/$dir/$f'" >& /dev/null
+         [ "$verbose" -eq 0 ] || lftp -c "$opt get -e '$uri/$f' -o '$DSAS_HAUT/$dir/$f'"
 
          # Verify its checksum
          chksum=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
              sed -e "s:repomd xmlns:repomd ignore:g" | \
-             xmllint --xpath 'string(//repomd/data[$i]/checksum)' - )
+             xmllint --xpath "string(//repomd/data[$i]/checksum)" - )
          chktype=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
              sed -e "s:repomd xmlns:repomd ignore:g" | \
-             xmllint --xpath 'string(//repomd/data[$i]/checksum/@type)' - )
+             xmllint --xpath "string(//repomd/data[$i]/checksum/@type)" - )
          if  check_checksum "$DSAS_HAUT/$dir/$f" $chksum $chktype; then
              1>&2 echo "Error verifiying checksum of $f"
            cleanup_and_exit 1 $tempdir
@@ -131,7 +156,7 @@ getrepo() {
          xmllint --xpath 'string(//repomd/data[@type="primary"]/location/@href)' - )
 
        # Recover a table of the hashtype, hash and file names
-       if [[ "$f" =~ ".*.gz" ]] || [[ "$f" =~ ".*.bz2" ]]; then
+       if [[ "$filelist" =~ ".*.gz" ]] || [[ "$filelist" =~ ".*.bz2" ]]; then
          filetable=$(zcat "$DSAS_HAUT/$dir/$filelist" | \
             sed -e "s/xmlns=/ignore=/g" | \
             xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | \
@@ -154,10 +179,12 @@ getrepo() {
        done
 
        # Download the packages
-       get_packages "$DSAS_HAUT/$dir" $uri $filetable
+       get_packages "$DSAS_HAUT/$dir" "$uri" "$opt" $filetable
        ;;
     *) 1>&2 echo "Unrecognized repositiory check type $check"; exit 1; ;;
   esac
+
+  [ -f "/tmp/cert.$$" ] && rm /tmp/cert.$$
 }
 
 help() {

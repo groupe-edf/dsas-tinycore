@@ -25,6 +25,25 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         $run = $data["run"];
         if ($run !== "never" && $run !== "hourly" && $run !== "daily" && $run !== "weekly" && $run !== "monthly")
           $errors[] = ["error" => "The period between execution of the task is illegal"];
+        $ca = $data["ca"];
+        $ca_finger = strtolower(trim($ca["fingerprint"]));
+        $ca_name = htmlspecialchars(trim($ca["name"]));
+        if ($ca_finger !== "" && $ca_finger !== "self") {
+          $ca_ok = false;
+          foreach ($dsas->certificates->certificate as $certificate) {
+            if ($certificate->type == "x509") {
+              if ($certificate->authority == "true") {
+                if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $ca_finger) {
+                  $ca_ok = true;
+                  break;
+                }
+              }
+            }
+          }
+          if (! $ca_ok)
+            $errors[] = ["error" => "Certificate authority not found"];
+        }
+
         $certs = array();
         $have_ca = false;
         $have_pubkey = false;
@@ -181,6 +200,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $newtask->uri = $uri;
           $newtask->type = $type;
           $newtask->run = $run;
+          $newtask->ca->fingerprint = $ca_finger;
+          $newtask->ca->name = $ca_name;
           foreach ($certs as $cert) {
             $newcert = $newtask->addChild("cert");
             $newcert->name = $cert["name"];
@@ -256,6 +277,10 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
     $tmp = dsas_run_log($task->id);
     $task->last = $tmp["last"];
     $task->status = $tmp["status"];
+    if (empty($task->ca->fingerprint)) {
+      $task->ca->name = "";
+      $task->ca->fingerprint = "";
+    }
     $i++;
   }
   header("Content-Type: application/json");
