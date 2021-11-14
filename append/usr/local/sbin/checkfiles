@@ -452,11 +452,9 @@ verifrepo() {
   gpg --dearmor "$tempdir/cert.0"
 
   if [ "$type" == "repomd" ]; then
-    # Verify the repomd.xml against the GPG signature repomd.xml.asc
-    # FIXME Why does this still print something !!
     if ! gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg"  \
           --verify "$DSAS_HAUT/$dir/repodata/repomd.xml.asc" \
-          "$DSAS_HAUT/$dir/repodata/repomd.xml" 2>&1 1> /dev/null; then
+          "$DSAS_HAUT/$dir/repodata/repomd.xml" >& /dev/null; then
       1>&2 echo "Failed to verify repomd.xml signature"
       exit 1
     fi
@@ -478,16 +476,16 @@ verifrepo() {
     # Note that we have to ignore the xml namespace (initial cat/sed)
     f=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
          sed -e "s:repomd xmlns:repomd ignore:g" | \
-         xmllint --xpath 'string(//repomd/data[$i]/location/@href)' -)
+         xmllint --xpath "string(//repomd/data[$i]/location/@href)" -)
     [ -z "$f" ] && break
 
     # Verify its checksum
     chksum=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
          sed -e "s:repomd xmlns:repomd ignore:g" | \
-         xmllint --xpath 'string(//repomd/data[$i]/checksum)' - )
+         xmllint --xpath "string(//repomd/data[$i]/checksum)" - )
     chktype=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
          sed -e "s:repomd xmlns:repomd ignore:g" | \
-         xmllint --xpath 'string(//repomd/data[$i]/checksum/@type)' - )
+         xmllint --xpath "string(//repomd/data[$i]/checksum/@type)" - )
     if  check_checksum "$DSAS_HAUT/$dir/$f" $chksum $chktype; then
       1>&2 echo "Error verifiying checksum of $f"
       cleanup_and_exit 1 "$tempdir"
@@ -503,14 +501,14 @@ verifrepo() {
          xmllint --xpath 'string(//repomd/data[@type="primary"]/location/@href)' -)
 
   # Recover a table of the hashtype, hash and file names
-  if [[ "$f" =~ ".*.gz" ]] || [[ "$f" =~ ".*.bz2" ]]; then
-    filetable=$(zcat "$DSAS_HAUT/$dir/$unzipfile" | \
+  if [[ "$filelist" =~ ".*.gz" ]] || [[ "$filelist" =~ ".*.bz2" ]]; then
+    filetable=$(zcat "$DSAS_HAUT/$dir/$filelist" | \
             sed -e "s/xmlns=/ignore=/g" | \
             xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | \
             sed -e 's:.*href="\(.*\)"/>$:\1:g' \
               -e 's:.*type="\([^"]*\)"[^>]*>\([0-9a-fA-F]*\)</checksum>:\1 \2:g')
   else
-    filetable=$(cat "$DSAS_HAUT/$dir/$unzipfile" | \
+    filetable=$(cat "$DSAS_HAUT/$dir/$filelist" | \
             sed -e "s/xmlns=/ignore=/g" | \
             xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | \
             sed -e 's:.*href="\(.*\)"/>$:\1:g' \
