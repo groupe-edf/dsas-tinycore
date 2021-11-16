@@ -129,8 +129,9 @@ ln() {
   if [ "$dryrun" == "0" ]; then
     [ -d $(dirname "$2") ] || ( mkdir -m 770 -p $(dirname "$2"); chgrp -R $grp $(dirname "$2"))
     # This script is not running as root so can't change the owner. We
-    # first have to copy the file
-    cp --preserve=timestamp "$1" "$1.tmp.$$"
+    # first have to copy the file.
+    # FIXME : Hardcode path to gnu version of cp for the "--preserve" flag
+    /usr/local/bin/cp --preserve=timestamp "$1" "$1.tmp.$$"
     /bin/mv -f "$1.tmp.$$" "$1"
     chmod 0640 "$1"
     chgrp $grp "$1"
