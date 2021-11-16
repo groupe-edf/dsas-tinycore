@@ -20,7 +20,7 @@ lftp_ca_options() {
       "self") opt="set ssl:verify-certificate false; " ;;
       *)
         idx=$(get_certificate $ca_finger)
-        [ $idx -eq 0 ] && opt="set ssl:cs-file /tmp/cert.$$; "
+        [ -z "$idx" ] || opt="set ssl:ca-file /tmp/cert.$$; "
         ;;
     esac
   fi
@@ -65,6 +65,8 @@ getdirectory() {
   fi
 
   [ -f "/tmp/cert.$$" ] && rm /tmp/cert.$$
+
+  exit 0
 }
 
 get_packages() {
@@ -185,6 +187,8 @@ getrepo() {
   esac
 
   [ -f "/tmp/cert.$$" ] && rm /tmp/cert.$$
+
+  exit 0
 }
 
 help() {
