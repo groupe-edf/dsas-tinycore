@@ -1234,13 +1234,7 @@ function dsas_display_tasks(what = "all") {
             statusText: response.statusText});
     }).then(tasks => {
       var i = 0;
-      var body = '<div class="row"><div class="col-md-10"><h5><a class="text-toggle" data-bs-toggle="collapse" href="#Tasks"\n' +
-    '  role="button" aria-controls="Tasks" aria-expanded="false">\n' +
-    '  <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded">\n' +
-    '  <img src="caret-down.svg"/></i></a>' + _("Tasks") + '</h5></div>\n' +
-    '  <div class="col-md-2 text-end"><img src="plus-lg.svg" data-toggle="tooltip" title="' + _("Add") + '" onclick="dsas_task_new();"></div></div>\n' +
-    '  <div class="collapse" id="Tasks">\n';
-
+      var body = '';
       if (tasks.task) {
         for (task of (tasks.task.constructor === Object ? [tasks.task] : tasks.task)) { 
           cls = (task.last == "never" ? "text-info" : (task.status == "Running" ? "text-info" : (task.status == "Failed" ? "text-danger" : "text-success")));
@@ -1261,8 +1255,7 @@ function dsas_display_tasks(what = "all") {
           i++;
         }
       }
-      body = body + "</div>";
-      document.getElementById("Task").innerHTML = body;
+      document.getElementById("Tasks").innerHTML = body;
     }).catch(error => {
       fail_loggedin(error.statusText);
     });
