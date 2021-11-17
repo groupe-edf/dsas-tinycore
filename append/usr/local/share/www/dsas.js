@@ -1473,7 +1473,7 @@ function dsas_add_task_cert() {
   var name = "";
   var finger = "";
   for (opt of document.getElementsByTagName("option")) {
-    if (opt.id.substr(0,7) === "TaskRun" || opt.id.substr(0,8) === "TaskType")
+    if (opt.id.substr(0,7) === "TaskRun" || opt.id.substr(0,8) === "TaskType" || opt.id.substr(0,6) === "TaskCA")
       continue;
     if (opt.selected) {
       name = opt.innerHTML
