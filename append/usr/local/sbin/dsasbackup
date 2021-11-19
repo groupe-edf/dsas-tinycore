@@ -16,7 +16,8 @@ else
   exit 1
 fi
 
-# Only these specific files are saved. Anything else is forbidden 
+# Only these specific files are saved. Anything else is forbidden.
+# The SSH directories are need to keep authorized keys, known_hosts, etc files
 FILES="usr/local/etc/ssh/ssh_host_dsa_key
 usr/local/etc/ssh/ssh_host_dsa_key.pub
 usr/local/etc/ssh/ssh_host_ecdsa_key
@@ -31,7 +32,9 @@ var/dsas/dsas_conf.xml
 var/dsas/dsas_priv.pem
 var/dsas/dsas_pub.pem
 var/dsas/dsas_typ
-home/tc/.ssh"
+home/tc/.ssh
+home/haut/.ssh
+home/bas/.ssh"
 
 RESTORE=0
 APPLY=0
@@ -68,11 +71,11 @@ EOD
 
 if [ "$RESTORE" -eq 0 ]; then
   # Create the backup on the machine haut
-  (umask 077; ssh tc@$INTERCO_HAUT sudo tar -C / -c -z -f - $FILES home/bas/.ssh > /tmp/haut.tgz)
+  (umask 077; ssh tc@$INTERCO_HAUT sudo tar -C / -c -z -f - $FILES > /tmp/haut.tgz)
   [ -n "$PASSWD" ] && (umask 077; cd /tmp; blowfish_encrypt haut.tgz $PASSWD)
   
   # Get the backup for the machine bas
-  (umask 077; sudo tar -C / -c -z -f - $FILES home/haut/.ssh > /tmp/bas.tgz)
+  (umask 077; sudo tar -C / -c -z -f - $FILES > /tmp/bas.tgz)
   [ -n "$PASSWD" ] && (umask 077; cd /tmp; blowfish_encrypt bas.tgz $PASSWD)
 
   # Create the backup file

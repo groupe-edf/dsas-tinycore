@@ -413,6 +413,8 @@ case $1 in
   echo tc:dSaO2021DSAS >> $passfile
 cat << EOF >> $create_users
 echo tc:dSaO2021DSAS | chpasswd -c sha512
+mkdir /home/tc/.ssh
+chmod 700 /home/tc/.ssh
 EOF
 
 
@@ -430,6 +432,8 @@ EOF
   cat << EOF >> $create_users
 adduser -s /bin/false -u 2001 -D -h /home/bas bas
 echo bas:$pass | chpasswd -c sha512
+mkdir /home/bas/.ssh
+chmod 700 /home/bas/.ssh
 EOF
 
   msg adding user 'haut'
@@ -438,6 +442,8 @@ EOF
   cat << EOF >> $create_users
 adduser -s /bin/false -u 2002 -D -h /home/haut haut
 echo bas:$pass | chpasswd -c sha512
+mkdir /home/haut/.ssh
+chmod 700 /home/haut/.ssh
 EOF
 
   cat << EOF >> $create_users
