@@ -199,20 +199,10 @@ getdeb() {
   local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
   local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" $CONF)
   local type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" $CONF)
+  local opt=$(lftp_ca_options $id)
 
   case $type in
     deb)
-       # Find the pool directory
-       pool=$(dirname "$uri")
-       pool_local=$(dirname "$dir")
-       have_pool="0"
-       while [ -n "$pool" ]; do
-         $(lftp -c "$opt open '$pool/pool'" >& /dev/null) && have_pool="1" && break
-         pool=$(dirname "$pool")
-         pool_local=$(dirname "$pool_local")
-       done
-       [ "$have_pool" == "0" ] && $(1>&2 echo "Debian pool directory not found"; exit 1)
-
        # Create the destination directory if needed
        [ -d "$DSAS_HAUT/$dir" ] || $(umask 007 && mkdir -p $DSAS_HAUT/$dir)
 
@@ -226,6 +216,21 @@ getdeb() {
          lftp -c "$opt get -e '$uri/Release.gpg' -o '$DSAS_HAUT/$dir/Release.gpg'"
          lftp -c "$opt get -e '$uri/InRelease' -o '$DSAS_HAUT/$dir/InRelease'"
        fi
+
+       [ -f "$DSAS_HAUT/$dir/Release" ] || $(1>&2 echo "Failed to download 'Release'"; exit 1)
+       [ -f "$DSAS_HAUT/$dir/Release.gpg" ] || $(1>&2 echo "Failed to download 'Release.gpg'"; exit 1)
+
+       # Find the pool directory
+       pool=$(dirname "$uri")
+       pool_local=$(dirname "$dir")
+       have_pool="0"
+       while [ -n "$pool" ] && [ "${pool: -3}" != "://" ]; do
+         $(lftp -c "$opt open '$pool/pool'" >& /dev/null) && have_pool="1" && break
+         pool=$(dirname "$pool")
+         pool_local=$(dirname "$pool_local")
+       done
+       [ "$have_pool" == "0" ] && $(1>&2 echo "Debian pool directory not found"; exit 1)
+
 
        # Identify if the Release file has SHA256 et/ou MD5 hashes
        grep -qx "MD5Sum:" "$DSAS_HAUT/$dir/Release" && hashtyp="MD5Sum:" && chktyp="md5"
