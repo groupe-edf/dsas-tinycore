@@ -169,8 +169,10 @@ get_dsas(){
 
       mkdir -p $DISK/dsas/$_user/share
       chmod -R 770 $DISK/dsas/$_user/share
+      chmod -R g+s $DISK/dsas/$_user/share
       chown -R $_user.$_user $DISK/dsas/$_user/share
     done
+    chgrp -R share  $DISK/dsas/bas/share
     mkdir -p $DISK/dsas/log
     chmod -R 770 $DISK/dsas/log
     chown -R tc.verif $DISK/dsas/log
