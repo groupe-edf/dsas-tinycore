@@ -1012,7 +1012,7 @@ function treat_gpg_certs(certs) {
       '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + name + 
       '&nbsp;<a data-toggle="tooltip" title="' + _("Download") + '" href="' + url + '" download="' + name.replace(/ /g,"_") + '.gpg">' + 
       '<img src="save.svg"></a>';
-    body = body + '&nbsp;<a data-toggle="tooltip" title="' + _("Delete") + '" onclick="dsas_cert_delete(\'' + name + '\',\'' + 
+    body = body + '&nbsp;<a data-toggle="tooltip" title="' + _("Delete") + '" onclick="dsas_cert_delete(\'' + name.replaceAll('\n','\\n') + '\',\'' + 
         cert.fingerprint + '\');"><img src="x-lg.svg"></a>';
     body = body + 
       '</p><div class="collapse" id="gpg' + i + '"><div class="card card-body">' +
@@ -1053,7 +1053,7 @@ function treat_ssl_pubkeys(pubkeys) {
       '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + name + 
       '&nbsp;<a data-toggle="tooltip" title="' + _("Download") + '" href="' + url + '" download="' + name.replace(/ /g,"_")  + '.pem">' + 
       '<img src="save.svg"></a>';
-    body = body + '&nbsp;<a data-toggle="tooltip" title="' + _("Delete") + '" onclick="dsas_cert_delete(\'' + name + '\',\'' + 
+    body = body + '&nbsp;<a data-toggle="tooltip" title="' + _("Delete") + '" onclick="dsas_cert_delete(\'' + name.replaceAll('\n','\\n') + '\',\'' + 
         pubkey.fingerprint + '\');"><img src="x-lg.svg"></a>';
     body = body + 
       '</p><div class="collapse" id="pubkey' + i + '"><div class="card card-body">' +
@@ -1080,7 +1080,7 @@ function treat_x509_certs(certs, added = false) {
       '&nbsp;<a data-toggle="tooltip" title="' + _("Download") + '" href="' + url + '" download="' + name.replace(/ /g,"_") + '.crt">' + 
       '<img src="save.svg"></a>';
     if (added)
-      body = body + '&nbsp;<a data-toggle="tooltip" title="' + _("Delete") + '" onclick="dsas_cert_delete(\'' + name + '\',\'' + 
+      body = body + '&nbsp;<a data-toggle="tooltip" title="' + _("Delete") + '" onclick="dsas_cert_delete(\'' + name.replaceAll('\n','\\n') + '\',\'' + 
         cert.fingerprint + '\');"><img src="x-lg.svg"></a>';
     body = body + 
       '</p><div class="collapse" id="' + (added ? 'add' : 'ca') + i + '"><div class="card card-body">' +
