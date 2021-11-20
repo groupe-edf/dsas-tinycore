@@ -63,6 +63,7 @@ msg() {
   if [ $logstdout -eq 1 ]; then
     printf "%-3s %-15s %-32s %s %s\n" "$1" "$2" "$3" "$4" "$5"
   elif [ -n $logfile ]; then
+    [ $verbose -ne 0 ] &&  printf "%-3s %-15s %-32s %s %s\n" "$1" "$2" "$3" "$4" "$5"
     printf "%-3s %-15s %-32s %s %s\n" "$1" "$2" "$3" "$4" "$5" >> $logfile
   fi
 }

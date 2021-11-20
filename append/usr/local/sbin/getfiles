@@ -48,7 +48,7 @@ getdirectory() {
   isdir=""
   [ "${uri: -1}" == "/" ] && isdir="1"
   [ "${uri: -1}" == "\\" ] && isdir="1"
-  [ -z "$isdir" ] && $(lftp -c "open '$uri'") && isdir="1"
+  [ -z "$isdir" ] && $(lftp -c "$opt open '$uri'") && isdir="1"
 
   if [ -z "$isdir" ]; then
     myecho "Downloading file : $(basename "$uri")"
@@ -191,6 +191,121 @@ getrepo() {
   exit 0
 }
 
+getdeb() {
+  local chktyp inhash hashtyp _hash _hash_md5 _hash_sha256 _size _file
+  local pool pool_local have_pool packages inpackage
+  local id=$1
+  local uri=$(get_uri $id)
+  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
+  local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" $CONF)
+  local type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" $CONF)
+
+  case $type in
+    deb)
+       # Find the pool directory
+       pool=$(dirname "$uri")
+       pool_local=$(dirname "$dir")
+       have_pool="0"
+       while [ -n "$pool" ]; do
+         $(lftp -c "$opt open '$pool/pool'" >& /dev/null) && have_pool="1" && break
+         pool=$(dirname "$pool")
+         pool_local=$(dirname "$pool_local")
+       done
+       [ "$have_pool" == "0" ] && $(1>&2 echo "Debian pool directory not found"; exit 1)
+
+       # Create the destination directory if needed
+       [ -d "$DSAS_HAUT/$dir" ] || $(umask 007 && mkdir -p $DSAS_HAUT/$dir)
+
+       myecho "Downloading Release/Release.gpg from $name"
+       if [ "$verbose" -eq 0 ]; then
+         lftp -c "$opt get -e '$uri/Release' -o '$DSAS_HAUT/$dir/Release'" >& /dev/null
+         lftp -c "$opt get -e '$uri/Release.gpg' -o '$DSAS_HAUT/$dir/Release.gpg'" >& /dev/null
+         lftp -c "$opt get -e '$uri/InRelease' -o '$DSAS_HAUT/$dir/InRelease'" >& /dev/null
+       else
+         lftp -c "$opt get -e '$uri/Release' -o '$DSAS_HAUT/$dir/Release'"
+         lftp -c "$opt get -e '$uri/Release.gpg' -o '$DSAS_HAUT/$dir/Release.gpg'"
+         lftp -c "$opt get -e '$uri/InRelease' -o '$DSAS_HAUT/$dir/InRelease'"
+       fi
+
+       # Identify if the Release file has SHA256 et/ou MD5 hashes
+       grep -qx "MD5Sum:" "$DSAS_HAUT/$dir/Release" && hashtyp="MD5Sum:" && chktyp="md5"
+       grep -qx "SHA1:" "$DSAS_HAUT/$dir/Release" && hashtyp="SHA1:" && chktyp="sha"
+       grep -qx "SHA256:" "$DSAS_HAUT/$dir/Release" && hashtyp="SHA256:" && chktyp="sha256"
+
+       # Identify all files listed in Release and download them
+       inhash=0
+       while read -r line; do
+         # Assume that each hash is listed after the correct flag and has
+         # a leading space
+         [ "$inhash" == "0" ] && [[ "$line" =~ "^$hashtyp$" ]] && inhash="1" && continue
+         [ "$inhash" == "1" ] && [[ "$line" =~ ":$" ]] && inhash="0" && continue
+         [ "$inhash" == "0" ] && continue
+
+         IFS=' ' read _hash _size _file << EOF
+$line
+EOF
+         if [ -f "$DSAS_HAUT/$dir/$_file" ]; then
+           if check_checksum "$DSAS_HAUT/$dir/$_file" $_hash $chktyp; then
+             myecho "Downloading file $_file [Checksum different!!]"
+             [ "$verbose" -eq 0 ] && lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
+             [ "$verbose" -eq 0 ] || lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
+           else
+             myecho "Skipping file $_file"
+           fi
+         else
+           myecho "Downloading file $_file"
+           [ -d "$(dirname "$DSAS_HAUT/$dir/$_file")" ] || $(umask 007; mkdir -p "$(dirname "$DSAS_HAUT/$dir/$_file")")
+           [ "$verbose" -eq 0 ] && lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
+           [ "$verbose" -eq 0 ] || lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
+         fi
+       done < $DSAS_HAUT/$dir/Release
+
+       # For each file Packages.gz download the listed files into the pool directory
+       for packages in $(find "$DSAS_HAUT/$dir" -name "Packages.gz"); do
+         inpackage=0
+         _file=""
+         _hash_md5=""
+         _hash_sha256=""
+         zcat "$packages" | while read -r line; do
+           # Use sed to strip leading and trailing space, as can't used xargs due to possible
+           # illegal characters like single quotes in strings. 
+           [[ "$line" =~ "Filename:" ]] && _file="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
+           [[ "$line" =~ "MD5sum:" ]] && _hash_md5="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
+           [[ "$line" =~ "SHA256:" ]] && _hash_sha256="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
+           if [ -z "$(echo $line | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" ]; then
+             if [ -f "$DSAS_HAUT/$pool_local/$_file" ]; then
+               [ -n "$hash_md5" ] && check_checksum "$DSAS_HUAT/$pool_local/$_file" $_hash_md5 md5
+               [ "$?" -eq 0 ] && [ -n "$hash_sha256"  ] && check_checksum "$DSAS_HUAT/$pool_local/$_file" $_hash_sha256 sha256
+               
+               if [ "$?" -eq 0 ]; then
+                 myecho "Downloading file $_file [Checksum different!!]"
+                 [ "$verbose" -eq 0 ] && lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'" >& /dev/null
+                 [ "$verbose" -eq 0 ] || lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'"
+               else
+                 myecho "Skipping file $_file"
+               fi
+             elif [ -n "$_file" ]; then
+               myecho "Downloading file $_file"
+               [ -d "$(dirname "$DSAS_HAUT/$pool_local/$_file")" ] || $(umask 007 && mkdir -p "$(dirname "$DSAS_HAUT/$pool_local/$_file")")
+               [ "$verbose" -eq 0 ] && lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'" >& /dev/null
+               [ "$verbose" -eq 0 ] || lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'"
+             fi
+             _file=""
+             _hash_md5=""
+             _hash_sha256=""
+           fi
+         done
+       done
+
+       ;;
+
+     *) 1>&2 echo "Unknown file checking type"; exit 1; ;;
+  esac
+
+  exit 0
+}
+
+
 help() {
   echo "Usage: $(basename $0)  [Options] ID"
   echo "Get files given by the task ID"
@@ -234,7 +349,7 @@ for _idx in $idx; do
   type=$(xmllint --xpath "string(dsas/tasks/task[$_idx]/type)" $CONF)
   case $type in
     rpm|repomd) getrepo $_idx; ;;
-    deb) 1>&2 echo "DEB files are not yet implemented"; exit 1; ;;
+    deb) getdeb $_idx; ;;
     authenticode|openssl|gpg|liveupdate|cyberwatch) getdirectory $_idx; ;;
     *) 1>&2 echo "Unknown task type : $type"; exit 1; ;;
   esac

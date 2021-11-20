@@ -341,7 +341,7 @@ verifdirectory() {
   fi
 
   # Create directory if needed
-  [ -d "$DSAS_BAS/$dir" ] || $(umask 007 && mkdir -p "$DSAS_BAS/$dir" && chgrp -R $grp "$DSAS_BAS/$(echo $dir | cut -d/ -f1)")
+  [ -d "$DSAS_BAS/$dir" ] || $(umask 007; mkdir -p "$DSAS_BAS/$dir"; chgrp -R $grp "$DSAS_BAS/$(echo $dir | cut -d/ -f1)")
 
   # Remove the files in our tree bas and not in haut.
   filetable=$(cd "$DSAS_HAUT/$dir"; find . -type f)
@@ -464,7 +464,7 @@ verifrepo() {
   fi 
 
   # Create the destination directory if needed
-  [ -d "$DSAS_BAS/$dir" ] || $(umask 007 && mkdir -p "$DSAS_BAS/$dir" && chgrp $grp -R "$DSAS_BAS/$(echo $dir | cut -d/ -f1)")
+  [ -d "$DSAS_BAS/$dir" ] || $(umask 007; mkdir -p "$DSAS_BAS/$dir"; chgrp $grp -R "$DSAS_BAS/$(echo $dir | cut -d/ -f1)")
 
   # Copy repomd.xml* to $bas
   ln "$DSAS_HAUT/$dir/repodata/repomd.xml" "$DSAS_BAS/$dir/repodata/repomd.xml"
@@ -533,13 +533,143 @@ verifrepo() {
   /bin/rm -fr "$tempdir"
 }
 
+
+verifdeb(){
+  local chktyp inhash hashtyp _hash _hash_md5 _hash_sha256 _size _file 
+  local j pool have_pool packages inpackage tempdir
+  local id=$1
+  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
+  local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" $CONF)
+  local type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" $CONF)
+
+  pool=$(dirname "$dir")
+  have_pool="0"
+  while [ -n "$pool" ]; do
+    [ -d "$DSAS_HAUT/$pool/pool" ] && have_pool="1" && break
+    pool=$(dirname "$pool")
+  done
+  [ "$have_pool" == "0" ] && $(1>&2 echo "Debian pool directory not found"; exit 1)
+
+  tempdir=$(mktemp -d)
+  j=1
+  while :; do
+    fprint=$(xmllint --xpath "string(dsas/tasks/task[$id]/cert[$j]/fingerprint)" "$CONF")
+    [ -z "$fprint" ] && break;
+    idx=$(get_certificate $fprint)
+    [ -z "$idx" ] && { 1>&2 echo "Certificate used by task($id) not found !!"; cleanup_and_exit 1 "$tempdir"; }
+    cat /tmp/cert.$$ >> $tempdir/cert.0
+    j=$((j + 1))
+  done
+  gpg --dearmor "$tempdir/cert.0"
+
+  if ! gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg"  \
+        --verify "$DSAS_HAUT/$dir/Release.gpg" \
+        "$DSAS_HAUT/$dir/Release" >& /dev/null; then
+    1>&2 echo "Failed to verify Release signature"
+    cleanup_and_exit 1 "$tempdir"
+  fi
+  if ! gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg"  \
+        --verify "$DSAS_HAUT/$dir/InRelease" >& /dev/null; then
+    1>&2 echo "Failed to verify InRelease signature"
+    cleanup_and_exit 1 "$tempdir"
+  fi
+
+  # Create the destination directory if needed
+  [ -d "$DSAS_BAS/$dir" ] || $(umask 007; mkdir -p $DSAS_BAS/$dir; chgrp $grp -R $DSAS_BAS/$dir)
+
+  # Copy *Release* to $bas
+  for _file in "Release Release.gpg InRelease"; do
+    [ -f "$DSAS_HAUT/$dir/$_file" ] && ln "$DSAS_HAUT/$dir/$_file" "$DSAS_BAS/$dir/$_file"
+  done
+
+  # Identify if the Release file has SHA256 et/ou MD5 hashes
+  grep -qx "MD5Sum:" "$DSAS_HAUT/$dir/Release" && hashtyp="MD5Sum:" && chktyp="md5"
+  grep -qx "SHA1:" "$DSAS_HAUT/$dir/Release" && hashtyp="SHA1:" && chktyp="sha"
+  grep -qx "SHA256:" "$DSAS_HAUT/$dir/Release" && hashtyp="SHA256:" && chktyp="sha256"
+
+  # Identify all files listed in Release and download them
+  inhash=0
+  while read -r line; do
+    # Assume that each hash is listed after the correct flag and has
+    # a leading space
+    [ "$inhash" == "0" ] && [[ "$line" =~ "^$hashtyp$" ]] && inhash="1" && continue
+    [ "$inhash" == "1" ] && [[ "$line" =~ ":$" ]] && inhash="0" && continue
+    [ "$inhash" == "0" ] && continue
+
+    IFS=' ' read _hash _size _file << EOF
+$line
+EOF
+    if [ -f "$DSAS_HAUT/$dir/$_file" ]; then
+      # If file exists in bas skip. Hardlinked, so test is fast
+      [ "$DSAS_HAUT/$dir/$_file" -ef "$DSAS_BAS/$dir/$_file" ] && continue
+
+      if  check_checksum "$DSAS_HAUT/$dir/$_file" $_hash $chktyp; then
+        msgline "$DSAS_HAUT/$dir/$_file" 1  
+      else
+        msgline "$DSAS_HAUT/$dir/$_file" 0
+        [ -d "$(dirname "$DSAS_BAS/$dir/$_file")" ] || $(umask 007; mkdir -p "$(dirname "$DSAS_BAS/$dir/$_file")"; chgrp $grp -R "$(dirname "$DSAS_BAS/$dir/$_file")")
+        ln "$DSAS_HAUT/$dir/$_file" "$DSAS_BAS/$dir/$_file"
+      fi
+      # For now ignore missing files
+    fi
+  done < $DSAS_HAUT/$dir/Release
+
+  # For each file Packages.gz check the listed files into the pool directory
+  for packages in $(find "$DSAS_BAS/$dir" -name "Packages.gz"); do
+    inpackage=0
+    _file=""
+    _hash_md5=""
+    _hash_sha256=""
+    zcat "$packages" | while read -r line; do
+      # Use sed rather than xargs to strip leading/trailing whitespace as strings might
+      # contain quotes and other special characters
+      [[ "$line" =~ "Filename:" ]] && _file="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
+      [[ "$line" =~ "MD5sum:" ]] && _hash_md5="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
+      [[ "$line" =~ "SHA256:" ]] && _hash_sha256="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
+      if [ -z "$(echo $line | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" ]; then
+        if [ -f "$DSAS_HAUT/$pool/$_file" ]; then
+          # If file exists in bas skip. Hardlinked, so test is fast
+          [ "$DSAS_HAUT/$pool/$_file" -ef "$DSAS_BAS/$pool/$_file" ] && continue
+
+          if [ -n "$hash_sha256"  ] && check_checksum "$DSAS_HUAT/$pool_local/$_file" $_hash_dha256 sha256; then
+            msgline "$DSAS_HAUT/$pool/$_file" 1
+          elif [ -n "$hash_md5" ] && check_checksum "$DSAS_HUAT/$pool/$_file" $_hash_md5 md5; then
+            msgline "$DSAS_HAUT/$pool/$_file" 1
+          else
+            msgline "$DSAS_HAUT/$pool/$_file" 0 
+            [ -d "$(dirname i"$DSAS_BAS/$pool/$_file")" ] || $(umask 007; mkdir -p "$(dirname "$DSAS_BAS/$pool/$_file")"; chgrp $grp -R "$(dirname "$DSAS_BAS/$pool/$_file")")
+            ln "$DSAS_HAUT/$pool/$_file" "$DSAS_BAS/$pool/$_file"          
+          fi
+        fi
+        _file=""
+        _hash_md5=""
+        _hash_sha256=""
+      fi
+    done
+  done
+
+  exit 0
+}
+
 passdirectory(){
-  local filetable file status i j fprint tempdir idx auth
+  local filetable file status i j fprint tempdir idx auth pool have_pool
   local id=$1
   local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
 
-  # Create directory if needed
-  [ -d "$DSAS_BAS/$dir" ] ||  $(umask 007 && mkdir -p "$DSAS_BAS/$dir" && chgrp $grp -R "$DSAS_BAS/$(echo $dir | cut -d/ -f1)")
+  if [ "$2" == "deb" ]; then
+    pool=$(dirname "$dir")
+    have_pool="0"
+    while [ -n "$pool" ]; do
+      [ -d "$DSAS_HAUT/$pool/pool" ] && have_pool="1" && break
+      pool=$(dirname "$pool")
+    done
+    [ "$have_pool" == "0" ] && $(1>&2 echo "Debian pool directory not found"; exit 1)
+  fi
+
+  # Create directories if needed
+  for _d in $(cd "$DSAS_HAUT"; find "$dir" -type d); do
+    [ -d "$DSAS_BAS/$_d" ] || $(umask 007; mkdir -p "$DSAS_BAS/$_d"; chgrp $grp -R "$DSAS_BAS/$_d")
+  done
 
   # Remove the files in our tree bas and not in haut.
   filetable=$(cd "$DSAS_HAUT/$dir"; find . -type f)
@@ -558,6 +688,31 @@ passdirectory(){
     # the logs aren't yet used
     ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
   done
+
+  if [ "$2" == "deb" ]; then
+    # Create directories if needed
+    for _d in $(cd "$DSAS_HAUT"; find "$pool/pool" -type d); do
+      [ -d "$DSAS_BAS/$_d" ] || $(umask 007; mkdir -p "$DSAS_BAS/$_d"; chgrp $grp -R "$DSAS_BAS/$_d")
+    done
+
+    # Remove the files in our tree bas and not in haut.
+    filetable=$(cd "$DSAS_HAUT/$pool/pool"; find . -type f)
+    for file in $(cd "$DSAS_BAS/$pool/pool"; find . -type f); do
+      if [[ "$filetable" != *"${file:2}"* ]]; then
+        myecho "Removing stale file ${file:2}"
+        rm -f "$DSAS_BAS/$pool/pool/${file:2}"
+      fi
+    done
+
+    for file in $(cd "$DSAS_HAUT"; find "$pool/pool" -type f); do
+      # If file exists in bas skip. Hardlinked, so test is fast
+      [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
+
+      # Don't log the transfers with msgline for the machine haut as
+      # the logs aren't yet used
+      ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
+    done
+  fi
 }
 
 check_dsas
@@ -596,14 +751,14 @@ for _id in $ids; do
 done
 
 for _id in $idx; do
+  type=$(xmllint --xpath "string(dsas/tasks/task[$_id]/type)" "$CONF")
   if [ "$TYP" == "haut" ]; then
     # No verification on the machine haut
-    passdirectory $_id
+    passdirectory $_id $type
   else
-    type=$(xmllint --xpath "string(dsas/tasks/task[$_id]/type)" "$CONF")
     case $type in
       rpm|repomd) verifrepo $_id; ;;
-      deb) 1>&2 echo "DEB files are  are not yet implemented"; exit 1; ;;
+      deb) verifdeb $_id; ;;
       authenticode|openssl|gpg|liveupdate|cyberwatch) verifdirectory $_id; ;; 
       *) 1>&2 echo "Unknown task type : $type"; exit 1 ;;
     esac

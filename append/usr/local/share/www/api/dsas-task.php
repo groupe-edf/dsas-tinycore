@@ -93,7 +93,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
                   $errors[] = ["error" => ["The task type '{0}' does not support {1} certificates", $type, "GPG"]];
                   break 2;
                 }
-                if ($have_ca) {
+                if ($type == "gpg" && $have_ca) {
                   $errors[] = ["error" => ["The task type '{0}' only supports one GPG certificate", $type]];
                   break 2;
                 }
@@ -174,12 +174,12 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $errors[] = ["error" => "One of the certificates does not exist"];
         }
 
-        if ($type === "rpm" || $type === "repomd" || $type === "deb" || $type === "gpg") {
+        if ($type === "rpm" || $type === "repomd" || $type === "gpg") {
 	  if (count($certs) != 1)
             $errors[] = ["error" => ["The task type '{0}' requires a GPG certificate", $type]]; 
         }
 
-        if ($type === "openssl" || $type === "cyberwatch") {
+        if ($type === "openssl" || $type === "cyberwatch" || $type == "deb") {
 	  if (count($certs) < 1)
             $errors[] = ["error" => ["The task type '{0}' at least one certificate or public key", $type]]; 
         }
