@@ -33,14 +33,13 @@ des signatures. Chaque fichier permis de passer par le DSAS pourrait être véri
 une signature cryptographique. 
 
 Le DSAS n'est pas le premier à proposer ce moyen de vérification dans un sas de transfert
-de fichier et [nous avons déjà un produit](https://www.seclab-security.com/seclab-securing-systems/)
-déployé a EDF. Le problème est que ces moyens requièrent l'intervention de quelqu'un à EDF 
-afin de signer chaque fichier reçu avant leurs transmission. Un produit comme Symantec 
-End Point Manager produit approximativement 4000 fichiers par jours à transmettre. Donc c'est 
-illusoire à penser que quelqu'un va contrôler chacun de ses fichier avant de signer et les 
-transmettre.
+de fichier et [par exemple le produit de SECLAB permets de faire](https://www.seclab-security.com/seclab-securing-systems/)
+Le problème est que ces moyens requièrent l'intervention de quelqu'un afin de signer chaque 
+fichier reçu avant leurs transmission. Un produit comme Symantec End Point Manager produit 
+approximativement 4000 fichiers par jours à transmettre. Donc c'est illusoire à penser que 
+quelqu'un va contrôler chacun de ses fichier avant de signer et les transmettre.
 
-Le DSAS prendre une autre approche, en donnant confiance aux signatures des fichier fourneient par
+Le DSAS prendre une autre approche, en donnant confiance aux signatures des fichiers fournaient par
 certains éditeur de logiciel, et permettant le transfert de ces fichiers. En revanche il existe 
 plusieurs moyens de signature utilisé par les éditeurs de logiciels, et le DSAS est requis 
 d'avoir une moyen de vérifier chaque type de signature utilisé par les éditeurs de logiciel
@@ -546,8 +545,8 @@ Les champs à remplir pour le renouvellement sont des champs définis par la nor
 codé sur deux lettres comme défini dans le RFC5280. Le code pour la France est __FR__.
 - __O__ - L'organisation responsable pour le serveur. En France est obligatoirement le
 nom du société enregistré avec INSEE et doit être tout en majuscule.
-- __OU__ - Un identifiant of le sous organisation responsale pour le serveur. Les certificats
-signés par l'ONS d'EDF utilise tous '0002 552081317', le KBIS d'EDF.
+- __OU__ - Un identifiant of le sous organisation responsable pour le serveur. Les certificats
+signés en France doit inclure les KBIS, par exemple ici '0002 552081317' est  un KBIS d'EDF.
 - __CN__ - Pour un serveur, comme le DSAS ceci est obligatoirement le nom DNS du serveur
 - __S__ - Un champ libre pour la région du siège social de L'entreprise. Il est optionnel
 - __L__ - Un champ libre pour la ville du siège social de L'entreprise. Il est optionnel
@@ -765,13 +764,13 @@ Donc idéalement il faut vérifier les mises à jour de SEP avec le certificat r
 `VeriSign Class 3 Public Primary Certification Authority - G5` et avec le certificat
 intermédiate `Symantec Corporation` afin de limiter au maximum les fichiers qui 
 pourrait être validé en tant que mise à jour de Symantec. Donc pour ces mises à
-jour il faut chargé le certificat `Symantec Corporation` dans le DSAS.
+jour il faut charger le certificat `Symantec Corporation` dans le DSAS.
 
 ### Gestion des certificats X509
 
 #### Identification des certificats X509
 
-Les certificats X509 sont utilisé dans la vérification des binaires Windows, mais
+Les certificats X509 sont utilisés dans la vérification des binaires Windows, mais
 également pour des fichiers signés par `openssl`. 
 
 Depuis un poste de travail en Windows, avec un clic droit et en sélectionnant l'option
@@ -910,7 +909,7 @@ pour chaque tache.
 associés avec une tâche. De laisser vide est permissible et dans ce cas il est assumé 
 que les fichiers associés avec le taches doit-être déposé sur la DSAS par l'utilisateur.
 le `URI` doit-être de la forme `protocole://site/dossier/` ou bien 
-`protocole://sit/dossier/fichier`. Les protocole permis sont `sftp:`, `ftp:`, `ftps:`, 
+`protocole://site/dossier/fichier`. Les protocoles permis sont `sftp:`, `ftp:`, `ftps:`, 
 `http:` et `https:`. Par exemple `ftp://noeysep3.noe.edf.fr/LiveUpdate/`. Le `/` à la
 fin des `URI` avec un dossier est optionnelle mais recommandé.
 - `Type de tache` - Le type de tache a utilisé. Les types de tache permis sont
@@ -1055,7 +1054,7 @@ va installer l'ensemble des outils nécessaire pour la build
 
 ### Clavier français
 
-Si vous avez un clavier français, le plus est d'ajouter 
+Si vous avez un clavier français, le plus simple est d'ajouter 
 
 ```
 setxkmap fr
@@ -1627,7 +1626,7 @@ Il y a également des façon d'abuser le format des fichiers zip afin de cacher 
 
 Un fichier zip est compris de __N__ objets compressé suivi par une index des fichiers contenu dans le 
 zip avec les positionnes pour chaque objet compressé du fichier zip relatives aux positionne de l'index.
-Ceci ouvre 4 possible endroit à cacher des données dans une fichier zip
+Ceci ouvre 4 endroit possible à cacher des données dans une fichier zip
 
 - ajouter au début : parce que les postionnes des objets compressé sont rélative à l'index il est tout
 à fait possible d'avoir des données avant ces objets
@@ -1643,7 +1642,7 @@ non vérifier à traverse du DSAS.
 
 Ceci ne concerne que des fichiers zip non signé, car quelqu'un capable de signer le zip est egalement
 capable de signer le contenu. Donc la parade est relativement simple, et consist à reconstruire les 
-fichiers zip non signé à partir de son contenu. Le DSAS implemente cette comportement 
+fichiers zip non signé à partir de son contenu. Le DSAS implemente cette parade
 
 ## Service OpenSSH
 
