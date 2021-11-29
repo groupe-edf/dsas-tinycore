@@ -1550,6 +1550,25 @@ $ cat cert.pem cert1.pem > certs.pem
 $ openssl cms -verify -CAfile SymantecRoot2005CA.pem -certfile certs.pem -nointern -inform der -in v.sig -content v.grd
 ```
 
+### Vérification - debian
+
+At the base of the verification of a debian repository is the file file `Release` and its 
+signature `Release.gpg`. Recnetly, the file `InRelease`, which is identical to `Release` but
+includes an integrated signature.
+
+The debian respositories are sigend with several keys. At each new version of debian , a new master
+archive key is created. The file `Release` is signed with the current key and the key anterior. The
+repositoreis `stable`, `testing`, `security` are only signed with these two keys. However, the 
+repositories of the debian versions themselves, such as `Buster` or `BullsEye`, are also signed
+with a third key taht depends on the version.
+
+The verification tasks of debian repositories requires access to all of these keys. For example for
+`BullsEye` the needed keys are 
+
+- [Debian 10/buster archive signing key](https://ftp-master.debian.org/keys/archive-key-10.asc)
+- [Debian 11/bullseye archive signing key](https://ftp-master.debian.org/keys/archive-key-11.asc)
+- [Debian 11/bullseye release key](https://ftp-master.debian.org/keys/release-11.asc)
+
 ### Verification - gpg
 
 GPG signatures can be embedded in the signed file or in a separate file. The DSAS
