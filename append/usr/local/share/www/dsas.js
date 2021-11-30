@@ -388,11 +388,16 @@ function dsas_check_warnings(disablenav = false, redirect = true){
 
 function dsas_togglelogs(all = false){
    var btn = document.getElementById("loghide");
-   if (btn.value === _("All logs"))
-     dsas_display_logs(false);
-   else
-     dsas_display_logs(true);
+   if (btn.value === _("All logs")) {
+     btn.value = _("Errors only");
+     DSASLogs.changeAll(false);
+   } else {
+     btn.value = _("All logs");
+     DSASLogs.changeAll(true);
+   }
 }
+
+var DSASLogs;
 
 function dsas_display_logs(all = false){
   var preLog = document.getElementById("VerifLogs");
@@ -412,34 +417,15 @@ function dsas_display_logs(all = false){
 
       if (logs) {
         if (logs.length == 1) {
-          for (const log of logs[0]) {
-            var str = dsas_verify_line(log["line"]);            
-            if (log["type"] === "normal") {
-              if (all) 
-                body = body + '<pre class="my-0 text-muted overflow-hidden">' + str + '</pre>\n';
-            } else
-              body = body + '<pre class="my-0 text-danger overflow-hidden">'  + str + '</pre>\n';
-          }
+          body = body + '<div id="logpane"  style="height: 500px; position: relative; overflow-x: hidden; overflow-y: auto;"></div>'; 
         } else {
           body = body + '<ul class="nav nav-tabs" id="logs" role="tablist">\n';
           for (let i = 0; i < logs.length; i++) 
-            body = body + '  <li class="nav-item"><a class="nav-link' + (i === 0 ? ' active' : '') + '" data-bs-toggle="tab" href="#log' + i + '">' + i + '</a></li>\n';
-          body = body + '</ul>\n<div class="tab-content overflow-auto" style="height: 500px">';
-          for (let i = 0; i < logs.length; i++) {
-            body = body + '<div id="log' + i + '" class="container tab-pane ' + (i === 0 ? 'active' : 'fade') + '">';
-            for (const log of logs[i]) {
-              var str = dsas_verify_line(log["line"]);
-              if (log["type"] === "normal") {
-                if (all) 
-                  body = body + '<pre class="my-0 text-muted overflow-hidden">' + str + '</pre>\n';
-              } else
-                body = body + '<pre class="my-0 text-danger overflow-hidden">'  + str + '</pre>\n';
-            }
-            body = body + '</div>';
-          }
-          body = body + '</div>';
+            body = body + '  <li class="nav-item"><a class="nav-link' + (i === 0 ? ' active' : '') + '" id="navlog' + i + '" data-bs-toggle="tab" href="#log' + i + '">' + i + '</a></li>\n';
+          body = body + '</ul>\n<div class="tab-content" id="logpane"  style="height: 500px; position: relative; overflow-x: hidden; overflow-y: auto;"></div>';
         }
         preLog.innerHTML = body;
+        DSASLogs = new DSASDisplayLogs("logpane", logs);
       } else
         modal_message(_("No logs returned by the DSAS"));
     }).catch(error => {
@@ -2108,6 +2094,136 @@ function translate(){
                    '        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">' + ml.currentLanguage + '</a>\n' +
                    '        <div class="dropdown-menu">\n' + langs + '        </div>\n' +
                    '      </li>\n';
+  }
+}
+
+class DSASDisplayLogs {
+  constructor(id, logs, all = true, hidescrollbar = false){
+    this.holder = document.getElementById(id);
+    this.view = null;
+    this.logs = logs;
+    this.all = all;
+    this.tab = 0;
+    this.height = this.itemHeight();
+    this.hidescrollbar = hidescrollbar;
+
+    var div = '<div id="heightForcer"></div>';
+    if (this.logs.length)
+      for (let i = 0; i < logs.length; i++)
+        div = div + '<div id="log' + i + '" class="container tab-pane ' + (i === 0 ? 'active' : 'fade') + '"></div>';
+    this.holder.innerHTML = div;
+    this.refreshWindow();
+    document.getElementById("heightForcer").style.height = (this.numberOfItems() * this.height) + "px";
+    if (hidescrollbar)
+      // work around for non chrome browsers, hides the scrollbar
+      this.holder.style.width = (this.holder.offsetWidth * 2 - this.view.offsetWidth) + 'px';
+
+    if (this.holder.addEventListener) {
+      this.holder.addEventListener("scroll", this.delayingHandler.bind(this), false);
+      if (this.logs.length > 1) 
+        for (var i = 0; i < logs.length; i++)
+          document.getElementById("navlog" + i).addEventListener("click", this.changeTab.bind(this), false);
+    } else {
+      this.holder.attachEvent("onscroll", this.delayingHandler.bind(this));
+      if (this.logs.length > 1) 
+        for (var i = 0; i < logs.length; i++)
+          document.getElementById("navlog" + i).attachEvent("click", this.changeTab.bind(this));
+    }
+  }
+
+  delayingHandler() {
+    setTimeout(this.refreshWindow.bind(this), 10);
+  }
+
+  changeTab(e) {
+    var tab = parseInt(e.target.id.substr(6));
+    if (tab > this.logs.length - 1)
+      tab = this.logs.length - 1;
+    if (tab < 0)
+      tab = 0;
+    this.tab = tab
+    this.refreshWindow();
+    document.getElementById("heightForcer").style.height = (this.numberOfItems() * this.height) + "px";
+    if (this.hidescrollbar)
+      // work around for non chrome browsers, hides the scrollbar
+      this.holder.style.width = (this.holder.offsetWidth * 2 - this.view.offsetWidth) + 'px';
+  }
+
+  changeAll(all) {
+    this.all = all;
+    this.refreshWindow();
+    document.getElementById("heightForcer").style.height = (this.numberOfItems() * this.height) + "px";
+    if (this.hidescrollbar)
+      // work around for non chrome browsers, hides the scrollbar
+      this.holder.style.width = (this.holder.offsetWidth * 2 - this.view.offsetWidth) + 'px';
+  }
+
+  itemHeight () {
+    var pre = document.createElement('pre');
+    pre.innerHTML = "testing height";
+    this.holder.appendChild(pre)
+
+    var output = pre.offsetHeight;
+    this.holder.removeChild(pre)
+    return output;
+  }
+
+  numberOfItems(){
+    var output = 0;
+    if (this.all)
+      output = this.logs[this.tab].length
+    else {
+      for (var index = 0; index < this.logs[this.tab].length; ++index) {
+        if (this.logs[this.tab][index]["type"] !== "normal")
+          output++;
+      }
+    }
+    return output;
+  }
+
+  refreshWindow () {
+    if (this.view != null)
+      this.view.remove();    
+    if (this.logs.length > 1)
+      this.view = document.getElementById('log' + this.tab).appendChild(document.createElement("div"));
+    else
+      this.view = this.holder.appendChild(document.createElement("div"));
+
+    var firstItem = Math.floor(this.holder.scrollTop / this.height);
+    var lastItem = firstItem + Math.ceil(this.holder.offsetHeight / this.height)
+    if (lastItem + 1 >= this.logs[this.tab].length)
+      lastItem = this.logs[this.tab].length - 1;
+    this.view.id = "view";
+    this.view.style.top = (firstItem * this.height) + 'px';
+    this.view.style.position = "absolute";
+
+    var pre;
+    if (this.all) {
+      for (var index = firstItem; index <= lastItem; ++index) {
+        pre = document.createElement('pre');
+        if (this.logs[this.tab][index]["type"] === "normal")
+          pre.className = "my-0 text-muted overflow-hidden";
+        else
+          pre.className = "my-0 text-danger overflow-hidden";       
+        pre.innerHTML = dsas_verify_line(this.logs[this.tab][index]["line"]); 
+        this.view.appendChild(pre);
+      }
+    } else {
+      var line = 0;
+      for (var index = 0; index < this.logs[this.tab].length; ++index) {
+        if (this.logs[this.tab][index]["type"] !== "normal") {
+          if (line > firstItem) {
+            pre = document.createElement('pre');
+            pre.className = "my-0 text-danger overflow-hidden";       
+            pre.innerHTML = dsas_verify_line(this.logs[this.tab][index]["line"]); 
+            view.appendChild(pre);
+          }
+          line++;
+          if (line > lastItem)
+            break;
+        }
+      }
+    }
   }
 }
 
