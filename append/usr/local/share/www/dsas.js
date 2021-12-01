@@ -2213,8 +2213,6 @@ class DSASDisplayLogs {
       if (found < 0)
         found = 0;
       if (nmatches > 0) {
-        console.log(matches);
-        console.log(found);
         this.all = true; // Force all logs to be displayed
         this.tab = matches[found]["tab"];
         this.highlight = {tab: this.tab, line: matches[found]["line"]};
@@ -2248,8 +2246,6 @@ class DSASDisplayLogs {
     this.curItem = firstItem;
 
     var pre;
-    console.log("highlight : " + this.highlight["line"] + " firstItem : " + firstItem + " lastItem : " + lastItem);
-
     if (this.all) {
       for (var index = firstItem; index <= lastItem; ++index) {
         pre = document.createElement('pre');
