@@ -2184,8 +2184,8 @@ class DSASDisplayLogs {
 
   search(str="") {
     if (str !== "") {
-      var curIndex = (this.highlight["line"] < 0 ? this.curItem : this.highligh["line"]);
-      var curTab = (this.highlight["tab"] < 0 ? this.tab : this.highligh["tab"]);
+      var curIndex = (this.highlight["line"] < 0 ? this.curItem : this.highlight["line"]);
+      var curTab = (this.highlight["tab"] < 0 ? this.tab : this.highlight["tab"]);
       if ((! this.all) && (this.highlight["tab"] < 0)) {
         var line = 0;
         for (var index = 0; index < this.logs[this.tab].length; ++index) {
