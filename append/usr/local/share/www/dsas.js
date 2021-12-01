@@ -408,11 +408,12 @@ function dsas_display_logs(all = false){
         return Promise.reject({status: response.status, 
             statusText: response.statusText});
     }).then(logs => {
-      var body = '   <div class="row"><div class="col-md-6">\n' +
+      var body = '   <div class="row"><div class="col-md-4">\n' +
                  '     <h5>' + _("Filtered file logs :") + '</h5></div>\n' +
-                 '      <div class="col-md-6 text-end">\n' +
+                 '      <div class="col-md-8 text-end">\n' +
                  '        <input type="button" class="btn btn-primary" id="loghide" value="' + (all ? _("All logs") : _("Errors only")) + '" onclick="dsas_togglelogs(\'all\');">\n' +
                  '        <input type="button" class="btn btn-primary" id="refresh" value="' + _("Refresh") + '" onclick="dsas_display_logs(' + all + ');">\n' +
+                 '        <input type="search" class="input-lg rounded"  id="logsearch" placeholder="' +  _("Search") + '" onkeypress="if (event.key === \'Enter\'){ DSASLogs.search(document.getElementById(\'logsearch\').value);}">\n' +
                  '   </div></div>\n';
 
       if (logs) {
@@ -2003,7 +2004,6 @@ class multiLang {
         this.onLoad();
 
     }).catch(error => {
-      console.log(error);
       this.phrases = {};
     });
   }
@@ -2106,6 +2106,7 @@ class DSASDisplayLogs {
     this.tab = 0;
     this.height = this.itemHeight();
     this.hidescrollbar = hidescrollbar;
+    this.highlight = -1;
 
     var div = '<div id="heightForcer"></div>';
     if (this.logs.length)
@@ -2181,6 +2182,56 @@ class DSASDisplayLogs {
     return output;
   }
 
+  search(str="") {
+    if (str !== "") {
+      var curIndex = this.curItem;
+      var curTab = this.tab;
+      if (! this.all) {
+        var line = 0;
+        for (var index = 0; index < this.logs[this.tab].length; ++index) {
+         if (line === curIndex) {
+             curIndex = index;
+            break;
+          }
+          if (this.logs[this.tab][index]["type"] !== "normal")
+            line++;
+        }
+      }
+      if (curIndex < this.highlight)
+        curIndex = this.highlight;
+      var matches = [];
+      var nmatches = 0;
+      var found = -1;
+      for (var i = 0; i < this.logs.length; i++) {
+        for (var j = 0; j < this.logs[i].length; j++) {
+           if (this.logs[i][j]["line"].includes(str)) {
+             matches.push({tab : i, line: j});
+             if ((found < 0) && ((i > curTab) || ((i === curTab) && (j > curIndex))))
+               found = nmatches;
+             nmatches++;
+           }
+        }
+      }
+      if (found < 0)
+        found = 0;
+      if (nmatches > 0) {
+        console.log(matches);
+        console.log(found);
+        this.all = true; // Force all logs to be displayed
+        this.tab = matches[found]["tab"];
+        this.highlight = matches[found]["line"];
+        if (this.tab !== curTab)
+          bootstrap.Tab.getOrCreateInstance(document.querySelector('#navlog' + this.tab)).show();
+        this.holder.scrollTop = Math.floor(matches[found]["line"] * this.height);
+        this.refreshWindow();
+        document.getElementById("heightForcer").style.height = (this.numberOfItems() * this.height) + "px";
+        if (this.hidescrollbar)
+          // work around for non chrome browsers, hides the scrollbar
+          this.holder.style.width = (this.holder.offsetWidth * 2 - this.view.offsetWidth) + 'px';
+      }
+    }
+  }
+
   refreshWindow () {
     if (this.view != null)
       this.view.remove();    
@@ -2196,12 +2247,17 @@ class DSASDisplayLogs {
     this.view.id = "view";
     this.view.style.top = (firstItem * this.height) + 'px';
     this.view.style.position = "absolute";
+    this.curItem = firstItem;
 
     var pre;
+    console.log("highlight : " + this.highlight + " firstItem : " + firstItem + " lastItem : " + lastItem);
+
     if (this.all) {
       for (var index = firstItem; index <= lastItem; ++index) {
         pre = document.createElement('pre');
-        if (this.logs[this.tab][index]["type"] === "normal")
+        if (index === this.highlight) 
+          pre.className = "my-0 bg-info overflow-hidden";
+        else if (this.logs[this.tab][index]["type"] === "normal")
           pre.className = "my-0 text-muted overflow-hidden";
         else
           pre.className = "my-0 text-danger overflow-hidden";       
