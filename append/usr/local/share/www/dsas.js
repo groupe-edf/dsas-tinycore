@@ -2106,7 +2106,7 @@ class DSASDisplayLogs {
     this.tab = 0;
     this.height = this.itemHeight();
     this.hidescrollbar = hidescrollbar;
-    this.highlight = -1;
+    this.highlight = {tab: -1, line: -1};
 
     var div = '<div id="heightForcer"></div>';
     if (this.logs.length)
@@ -2184,9 +2184,9 @@ class DSASDisplayLogs {
 
   search(str="") {
     if (str !== "") {
-      var curIndex = this.curItem;
-      var curTab = this.tab;
-      if (! this.all) {
+      var curIndex = (this.highlight["line"] < 0 ? this.curItem : this.highligh["line"]);
+      var curTab = (this.highlight["tab"] < 0 ? this.tab : this.highligh["tab"]);
+      if ((! this.all) && (this.highlight["tab"] < 0)) {
         var line = 0;
         for (var index = 0; index < this.logs[this.tab].length; ++index) {
          if (line === curIndex) {
@@ -2197,8 +2197,6 @@ class DSASDisplayLogs {
             line++;
         }
       }
-      if (curIndex < this.highlight)
-        curIndex = this.highlight;
       var matches = [];
       var nmatches = 0;
       var found = -1;
@@ -2215,9 +2213,11 @@ class DSASDisplayLogs {
       if (found < 0)
         found = 0;
       if (nmatches > 0) {
+        console.log(matches);
+        console.log(found);
         this.all = true; // Force all logs to be displayed
         this.tab = matches[found]["tab"];
-        this.highlight = matches[found]["line"];
+        this.highlight = {tab: this.tab, line: matches[found]["line"]};
         if (this.tab !== curTab)
           bootstrap.Tab.getOrCreateInstance(document.querySelector('#navlog' + this.tab)).show();
         this.holder.scrollTop = Math.floor(matches[found]["line"] * this.height);
@@ -2248,10 +2248,12 @@ class DSASDisplayLogs {
     this.curItem = firstItem;
 
     var pre;
+    console.log("highlight : " + this.highlight["line"] + " firstItem : " + firstItem + " lastItem : " + lastItem);
+
     if (this.all) {
       for (var index = firstItem; index <= lastItem; ++index) {
         pre = document.createElement('pre');
-        if (index === this.highlight) 
+        if ((this.tab == this.highlight["tab"]) && (index === this.highlight["line"])) 
           pre.className = "my-0 bg-info overflow-hidden";
         else if (this.logs[this.tab][index]["type"] === "normal")
           pre.className = "my-0 text-muted overflow-hidden";
