@@ -1,5 +1,6 @@
 {
   "en" : {
+    "Search" : "",
     "Error : {0}" : "",
     "Add a task" : "",
     "Task name :" : "",
@@ -199,6 +200,7 @@
     "Certificate authority not found" : ""
   },
   "fr" : {
+    "Search" : "Rechercher",
     "Error : {0}" : "Erreur : {0}",
     "Add a task" : "Ajouter un tâche",
     "Task name :" : "Nom du tâche",
