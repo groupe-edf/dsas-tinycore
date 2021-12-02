@@ -37,7 +37,7 @@ de fichier et [par exemple le produit de SECLAB permets de faire](https://www.se
 Le problème est que ces moyens requièrent l'intervention de quelqu'un afin de signer chaque 
 fichier reçu avant leurs transmission. Un produit comme Symantec End Point Manager produit 
 approximativement 4000 fichiers par jours à transmettre. Donc c'est illusoire à penser que 
-quelqu'un va contrôler chacun de ses fichier avant de signer et les transmettre.
+quelqu'un va contrôler chacun de ses fichiers avant de signer et les transmettre.
 
 Le DSAS prendre une autre approche, en donnant confiance aux signatures des fichiers fournaient par
 certains éditeur de logiciel, et permettant le transfert de ces fichiers. En revanche il existe 
@@ -174,7 +174,7 @@ cela est que les mises à jour du DSAS vont être très simples en exploitation 
 par l'arrêt du DSAS, le remplacement de l'ISO et le redémarrage.
 
 L'ISO du DSAS est une souche linux en 32 bits, et la machine virtuelle est à configurer
-en conséquence. Par exemple sous VirtualBox la configuration initiale devrait être
+en conséquence. Par exemple, sous VirtualBox la configuration initiale devrait être
 
 ![Création d'une VM sous VirtualBox](fr/vbox1.png)
 
@@ -546,7 +546,7 @@ codé sur deux lettres comme défini dans le RFC5280. Le code pour la France est
 - __O__ - L'organisation responsable pour le serveur. En France est obligatoirement le
 nom du société enregistré avec INSEE et doit être tout en majuscule.
 - __OU__ - Un identifiant of le sous organisation responsable pour le serveur. Les certificats
-signés en France doit inclure les KBIS, par exemple ici '0002 552081317' est  un KBIS d'EDF.
+signés en France doit inclure les KBIS, par exemple ici '0002 552081317' est un KBIS d'EDF.
 - __CN__ - Pour un serveur, comme le DSAS ceci est obligatoirement le nom DNS du serveur
 - __S__ - Un champ libre pour la région du siège social de L'entreprise. Il est optionnel
 - __L__ - Un champ libre pour la ville du siège social de L'entreprise. Il est optionnel
@@ -703,7 +703,7 @@ depuis le machine bas.
 - `** Bad Sig` : Un des vérifications demandées a signalé une mauvaise signature
 - `** Bad Interm Sig` : La vérification d'un certificat intermédiaire a échoué
 - `** Bad RPM Sig` : La vérification de signature d'un fichier RPM a échoué
-- `** Bad DEB Sig` : La vérification de signature d'un fichier RPM a échoué
+- `** Bad DEB Sig` : La vérification de signature d'un fichier DEB a échoué
 - `** Not signed` : Le fichier n'est pas signé et ne pourrait pas être vérifié
 
 le bouton bleu en haut des logs de vérification permettre de basculer entre un mode ou "tous le logs" 
