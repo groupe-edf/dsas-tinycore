@@ -926,6 +926,17 @@ le `URI` doit-être de la forme `protocole://site/dossier/` ou bien
 `protocole://site/dossier/fichier`. Les protocoles permis sont `sftp:`, `ftp:`, `ftps:`, 
 `http:` et `https:`. Par exemple `ftp://noeysep3.noe.edf.fr/LiveUpdate/`. Le `/` à la
 fin des `URI` avec un dossier est optionnelle mais recommandé.
+- `Autorité de certificate d'URI` - Si `https est utilisé pour le `URI`, le DSAS va
+refuser de télécharger des fichier depuis l'URI si le certificat utilisé par le 
+serveur n'est pas valable. Trois choix sont possible
+  * `CA Integré` - Les autoritiés de certification integrés sont utilisés pour la
+  validation du serveur
+  * `Auto signée` - Le DSAS ne validera pas le certificat utilisé par le serveur.
+  Ceci ouvre la posibilité d'attaque de `l'homme de milieu`, et d'autres moyens 
+  de protection pourrait être nécessaire. En revanche tous les fichiers transitant
+  le DSAS sont vérifié, donc malgré tout la risque est minimale
+  * Certificats téléchargé - Les certificates X509 racine chargés sur la DSAS 
+  pourrait être utilisé pour la verification du serveur.
 - `Type de tache` - Le type de tache a utilisé. Les types de tache permis sont
   * `rpm` - La tâche est un dépôt de fichier en format rpm. L’ensemble des fichiers sont 
 vérifier avec `rpm -K`. 
