@@ -1599,14 +1599,15 @@ GPG signatures can be embedded in the signed file or in a separate file. The DSA
 assume that one of the following means is used to sign a file 
 
 ```shell
-$ gpg --output <file>.gpg --sign <file>
-$ gpg --output <file>.sig --detach-sig <file>
-$ gpg --output <file>.sig -a --detach-sig <file>
+$ gpg --sign <file>
+$ gpg --clearsign <file>
+$ gpg --detach-sig <file>
+$ gpg -a --detach-sig <file>
 ```
 
-So detached signatures are in two files <file> and <file> .sig, and embedded signatures
-are in files ending as <file>.gpg. DSAS processes both types of signature. In the
-case of detached signature, both files must be provided to the DSAS.
+With the first two forms, only <file>.gpg or <file>.asc needs to be sent to the DSAS, because
+both include the original file and its signature. For the two forms with detached signatures,
+the original file and <file>.sig ou <file>.asc both need to be provided to the DSAS.
 
 ### Verification - openssl
 
