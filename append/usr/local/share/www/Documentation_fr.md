@@ -710,6 +710,20 @@ le bouton bleu en haut des logs de vérification permettre de basculer entre un 
 sont visible ou un mode ou "que des erreurs" sont visible. Ceci permettre de rapidement identifiés 
 les fichiers ayant eu des problèmes.
 
+### Recherche dans les logs de vérification
+
+ En cas d'identification d'un probleme ou vulnérabilité ça pourrait être nécessaire à chercher
+ dans les logs de vérification, soit pour le nom d'un logiciel, soit pour sa signature MD5en En
+ tant d'indicateur de compromission. Le DSAS fournit un dialog de recherche afin de trouver des
+ entrees correspondant dans les logs de vérification. Taper le valeur à trouver dans la dialog 
+ de recherche comme ci-dessous et la prochaine log correspondant sera sous-ligné 
+
+![Recherche dans les logs de vérification](fr/DSAS33.png)
+
+Tapant sur `Entrée` permit d'avancer entre les lignes de log correspondant à la valeur rechercher.
+Si à partir de la position actuel il n'y a plus de ligne correspondant, Le DSAS recommence la 
+recherche depuis la début des logs. En cas d'aucun correspondance, aucun ligne est sous-ligné 
+
 ## Configuration des certificats
 
 Le DSAS est préconfiguré avec l'ensemble de certificats racines d'un souche linux classique. 
