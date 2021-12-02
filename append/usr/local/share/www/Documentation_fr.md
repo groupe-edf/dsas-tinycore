@@ -931,7 +931,7 @@ fin des `URI` avec un dossier est optionnelle mais recommandé.
 vérifier avec `rpm -K`. 
   * `repomd` - Comme le type `rpm`, mais le les fichiers `repomd.xml` est signé
 permettant d'accélérer les vérifications. 
-  * `deb` - Non implémenté actuellement
+  * `deb` - Verification des dépot de type Debian.
   * `authenticode` - Les fichiers sont signés avec des signature de type `Microsoft`.
   * `liveupdate` - Les fichiers correspondant aux fichiers de mise à jour de 
 Symantec LiveUpdate.
@@ -1339,7 +1339,7 @@ Il y a 3 types de vérification des dépôts linux
 
 * rpm - La signature de chaque fichier RPM est vérifié avec "rpm -K"
 * repomd - Le fichier repomd.xml est vérifié et seulement les haches de chaque fichier est vérifié
-* deb - Actuellement non implémenté
+* deb - Le fichier Release est vérifié et seuelement les haches de chaque fichier est vérifié
 
 Il y a cinq autres types de vérification 
 
