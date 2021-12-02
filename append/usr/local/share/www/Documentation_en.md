@@ -898,6 +898,17 @@ by the user. the `URI` must be of the form` protocol://site/folder/ `or else
 `protocol://site/folder/ file`. Allowed protocols are `sftp:`, `ftp:`, `ftps:` 
 `http:` and `https:`. For example `ftp://noeysep3.noe.edf.fr/LiveUpdate/`. The `/` 
 at the end of the `URI` with a folder is optional but recommended.
+- `URI Certification Authority` - If the `URI` uses `https`, then the DSAS will
+refuse to download files from the URI unless a validation certiciate is used 
+for the server. Three choices are possible
+  * `Base CA` - The integrated cerificate authorities are used the validate the
+  server
+  * `Self-signed` - The DSAS will not validate the certificated used by the server.
+  In this case a "Man in the Middle" attack is possible, and other means of ensuring
+  protection ahainst this might be needed. All files recovered are verified by the 
+  DSAS so the risk is minimized.
+  * Uploaded certificates - The X509 root certificates that have been uploaded can
+  also be used as the certification authority for the verification of the server.
 - `Task type` - The type of task used. The types of tasks allowed are
   * `rpm` - The task is a file repository in rpm format. All files are
 check with `rpm -K`.
