@@ -411,8 +411,8 @@ function dsas_display_logs(all = false){
       var body = '   <div class="row"><div class="col-md-4">\n' +
                  '     <h5>' + _("Filtered file logs :") + '</h5></div>\n' +
                  '      <div class="col-md-8 text-end">\n' +
-                 '        <input type="button" class="btn btn-primary" id="loghide" value="' + (all ? _("All logs") : _("Errors only")) + '" onclick="dsas_togglelogs(\'all\');">\n' +
-                 '        <input type="button" class="btn btn-primary" id="refresh" value="' + _("Refresh") + '" onclick="dsas_display_logs(' + all + ');">\n' +
+                 '        <input type="button" class="btn btn-primary btn-sm" id="loghide" value="' + (all ? _("All logs") : _("Errors only")) + '" onclick="dsas_togglelogs(\'all\');">\n' +
+                 '        <input type="button" class="btn btn-primary btn-sm" id="refresh" value="' + _("Refresh") + '" onclick="dsas_display_logs(' + all + ');">\n' +
                  '        <input type="search" class="input-lg rounded"  id="logsearch" placeholder="' +  _("Search") + '" onkeypress="if (event.key === \'Enter\'){ DSASLogs.search(document.getElementById(\'logsearch\').value);}">\n' +
                  '   </div></div>\n';
 
@@ -2214,6 +2214,12 @@ class DSASDisplayLogs {
         found = 0;
       if (nmatches > 0) {
         this.all = true; // Force all logs to be displayed
+        // FIXME : This button text change should not be in this class, 
+        // but difficult to put it elsewhere
+        document.getElementById("loghide").value = _("All logs")
+
+       
+
         this.tab = matches[found]["tab"];
         this.highlight = {tab: this.tab, line: matches[found]["line"]};
         if (this.tab !== curTab)
