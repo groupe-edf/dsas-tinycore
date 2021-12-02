@@ -904,7 +904,7 @@ at the end of the `URI` with a folder is optional but recommended.
 check with `rpm -K`.
   * `repomd` - Like the` rpm` type, but the `repomd.xml` files are signed
 allowing to speed up verification.
-  * `deb` - Currently not implemented
+  * `deb` - Verification of Debian repositories
   * `authenticode` - Files are signed with` Microsoft` type signatures.
   * `liveupdate` - The files corresponding to the update files of
 Symantec LiveUpdate.
@@ -1310,7 +1310,7 @@ There are 3 types of linux repository verificatop,
 
 * rpm - The signature of each RPM file is verified with "rpm -K"
 * repomd - The repomd.xml file is verified and only the hashes of each file are checked
-* deb - Currently not implemented
+* deb - The Release file is verified and only the hashes of each file are checked
 
 There are five other types of verification
 
