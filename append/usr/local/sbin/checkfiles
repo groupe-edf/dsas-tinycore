@@ -92,9 +92,17 @@ verifgpg(){
   local tempdir=$2
   local file=$3
   if [ "${file##*.}" == "gpg" ]; then
-    gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file"
+    # gpg -sign
+    gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file" >& /dev/null
+  elif [ "${file##*.}" == "asc" ]; then
+    # gpg --clearsign 
+    gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file" >& /dev/null
+  elif [ -f "$file.asc" ]; then
+    # gpg -a --detach-sig --sign
+    gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file.asc" "$file" >& /dev/null
   else
-    gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file.sig" "$file"
+    # gpg --detach-sig --sign
+    gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file.sig" "$file" >& /dev/null
   fi
   return $?
 }
@@ -389,7 +397,8 @@ verifdirectory() {
           verifopenssl $id "$tempdir" "$DSAS_HAUT/$file"
           ;;
         gpg)
-          [ "${file##*.}" == "sig" ]  && continue 
+          [ "${file##*.}" == "sig" ] && continue
+          [ "${file##*.}" == "asc" ] && [ -f "$DSAS_HAUT/$(dirname "$file")/$(basename -s .asc "$file")" ] && continue
           verifgpg $id "$tempdir" "$DSAS_HAUT/$file"
           ;;
       esac
@@ -397,7 +406,13 @@ verifdirectory() {
       msgline "$DSAS_HAUT/$file" $status
       if [ $status -eq 0 ]; then
         ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
-        [ "$type" == "gpg" ] && [ "${file##*.}" != "gpg" ] && ln "$DSAS_HAUT/$file.sig" "$DSAS_BAS/$file.sig"
+        if [ "$type" == "gpg" ] && [ "${file##*.}" != "gpg" ]; then
+          if [ -f "$DSAS_HAUT/$file.asc" ]; then
+            ln "$DSAS_HAUT/$file.asc" "$DSAS_BAS/$file.asc"
+          elif [ -f "$DSAS_HAUT/$file.sig" ]; then
+            ln "$DSAS_HAUT/$file.sig" "$DSAS_BAS/$file.sig"
+          fi
+        fi
         [ "$type" == "openssl" ] && ln "$DSAS_HAUT/$file.sig" "$DSAS_BAS/$file.sig"
       fi
     done
