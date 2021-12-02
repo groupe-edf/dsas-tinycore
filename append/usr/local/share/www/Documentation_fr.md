@@ -926,7 +926,7 @@ le `URI` doit-être de la forme `protocole://site/dossier/` ou bien
 `protocole://site/dossier/fichier`. Les protocoles permis sont `sftp:`, `ftp:`, `ftps:`, 
 `http:` et `https:`. Par exemple `ftp://noeysep3.noe.edf.fr/LiveUpdate/`. Le `/` à la
 fin des `URI` avec un dossier est optionnelle mais recommandé.
-- `Autorité de certificate d'URI` - Si `https est utilisé pour le `URI`, le DSAS va
+- `Autorité de certificate d'URI` - Si `https` est utilisé pour le `URI`, le DSAS va
 refuser de télécharger des fichier depuis l'URI si le certificat utilisé par le 
 serveur n'est pas valable. Trois choix sont possible
   * `CA Integré` - Les autoritiés de certification integrés sont utilisés pour la
