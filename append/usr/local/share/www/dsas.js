@@ -2213,12 +2213,12 @@ class DSASDisplayLogs {
       if (found < 0)
         found = 0;
       if (nmatches > 0) {
-        this.all = true; // Force all logs to be displayed
+        // Force all logs to be displayed, as the value we're looking for
+        // might be hidden.
         // FIXME : This button text change should not be in this class, 
         // but difficult to put it elsewhere
+        this.all = true;
         document.getElementById("loghide").value = _("All logs")
-
-       
 
         this.tab = matches[found]["tab"];
         this.highlight = {tab: this.tab, line: matches[found]["line"]};
