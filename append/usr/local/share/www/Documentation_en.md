@@ -693,6 +693,20 @@ the blue button at the top of the verification logs allow to switch between a mo
 are visible or a mode or "that errors" are visible. This will allow you to quickly identify
 the files that had problems.
 
+### Search in verification logs 
+
+In the case of a problem or a vulnerability being identified it might be necessary to examine
+the verification logs, for either the name of a file or its MD5 signature as an indicator of
+compromission. The DSAS includes a serach dialog allowing matches log lines to be found. type
+the string value to be found in the verification logs as shown below and the next matching line
+will be highlighted.
+
+![Search in the verification logs](en/DSAS33.png)
+
+Type `Return` allows the next matching line to be found. If there is no matching line between
+the actual position in the logs and the end of the logs, the DSAS will recommence the search 
+starting at the beginning. If no matching line is found, no line will be highlighted.
+
 ## Certificate configuration
 
 The DSAS is preconfigured with the set of root certificates of a classic linux distribution.
