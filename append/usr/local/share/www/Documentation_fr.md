@@ -1631,14 +1631,16 @@ Les signatures GPG pourrait être intégré dans le fichier signé ou dans un fi
 assume qu'un des moyens suivant est utilisé afin de signé un fichier
 
 ```shell
-$ gpg --output <file>.gpg --sign <file>
-$ gpg --output <file>.sig --detach-sig <file>
-$ gpg --output <file>.sig -a --detach-sig <file>
+$ gpg --sign <file>
+$ gpg --clearsign <file>
+$ gpg --detach-sig <file>
+$ gpg -a --detach-sig <file>
 ```
 
-Donc des signature détaché sont en deux fichiers <file> et <file>.sig, et des signature intégrés 
-sont dans des fichiers terminant comme <file>.gpg. Le DSAS traite les deux types de signature. Dans le
-cas de signature détaché, les deux fichiers doit être fournis au DSAS.
+Avec la premiere deux formes seulement ls fichier <file>.gpg ou <file>.asc doivent être transmis
+au DSAS parce que ce fichier contient la signature et le fichier d'origine. Pour les deux formes 
+avec les signatures detachées le fichier d'origine et un fichier <file>.sig ou <file>.asc doit
+être fournis au DSAS.
 
 ### Vérification - openssl
 
