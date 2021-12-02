@@ -33,7 +33,7 @@ signatures. Each file allowed to pass the DSAS can be verified by its
 cryptographic signature.
 
 The DSAS is not the first proposal to use cryptographique signatures in a 
-file transfer system and [EDF already uses such a product](https://www.seclab-security.com/seclab-securing-systems/)
+file transfer system and for example [a product by SECLAB implements this.](https://www.seclab-security.com/seclab-securing-systems/)
 The problem is that these existing systems require human intervention to verifier
 and sign every file received and to be transfered by the DSAS. A program like
 Symantec End Point Manager produces approximately 4000 files a day to transfer.
@@ -118,7 +118,7 @@ A simplified architecture of the DSAS is then
 
 ![Architecture DSAS architecture](en/DSAS.png)
 
-where the arrows represent networl or application flows with the direction defining which 
+where the arrows represent network or application flows with the direction defining which 
 machine or application initiates the flow. 
 
 An administration account is also created. This account is only available from the sensitive
@@ -153,7 +153,7 @@ are removed when they are not longer available on the site they were downloaded 
 So the only the addition of space used by the download sites is needed, with a little
 extra margin.
 
-The Windows "Patch Tuesday" updates are often a hundred or so megabytes, so we multiplying
+The Windows "Patch Tuesday" updates are often a hundred or so megabytes, so we multiply
 that by the number of updates to keep available and we can easily find otherselves with
 several gigabytes. The Symantec IntelligentUpdates need roughly 150 megabytes, while 
 Symantec LiveUpdate needs 50 gigabytes. 
@@ -165,7 +165,7 @@ of the DSAS.
 
 ### Creation of the virtual machines
 
-The DSAS is supplied in the form of an ISO that shoul dbe used as a "live CD". This means
+The DSAS is supplied in the form of an ISO that should be used as a "live CD". This means
 that the operating system should always boot from this image ISO. The major advantage of
 this is that the updates of the DSAS will be extremely easy and resumes as the shutdown of
 the DSAS, the remplacement of the ISO and a restart.
@@ -206,8 +206,8 @@ the use of an internal network of the hypervisor configured with VirtualBox like
 
 We are now ready to start the machines for the first time.
 
-This step start with an initialisation in two phases : the first using the linux console,
-and the second with the administration console of the DSAS en https.
+This step starts with an initialisation in two phases : the first using the linux 
+console, and the second with the administration console of the DSAS using https.
 
 ## First initialisation phase
 
@@ -229,9 +229,8 @@ Navigation in this type of menu is done with the following keys
 - Space - select an option
 - Enter - continue
 
-Use "Space" to select the disk, here "/dev/sda", and "Enter"
-to start formatting the disk. After formatting, the machine
-will restart automatically before continuing
+Use "Space" to select the disk, here "/dev/sda", and "Enter" to start formatting 
+the disk. After formatting, the machine will restart automatically before continuing
 
 ### Selection of the type of machine
 
@@ -389,7 +388,7 @@ At the top of the administration interface pages you will find an `Apply` button
 highlighted in red. This button is very important. No modification made via the administration
 interface will be permanent and none, except password changes, will be applied until this 
 button is used. This button performs a permanent backup of the changes and applies them. In this
-meanner, major errors can be easily removed with a simple restart unless they are applied.
+manner, major errors can be easily removed with a simple restart unless they are applied.
 
 #### Shutdown and Restart
 
@@ -403,7 +402,7 @@ DSAS, like
 #### Backup and Restore
 
 The currently applied DSAS configuration can be saved by using the button in
-the menu above. Selecting to backup you will be asked to enter a password for the
+the menu above. Selecting to backup, you will be asked to enter a password for the
 backup, like
 
 ![Backup password entry menu](en/DSAS24.png)
@@ -414,7 +413,7 @@ without the encryption step.
 
 It is strongly advised to encrypt these archives, because it contains the complete DSAS
 configuration, including SSL certificates and SSH secrets. The password does not have to 
-be the same password as used for DSAS. The user passwords will not be backed up.
+be the same password as used for the DSAS. The user passwords will not be backed up.
 
 When restoring the same password will be requested, and so this password should be kept
 preciously. In case of a restoration it will be applied immediately. This could result in
@@ -537,7 +536,7 @@ is must be two letters encoded as defined in RFC5280. The code for France is __F
 - __O__ - The organization responsible for the server. In France, the
 name of the company registered with INSEE and must be all capital letters.
 - __OU__ - An identifier of the sub organization responsible for the server. Certificates
-signed by the ONS of EDF all use '0002 552081317', the KBIS of EDF.
+signed in France must include a KBIS, for example here '0002 552081317', is the KBIS of EDF.
 - __CN__ - For a server, like the DSAS this must be the DNS name of the server
 - __S__ - A free field for the region of the Company's head office. It is optional
 - __L__ - A free field for the city of the company's head office. It is optional
@@ -697,7 +696,7 @@ the files that had problems.
 
 In the case of a problem or a vulnerability being identified it might be necessary to examine
 the verification logs, for either the name of a file or its MD5 signature as an indicator of
-compromission. The DSAS includes a serach dialog allowing matches log lines to be found. type
+compromission. The DSAS includes a search dialog allowing matches log lines to be found. type
 the string value to be found in the verification logs as shown below and the next matching line
 will be highlighted.
 
