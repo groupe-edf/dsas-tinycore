@@ -1,3 +1,6 @@
+var timeout_login = 0;
+var timeout_status = 0;
+
 function modal_message(text, action = null, hide = false){
   var modalDSAS = document.getElementById("modalDSAS");
   modalDSAS.removeAttribute("disable");
@@ -199,8 +202,8 @@ function dsas_loggedin(update_timeout = true){
       return Promise.reject({status: response.status, 
           statusText: response.statusText});
     else {
-      // Check if logged in once evry 15 seconds, but don't update the timeout
-      setTimeout(dsas_loggedin, 15000, false);
+      // Check if logged in once every 15 seconds, but don't update the timeout
+      timeout_login = setTimeout(dsas_loggedin, 15000, false);
     }
   }).catch(error => {
     modal_message(_("You are not connected. Click 'Ok' to reconnect."),
@@ -293,7 +296,7 @@ function dsas_status(){
            '<h5>' + _("Upper Machine :") + '</h5>' + machine_status(obj.haut) + '</div></div>';
       document.getElementById("StatusBar").innerHTML = body;
       // Automatically refresh the page
-      setTimeout(dsas_status, 5000);
+      timeout_status = setTimeout(dsas_status, 5000);
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
         if (error.status)
@@ -983,6 +986,15 @@ function dsas_display_cert(what = "all"){
     });
 }
 
+function escapeHtml(unsafe) {
+  return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+}
+
 function treat_gpg_certs(certs) {
   body = "";
   i = 0;
@@ -996,7 +1008,7 @@ function treat_gpg_certs(certs) {
       '<p class="my-0 ' + cls + '"><a class="text-toggle" data-bs-toggle="collapse" href="#gpg' + i + '" role="button"' + 
       'aria-controls="gpg' + i + '" aria-expanded="false">' +
       '<i class="text-collapsed"><img src="caret-right.svg"/></i>' +
-      '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + name + 
+      '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + escapeHtml(name) + 
       '&nbsp;<a data-toggle="tooltip" title="' + _("Download") + '" href="' + url + '" download="' + name.replace(/ /g,"_") + '.gpg">' + 
       '<img src="save.svg"></a>';
     body = body + '&nbsp;<a data-toggle="tooltip" title="' + _("Delete") + '" onclick="dsas_cert_delete(\'' + name.replaceAll('\n','\\n') + '\',\'' + 
@@ -1748,7 +1760,6 @@ function dsas_display_help(){
 
 function dsas_apply(){
   var modalApply = document.getElementById("modalDSAS")
-
   modalApply.setAttribute("disable", true);
   modalApply.setAttribute("body", "<span class='spinner-border spinner-border-sm'></span> &nbsp; Sauvegarde de la configuration en cours.");
 
@@ -1788,8 +1799,6 @@ function dsas_apply(){
 
 function dsas_reboot(){
   var modalReboot = document.getElementById("modalDSAS");
-  document.getElementById("modalDSAS").hide();
-
   modalReboot.setAttribute("disable", true);
   modalReboot.setAttribute("body", '  <div class="row">\n'+
                  '    <div class="col-8">\n' +
@@ -1801,6 +1810,12 @@ function dsas_reboot(){
                  '      </div>\n' +
                  '    </div>\n' +
                  '  </div>');
+
+  // Clear status and login timeouts before continuing
+  if (timeout_login !== 0)
+    clearTimeout(timeout_login);
+  if (timeout_status !== 0)
+    clearTimeout(timeout_status);
 
   fetch("api/reboot.php").then(response => {
     if (response.ok) 
@@ -1899,6 +1914,12 @@ function dsas_shutdown(){
                  '    </div>\n' +
                  '  </div>');
 
+  // Clear status and login timeouts before continuing
+  if (timeout_login !== 0)
+    clearTimeout(timeout_login);
+  if (timeout_status !== 0)
+    clearTimeout(timeout_status);
+
   fetch("api/shutdown.php").then(response => {
     if (response.ok) 
       setTimeout(waitshutdown, 1000);
@@ -1928,7 +1949,7 @@ function waitshutdown(counter = 0) {
     chkdown(location.host).then(response => {
       modalShutdown.removeAttribute("disable");
       modalShutdown.hide();
-      modal_message(_("The DSAS has shutown. You can close this window"));
+      modal_message(_("The DSAS has shutdown. You can close this window"));
     }).catch(error => {
       modalShutdown.removeAttribute("disable");
       modalShutdown.hide();  

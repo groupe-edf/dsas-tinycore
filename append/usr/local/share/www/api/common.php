@@ -1,7 +1,5 @@
 <?php
 
-// FIXME : Lots of dead code here to clean up
-
 define("_DSAS_VAR", "/var/dsas");
 define("_DSAS_LOG", "/home/dsas/log");
 define("_DSAS_XML", _DSAS_VAR . "/dsas_conf.xml");
@@ -66,18 +64,45 @@ function dsas_exec($args, $cwd = null, $stdin = []){
 
     // Write all of the inputs line by line. Need to parse user
     // input before using them in this function !!!
+    // FIXME IF this blocks, we'll need to intercale the writes
+    // to stdin with the reads from stdout and stderr below
     foreach ($stdin as $line)
        fwrite($pipes[0], $line . PHP_EOL);
     fclose($pipes[0]);
 
+    // Intercale reading of stderr and stdout to avoid one block the other
     $stdout="";
-    while (!feof($pipes[1]))
-      $stdout = $stdout . fgets($pipes[1]);
-    fclose($pipes[1]);
-    $stderr = "";
-    while (!feof($pipes[2]))
-      $stderr = $stderr . fgets($pipes[2]);
-    fclose($pipes[2]);
+    $read_out=true;
+    $stderr="";
+    $read_err=true;
+    $len = 0;
+    while ($read_out || $read_err) {
+      if ($read_out) {
+        if (feof($pipes[1])) {
+          fclose($pipes[1]);
+          $read_out = false;
+        } else {
+          $str = fgets($pipes[1]);
+          $stdout = $stdout . $str;
+          $len = strlen($str);
+        }
+      }
+      if ($read_err) {
+        if (feof($pipes[2])) {
+          fclose($pipes[2]);
+          $read_err = false;
+        } else {
+          $str = fgets($pipes[2]);
+          $stderr = $stderr . $str;
+          if ($len == 0)
+            $len = strlen($str);
+        }
+      }
+      if ($len == 0)
+        usleep(10000);
+      else
+        $len = 0;
+    }
     $retval = proc_close($process);
     return ["retval" => $retval, "stdout" => $stdout, "stderr" => $stderr];
   } else {
@@ -198,13 +223,12 @@ function mask2cidr($mask){
   return 32-log(($long ^$base)+1,2);
 }
 
-// This function should never be passed parameters from the end user
-// If it ever is convert exec to use proc_open with a command array
 function ip_interface($interface){  
   $pattern1 = "/inet addr:(\d+\.\d+\.\d+\.\d+)/";
-  $pattern2 = "/Mask:(\d+\.\d+\.\d+\.\d+)/";     
-  if (! exec(escapeshellcmd("/sbin/ifconfig " . $interface) . " 2>&1", $text, $retval)) {
-    $text = implode(" ", $text);                                                
+  $pattern2 = "/Mask:(\d+\.\d+\.\d+\.\d+)/";
+  $output = dsas_exec(["/sbin/ifconfig", $interface]);      
+  if ($output["retval"] === 0) {
+    $text = implode(" ", $output["stdout"]);                                                
     preg_match($pattern1, $text, $matches);                                     
     if (count($matches) < 2)                                                    
       return "";                           
@@ -375,8 +399,8 @@ function parse_gpg($cert){
   // This use of exec is ok as there are no user parameters, the user data is passed
   // as a file $tmp
   if (exec(escapeshellcmd("/usr/local/bin/gpg -no-default-keyring -vv " . $tmp) . " 2>&1", $text, $retval)) {
-    $text = implode(PHP_EOL, $text);                                                
-    preg_match("/uid\s+([^$]+)" . PHP_EOL . "/", $text, $matches); 
+    $text = implode(PHP_EOL, $text);                                                                                           
+    preg_match("/uid\s+([^\n]+)/", $text, $matches); 
     $data["uid"] = $matches[1]; 
     preg_match("/pub\s+([^\s]+)/", $text, $matches); 
     $data["size"] = $matches[1];  

@@ -247,8 +247,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $errors[] = ["error" => ["The task '{0}' is not active. Try applying before use",  $id]];
           } else {
             // Force the execution of the task with the "-f" flag
-            exec("runtask -f " . escapeshellarg($id) . " > /dev/null &", $output, $retval);
-            if ($retval != 0)
+            $output = dsas_exec(["runtask", "-f", $id, "&"]);
+            if ($output["retval"] != 0)
               $errors[] = ["error" => ["The task '{0}' has failed", $id]];
           }
         }

@@ -6,17 +6,23 @@ if (! dsas_loggedin())
 else {
   // exec here for now, use proc_open to avoid shell if user input is supplied
   $haut = interco_haut();
-  exec("sudo /etc/init.d/services/dsas apply", $output, $retval);
-  if ($retval == 0) 
-    exec("ssh tc@" . $haut . " cp /var/dsas/dsas_conf.xml /var/dsas/dsas_conf.xml.old", $output, $retval);
-  if ($retval == 0) 
-    exec("scp /var/dsas/dsas_conf.xml tc@" . $haut . ":/tmp", $output, $retval);
-  if ($retval == 0) 
-    exec("ssh tc@" . $haut ." mv /tmp/dsas_conf.xml /var/dsas/dsas_conf.xml", $output, $retval);
-  if ($retval == 0)
-    exec("ssh tc@" . $haut . " sudo /etc/init.d/services/dsas apply", $output, $retval);
-  if ($retval != 0)
-    die(header("HTTP/1.0 500 Internal Server Error"));
+
+  // FIXME Can't use dsas_exec here as this command snt a HUP to the very server
+  // on which this PHP code is running. So dsas_exec will hang in this case. 
+  // exceptionally we use "exec" that seems to work.
+  exec("sudo /etc/init.d/services/dsas apply", $dummy, $retval);
+  $output["retval"] = $retval;
+
+  if ($output["retval"] == 0) 
+    $output = dsas_exec(["ssh", "tc@" . $haut, "cp", "/var/dsas/dsas_conf.xml", "/var/dsas/dsas_conf.xml.old"]);
+  if ($output["retval"] == 0) 
+    $output = dsas_exec(["scp", "/var/dsas/dsas_conf.xml", "tc@" . $haut . ":/tmp"]);
+  if ($output["retval"] == 0) 
+    $output = dsas_exec(["ssh", "tc@" . $haut, "mv", "/tmp/dsas_conf.xml", "/var/dsas/dsas_conf.xml"]);
+  if ($output["retval"] == 0)
+    $output = dsas_exec(["ssh", "tc@" . $haut, "sudo", "/etc/init.d/services/dsas", "apply"]);
+  if ($output["retval"] != 0)
+    die(header("HTTP/1.0 500 Internal Server Error: " . $output["stderr"]));
   else
     echo "Ok";
 }
