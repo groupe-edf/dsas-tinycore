@@ -1,8 +1,4 @@
-#!/bin/bash
-
-# This script need bash  to access /dev/udp/HOST/PORT. Could write a simple
-# C program to replace this if needed. Don't use netcat or socat as too much
-# risk to have them on the DSAS
+#!/bin/sh
 
 # if root rerun as user tc
 if [ $(id -u) == 0 ]; then
@@ -35,20 +31,10 @@ HLOGH=""
 HLOGSZ0=0
 HLOGH0=""
 if [ -f "$LAST" ]; then
-  last="";
-  while IFS= read -r line; do
-    if [ -z "$last" ]; then
-      IFS=' ' read HLOG HLOGSZ HLOGH << EOF
-$line
-EOF
-      last="true"
-    else
-      IFS=' ' read HLOG0 HLOGSZ0 HLOGH0 << EOF
-$line
-EOF
-      break
-    fi
-  done < $LAST
+  HLOGSZ=$(grep $HLOG $LAST | cut -d' ' -f2)
+  HLOGH=$(grep $HLOG $LAST | cut -d' ' -f3)
+  HLOGSZ0=$(grep $HLOG0 $LAST | cut -d' ' -f2)
+  HLOGH0=$(grep $HLOG0 $LAST | cut -d' ' -f3)T
 fi
 
 # Get /var/log/messages from the machine haut
@@ -65,16 +51,17 @@ if [ "$(sha256sum $tempdir/$(basename $HLOG) | cut -d' ' -f1)" != "$HLOGH" ]; th
     if [ "$(sha256sum $tempdir/$(basename $HLOG0) | cut -d' ' -f1)" != "$HLOGH" ]; then
       # There are lines in $HLOG0 to treat
       dd status=none bs=1 skip=$HLOGSZ0 if=$tempdir/$(basename $HLOG0) | while read -r line; do
-        echo $line > /dev/udp/$server/514
+        echo $line | nc -u $server 514 
       done
     fi
     HLOGH0="$(sha256sum $tempdir/$(basename $HLOG0) | cut -d' ' -f1)"
     HLOGSZ0="$(stat -c%s $tempdir/$(basename $HLOG0))"
     HLOGSZ=0
+
   fi
   # Treat the lines in $HLOG
   dd status=none bs=1 skip=$HLOGSZ if=$tempdir/$(basename $HLOG) | while read -r line; do
-    echo $line > /dev/udp/$server/514
+    echo $line | nc -u $server 514
   done
 
   # Update the status file
