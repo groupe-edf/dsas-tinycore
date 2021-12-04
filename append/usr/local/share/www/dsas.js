@@ -2192,12 +2192,16 @@ class DSASDisplayLogs {
 
   numberOfItems(){
     var output = 0;
-    if (this.all)
-      output = this.logs[this.tab].length
+    if (this.logs.length === 0)
+      output = 0;
     else {
-      for (var index = 0; index < this.logs[this.tab].length; ++index) {
-        if (this.logs[this.tab][index]["type"] !== "normal")
-          output++;
+      if (this.all)
+        output = this.logs[this.tab].length
+      else {
+        for (var index = 0; index < this.logs[this.tab].length; ++index) {
+          if (this.logs[this.tab][index]["type"] !== "normal")
+            output++;
+        }
       }
     }
     return output;
@@ -2263,41 +2267,43 @@ class DSASDisplayLogs {
     else
       this.view = this.holder.appendChild(document.createElement("div"));
 
-    var firstItem = Math.floor(this.holder.scrollTop / this.height);
-    var lastItem = firstItem + Math.ceil(this.holder.offsetHeight / this.height)
-    if (lastItem + 1 >= this.logs[this.tab].length)
-      lastItem = this.logs[this.tab].length - 1;
-    this.view.id = "view";
-    this.view.style.top = (firstItem * this.height) + 'px';
-    this.view.style.position = "absolute";
-    this.curItem = firstItem;
+    if (this.logs.length > 0) {
+      var firstItem = Math.floor(this.holder.scrollTop / this.height);
+      var lastItem = firstItem + Math.ceil(this.holder.offsetHeight / this.height)
+      if (lastItem + 1 >= this.logs[this.tab].length)
+        lastItem = this.logs[this.tab].length - 1;
+      this.view.id = "view";
+      this.view.style.top = (firstItem * this.height) + 'px';
+      this.view.style.position = "absolute";
+      this.curItem = firstItem;
 
-    var pre;
-    if (this.all) {
-      for (var index = firstItem; index <= lastItem; ++index) {
-        pre = document.createElement('pre');
-        if ((this.tab == this.highlight["tab"]) && (index === this.highlight["line"])) 
-          pre.className = "my-0 bg-info overflow-hidden";
-        else if (this.logs[this.tab][index]["type"] === "normal")
-          pre.className = "my-0 text-muted overflow-hidden";
-        else
-          pre.className = "my-0 text-danger overflow-hidden";       
-        pre.innerHTML = dsas_verify_line(this.logs[this.tab][index]["line"]); 
-        this.view.appendChild(pre);
-      }
-    } else {
-      var line = 0;
-      for (var index = 0; index < this.logs[this.tab].length; ++index) {
-        if (this.logs[this.tab][index]["type"] !== "normal") {
-          if (line > firstItem) {
-            pre = document.createElement('pre');
+      var pre;
+      if (this.all) {
+        for (var index = firstItem; index <= lastItem; ++index) {
+          pre = document.createElement('pre');
+          if ((this.tab == this.highlight["tab"]) && (index === this.highlight["line"])) 
+            pre.className = "my-0 bg-info overflow-hidden";
+          else if (this.logs[this.tab][index]["type"] === "normal")
+            pre.className = "my-0 text-muted overflow-hidden";
+          else
             pre.className = "my-0 text-danger overflow-hidden";       
-            pre.innerHTML = dsas_verify_line(this.logs[this.tab][index]["line"]); 
-            view.appendChild(pre);
+          pre.innerHTML = dsas_verify_line(this.logs[this.tab][index]["line"]); 
+          this.view.appendChild(pre);
+        }
+      } else {
+        var line = 0;
+        for (var index = 0; index < this.logs[this.tab].length; ++index) {
+          if (this.logs[this.tab][index]["type"] !== "normal") {
+            if (line > firstItem) {
+              pre = document.createElement('pre');
+              pre.className = "my-0 text-danger overflow-hidden";       
+              pre.innerHTML = dsas_verify_line(this.logs[this.tab][index]["line"]); 
+              view.appendChild(pre);
+            }
+            line++;
+            if (line > lastItem)
+              break;
           }
-          line++;
-          if (line > lastItem)
-            break;
         }
       }
     }
