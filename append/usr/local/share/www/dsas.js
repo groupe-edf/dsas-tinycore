@@ -2294,7 +2294,7 @@ class DSASDisplayLogs {
         var line = 0;
         for (var index = 0; index < this.logs[this.tab].length; ++index) {
           if (this.logs[this.tab][index]["type"] !== "normal") {
-            if (line > firstItem) {
+            if (line >= firstItem) {
               pre = document.createElement('pre');
               pre.className = "my-0 text-danger overflow-hidden";       
               pre.innerHTML = dsas_verify_line(this.logs[this.tab][index]["line"]); 
