@@ -208,11 +208,6 @@ valid_cidr() {
 
 config_interco(){
     c=$(xmllint --xpath 'string(dsas/config/network/interco/cidr)' $VAR/dsas_conf.xml)
-    if [ -z "$c" ]; then
-      INTERCO_CIDR="192.168.192.0/24"
-      echo -e "cd /dsas/config/network/interco/cidr\nset $c\nsave" | xmllint --shell $VAR/dsas_conf.xml > /dev/null
-    fi
-
     while :; do
       INTERCO_CIDR="$(dialog --stdout --no-cancel --title 'Interconnexion network in CIDR format' --inputbox 'Address:' 0 0 $c)"
       valid_cidr $INTERCO_CIDR || { dialog --msgbox "IP Address invalid" 0 0; continue; }
@@ -654,13 +649,18 @@ check_xml_version(){
     echo "XML version added"
     # Don't use xmllint here as can't easily add nodes. Just use sed
     mv $VAR/dsas_conf.xml $VAR/dsas_conf.xml.old
-    cat $VAR/dsas_conf.xml.old | sed -e "s:<dsas>:<dsas>\n  <version>0.5</version>:" > $VAR/dsas_conf.xml
+    sed -i -e "s:<dsas>:<dsas>\n  <version>0.5</version>:" $VAR/dsas_conf.xml
     chown tc.staff $VAR/dsas_conf.xml
     chmod 644 $VAR/dsas_conf.xml
     _ver="0.5"
   fi
-  # FIXME : When the XML versions change add code here for the upgrade
+  VER_MAJOR="$(echo $_ver | cut -d. -f1)"
+  VER_MINOR="$(echo $_ver | cut -d. -f2)"
 
+  # When the XML versions change add code here for the upgrade
+  if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "6" ]; then 
+    sed -i -e "s:<network>:<network>\n      <interco>\n        <cidr>192.168.192.0/24</cidr>\n      </interco>:" $VAR/dsas_conf.xml
+  fi
 
   # Now that the XML is upgraded, save the new version number
   if [ "$_ver" != "$DSAS_XML_VERSION" ]; then
@@ -700,6 +700,7 @@ case "${1}" in
     echo "# Hardcoded address of other DSAS machine" >> /etc/hosts
     [ "$TYP" == "bas" ] && echo "$INTERCO_HAUT haut" >> /etc/hosts
     [ "$TYP" == "haut" ] && echo "$INTERCO_BAS bas" >> /etc/hosts
+    /bin/chmod a+r /etc/hosts
     start_network
     start_sshd
     start_syslog
