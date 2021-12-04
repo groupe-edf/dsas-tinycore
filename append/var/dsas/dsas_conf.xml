@@ -1,5 +1,5 @@
 <dsas>
-  <version>0.5</version>
+  <version>0.6</version>
   <config>
     <users>
       <hash>sha512</hash>
@@ -27,6 +27,9 @@
           <nameserver />
         </dns>
       </haut>
+     <interco>
+       <cidr>192.168.192.0/24</cidr>
+     </interco>
     </network>
     <web>
       <ssl>

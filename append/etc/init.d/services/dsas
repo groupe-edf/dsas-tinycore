@@ -6,15 +6,8 @@ YELLOW="$(echo -e '\033[1;33m')"
 NORMAL="$(echo -e '\033[1;39m')"
 MNT=/mnt
 
-# FIXME : Make this configurable ?
-INTERCO="192.168.192.0"
-INTERCO_MASK="255.255.255.0"
-INTERCO_CIDR="$INTERCO/24"
-INTERCO_BAS="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 1)) )"
-INTERCO_HAUT="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 2)) )"
-
-# The vesrion of the DSAS xml file supported by this version
-DSAS_XML_VERSION="0.5"
+# The version of the DSAS xml file supported by this version
+DSAS_XML_VERSION="0.6"
 
 VAR=/var/dsas
 as_tc="sudo -E -u tc"
@@ -211,6 +204,39 @@ valid_cidr() {
  
   [ $? ] || return 1
   return 0
+}
+
+config_interco(){
+    c=$(xmllint --xpath 'string(dsas/config/network/interco/cidr)' $VAR/dsas_conf.xml)
+    if [ -z "$c" ]; then
+      INTERCO_CIDR="192.168.192.0/24"
+      echo -e "cd /dsas/config/network/interco/cidr\nset $c\nsave" | xmllint --shell $VAR/dsas_conf.xml > /dev/null
+    fi
+
+    while :; do
+      INTERCO_CIDR="$(dialog --stdout --no-cancel --title 'Interconnexion network in CIDR format' --inputbox 'Address:' 0 0 $c)"
+      valid_cidr $INTERCO_CIDR || { dialog --msgbox "IP Address invalid" 0 0; continue; }
+      _cidr="$(echo $INTERCO_CIDR | sed -e "s:^.*/\(.*\)$:\1:")"
+      if [ "$_cidr" -lt 24 ] || [ "$_cidr" -gt 30 ] ; then
+        dialog --msgbox "CIDR must be between 24 and 30 invalid" 0 0
+        continue
+      fi
+      break
+    done
+    if [ "$INTERCO_CIDR" != "$c" ]; then
+      echo -e "cd /dsas/config/network/interco/cidr\nset $INTERCO_CIDR\nsave" | xmllint --shell $VAR/dsas_conf.xml > /dev/null
+    fi
+}
+
+setup_interco(){
+    INTERCO_CIDR=$(xmllint --xpath 'string(dsas/config/network/interco/cidr)' $VAR/dsas_conf.xml)
+    _cidr="$(echo $INTERCO_CIDR | sed -e "s:^.*/\(.*\)$:\1:")"
+    _ip=$(echo $INTERCO_CIDR | sed -e "s:^\(.*\)/.*$:\1:")
+   INTERCO_MASK="255.255.255.$(( (255 << (32 - $_cidr)) & 255))"
+   _last="$(($(echo $_ip | cut -d. -f4) & ((0xFF00 << ($_cidr - 24)) & 0xFF)))" 
+   INTERCO="$(echo $_ip | cut -d. -f1-3).$_last"   
+   INTERCO_BAS="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 1)) )"
+   INTERCO_HAUT="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 2)) )"
 }
 
 valid_domain(){
@@ -505,6 +531,7 @@ config_sshd(){
 
     echo "Copying public keys to machine haut"
     $as_tc ssh-keyscan $INTERCO_HAUT > /home/tc/.ssh/known_hosts
+    $as_tc ssh-keyscan haut >> /home/tc/.ssh/known_hosts
     cp /home/tc/.ssh/known_hosts /home/haut/.ssh/known_hosts
     chown tc.staff /home/tc/.ssh/known_hosts
     chown haut.haut /home/haut/.ssh/known_hosts
@@ -663,14 +690,16 @@ case "${1}" in
       TYP="$(dialog --stdout --no-cancel --radiolist 'Select machine type:' 0 0 0 haut 'Haut/High' on bas 'Bas/Low' off)"
       $as_tc echo $TYP > $VAR/dsas_typ
       echo "Machine configured as type: ${GREEN}$TYP${NORMAL}"
+      config_interco
       # The machine "haut" is configured from the web admin of "bas"
       [ "$TYP" == "bas" ] && config_network
       CONFIG_SSH="true"
     fi
+    setup_interco
     /usr/bin/sethostname $TYP
     echo "# Hardcoded address of other DSAS machine" >> /etc/hosts
-    [ "$TYP" == "bas" ] && echo "192.168.192.2 haut" >> /etc/hosts
-    [ "$TYP" == "haut" ] && echo "192.168.192.1 bas" >> /etc/hosts
+    [ "$TYP" == "bas" ] && echo "$INTERCO_HAUT haut" >> /etc/hosts
+    [ "$TYP" == "haut" ] && echo "$INTERCO_BAS bas" >> /etc/hosts
     start_network
     start_sshd
     start_syslog
@@ -712,6 +741,8 @@ case "${1}" in
     TYP="$(dialog --stdout --no-cancel --radiolist 'Select machine type:' 0 0 0 haut 'Haut/High' on bas 'Bas/Low' off)"
     $as_tc echo $TYP > $VAR/dsas_typ
     echo "Machine configured as type: ${GREEN}$TYP${NORMAL}"
+    config_interco
+    setup_interco
     [ "$TYP" == "bas" ] && config_network
     config_sshd
     $0 restart

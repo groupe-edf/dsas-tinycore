@@ -161,8 +161,8 @@ function complexity_test($passwd) {
 }
 
 function interco_haut(){
-  // FIXME Make it configurable ?
-  return "192.168.192.2";
+  // Return name listed in /etc/host
+  return "haut";
 }
 
 function force_passwd(){

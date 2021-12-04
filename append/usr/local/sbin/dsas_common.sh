@@ -6,10 +6,8 @@ CONF="$VAR/dsas_conf.xml.active"
 RUNLOG="$LOG/dsas_runlog"
 DSAS_HOME="/home/dsas"
 
-INTERCO="192.168.192.0"
-INTERCO_MASK="255.255.255.0"
-INTERCO_BAS="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 1)) )"
-INTERCO_HAUT="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 2)) )"
+# Hotnames listed in /etc/hosts for "bas and "haut"
+INTERCO_HAUT="haut"
 
 DSAS_HAUT=$DSAS_HOME/haut/share
 DSAS_BAS=$DSAS_HOME/bas/share
