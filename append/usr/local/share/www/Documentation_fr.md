@@ -201,9 +201,9 @@ réseau est toujours utilisée pour les connexions vers les réseaux externes du
 et leur configuration dépendent de l'environnement où est installé le DSAS. 
 
 La deuxième carte réseau est toujours utilisée pour l'interconnexion entre les 
-deux machines du DSAS, et ce réseau est un réseau statique en "192.168.192.0/24".
-Plusieurs moyens pourraient être mis en place pour la configuration du réseau
-d'interconnexion, notamment si un pare-feu supplémentaire est à placer sur ce
+deux machines du DSAS, et ce réseau est un réseau statique par defaut en 
+"192.168.192.0/24". Plusieurs moyens pourraient être mis en place pour la configuration 
+du réseau d'interconnexion, notamment si un pare-feu supplémentaire est à placer sur ce
 lien (ceci ne semble néanmoins pas vraiment nécessaire). Nous conseillons l'usage un 
 réseau interne à l'hyperviseur configuré en VirtualBox comme
 
@@ -253,6 +253,24 @@ sa configuration avec l'erreur
 ![L'erreur si deux interfaces réseau ne sont pas configurées](fr/init2.png)
 
 Dans ce cas arrêter la machine et ajouter une carte réseau dans l'hyperviseur.
+
+### Configuration réseau d'interconnexion
+
+Le configuration du réseau d'interconnexion ne devrait changer très rarement, et sa
+configuration n'est que accessible pendant ce premier phase de configuration. Il est
+important que la même configuration est utilisé pour les deux machines. Par défaut
+ce réseau est "192.168.192.0/24" et la machine `bas` prendra l'adresse  "192.168.192.1" 
+et la machine `haut` l'adresse "192.168.192.2". 
+
+Ce réseau est configurable avec les contraintes
+
+- Les adresses IP utilisées ne devrait pas être réutilisés sur les autres interfaces
+des deux machine,
+- Le netmask en format CIDR devrait être compris entre 24 et 30. 
+
+Le réseau d'interconnexion est configuré comme
+
+![Configuration réseau d'interconnexion](fr/init13.png)
 
 ### Configuration du réseau initial
 
