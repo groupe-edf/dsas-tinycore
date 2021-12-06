@@ -197,7 +197,7 @@ will be used for the connection to the outside the DSAS and their configuration
 will be depend upon the environment in which the DSAS is installed.
 
 The second card is always used for the interconnexion between the two machines,
-and this network with always be  the static network "192.168.192.0/24". Several
+and this network by default will be the static network "192.168.192.0/24". Several
 means could be used to configure this interconnection network, particularly if 
 a friewall is placed on this link (which doesn't seem to be necessary). We propose
 the use of an internal network of the hypervisor configured with VirtualBox like
@@ -246,6 +246,24 @@ its configuration with the error
 ![The error if two network interfaces are not configured](en/init2.png)
 
 In this case stop the machine and add a network card in the hypervisor.
+
+### Configuration of interconnection network
+
+The configuration of the interconnection network should only be changed rarely, and
+its configuration is only available in this initial phase of configuration. It is 
+important that the same configuration is used on both machines. By default this network
+is "192.168.192.0/24" and the `lower` machine will take the address "192.168.192.1" et
+`upper` machine the address "192.168.192.2".
+
+This network is configurable with the constraints
+
+- The IP addresses used must not be reused on either on the other interfaces of the
+two machines
+- The netmask in CIDR format must be between 24 and 30.
+
+The interconnection network is configuration with the menu 
+
+![Configuration of the interconnection network](en/init13.png)
 
 ### Initial network configuration
 
