@@ -1,0 +1,12 @@
+_pkg=check
+_version=0.15.2
+_uri="https://github.com/libcheck/check/releases/download/0.15.2/check-0.15.2.tar.gz"
+_dep=""
+_build_dep="compiletc"
+_pkg_path="check-0.15.2"
+_conf_cmd="./configure"
+_make_cmd="make"
+_install_cmd="make install DESTDIR="
+_post_build=""
+_pkgs="main{/usr/local/bin,/usr/local/lib/*.so*};dev{/usr/local/include,/usr/local/lib/*.a,/usr/local/lib/*.la,/usr/local/lib/pkgconfig,/usr/local/share/aclocal};doc{/usr/local/share/doc,/usr/local/share/info,/usr/local/share/man}"
+_post_install=""
