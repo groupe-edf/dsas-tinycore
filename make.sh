@@ -46,6 +46,7 @@ dsascd=$work/dsas.iso
 service_pass_len=24
 rebuild=0
 forcedownload=0
+keep=0
 
 # Force the umask
 umask 0022
@@ -228,6 +229,7 @@ EOF
         [ -z "$_make_cmd" ] || chroot --userspec=$SUDO_USER $extract /tmp/script $_make_cmd || { error "Unexpected error ($?) in build"; exit 1; }
         msg "Installing $_pkg"
         cat << EOF > $extract/tmp/script
+export DESTDIR=$destdir
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 cd $builddir/$_pkg_path
 $_install_cmd$destdir
@@ -293,9 +295,11 @@ EOF
           IFS=";"
         done
         IFS=$OIFS
-        msg "Removing build image"
-        if [ -d $extract ]; then 
-          rm -fr $extract
+        if [ "$keep" == "0" ]; then
+          msg "Removing build image"
+          if [ -d $extract ]; then 
+            rm -fr $extract
+          fi
         fi
       else
         # Can't rebuild package try getting the tcz
@@ -338,6 +342,7 @@ case $1 in
     case $1 in
       -r|--rebuild) rebuild=1; newargs="$newargs $1" ;;
       -f|--download) forcedownload=1; newargs="$newargs $1" ;;
+      -k|--keep) keep=1; ;;
       *) pkgs="$pkgs $1"
     esac
     shift
