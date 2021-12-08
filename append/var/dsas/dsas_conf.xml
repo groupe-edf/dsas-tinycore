@@ -65,6 +65,10 @@
       <active>false</active>
       <server></server>
     </syslog>
+    <antivirus>
+      <active>false</active>
+      <uri></uri>
+    </antivirus>
   </config>
   <tasks>
   </tasks>
