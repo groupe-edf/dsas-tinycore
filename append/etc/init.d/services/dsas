@@ -265,7 +265,7 @@ setup_interco(){
     _last="$(($(echo $INTERCO_HAUT | cut -d. -f4) & ((0xFF00 << ($_cidr - 24)) & 0xFF)))" 
     INTERCO_CIDR_HAUT="$(echo $INTERCO_HAUT | cut -d. -f1-3).$_last"   
 
-    INTERCO_CIDR_BAS=$(xmllint --xpath 'string(dsas/config/network/interco/haut/cidr)' $VAR/dsas_conf.xml)
+    INTERCO_CIDR_BAS=$(xmllint --xpath 'string(dsas/config/network/interco/bas/cidr)' $VAR/dsas_conf.xml)
     _cidr="$(echo $INTERCO_CIDR_BAS | sed -e "s:^.*/\(.*\)$:\1:")"
     INTERCO_BAS=$(echo $INTERCO_CIDR_BAS | sed -e "s:^\(.*\)/.*$:\1:")
     INTERCO_MASK_BAS="255.255.255.$(( (255 << (32 - $_cidr)) & 255))"
