@@ -7,7 +7,7 @@ NORMAL="$(echo -e '\033[1;39m')"
 MNT=/mnt
 
 # The version of the DSAS xml file supported by this version
-DSAS_XML_VERSION="0.7"
+DSAS_XML_VERSION="0.8"
 
 VAR=/var/dsas
 as_tc="sudo -E -u tc"
@@ -728,6 +728,9 @@ check_xml_version(){
     cp /var/dsas/dsas_conf.xml /var/dsas/dsas_conf.xml.old
     awk '/^ +<\/interco>/ && found {found=""; next} /^ +<interco>/ {found=1} NF && !found'  $VAR/dsas_conf.xml.old \
         | sed -e "s:<network>:<network>\n      <interco>\n        <haut>\n          <cidr>$INTERCO_HAUT/$_cidr</cidr>\n          <gateway>$INTERCO_GW</gateway>\n        </haut>\n        <bas>\n          <cidr>$INTERCO_BAS/$_cidr</cidr>\n          <gateway>$INTERCO_GW</gateway>\n        </bas>\n      </interco>:" > $VAR/dsas_conf.xml
+  fi
+  if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "8" ]; then 
+    sed -i -e "s:</config>:<antivirus>\n        <active>false</active>\n        <uri></uri>\n      </antivirus>\n    </config>:" $VAR/dsas_conf.xml
   fi
 
   # Now that the XML is upgraded, save the new version number

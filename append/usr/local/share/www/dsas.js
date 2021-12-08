@@ -917,6 +917,8 @@ function dsas_change_service(what) {
     document.getElementById("syslog_server").disabled = ! document.getElementById("syslog").checked;
   } else if (what === "ntp") {
     document.getElementById("ntp_pool").disabled = ! document.getElementById("ntp").checked;
+  } else if (what === "antivirus") {
+    document.getElementById("antivirus_uri").disabled = ! document.getElementById("antivirus").checked;
   } else {
     fetch("api/dsas-service.php").then(response => {
       if (response.ok) 

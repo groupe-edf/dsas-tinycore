@@ -82,7 +82,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $errors[] = ["ntp_pool" => $pool_err];
 
         $dsas->config->antivirus->active = ($data["antivirus"]["active"] === "true" ? "true" : "false");
-        $antivirus_uri = htmlspecialchars(trim($data["syslog"]["uri"]));
+        $antivirus_uri = htmlspecialchars(trim($data["antivirus"]["uri"]));
         if (! empty($antivirus_uri))
           $antivirus_err = uri_valid($antivirus_uri);
         if (empty($antivirus_err))

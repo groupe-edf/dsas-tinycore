@@ -304,11 +304,11 @@ function inet_valid($addr){
 }
 
 function uri_valid($uri){
-  $tmp = preg_split('!://!', $uri)
+  $tmp = preg_split('!://!', $uri);
   $proto = $tmp[0];
-  if (($proto != ftp) && ($proto != ftps) && ($proto != sftp) && ($proto != http) && ($proto != https))
-    return "The protocole is invalid"
-  return valid_inet(preg_split(, ':/:', tmp[1])[0])
+  if (($proto != "ftp") && ($proto != "ftps") && ($proto != "sftp") && ($proto != "http") && ($proto != "https"))
+    return "The protocol is invalid";
+  return inet_valid(preg_split(':/:', tmp[1])[0]);
 }
 
 function dsas_get_logs() {
