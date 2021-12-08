@@ -310,7 +310,7 @@ function uri_valid($uri){
   $proto = $tmp[0];
   if (($proto != "ftp") && ($proto != "ftps") && ($proto != "sftp") && ($proto != "http") && ($proto != "https"))
     return "The protocol is invalid";
-  return inet_valid(preg_split(':/:', tmp[1])[0]);
+  return inet_valid(preg_split(':/:', $tmp[1])[0]);
 }
 
 function dsas_get_logs() {
