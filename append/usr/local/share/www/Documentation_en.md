@@ -250,20 +250,45 @@ In this case stop the machine and add a network card in the hypervisor.
 ### Configuration of interconnection network
 
 The configuration of the interconnection network should only be changed rarely, and
-its configuration is only available in this initial phase of configuration. It is 
-important that the same configuration is used on both machines. By default this network
-is "192.168.192.0/24" and the `lower` machine will take the address "192.168.192.1" et
-`upper` machine the address "192.168.192.2".
+its configuration is only available in this initial phase of configuration. The 
+confuration of the interconnexion network depends on the environment in which the 
+DSAS is installed. There are 2 typical means of configuring the interconnection 
+network of the DSAS.
 
-This network is configurable with the constraints
+1. Both machines are on the same LAN. In this case the upper and lower machines 
+interconnection network should be configured with IP addresses in CIDR on the 
+same LAN, and the gateways for both machines will be ignored
+2. The two machines are on different LANs, to allow a firewall to be placed between
+them. In this case the IP addresses of both machines are independant and the gateways
+for both machines must be a valid IP address on the same LAN
 
-- The IP addresses used must not be reused on either on the other interfaces of the
-two machines
-- The netmask in CIDR format must be between 24 and 30.
+Both machines must know the interconnexion network configuration of both machines and
+so this step must be carried out on both machines and be __identical__. If the configuration
+is incorrect, the lower machine will be unable to contact the upper machine and one or
+both machines must be [reconfigured as discussed below](#in-the-event-of-a-dsas-initialization-error).
 
-The interconnection network is configuration with the menu 
+There are 4 steps in the configuration of the interconnection network. Firstly the 
+upper machines IP address in CIDR format must be entered as
 
-![Configuration of the interconnection network](en/init13.png)
+![Configuration of the upper interconnection network](en/init15.png)
+
+The IP address here is the IP address that the upper machine will take and the mask in CIDR
+format must be between 24 and 30. By default this address is "192.168.192.2/24".
+
+Next, the gateway of the upper interconnection network. If the two machines are on the 
+same network, the gateway can be left blank. It is configured as 
+
+![Configuration of the upper interconnection gateway](en/init16.png)
+
+The lower network is configured in an identical manner 
+
+![Configuration of the lower interconnection network](en/init17.png)
+
+![Configuration of the lower interconnection gateway](en/init18.png)
+
+Here, both machines are on the same network with the lower machine taking the address
+"192.168.192.1/24". It should be noted that the addresses used for the interconnection
+network must not used reused elsewhere so as to ensure the correct.
 
 ### Initial network configuration
 

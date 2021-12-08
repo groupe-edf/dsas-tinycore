@@ -256,21 +256,49 @@ Dans ce cas arrêter la machine et ajouter une carte réseau dans l'hyperviseur.
 
 ### Configuration réseau d'interconnexion
 
-Le configuration du réseau d'interconnexion ne devrait changer très rarement, et sa
-configuration n'est que accessible pendant ce premier phase de configuration. Il est
-important que la même configuration est utilisé pour les deux machines. Par défaut
-ce réseau est "192.168.192.0/24" et la machine `bas` prendra l'adresse  "192.168.192.1" 
-et la machine `haut` l'adresse "192.168.192.2". 
+La configuration du réseau d'interconnexion ne devrait changer très rarement, et sa
+configuration n'est que accessible pendant ce premier phase de configuration. La
+configuration du réseau d'interconnexon depend sur l'environnement dans lequel le
+DSAS est installé. Il y a deux scenario typique pour la configuration du reseau
+d'interconnexion
 
-Ce réseau est configurable avec les contraintes
+1. Les deux machines sont sur la même LAN. Dan ce cas, les machines haute et basse 
+devraient être configurés avec des adresses IP sur la même LAN et la passerelle 
+pour les deux machines seraient ignoré
+2. Les deux machines sont sur des LAN differentes, afin de permettre la placement d'un
+pare-feu entre eux. Dans ce cas, les adresses IP des deux machines sont independant 
+et les passerelle pour les deux machines devraient un adresse IP valide sur la même LAN.
 
-- Les adresses IP utilisées ne devrait pas être réutilisés sur les autres interfaces
-des deux machine,
-- Le netmask en format CIDR devrait être compris entre 24 et 30. 
+Les deux machines doivent conaitre le réseau d'interconnexion des deux machines et alors
+cet étape est à faire sur les deux machines et doit être __indentique__. Si la 
+configuration est incorrect, la machine basse ne pourrait pas communiquer avec la
+machine haute. Une ou les deux machines devraient être [réconfigurer comme discuté 
+ci-dessous](#en-cas-derreur-dinitialisation-du-dsas).
 
-Le réseau d'interconnexion est configuré comme
+Il y a 4 étapes dans la configuration du réseau d'interconnexion. Premierement il faut
+configurer l'adresse IP de la machine haute en format CIDR comme
 
-![Configuration réseau d'interconnexion](fr/init13.png)
+![Configuration reseau interconnexion bas](fr/init15.png)
+
+L'adresse IP est adresse de la machine haute et la mask est en format CIDR et doit-être
+entre 24 et 30. Par défaut l'adresse ici est "192.168.192.2/24".
+
+
+Apres, la passerelle du reseau d'interconnexion haut est a configurer. Si les deux 
+machines sont sur la même LAN, la passerelle pourait être laisser vide. C'est 
+configuré comme
+
+![Configuration passerelle  d'interconnexion haut](fr/init16.png)
+
+Le reseau bas est configurer de manière indentique comme
+
+![Configuration reseau d'interconnexion bas](fr/init17.png)
+
+![Configuration passerelle d'interconnexion bas](fr/init18.png)
+
+Ici les deux machines sont sur la même LAN avec la machine basse prennant l'adresse
+"192.168.192.1/24". Les adresses utilisés pour les reseaux d'interconnexion ne 
+devrait pas être utilisé ailleurs.
 
 ### Configuration du réseau initial
 

@@ -7,7 +7,7 @@ NORMAL="$(echo -e '\033[1;39m')"
 MNT=/mnt
 
 # The version of the DSAS xml file supported by this version
-DSAS_XML_VERSION="0.6"
+DSAS_XML_VERSION="0.7"
 
 VAR=/var/dsas
 as_tc="sudo -E -u tc"
@@ -207,9 +207,9 @@ valid_cidr() {
 }
 
 config_interco(){
-    c=$(xmllint --xpath 'string(dsas/config/network/interco/cidr)' $VAR/dsas_conf.xml)
+    c=$(xmllint --xpath 'string(dsas/config/network/interco/haut/cidr)' $VAR/dsas_conf.xml)
     while :; do
-      INTERCO_CIDR="$(dialog --stdout --no-cancel --title 'Interconnexion network in CIDR format' --inputbox 'Address:' 0 0 $c)"
+      INTERCO_CIDR="$(dialog --stdout --no-cancel --title 'Upper interconnexion network in CIDR format' --inputbox 'Address:' 0 0 $c)"
       valid_cidr $INTERCO_CIDR || { dialog --msgbox "IP Address invalid" 0 0; continue; }
       _cidr="$(echo $INTERCO_CIDR | sed -e "s:^.*/\(.*\)$:\1:")"
       if [ "$_cidr" -lt 24 ] || [ "$_cidr" -gt 30 ] ; then
@@ -219,19 +219,67 @@ config_interco(){
       break
     done
     if [ "$INTERCO_CIDR" != "$c" ]; then
-      echo -e "cd /dsas/config/network/interco/cidr\nset $INTERCO_CIDR\nsave" | xmllint --shell $VAR/dsas_conf.xml > /dev/null
+      echo -e "cd /dsas/config/network/interco/haut/cidr\nset $INTERCO_CIDR\nsave" | xmllint --shell $VAR/dsas_conf.xml > /dev/null
+    fi
+    g=$(xmllint --xpath 'string(dsas/config/network/interco/haut/gateway)' $VAR/dsas_conf.xml)
+    while :; do
+      INTERCO_GW="$(dialog --stdout --no-cancel --title 'Upper interconnexion gateway' --inputbox 'Address:' 0 0 $g)"
+      [ -z "$INTERCO_GW" ] || break
+      valid_ip $INTERCO_GW && break
+      dialog --msgbox "IP Address invalid" 0 0
+    done
+    if [ "$INTERCO_GW" != "$g" ]; then
+      echo -e "cd /dsas/config/network/interco/haut/gateway\nset $INTERCO_GW\nsave" | xmllint --shell $VAR/dsas_conf.xml > /dev/null
+    fi
+    c=$(xmllint --xpath 'string(dsas/config/network/interco/bas/cidr)' $VAR/dsas_conf.xml)
+    while :; do
+      INTERCO_CIDR="$(dialog --stdout --no-cancel --title 'Lower interconnexion network in CIDR format' --inputbox 'Address:' 0 0 $c)"
+      valid_cidr $INTERCO_CIDR || { dialog --msgbox "IP Address invalid" 0 0; continue; }
+      _cidr="$(echo $INTERCO_CIDR | sed -e "s:^.*/\(.*\)$:\1:")"
+      if [ "$_cidr" -lt 24 ] || [ "$_cidr" -gt 30 ] ; then
+        dialog --msgbox "CIDR must be between 24 and 30 invalid" 0 0
+        continue
+      fi
+      break
+    done
+    if [ "$INTERCO_CIDR" != "$c" ]; then
+      echo -e "cd /dsas/config/network/interco/bas/cidr\nset $INTERCO_CIDR\nsave" | xmllint --shell $VAR/dsas_conf.xml > /dev/null
+    fi
+    g=$(xmllint --xpath 'string(dsas/config/network/interco/bas/gateway)' $VAR/dsas_conf.xml)
+    while :; do
+      INTERCO_GW="$(dialog --stdout --no-cancel --title 'Lower interconnexion gateway' --inputbox 'Address:' 0 0 $g)"
+      [ -z "$INTERCO_GW" ] || break
+      valid_ip $INTERCO_GW && break
+      dialog --msgbox "IP Address invalid" 0 0
+    done
+    if [ "$INTERCO_GW" != "$g" ]; then
+      echo -e "cd /dsas/config/network/interco/bas/gateway\nset $INTERCO_GW\nsave" | xmllint --shell $VAR/dsas_conf.xml > /dev/null
     fi
 }
 
 setup_interco(){
-    INTERCO_CIDR=$(xmllint --xpath 'string(dsas/config/network/interco/cidr)' $VAR/dsas_conf.xml)
-    _cidr="$(echo $INTERCO_CIDR | sed -e "s:^.*/\(.*\)$:\1:")"
-    _ip=$(echo $INTERCO_CIDR | sed -e "s:^\(.*\)/.*$:\1:")
-   INTERCO_MASK="255.255.255.$(( (255 << (32 - $_cidr)) & 255))"
-   _last="$(($(echo $_ip | cut -d. -f4) & ((0xFF00 << ($_cidr - 24)) & 0xFF)))" 
-   INTERCO="$(echo $_ip | cut -d. -f1-3).$_last"   
-   INTERCO_BAS="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 1)) )"
-   INTERCO_HAUT="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 2)) )"
+    INTERCO_CIDR_HAUT=$(xmllint --xpath 'string(dsas/config/network/interco/haut/cidr)' $VAR/dsas_conf.xml)
+    _cidr="$(echo $INTERCO_CIDR_HAUT | sed -e "s:^.*/\(.*\)$:\1:")"
+    INTERCO_HAUT=$(echo $INTERCO_CIDR_HAUT | sed -e "s:^\(.*\)/.*$:\1:")
+    INTERCO_MASK_HAUT="255.255.255.$(( (255 << (32 - $_cidr)) & 255))"
+    _last="$(($(echo $INTERCO_HAUT | cut -d. -f4) & ((0xFF00 << ($_cidr - 24)) & 0xFF)))" 
+    INTERCO_CIDR_HAUT="$(echo $INTERCO_HAUT | cut -d. -f1-3).$_last"   
+
+    INTERCO_CIDR_BAS=$(xmllint --xpath 'string(dsas/config/network/interco/haut/cidr)' $VAR/dsas_conf.xml)
+    _cidr="$(echo $INTERCO_CIDR_BAS | sed -e "s:^.*/\(.*\)$:\1:")"
+    INTERCO_BAS=$(echo $INTERCO_CIDR_BAS | sed -e "s:^\(.*\)/.*$:\1:")
+    INTERCO_MASK_BAS="255.255.255.$(( (255 << (32 - $_cidr)) & 255))"
+    _last="$(($(echo $INTERCO_BAS | cut -d. -f4) & ((0xFF00 << ($_cidr - 24)) & 0xFF)))" 
+    INTERCO_CIDR_HAUT="$(echo $INTERCO_BAS | cut -d. -f1-3).$_last" 
+
+    if [ "$INTERCO_CIDR_BAS" != "$INTERCO_CIDR_HAUT" ] || [ "$INTERCO_MASK_BAS" != "$INTERCO_MASK_HAUT" ]; then
+      # The two machines of the DSAS are on different lans. Need to configure the gateways
+      INTERCO_GW_HAUT=$(xmllint --xpath 'string(dsas/config/network/interco/haut/gateway)' $VAR/dsas_conf.xml)
+      INTERCO_GW_BAS=$(xmllint --xpath 'string(dsas/config/network/interco/bas/gateway)' $VAR/dsas_conf.xml)
+    else
+      INTERCO_GW_HAUT=""
+      INTERCO_GW_BAS=""
+    fi
 }
 
 valid_domain(){
@@ -340,11 +388,19 @@ start_network(){
   if [ -z "$NO_INTERCO" ]; then
     echo "Using static IP for ${GREEN}$ETH1${NORMAL}."
     if [ "$TYP" == "bas" ]; then
-      /sbin/ifconfig $ETH1 $INTERCO_BAS netmask $INTERCO_MASK up
-      /sbin/route add $INTERCO_HAUT $ETH1 &
+      /sbin/ifconfig $ETH1 $INTERCO_BAS netmask $INTERCO_MASK_BAS up
+      if [ -z "$INTERCO_BAS_GW" ]; then
+        /sbin/route add $INTERCO_HAUT $ETH1 &
+      else
+        /sbin/route add $INTERCO_HAUT $ETH1 gw $INTERCO_BAS_GW &
+      fi
     else
-      /sbin/ifconfig $ETH1 $INTERCO_HAUT netmask $INTERCO_MASK up
-      /sbin/route add $INTERCO_BAS $ETH1 &
+      /sbin/ifconfig $ETH1 $INTERCO_HAUT netmask $INTERCO_MASK_HAUT up
+      if [ -z "$INTERCO_HAUT_GW" ]; then
+        /sbin/route add $INTERCO_BAS $ETH1 &
+      else
+        /sbin/route add $INTERCO_BAS $ETH1 gw $INTERCO_HAUT_GW &
+      fi
     fi
   fi
 
@@ -433,12 +489,11 @@ start_sshd(){
       LISTEN="$INTERCO_HAUT"
     else
       LISTEN="0.0.0.0"
-      # Exclude the interconnexion network !!
-      [[ "$USER" =~ "/0$" ]] && USER="$USER,!$INTERCO_CIDR"
+      # Exclude the machine bas
+      [[ "$USER" =~ "/0$" ]] && USER="$USER,!$INTERCO_BAS"
     fi
   fi
   [ -z $USER_TC ] && [ -z $USER ] && return 0
-
   cp -f /usr/local/etc/ssh/sshd_config.dsas /usr/local/etc/ssh/sshd_config
   if [ ! -z $USER_TC ]; then
     cat << EOF >> /usr/local/etc/ssh/sshd_config
@@ -660,6 +715,19 @@ check_xml_version(){
   # When the XML versions change add code here for the upgrade
   if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "6" ]; then 
     sed -i -e "s:<network>:<network>\n      <interco>\n        <cidr>192.168.192.0/24</cidr>\n      </interco>:" $VAR/dsas_conf.xml
+  fi
+  if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "7" ]; then 
+    INTERCO_CIDR=$(xmllint --xpath 'string(dsas/config/network/interco/cidr)' $VAR/dsas_conf.xml)
+    _cidr="$(echo $INTERCO_CIDR | sed -e "s:^.*/\(.*\)$:\1:")"
+    _ip=$(echo $INTERCO_CIDR | sed -e "s:^\(.*\)/.*$:\1:")
+    _last="$(($(echo $_ip | cut -d. -f4) & ((0xFF00 << ($_cidr - 24)) & 0xFF)))"
+    INTERCO="$(echo $_ip | cut -d. -f1-3).$_last"   
+    INTERCO_BAS="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 1)) )"
+    INTERCO_HAUT="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 2)) )"
+    INTERCO_GW="$(echo $_ip | cut -d. -f1-3).$((((0xFF << (32 - $_cidr)) ^ 0xFF) & 0xFF + $_last - 1))"
+    cp /var/dsas/dsas_conf.xml /var/dsas/dsas_conf.xml.old
+    awk '/^ +<\/interco>/ && found {found=""; next} /^ +<interco>/ {found=1} NF && !found'  $VAR/dsas_conf.xml.old \
+        | sed -e "s:<network>:<network>\n      <interco>\n        <haut>\n          <cidr>$INTERCO_HAUT/$_cidr</cidr>\n          <gateway>$INTERCO_GW</gateway>\n        </haut>\n        <bas>\n          <cidr>$INTERCO_BAS/$_cidr</cidr>\n          <gateway>$INTERCO_GW</gateway>\n        </bas>\n      </interco>:" > $VAR/dsas_conf.xml
   fi
 
   # Now that the XML is upgraded, save the new version number
