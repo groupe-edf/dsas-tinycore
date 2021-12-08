@@ -391,6 +391,7 @@ case $1 in
   install_tcz rpm
   install_tcz p7zip         # Needed by LiveUpdate
   install_tcz zip-unzip     # Needed to allow repacking of unsigned zip files
+  install_tcz clamav
 
   # Copy the pre-extracted packages to work dir. This must be after packages
   # are installed to allow for files to be overwritten. Run as root 

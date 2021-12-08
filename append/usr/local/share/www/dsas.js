@@ -897,6 +897,12 @@ function dsas_display_service(what = "all"){
        document.getElementById("ntp_pool").value = pool;
        document.getElementById("ntp_pool").disabled = (serv.ntp.active !== "true");
      }
+     if (what === "antivirus" || what === "all") {
+       document.getElementById("antivirus").checked = (serv.antivirus.active === "true");
+       document.getElementById("antivirus_uri").value = print_obj(serv.antivirus.uri);
+       document.getElementById("antivirus_uri").disabled = (serv.antivirus.active !== "true");
+     }
+
   }).catch(error => {
       fail_loggedin(error.statusText);
   });
@@ -936,6 +942,8 @@ function dsas_change_service(what) {
          }
        }
        serv.ntp.server = server;
+       serv.antivirus.active = (document.getElementById("antivirus").checked ? "true" : "false");
+       serv.antivirus.uri = document.getElementById("antivirus_uri").value;
  
        var formData = new FormData;
        formData.append("op", "all");

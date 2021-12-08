@@ -197,7 +197,8 @@
     "Base CA" : "",
     "Self-signed" : "",
     "URI Certification Authority" : "",
-    "Certificate authority not found" : ""
+    "Certificate authority not found" : "",
+    "Antivirus" : ""
   },
   "fr" : {
     "Search" : "Rechercher",
@@ -403,6 +404,7 @@
     "Base CA" : "CA Integré",
     "Self-signed" : "Auto signée ",
     "URI Certification Authority" : "Autorité de certificate d'URI",
-    "Certificate authority not found" : "Autorité de certificate n'a pas été trouvé"
+    "Certificate authority not found" : "Autorité de certificate n'a pas été trouvé",
+    "Antivirus" : "Antivirus"
   }
 }

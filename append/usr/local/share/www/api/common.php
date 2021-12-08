@@ -303,6 +303,14 @@ function inet_valid($addr){
     return (is_valid_domain($addr) ? "" : "The address is invalid");
 }
 
+function uri_valid($uri){
+  $tmp = preg_split('!://!', $uri)
+  $proto = $tmp[0];
+  if (($proto != ftp) && ($proto != ftps) && ($proto != sftp) && ($proto != http) && ($proto != https))
+    return "The protocole is invalid"
+  return valid_inet(preg_split(, ':/:', tmp[1])[0])
+}
+
 function dsas_get_logs() {
   $logs = array();
   foreach (["", ".0", ".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9"] as $ext) {
