@@ -199,16 +199,30 @@ build_pkg() {
         fi
         mkdir -p $extract
         zcat $squashfs | { cd $extract; cpio -i -H newc -d; }
+        # Force install of coreutils as always needed for install_tcz
+        install_tcz coreutils
         for dep in $_build_dep; do
           install_tcz $dep
         done
         msg "Building $_pkg.tcz"
         mkdir -p $src_dir
         download $_uri $src_dir
+        mkdir -p $extract/home/tc
+        chown tc.staff $extract/home/tc
         $as_user mkdir -p $extract/$builddir
         $as_user mkdir -p $extract/$destdir
         unpack $src_dir/$_src $extract/$builddir
         chown -R $SUDO_USER $extract/$builddir
+
+        cat << EOF > $extract/tmp/script
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+$_pre_config
+exit \$?
+EOF
+        chmod a+x $extract/tmp/script
+        [ -z "$_pre_config" ] || chroot $extract /tmp/script || { error "Unexpected error ($?) in configuration"; exit 1; }
+
+
         msg "Configuring $_pkg"
         cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
