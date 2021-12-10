@@ -10,6 +10,8 @@ fi
 # Default options
 logfile="$LOG/dsas_verif.log"
 UMASK=640
+clamav=0
+antivirus=0
 
 help() {
   echo "Usage: $(basename $0)  [Options] ID [ID...]"
@@ -17,6 +19,7 @@ help() {
   echo "     -v|--verbose    Log all files verified"
   echo "     -q|--quiet      Log only files failing to verifiy"
   echo "     -n|--dryrun     Perform no actions"
+  echo "     -c|--clamav     Check ClamAv signature files"
   echo "     -s|--stdout     Send logs to stdout"
   echo "     -l|--log        Send the logs to a file"
   echo "     -o <FILE>       Log to <FILE>, default $logfile"
@@ -730,6 +733,40 @@ passdirectory(){
   fi
 }
 
+verifclamav(){
+  local dir="ClamAV"
+
+  # Return if antivirus is not active
+  [ "$antivirus" == "true" ] || return
+g
+  # Create directory if needed
+  [ -d "$DSAS_BAS/$dir" ] || $(umask 007; mkdir -p "$DSAS_BAS/$dir"; chgrp $grp -R "$DSAS_BAS/$dir")
+  
+  if [ "$TYP" == "haut" ]; then
+    for file in main.cvd daily.cvd bytecode.cvd; do
+      # If file exists in bas skip. Hardlinked, so test is fast
+      [ "$DSAS_HAUT/$dir/$file" -ef "$DSAS_BAS/$dir/$file" ] && continue
+
+      # Don't log the transfers with msgline for the machine haut as
+      # the logs aren't yet used
+      ln "$DSAS_HAUT/$dir/$file" "$DSAS_BAS/$dir/$file"
+    done
+  else
+    for file in main.cvd daily.cvd bytecode.cvd; do
+      # If file exists in bas skip. Hardlinked, so test is fast
+      [ "$DSAS_HAUT/$dir/$file" -ef "$DSAS_BAS/$dir/$file" ] && continue
+
+      # Verify the signature of the ClamAv signatures, with ClamAV itself
+      if $(sigtool -i "$DSAS_HAUT/$dir/$file" >& /dev/null); then
+        msgline "$DSAS_HAUT/$dir/$file" $?
+        ln "$DSAS_HAUT/$dir/$file" "$DSAS_BAS/$dir/$file"
+      else
+        msgline "$DSAS_HAUT/$dir/$file" $?
+      fi
+    done
+  fi
+}
+
 check_dsas
 
 # Parse options
@@ -740,6 +777,7 @@ while [ "$#" -gt 0 ]; do
     -q|--quiet) verbose=0 ;;
     -r[--rotate) rotate=1 ;;
     -n|--dryrun) dryrun=1 ;;
+    -c|--clamav) clamav=1 ;;
     -s|--stdout) logstdout=1 ;;
     -l|--log) logstdout=0 ;;
     -o) logfile=$2; shift 1 ;;
@@ -756,6 +794,11 @@ done
 
 # If dryrun, force verbose
 [ $dryrun -ne 0 ] && verbose=1
+
+
+# If ClamAV download request do it now and exit
+[ "$clamav" == "1" ] && (verifclamav; exit 0)
+antivirus="$(xmllint --xpath "string(dsas/config/antivirus/active)" "$CONF")"
 
 # Check that all ids are valid before doing anything
 idx=""
