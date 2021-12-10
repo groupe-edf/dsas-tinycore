@@ -1,9 +1,12 @@
 _pkg=clamav
 _version=0.104.1
 _uri="https://www.clamav.net/downloads/production/clamav-0.104.1.tar.gz"
-_dep="bzip2-lib jsoc-c curl libxml2 ncursesw check openssl-1.1.1 libssh2 pcre2 libzip"
-_build_dep="compiletc cmake bzip2-dev json-c-dev libxml2-dev ncursesw-dev check-dev curl-dev openssl-1.1.1-dev libssh2-dev pcre2-dev libzip-dev"
+_dep="bzip2-lib json-c curl libxml2 ncursesw check openssl-1.1.1 libssh2 pcre2 libzip"
+# FIXME : keep openssl-1.1.1 explicitly here as won't build without it !!!!
+# Missing /usr/lib/libsl.so et /usr/lib/libpthread.so
+_build_dep="compiletc cmake bzip2-dev json-c-dev libxml2-dev ncursesw-dev check-dev curl-dev openssl-1.1.1 openssl-1.1.1-dev libssh2-dev pcre2-dev libzip-dev"
 _pkg_path="clamav-0.104.1"
+_pre_config=""
 _conf_cmd='cat << EOF | patch cmake/FindCURSES.cmake
 --- cmake/FindCURSES.cmake.old	2021-12-07 03:35:40.902075699 +0000
 +++ cmake/FindCURSES.cmake	2021-12-07 03:43:38.172042783 +0000
@@ -66,5 +69,14 @@ _make_cmd="cmake --build ."
 _install_cmd="cmake --build . --target install #"
 _post_build=""
 _pkgs="main{/usr/local/bin,/usr/local/sbin,/usr/local/lib/*.so*,/usr/local/etc};dev{/usr/local/include,/usr/local/lib/pkgconfig};doc{/usr/local/share}"
-_post_install=""
+_post_install=\
+"#! /bin/sh
+cat << EOF > /usr/local/etc/clamd.conf
+# DSAS ClamAV configuration
+DatabaseDirectory /home/dsas/bas/share/ClamAV
+LocalSocket /tmp/clamd.socket
+LocalSocketMode 660
+EOF
+chmod 644 /usr/local/etc/clamd.conf"
+
 
