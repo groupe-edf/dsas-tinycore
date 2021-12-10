@@ -27,6 +27,45 @@ lftp_ca_options() {
   echo $opt
 }
 
+getclamav() {
+  local uri
+  local dir="ClamAV"
+  local name="ClamAV"
+  local opt=$(lftp_ca_options $id)
+
+  # Return if antivirus is not active
+  [ "$(xmllint --xpath "string(dsas/config/antivirus/active)" "$CONF")" == "true" ] || return
+
+  if [ "$TYP" == "haut" ]; then
+    uri=$(xmllint --xpath "string(dsas/config/antivirus/uri)" "$CONF") 
+  else
+    local _uri="$DSAS_HOME/bas"
+    _uri=${DSAS_BAS:${#_uri}}
+    uri="sftp://bas:@$INTERCO_HAUT$_uri/$dir/"
+  fi
+  if [ -z "$uri" ]; then
+    # The URI can be empty. gracefully exit
+    myecho "Empty uri for task $name"
+    return
+  fi
+
+  # Create directory if needed
+  [ -d "${DSAS_HAUT}/$dir" ] || $(umask 007 && mkdir -p "${DSAS_HAUT}/$dir")
+
+  # Download the CVD files. Can't mirror as can't do ls on directory database.clamav.net 
+  for _file in main.cvd daily.cvd bytecode.cvd; do
+    [ "$verbose" -eq 0 ] && lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
+    [ "$verbose" -eq 0 ] || lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
+  done
+
+  # Correct directory permissions
+  find "$DSAS_HAUT/$dir" -type d -exec chmod 770 {} \;
+
+  [ -f "/tmp/cert.$$" ] && rm /tmp/cert.$$
+
+  exit 0
+}
+
 getdirectory() {
   local isdir
   local id=$1
@@ -317,10 +356,12 @@ help() {
   echo "     -v|--verbose    Log all files verified"
   echo "     -q|--quiet      Log only files failing to verifiy"
   echo "     -n|--dryrun     Perform no actions"
+  echo "     -c|--clamav     Get ClamAv signature files"
   echo "     -?|-h|--help    Print this help"
 }
 
 check_dsas
+clamav=0
 
 # Parse options
 ids=""
@@ -329,6 +370,7 @@ while [ "$#" -gt 0 ]; do
     -v|--verbose) verbose=1 ;;
     -q|--quiet) verbose=0 ;;
     -n|--dryrun) dryrun=1 ;;
+    -c|--clamav) clamav=1 ;;
     -?|-h|--help) help; exit 0 ;;
     -*) 1>&2 echo "Unrecognized option : $1"; help; exit 1 ;;
      *)
@@ -341,6 +383,9 @@ done
 
 # If dryrun, force verbose
 [ $dryrun -ne 0 ] && verbose=1
+
+# If ClamAV download request do it now and exit
+[ "$clamav" == "1" ] && (getclamav; exit 0)
 
 # Check that all ids are valid before doing anything
 idx=""
