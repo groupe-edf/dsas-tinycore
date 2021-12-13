@@ -679,6 +679,22 @@ stop_ntp(){
   pkill ntpd
 }
 
+start_antivirus(){
+  antivirus=$(xmllint --xpath "string(dsas/config/antivirus/active)" $VAR/dsas_conf.xml)
+  if [ "$antivirus" == "true" ]; then
+    ClamAVDir="/etc/sysconfig/tcedir/../dsas/bas/share/ClamAV"
+    if [ -n "$ClamAVDir" ]; then
+      mkdir -p $ClamAVDir
+      chown verif.share $ClamAVDir
+    fi
+    sudo -u verif /usr/local/sbin/clamd &
+  fi
+}
+
+stop_antivirus(){
+  pkill clamd
+}
+
 reboot_required(){
   echo -n "${YELLOW}Rebooting .${NORMAL}"
   for i in $(seq 1 1 5); do
@@ -780,6 +796,7 @@ case "${1}" in
       start_web_admin
       start_repo
       start_ntp
+      start_antivirus
       # Put root crontab file in place so it only runs on the machine bas
       /bin/cp $VAR/crontab.dsas /var/spool/cron/crontabs/root
     fi
@@ -794,6 +811,7 @@ case "${1}" in
       TYP="haut"
     fi
     if [ "$TYP" == "bas" ]; then
+      stop_antivirus
       stop_ntp
       stop_repo
       stop_web_admin
@@ -845,7 +863,9 @@ case "${1}" in
     # The other services can be restarted without risk
     stop_syslog
     start_syslog
-    if [ "$TYP" == "bas" ]; then    
+    if [ "$TYP" == "bas" ]; then
+      stop_antivirus
+      start_antivirus
       stop_ntp
       start_ntp
       stop_repo

@@ -6,3 +6,5 @@
 00  */1 *   *   *   sudo tc ssh tc@haut sudo date -c @$(date -u +"%s")
 # Every 5 minutes dump the upper machines syslog entries if needed
 */5  *  *   *   *   sudo tc /usr/local/sbin/sysloghaut >& /dev/null
+# Update the clamav signatures daily
+00  03  *   *   *   sudo tc /usr/local/sbin/runtask -c >& /dev/null  
