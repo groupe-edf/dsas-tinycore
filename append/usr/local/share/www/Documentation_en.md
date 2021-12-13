@@ -177,7 +177,9 @@ For example, under VirtualBox the initial configuration should be
 ![Creation of a VM with VirtualBox](en/vbox1.png)
 
 A minimum of 256 megabytes is needed to be able to start the DSAS. However, while running
-the DSAS could use more resources and we recommand 1 gigabyte of memory.
+the DSAS could use more resources. Without the antiantivirus we recommand 1 gigabyte of 
+memory, but if the antivirus is active at least 2 gigabytes are needed, but 3 gigabytes
+are recommanded.
 
 The DSAS has no specific requiement for the format of its disk, and here we have chosen 
 VirtualBox's default format 
@@ -597,6 +599,7 @@ which could be started on the DSAS;
 - An OpenSSH server for connections to the DSAS,
 - An ntpd client for setting the time of the machines, and
 - A syslogd client for local and remote administration logs
+- An antivirus server
 
 ![Web server configuration menu](en/DSAS16.png)
 
@@ -661,6 +664,24 @@ by DNS. In the second case the DNS must be configured as discussed in the sectio
 [Network configuration](network-configuration).
 
 Using ntp does not open a port on the DSAS but only connections to remote servers.
+
+### Antivirus server
+
+The DSAS includes an antivirus server based on `ClamAV`. If the option `Antivirus` is checked,
+a server `clamd` will be started, and the files transfered by the DSAS will be checked with
+the antivirus.
+
+However, these verifications need updated virale signatures. The files `main.cvd`, `daily.cvd`
+and `bytecode.cvd` must be installed on the DSAS. These files are available on the URL
+
+```
+https://database.clamav.net/main.cvd
+https://database.clamav.net/daily.cvd
+https://database.clamav.net/bytecode.cvd
+```
+
+and the URI to configure on the DSAS coud be `https://database.clamav.net/` or its mirror
+on the local network. The DSAS will update these files from this URI once a day.
 
 # DSAS Operation
 
