@@ -683,7 +683,7 @@ distants
 
 ### Serveur antivirale
 
-Le DSAS inclut un serveur d'antivirus basé sur le produit `ClamAV`. Si l'option Àntivirus`
+Le DSAS inclut un serveur d'antivirus basé sur le produit `ClamAV`. Si l'option `Antivirus`
 est active, le serveur `clamd` sera demarré, et les tests de vérification du DSAS inclura
 des tests antivirale.
 
@@ -697,8 +697,8 @@ https://database.clamav.net/daily.cvd
 https://database.clamav.net/bytecode.cvd
 ```
 
-et dans ce cas, la configuration du URI du DSAS pourrait être alors `htpps://database.clamav.net/`
-ou la site de replication locale. 
+et dans ce cas, la configuration du URI du DSAS pourrait être alors `https://database.clamav.net/`
+ou la site de replication locale. Le DSAS mettra à jour ces signatures un fois par jour.
 
 # Exploitation du DSAS
 
