@@ -26,16 +26,30 @@ fi
 ids=""
 opts=""
 force=""
+clamav=0
 while [ "$#" -gt 0 ]; do
   case $1 in
     -f|--force) force="true"; ;;
     -v|--verbose) verbose=1; opts="$opts -v"; ;;
     -q|--quiet) verbose=0; opts="$opts -q"; ;;
+    -c|--clamav) clamav=1; opts="$opts -c"; ;;
     -*) opts="$opts $1"; ;;
      *) ids="$ids $1" ;;
   esac
   shift 1
 done
+
+if [ "$clamav" == "1" ]; then
+  # Only run clamav checks
+  1>&2 myecho "$0: #### Tasks on machine HAUT ####"
+  ssh tc@$INTERCO_HAUT sudo sudo -u haut $(dirname $0)/getfiles $opts
+  [ $? -eq 0 ] && ssh tc@$INTERCO_HAUT sudo sudo -u verif $(dirname $0)/checkfiles $opts
+  [ $? -eq 0 ] && 1>&2 myecho "$0: #### Tasks on machine BAS ####"
+  [ $? -eq 0 ] && sudo sudo -u haut $(dirname $0)/getfiles $opts
+  [ $? -eq 0 ] && sudo sudo -u verif $(dirname $0)/checkfiles $opts -o $logfile
+
+  exit $?
+fi
 
 if [ -z $ids ]; then
   # No tasks specified. Get a list of all tasks
