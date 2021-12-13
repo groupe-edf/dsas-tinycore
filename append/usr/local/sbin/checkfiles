@@ -256,6 +256,10 @@ verifliveupdate(){
                 { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename $file)"; return 2; }
             [ -z "$s256" ] && [ -z "$s1" ] && { 1>&2 myecho "File $f from the archive $(basename $file) has no checksum"; return 2; }
             if [ -n "$livetri" ]; then
+              if [ "$antivirus" == "true" ]; then
+                # Antivirus test
+                clamdscan "$src/$filedir/$f" >& /dev/null || { 1>&2 myecho "File $f from the archive $(basename $file) failed anti-virus check";  return 4; }
+              fi
               msgline "$src/$filedir/$f" 0
               ln "$src/$filedir/$f" "$dest/$filedir/$f"
             fi
@@ -380,6 +384,9 @@ verifdirectory() {
         verifliveupdate $id "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS"
       fi
       status=$?
+      if [ "$status" == "0" ] && [ "$antivirus" == "true" ]; then
+        clamdscan "$DSAS_HAUT/$file" >& /dev/null || status = 4
+      fi
       msgline "$DSAS_HAUT/$file" $status
       [ $status -eq 0 ] && ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
       /bin/rm -fr "$zipdir"
@@ -406,6 +413,9 @@ verifdirectory() {
           ;;
       esac
       status=$?
+      if [ "$status" == "0" ] && [ "$antivirus" == "true" ]; then
+        clamdscan "$DSAS_HAUT/$file" >& /dev/null || status = 4
+      fi
       msgline "$DSAS_HAUT/$file" $status
       if [ $status -eq 0 ]; then
         ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
@@ -448,6 +458,13 @@ verify_packages() {
         msgline "$DSAS_HAUT/$dir/$file" 1
       elif [ "$rpm_k" == "1" ] && ! rpm -K "$DSAS_HAUT/$dir/$file" 2>&1 1> /dev/null; then
         msgline "$DSAS_HAUT/$dir/$file" 5      
+      elif [ "$antivirus" == "true" ]; then
+        if clamdscan "$DSAS_HAUT/$dir/$file" >& /dev/null; then
+          msgline "$DSAS_HAUT/$dir/$file" 0
+          ln "$DSAS_HAUT/$dir/$file" "$DSAS_BAS/$dir/$file"
+        else
+          msgline "$DSAS_HAUT/$dir/$file" 4
+        fi
       else
         msgline "$DSAS_HAUT/$dir/$file" 0
         ln "$DSAS_HAUT/$dir/$file" "$DSAS_BAS/$dir/$file"
@@ -484,6 +501,11 @@ verifrepo() {
   # Create the destination directory if needed
   [ -d "$DSAS_BAS/$dir" ] || $(umask 007; mkdir -p "$DSAS_BAS/$dir"; chgrp $grp -R "$DSAS_BAS/$(echo $dir | cut -d/ -f1)")
 
+  # Test antivirus 
+  if [ "$antivirus" == "true" ]; then
+    clamdscan "$DSAS_HAUT/$dir/repodata/repomd.xml" >& /dev/null || { msgline "$DSAS_HAUT/$dir/repodata/repomd.xml" 4; exit 1; }
+  fi
+
   # Copy repomd.xml* to $bas
   ln "$DSAS_HAUT/$dir/repodata/repomd.xml" "$DSAS_BAS/$dir/repodata/repomd.xml"
   [ -f "$DSAS_HAUT/$dir/repodata/repomd.xml.asc" ] && ln "$DSAS_HAUT/$dir/repodata/repomd.xml.asc" "$DSAS_BAS/$dir/repodata/repomd.xml.asc"
@@ -505,9 +527,15 @@ verifrepo() {
          sed -e "s:repomd xmlns:repomd ignore:g" | \
          xmllint --xpath "string(//repomd/data[$i]/checksum/@type)" - )
     if  check_checksum "$DSAS_HAUT/$dir/$f" $chksum $chktype; then
-      1>&2 echo "Error verifiying checksum of $f"
+      1>&2 echo "Error verifying checksum of $f"
       cleanup_and_exit 1 "$tempdir"
     fi
+
+    # Test antivirus 
+    if [ "$antivirus" == "true" ]; then
+      clamdscan "$DSAS_HAUT/$dir/$f" >& /dev/null || { 1>&2 echo "The file $f fails the antivirus test"; cleanup_and_exit 4 "$tempdir"; }
+    fi
+
     ln "$DSAS_HAUT/$dir/$f" "$DSAS_BAS/$dir/$f"
     i=$(($i + 1))
   done
@@ -551,7 +579,6 @@ verifrepo() {
   /bin/rm -fr "$tempdir"
 }
 
-
 verifdeb(){
   local chktyp inhash hashtyp _hash _hash_md5 _hash_sha256 _size _file 
   local j pool have_pool packages inpackage tempdir
@@ -592,6 +619,11 @@ verifdeb(){
     cleanup_and_exit 1 "$tempdir"
   fi
 
+  if [ "$antivirus" == "true" ]; then
+    clamdscan "$DSAS_HAUT/$dir/Release" >& /dev/null || { 1>&2 echo "The file Release failed antivirus check"; cleanup_and_exit 4 "$tempdir"; }
+    clamdscan "$DSAS_HAUT/$dir/InRelease" >& /dev/null || { 1>&2 echo "The file InRelease failed antivirus check"; cleanup_and_exit 4 "$tempdir"; }
+  fi
+
   # Create the destination directory if needed
   [ -d "$DSAS_BAS/$dir" ] || $(umask 007; mkdir -p $DSAS_BAS/$dir; chgrp $grp -R $DSAS_BAS/$dir)
 
@@ -624,9 +656,18 @@ EOF
       if  check_checksum "$DSAS_HAUT/$dir/$_file" $_hash $chktyp; then
         msgline "$DSAS_HAUT/$dir/$_file" 1  
       else
-        msgline "$DSAS_HAUT/$dir/$_file" 0
         [ -d "$(dirname "$DSAS_BAS/$dir/$_file")" ] || $(umask 007; mkdir -p "$(dirname "$DSAS_BAS/$dir/$_file")"; chgrp $grp -R "$(dirname "$DSAS_BAS/$dir/$_file")")
-        ln "$DSAS_HAUT/$dir/$_file" "$DSAS_BAS/$dir/$_file"
+        if [ "$antivirus" == "true" ]; then
+          if clamdscan "$DSAS_HAUT/$dir/$_file" >& /dev/null; then
+            msgline "$DSAS_HAUT/$dir/$_file" 0
+            ln "$DSAS_HAUT/$dir/$_file" "$DSAS_BAS/$dir/$_file"
+          else
+            msgline "$DSAS_HAUT/$dir/$_file" 4
+          fi
+        else
+          msgline "$DSAS_HAUT/$dir/$_file" 0
+          ln "$DSAS_HAUT/$dir/$_file" "$DSAS_BAS/$dir/$_file"
+        fi
       fi
       # For now ignore missing files
     fi
@@ -654,9 +695,19 @@ EOF
           elif [ -n "$hash_md5" ] && check_checksum "$DSAS_HUAT/$pool/$_file" $_hash_md5 md5; then
             msgline "$DSAS_HAUT/$pool/$_file" 1
           else
-            msgline "$DSAS_HAUT/$pool/$_file" 0 
             [ -d "$(dirname i"$DSAS_BAS/$pool/$_file")" ] || $(umask 007; mkdir -p "$(dirname "$DSAS_BAS/$pool/$_file")"; chgrp $grp -R "$(dirname "$DSAS_BAS/$pool/$_file")")
-            ln "$DSAS_HAUT/$pool/$_file" "$DSAS_BAS/$pool/$_file"          
+
+            if [ "$antivirus" == "true" ]; then
+              if clamdscan "$DSAS_HAUT/$pool/$_file" >& /dev/null; then
+                msgline "$DSAS_HAUT/$pool/$_file" 0
+                ln "$DSAS_HAUT/$pool/$_file" "$DSAS_BAS/$pool/$_file"
+              else
+                msgline "$DSAS_HAUT/$pool/$_file" 4
+              fi
+            else
+              msgline "$DSAS_HAUT/$pool/$_file" 0 
+              ln "$DSAS_HAUT/$pool/$_file" "$DSAS_BAS/$pool/$_file"
+            fi
           fi
         fi
         _file=""
@@ -738,7 +789,7 @@ verifclamav(){
 
   # Return if antivirus is not active
   [ "$antivirus" == "true" ] || return
-g
+
   # Create directory if needed
   [ -d "$DSAS_BAS/$dir" ] || $(umask 007; mkdir -p "$DSAS_BAS/$dir"; chgrp $grp -R "$DSAS_BAS/$dir")
   
@@ -756,7 +807,7 @@ g
       # If file exists in bas skip. Hardlinked, so test is fast
       [ "$DSAS_HAUT/$dir/$file" -ef "$DSAS_BAS/$dir/$file" ] && continue
 
-      # Verify the signature of the ClamAv signatures, with ClamAV itself
+      # Verify the signature of the ClamAV signatures, with ClamAV itself
       if $(sigtool -i "$DSAS_HAUT/$dir/$file" >& /dev/null); then
         msgline "$DSAS_HAUT/$dir/$file" $?
         ln "$DSAS_HAUT/$dir/$file" "$DSAS_BAS/$dir/$file"
