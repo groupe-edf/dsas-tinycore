@@ -179,8 +179,10 @@ en conséquence. Par exemple, sous VirtualBox la configuration initiale devrait 
 ![Création d'une VM sous VirtualBox](fr/vbox1.png)
 
 un minimum de 256 mégaoctets est nécessaire afin de démarrer le DSAS. Mais en 
-fonctionnement le DSAS pourrait utiliser plus de ressources et nous recommandons
-l'utilisation de 1 gigaoctet de mémoire. 
+fonctionnement le DSAS pourrait utiliser plus de ressources. Sans l'antivirus,
+nous recommandons l'utilisation de 1 gigaoctet de mémoire, mais avec l'antivirus
+d'au moins 2 gigaoctets de mémoire est nécessaire, mais nous recommandons 3 
+gigaoctets.
 
 Le DSAS n'a pas besoin d'un format spécifique de disque. Nous avons choisi ici d'utiliser 
 le format par défaut proposé par VirtualBox.
@@ -610,6 +612,7 @@ qui pourrait être démarrer sur les machines du DSAS;
 - Un serveur OpenSSH pour les connexions depuis l'extérieur,
 - Un client ntpd pour la mise à l'heure des machines, et
 - Un client syslogd pour les logs d'administration locale et distante
+- Un serveur de verification antivirale
 
 ![Menu de configuration du serveur web](fr/DSAS16.png)
 
@@ -677,6 +680,25 @@ comme discuté dans la section [Configuration des réseaux](configuration-des-r�
 
 Utilisation de ntp n'ouvre pas un port sur le DSAS mais seulement des flux vers des serveurs 
 distants
+
+### Serveur antivirale
+
+Le DSAS inclut un serveur d'antivirus basé sur le produit `ClamAV`. Si l'option Àntivirus`
+est active, le serveur `clamd` sera demarré, et les tests de vérification du DSAS inclura
+des tests antivirale.
+
+En revanche ces tests depends sur des signatures virale qui devrait être à jour. Des fichiers
+`main.cvd`, `daily.cvd` et `bytecode.cvd` doivent être téléchargé sur la DSAS.  C'est fichiers
+sont disponible sur les URL
+
+```
+https://database.clamav.net/main.cvd
+https://database.clamav.net/daily.cvd
+https://database.clamav.net/bytecode.cvd
+```
+
+et dans ce cas, la configuration du URI du DSAS pourrait être alors `htpps://database.clamav.net/`
+ou la site de replication locale. 
 
 # Exploitation du DSAS
 
