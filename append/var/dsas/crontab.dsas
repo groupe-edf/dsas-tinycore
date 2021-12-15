@@ -8,3 +8,5 @@
 */5  *  *   *   *   sudo tc /usr/local/sbin/sysloghaut >& /dev/null
 # Update the clamav signatures daily
 00  03  *   *   *   sudo tc /usr/local/sbin/runtask -c >& /dev/null  
+# Once a week scan all files in /home/dsas/bas. Takes about an hour per 100Go
+00  04  *   *   0   [ -n "$(pidof clamd)" ] && clamdscan --remove /home/dsas/bas  
