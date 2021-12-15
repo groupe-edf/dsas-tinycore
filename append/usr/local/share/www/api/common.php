@@ -228,7 +228,9 @@ function ip_interface($interface){
   $pattern2 = "/Mask:(\d+\.\d+\.\d+\.\d+)/";
   $output = dsas_exec(["/sbin/ifconfig", $interface]);      
   if ($output["retval"] === 0) {
-    $text = implode(" ", $output["stdout"]);                                                
+    $text = $output["stdout"];
+    if (! is_string($text))
+      $text = implode(" ", $text);                                                
     preg_match($pattern1, $text, $matches);                                     
     if (count($matches) < 2)                                                    
       return "";                           
