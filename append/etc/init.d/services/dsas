@@ -224,7 +224,7 @@ config_interco(){
     g=$(xmllint --xpath 'string(dsas/config/network/interco/haut/gateway)' $VAR/dsas_conf.xml)
     while :; do
       INTERCO_GW="$(dialog --stdout --no-cancel --title 'Upper interconnexion gateway' --inputbox 'Address:' 0 0 $g)"
-      [ -z "$INTERCO_GW" ] || break
+      [ -z "$INTERCO_GW" ] && break
       valid_ip $INTERCO_GW && break
       dialog --msgbox "IP Address invalid" 0 0
     done
@@ -248,7 +248,7 @@ config_interco(){
     g=$(xmllint --xpath 'string(dsas/config/network/interco/bas/gateway)' $VAR/dsas_conf.xml)
     while :; do
       INTERCO_GW="$(dialog --stdout --no-cancel --title 'Lower interconnexion gateway' --inputbox 'Address:' 0 0 $g)"
-      [ -z "$INTERCO_GW" ] || break
+      [ -z "$INTERCO_GW" ] && break
       valid_ip $INTERCO_GW && break
       dialog --msgbox "IP Address invalid" 0 0
     done
@@ -270,7 +270,7 @@ setup_interco(){
     INTERCO_BAS=$(echo $INTERCO_CIDR_BAS | sed -e "s:^\(.*\)/.*$:\1:")
     INTERCO_MASK_BAS="255.255.255.$(( (255 << (32 - $_cidr)) & 255))"
     _last="$(($(echo $INTERCO_BAS | cut -d. -f4) & ((0xFF00 << ($_cidr - 24)) & 0xFF)))" 
-    INTERCO_CIDR_HAUT="$(echo $INTERCO_BAS | cut -d. -f1-3).$_last" 
+    INTERCO_CIDR_BAS="$(echo $INTERCO_BAS | cut -d. -f1-3).$_last" 
 
     if [ "$INTERCO_CIDR_BAS" != "$INTERCO_CIDR_HAUT" ] || [ "$INTERCO_MASK_BAS" != "$INTERCO_MASK_HAUT" ]; then
       # The two machines of the DSAS are on different lans. Need to configure the gateways
@@ -320,7 +320,7 @@ config_network(){
     g=$(xmllint --xpath 'string(dsas/config/network/bas/gateway)' $VAR/dsas_conf.xml)
     while :; do
       GWAY="$(dialog --stdout --no-cancel --title 'Gateway IP Address' --inputbox 'Address:' 0 0 $g)"
-      [ -z "$GWAY" ] || break
+      [ -z "$GWAY" ] && break
       valid_ip $GWAY && break
       dialog --msgbox "IP Address invalid" 0 0
     done
