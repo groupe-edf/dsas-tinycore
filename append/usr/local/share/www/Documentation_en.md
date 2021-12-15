@@ -1002,7 +1002,7 @@ An example of an added task is
 
 ![Example task added](en/DSAS31.png)
 
-Next to each task, the icon ![](en/DSAS33.png) allows the task to be modified,
+Next to each task, the icon ![](en/DSAS36.png) allows the task to be modified,
 ![](en/DSAS35.png) allows the task to be removed and ![](en/DSAS34.png) allows
 the task to be executed immediately. The status of the task is provided via the color of the
 task title. In blue, the task was not executed, in green, the execution of the task was successful,
@@ -1053,6 +1053,8 @@ Software impacted by this risk
 | libgcrypt | [1.9.3](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.9.3.tar.bz2) | Used for RPM, DEB and GPG verification |
 | rpm | [4.16.1.3](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.16.x/rpm-4.16.1.3.tar.bz2) | Used for RPM checking |
 | osslsigncode | [2.2.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.2/osslsigncode-2.2.0.tar.gz) | Used for authenicode verification |
+| clamav | [0.104.1](https://www.clamav.net/downloads/production/clamav-0.104.1.tar.gz) | Used for antivirus tests |
+
 
 ### Risk: Attack on the means of downloading files
 
@@ -1720,6 +1722,27 @@ through DSAS.
 This only applies to unsigned zip files, as someone able to sign the zip is also
 able to sign content. So the solution is relatively simple, and consists of reconstructing the
 unsigned zip files from its contents. DSAS implements this behavior
+
+## Verification - Antivirus
+
+The antivirus tests use the software ClamAV. It is important to understand the limitations of antiviral
+tests and the prurpose of these tests in the DSAS. The risk that the use of an antivirus is attempting
+to address is the case of a compromised software repositories with at least one malicious package 
+uploaded. For example a 
+[recent compromission of php.net](https://arstechnica.com/gadgets/2021/03/hackers-backdoor-php-source-code-after-breaching-internal-git-server)
+allowed attackers to install backdoors in compromised packages. In this scenario, the attacker has
+no control on the format of the supplied packages. ClamAV is capable of decompressing and examining the
+files within most package archive formats, and so the signature of the attack can be examined by ClamAV.
+
+Where ClamAV can not help is when the attacker can control the format of the packaged files. In this case
+the attacker can 
+
+
+
+
+
+
+
 
 ## OpenSSH Service
 
