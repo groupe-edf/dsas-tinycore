@@ -389,17 +389,17 @@ start_network(){
     echo "Using static IP for ${GREEN}$ETH1${NORMAL}."
     if [ "$TYP" == "bas" ]; then
       /sbin/ifconfig $ETH1 $INTERCO_BAS netmask $INTERCO_MASK_BAS up
-      if [ -z "$INTERCO_BAS_GW" ]; then
+      if [ -z "$INTERCO_GW_BAS" ]; then
         /sbin/route add $INTERCO_HAUT $ETH1 &
       else
-        /sbin/route add $INTERCO_HAUT $ETH1 gw $INTERCO_BAS_GW &
+        /sbin/route add $INTERCO_HAUT gw $INTERCO_GW_BAS $ETH1 &
       fi
     else
       /sbin/ifconfig $ETH1 $INTERCO_HAUT netmask $INTERCO_MASK_HAUT up
-      if [ -z "$INTERCO_HAUT_GW" ]; then
+      if [ -z "$INTERCO_GW_HAUT" ]; then
         /sbin/route add $INTERCO_BAS $ETH1 &
       else
-        /sbin/route add $INTERCO_BAS $ETH1 gw $INTERCO_HAUT_GW &
+        /sbin/route add $INTERCO_BAS gw $INTERCO_GW_HAUT $ETH1 &
       fi
     fi
   fi
