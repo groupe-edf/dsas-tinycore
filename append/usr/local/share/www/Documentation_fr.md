@@ -1758,6 +1758,30 @@ Ceci ne concerne que des fichiers zip non signé, car quelqu'un capable de signe
 capable de signer le contenu. Donc la parade est relativement simple, et consist à reconstruire les 
 fichiers zip non signé à partir de son contenu. Le DSAS implemente cette parade
 
+## Vérification - Antivirus
+
+ClamAV est utilisé pour des tests antivirale. C'est important de conaitre les limitations des tests
+antivirale and la raison d'être de ces tests dans le DSAS.
+
+1. Un antivirus ne peut que fonctionner correctement si les signature utilisés sont à jour. Le DSAS
+doit alors être configuré afin de chercher regulierement des mises à jour des signatures
+2. Avec la chiffrement et l'obsfurcation c'est possible de cacher la presence de code dans les fichiers.
+La limitation de ces techniques est que l'attaquant doit avoir la controle que la format du fichier.
+
+La risque que le DSAS tent à traiter avec l'antivirus est le cas de dépôt de fichier compromis, avec
+au moins un fichier malveillant mise à disposition. Par example un
+[compromission recent de php.net](https://arstechnica.com/gadgets/2021/03/hackers-backdoor-php-source-code-after-breaching-internal-git-server)
+a permis des attaquants d'installer des portes dérobés dans des packages compromis. Dans cette
+scenario, l'attaquant n'a aucun control sur la format des fichiers de package. ClamAV est capable
+de décompressé la plupart des packages et à examiner des fichiers contenu dedans, so des signature 
+de l'attaque vont être visible à ClamAV.
+
+
+Par contre, ClamAV ne peut pas aider quand l'attaquant aurait la controle sur la format des fichiers.
+Dans ce cas, l'attaquant peur choisir le type de fichier afin d'obscurer son contenu and cacher la
+code malveillant. Ceci pourrait être le cas si attaquant aurait accès à un clef openssl ou gpg.
+Il est alors crtique d'assurer qui aurait accès aux clefs installé dans le DSAS.
+
 ## Service OpenSSH
 
 L'ensemble des flux ssh possible est

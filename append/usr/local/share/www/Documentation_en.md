@@ -1725,24 +1725,25 @@ unsigned zip files from its contents. DSAS implements this behavior
 
 ## Verification - Antivirus
 
-The antivirus tests use the software ClamAV. It is important to understand the limitations of antiviral
-tests and the prurpose of these tests in the DSAS. The risk that the use of an antivirus is attempting
-to address is the case of a compromised software repositories with at least one malicious package 
-uploaded. For example a 
+The antivirus tests use the software ClamAV. It is important to understand the limitations of antiviral 
+tests and the prurpose of these tests in the DSAS. 
+
+1. An antivirus can only function correctly if the signatures used for the viral dection are up
+to date. The DSAS must therefore be configured to update its signatures regularly
+2. With encryption and obsfurcation it is possible to hide the presence of code in files. The
+limitations of these techniques are that the attacker must be able to control the file format.
+
+The risk that the use of an antivirus in the DSAS is attempting to address is the case of a compromised 
+software repositories with at least one malicious package uploaded. For example a 
 [recent compromission of php.net](https://arstechnica.com/gadgets/2021/03/hackers-backdoor-php-source-code-after-breaching-internal-git-server)
 allowed attackers to install backdoors in compromised packages. In this scenario, the attacker has
 no control on the format of the supplied packages. ClamAV is capable of decompressing and examining the
 files within most package archive formats, and so the signature of the attack can be examined by ClamAV.
 
-Where ClamAV can not help is when the attacker can control the format of the packaged files. In this case
-the attacker can 
-
-
-
-
-
-
-
+However ClamAV can not help when the attacker can control the format of the packaged files. In this 
+case the attacker can choose the file type that obscures its contents and so hides the malicious code.
+This might be the case if an attacker has access to an openssl or gpg signing key. It is therefore
+critical to control carefully who has access to these openssl and gpg keys installed in the DSAS.
 
 ## OpenSSH Service
 
