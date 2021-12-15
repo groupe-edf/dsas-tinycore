@@ -3,6 +3,6 @@
 # Once a week rotate the logs
 00  01  *   *   0   /usr/local/sbin/rotatelogs >& /dev/null
 # Set date on machine haut once an hour. Can't use ntp
-00  */1 *   *   *   sudo tc ssh tc@haut sudo date -c @$(date -u +"%s")
+00  */1 *   *   *   sudo tc ssh tc@haut sudo date -s @$(date -u +"%s")
 # Every 5 minutes dump the upper machines syslog entries if needed
 */5  *  *   *   *   sudo tc /usr/local/sbin/sysloghaut >& /dev/null
