@@ -248,7 +248,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           } else {
             // Force the execution of the task with the "-f" flag.
             // FIXME : seems that we can't use dsas_exec ad it hands
-            exec("runtask -f " . $id . " >& /dev/null &"]);
+            exec("runtask -f " . $id . " >& /dev/null &");
           }
         }
 
