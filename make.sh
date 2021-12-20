@@ -199,6 +199,13 @@ build_pkg() {
         fi
         mkdir -p $extract
         zcat $squashfs | { cd $extract; cpio -i -H newc -d; }
+
+        # FIXME : Fix missing links
+        # It appears that certain links are missings with the base intsall
+        # and they need to be forced
+        ( cd $extract/usr/lib; ln -s ../../lib/libpthread.so.0 libpthread.so; )
+        ( cd $extract/usr/lib; ln -s ../../lib/libdl.so.2 libdl.so; )   
+
         # Force install of coreutils as always needed for install_tcz
         install_tcz coreutils
         for dep in $_build_dep; do

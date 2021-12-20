@@ -2,9 +2,7 @@ _pkg=clamav
 _version=0.104.1
 _uri="https://www.clamav.net/downloads/production/clamav-0.104.1.tar.gz"
 _dep="bzip2-lib json-c curl libxml2 ncursesw check openssl-1.1.1 libssh2 pcre2 libzip"
-# FIXME : keep openssl-1.1.1 explicitly here as won't build without it !!!!
-# Missing /usr/lib/libsl.so et /usr/lib/libpthread.so
-_build_dep="compiletc cmake bzip2-dev json-c-dev libxml2-dev ncursesw-dev check-dev curl-dev openssl-1.1.1 openssl-1.1.1-dev libssh2-dev pcre2-dev libzip-dev"
+_build_dep="cmake bzip2-dev json-c-dev libxml2-dev ncursesw-dev check-dev curl-dev openssl-1.1.1-dev libssh2-dev pcre2-dev libzip-dev compiletc"
 _pkg_path="clamav-0.104.1"
 _pre_config=""
 _conf_cmd='cat << EOF | patch cmake/FindCURSES.cmake
