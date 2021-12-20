@@ -205,8 +205,11 @@ build_pkg() {
         msg "Building $_pkg.tcz"
         mkdir -p $src_dir
         download $_uri $src_dir
+        mkdir -p $extract/home/tc
+        chown tc.staff $extract/home/tc
         $as_user mkdir -p $extract/$builddir
         $as_user mkdir -p $extract/$destdir
+        echo "here"
         unpack $src_dir/$_src $extract/$builddir
         chown -R $SUDO_USER $extract/$builddir
         msg "Configuring $_pkg"
