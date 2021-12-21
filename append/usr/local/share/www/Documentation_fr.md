@@ -1389,15 +1389,21 @@ et bas. Quand un fichier existe dans les deux zones, il faut que
   guichet bas
 - Que l'utilisateur haut pourrait supprimer l'existence du fichier dans le 
   guichet haut
+- L'accès par les utilisateurs bas et haut devrait être cloissoné par un `chroot jail`
+  et par consequence le dossier prinicipal de chaque utilisateur doit avoir un UID de 
+  `root`
+
 
 Avec les permissions suivantes
 
 | Perms      |  UID   | GID   |  Chemin
 |------------|--------|-------|-------------------
-| drwxrwx--- |  haut  | haut  |  dsas/haut
-| -rw-r----- |  verif | share |  dsas/haut/fichier
-| drwxrwx--- |  bas   | bas   |  dsas/bas
-| -rw-r----- |  verif | share |  disas/bas/fichier
+| drwxrwx--- |  root  | haut  |  dsas/haut
+| drwxrws--- |  haut  | haut  |  dsas/haut/share 
+| -rw-r----- |  verif | share |  dsas/haut/share/../fichier
+| drwxrwx--- |  root  | bas   |  dsas/bas
+| drwxrws--- |  bas   | share |  dsas/bas/share 
+| -rw-r----- |  verif | share |  disas/bas/share/../fichier
 
 et un fichier /etc/group contenant 
 
@@ -1410,7 +1416,7 @@ repo:x:2004:bas,tc
 ```
 
 les exigences voulu sont respectés. Les scripts de vérification du DSAS ont été 
-adapté afin d'assurer ces conditions
+adapté afin d'assurer ces conditions. Ces permissions sont audité à chaque rédemarrage
 
 ## Moyens de Vérification 
 

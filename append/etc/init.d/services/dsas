@@ -186,6 +186,29 @@ get_dsas(){
   fi
 }
 
+audit_perms(){
+  echo "Auditing permissions of ${GREEN}$DSAS${NORMAL} in the background"
+  for _user in bas haut; do
+    chown root.$_user $DSAS/$_user
+    chmod 750 $DSAS/$_user
+    for _d in $(find $DSAS/$_user/share -type d); do
+      chown $_user.$_user $_d
+      chmod 770 $_d
+    done
+  done
+  for _f in $(find $DSAS/haut/share -type f); do
+    if [ $(stat -c%h $_f) -eq 1 ]; then
+      # not hardlinked so only in haut
+      chown $_user.$_user $_f
+      chmod 640 $_f
+    fi
+  done
+  for _f in $(find $DSAS/bas/share -type f); do
+    chown verif.share $_f
+    chmod 640 $_f
+  done
+}
+
 valid_ip(){
   if [[ $1 =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     for i in 1 2 3 4; do
@@ -763,6 +786,7 @@ case "${1}" in
     init_disk || reboot_required
     get_dsas
     mount_dsas
+    audit_perms &
     check_xml_version
 
     NETDEVICES="$(awk -F: '/eth.:|tr.:/{print $1}' /proc/net/dev 2>/dev/null)"

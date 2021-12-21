@@ -1356,16 +1356,20 @@ the two partitions. When a file exists in both zones, it is necessary that
 - The haut (upper) user cannot delete the existence of the file in the
   lower partition 
 - That the haut (upper) user can delete a file in the upper partition
+- The users `haut` and `bas` must be isolated with a `chroot jail` and so the ownership
+  of the principal directory must be `root` 
 
 With the following permissions
 
 
 | Perms      |  UID   | GID   |  Chemin
 |------------|--------|-------|-------------------
-| drwxrwx--- |  haut  | haut  |  dsas/haut
-| -rw-r----- |  verif | share |  dsas/haut/fichier
+| drwxrwx--- |  root  | haut  |  dsas/haut
+| drwxrws--- |  haut  | haut  |  dsas/haut/share
+| -rw-r----- |  verif | share |  dsas/haut/share/../fichier
 | drwxrwx--- |  bas   | bas   |  dsas/bas
-| -rw-r----- |  verif | share |  disas/bas/fichier
+| drwxrws--- |  bas   | bas   |  dsas/bas/share
+| -rw-r----- |  verif | share |  disas/bas/share/../fichier
 
 and a /etc/group file containing
 
@@ -1378,7 +1382,7 @@ repo:x:2004:bas,tc
 ```
 
 These requirement are respected. The verificaton scripts of the DSAS have been
-adapted to respect these conditions
+adapted to respect these conditions. These permissions are audited at each reboot
 
 ## Means of Verification
 
