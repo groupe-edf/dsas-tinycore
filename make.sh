@@ -218,6 +218,7 @@ build_pkg() {
         chown tc.staff $extract/home/tc
         $as_user mkdir -p $extract/$builddir
         $as_user mkdir -p $extract/$destdir
+        echo "here"
         unpack $src_dir/$_src $extract/$builddir
         chown -R $SUDO_USER $extract/$builddir
 
@@ -425,8 +426,7 @@ case $1 in
   chmod 755 $extract/home
 
   # prevent autologin of tc user
-  ( cd $extract/etc; cat inittab | sed -r 's/(.*getty)(.*autologin)(.*)/\1\3/g' > inittab.new; )
-  ( cd $extract/etc; mv inittab.new inittab; )
+  ( cd $extract/etc; sed -i -r 's/(.*getty)(.*autologin)(.*)/\1\3/g'  inittab; )
 
   # Create users
   passfile=$work/dsas_pass.txt

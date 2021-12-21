@@ -157,14 +157,16 @@ get_dsas(){
 
     for _user in bas haut; do
       mkdir -p $DISK/dsas/$_user
-      chmod -R 755 $DISK/dsas/$_user
+      chmod -R 750 $DISK/dsas/$_user
       chown -R root.$_user $DISK/dsas/$_user
 
       mkdir -p $DISK/dsas/$_user/share
       chmod -R 770 $DISK/dsas/$_user/share
+      # g+s so that all files and subdirectories keep the same group
       chmod -R g+s $DISK/dsas/$_user/share
       chown -R $_user.$_user $DISK/dsas/$_user/share
     done
+    # Files created by "verif" in /home/dsas/bas must have the group "share"
     chgrp -R share  $DISK/dsas/bas/share
     mkdir -p $DISK/dsas/log
     chmod -R 770 $DISK/dsas/log
