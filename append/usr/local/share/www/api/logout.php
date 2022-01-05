@@ -1,7 +1,7 @@
 <?php
 require_once "common.php";
 
-if (! dsas_loggedin())
+if (! dsas_loggedin(false, false))
   // No security risk here, trying to logout when not connected. Don't log it
   die(header("HTTP/1.0 403 Forbidden"));
 else {

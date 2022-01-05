@@ -5,7 +5,7 @@ define("_DSAS_LOG", "/home/dsas/log");
 define("_DSAS_XML", _DSAS_VAR . "/dsas_conf.xml");
 
 function dsas_ca_file() {
-  foreach (["/etc/ssl/ca-bundle.crt", "/etc/ssl/ca-certificates.crt",
+  foreach (["/ etc/ssl/ca-bundle.crt", "/etc/ssl/ca-certificates.crt",
            "/usr/local/etc/ssl/ca-bundle.crt", "/ust/local/etc/ssl/ca-certificates.crt"] as $f) {
     if (is_file($f))
       return $f;
@@ -13,12 +13,12 @@ function dsas_ca_file() {
   return "";
 }
 
-function dsas_loggedin($update_timeout = true) {
+function dsas_loggedin($update_timeout = true, $admin_only = true) {
   // Initialize the session, ignoring uninitalised session ids
   ini_set("session.use_strict_mode", 1);
   session_start();
 
-  // Check if the user is already logged in, if yes then redirect him to welcome p
+  // Check if the user is already logged in
   if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
     return false;
   }
@@ -31,7 +31,40 @@ function dsas_loggedin($update_timeout = true) {
   } else if ($update_timeout) {
     $_SESSION["timestamp"] = time();
   }
-  return true;
+
+  if ($admin_only) {
+    if (dsas_is_admin())
+      return true;
+    else
+      return false;
+  } else
+    return true;
+}
+
+function dsas_is_admin() {
+  $dsas = simplexml_load_file(_DSAS_XML);
+  foreach ($dsas->config->users->user as $user) {
+    if ($user->username == $_SESSION["username"]) {
+      if ($user->type == "admin")
+        return true;
+      else
+        return false;
+    }
+  }
+  return false;
+}
+
+function dsas_user_active($user) {
+  $dsas = simplexml_load_file(_DSAS_XML);
+  foreach ($dsas->config->users->user as $duser) {
+    if ($duser->username == $user) {
+      if ($duser->active == "true")
+        return true;
+      else
+        return false;
+    }
+  }
+  return false;
 }
 
 function dsas_dir() {

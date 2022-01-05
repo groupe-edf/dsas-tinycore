@@ -2,24 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Password</title>
-    <link rel="stylesheet" type="text/css" href="bootstrap-5.0.2.min.css" />
+    <title>DSAS Login</title>
+    <link href="bootstrap-5.0.2.min.css" rel="stylesheet" type="text/css" />
     <script src="bootstrap-5.0.2.bundle.min.js"></script>
     <script src="dsas.js"></script>
-    <link rel="stylesheet" type="text/css" href="dsas.css" />
 </head>
 <body>
 
-<dsas-header></dsas-header>
-<div class="container p-3 my-3 border" id="Passwords"></div>
+<dsas-modal id="modalDSAS" tag="DSAS"  type="Ok"></dsas-modal>
 <script>
-  dsas_loggedin();
-  dsas_check_warnings(true, false);
+  dsas_loggedin(true, false);
   dsas_display_passwd();
 </script>
 
+<div class="container p-3 my-3 border">
+  <form>
+    <div class="row">
+      <div class="col-10">
+        <h1 data-i18n>DSAS user password update</h1>
+      </div>
+      <div class="col-2">
+        <nav class="navbar navbar-expand-sm">
+          <ul class="navbar-nav ms-auto" data-i18n-navbar-lang></ul>
+        </nav>
+      </div>
+    </div>
+    <div class="row mb-3">
+      <div class="col-sm-4" data-i18n>User :</div><div class="col-sm-8" id="User"></div>
+      <div class="col-sm-4" data-i18n>Type :</div><div class="col-sm-8" id="Type"></div>
+      <div class="col-sm-4"><label for="inp_pass" class="col-form-label" data-i18n>Password :</label></div>
+      <div class="col-sm-8"><input type="password" id="inp_pass" name="password" class="form-control" value=""></div>
+    </div>
+    <div class="row mb-3">
+      <div class="col-sm-12 text-end">
+        <input type="submit" class="btn btn-primary" value="Update" onclick="dsas_change_passwd(); return false;" data-i18n-value>
+        <input type="submit" class="btn btn-primary" value="Logout" onclick="dsas_logout(); return false;;" data-i18n-value>
+      </div>
+    </div>
+  </form>
+</div>
 </body>
 </html>
-
-

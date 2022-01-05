@@ -10,44 +10,51 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
     switch ($_POST["op"]){
       case "add":
         $duser = $data["username"];
-        if [preg_match('/[^a-z0-9]/', $duser)) {
-          errors[] = ["error" => ["Username '{0}' is illegal", $duser]] 
-        $found = false;
-        foreach ($dsas->config->users->user as $duser) {
-          if ($user === $duser) {
-            found = true;
-            $newuser = $dsas->congig->users->addChild("user");
+        if (preg_match('/[^a-z0-9]/', $duser)) {
+          $errors[] = ["error" => ["Username '{0}' is illegal", $duser]];
+        } else {
+          $found = false;
+          foreach ($dsas->config->users->user as $user) {
+            if ($user->username == $duser) {
+              $found = true;
+              break;
+            }
+          }
+          if ($found) {
+            $errors[] = ["error" => ["The user '{0}' already exists",  $duser]];
+          } else {
+            $newuser = $dsas->config->users->addChild("user");
             $newuser->username = $duser;
             $newuser->description = "";
             $newuser->type = "admin";
-            $newuser->ssh = "false";
             $newuser->active = "false";
-            $output = dsas_exec(["adduser", "-s", "/bin/false", "-D", $user]);
+            $output = dsas_exec(["ssh", "tc@haut", "sudo", "adduser", "-s", "/bin/sh", "-D", $duser]);
             if ($output["retval"] != 0)
-              $errors[] = ["error" => ["Error during user addition '{0}'", (string)$output["retval"]]];
-            break;
+              $errors[] = ["error" => ["Error during user addition '{0}'", (string)$output["stderr"]]];
+            else {
+              $output = dsas_exec(["sudo", "adduser", "-s", "/bin/sh", "-D", $duser]);
+              if ($output["retval"] != 0)
+                $errors[] = ["error" => ["Error during user addition '{0}'", (string)$output["stderr"]]];
+            }
           }
         }
-        if (! $found)
-          $errors[] = ["error" => ["The user '{0}' does not exist",  $data["user"]]];
-
         break;
 
       case "passwd":
         $found = false;
         foreach ($dsas->config->users->user as $user) {
-          if ($user === $data["username"]) {
-            found = true;
+          if ($user->username == $data["username"]) {
+            $found = true;
             $passwd = $data["passwd"];
             if ($passwd != str_replace("/\s+/", "", $passwd))
               $errors[] = [$name => "The password can not contain white spaces"];
             else if (! complexity_test($passwd))
               $errors[] = [$name => "The password is insufficently complex"];
             else {
-              $ret = change_passwd($user, $passwd, $dsas->config->users->hash);
+              $ret = change_passwd($data["username"], $passwd, $dsas->config->users->hash);
               if ($ret["retval"] != 0) {
                 $errors[] = [$name => $ret["stderr"]];
-              } else if ($user === "tc") {
+              } else if ($user->username === "tc") {
                 unset($dsas->config->users->first);
               }
             }
@@ -55,60 +62,66 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           }
         }
         if (! $found)
-          $errors[] = ["error" => ["The user '{0}' does not exist",  (string)$data["user"]]];
+          $errors[] = ["error" => ["The user '{0}' does not exist",  (string)$data["username"]]];
 
         break;
 
       case "delete":
         if ($data["username"] === "tc") {
           $errors[] = [ "error" => "Can not remove the user 'tc'"];
+        } else if ($data["username"] === $_SESSION["username"]) {
+          $errors[] = [ "error" => ["Can not remove loggedin user '{0}'", $data["username"]]];
         } else {
           $found = false;
-          $i = 0
+          $i = 0;
           foreach ($dsas->config->users->user as $user) {
-            if ($user === $data["user"]) {
-              found = true;
-              $output = dsas_exec(["deluser", "--remove-home", $user]);
-              if ($output["retval"] != 0)
-                $errors[] = ["error" => ["Error during user deletion '{0}'", (string)$output["retval"]]];
+            if ($user->username == $data["username"]) {
+              $found = true;
               unset($dsas->config->users->user[$i]);
+              $output = dsas_exec(["ssh", "tc@haut", "sudo", "deluser", $data["username"]]);
+              if ($output["retval"] != 0)
+                $errors[] = ["error" => ["Error during user deletion '{0}'", (string)$output["stderr"]]];
+              else {
+                $output = dsas_exec(["sudo", "deluser", $data["username"]]);
+                if ($output["retval"] != 0)
+                  $errors[] = ["error" => ["Error during user deletion '{0}'", (string)$output["stderr"]]];
+              }
               break;
             }
-            $i++
+            $i++;
           }
           if (! $found)
-            $errors[] = ["error" => ["The user '{0}' does not exist",  (string)$data["user"]]];
+            $errors[] = ["error" => ["The user '{0}' does not exist",  (string)$data["username"]]];
         }
         break;
      
       case "modify":
-        foreach ($data["user"] as $duser) {
+        foreach ($data as $duser) {
           $found = false;
-          $i = 0         
+          $i = 0;         
           foreach ($dsas->config->users->user as $user) {
-            if ($duser === $user) {
-              found = true;
-              if ($user !== "tc") {
-                $dsas->config->users->user[$i].description = htmlspecialchars(trim($duser["description"]));
+            if ($duser["username"] == $user->username) {
+              $found = true;
+              if ($duser["username"] != "tc" && $duser["username"] != $_SESSION["username"]) {
+                $dsas->config->users->user[$i]->description = htmlspecialchars(trim((string)$duser["description"]));
                 switch ($duser["type"]) {
                   case "admin":
                   case "bas":
                   case "haut":
-                    $dsas->config->users->user[$i].type = $duser["type"];
+                    $dsas->config->users->user[$i]->type = $duser["type"];
                     break;
                   default:
                     $errors[] = ["error" => ["User type '{0}' is illegal", $duser["type"]]];
                     break;
                 }
               }
-              $dsas->config->users->user[$i].ssh = ($duser["ssh"] === "true" ? "true" : "false");
-              $dsas->config->users->user[$i].active = ($duser["active"] === "true" ? "true" : "false");
+              $dsas->config->users->user[$i]->active = ($duser["active"] === "true" ? "true" : "false");
               break;
             }
-            $i++
+            $i++;
           }
           if (! $found)
-            $errors[] = ["error" => ["The user '{0}' does not exist",  $duser]];          
+            $errors[] = ["error" => ["The user '{0}' does not exist",  $duser["username"]]];          
         }
         break;
 

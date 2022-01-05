@@ -7,7 +7,7 @@ NORMAL="$(echo -e '\033[1;39m')"
 MNT=/mnt
 
 # The version of the DSAS xml file supported by this version
-DSAS_XML_VERSION="0.8"
+DSAS_XML_VERSION="0.9"
 
 VAR=/var/dsas
 as_tc="sudo -E -u tc"
@@ -778,7 +778,7 @@ check_xml_version(){
     _first=$(xmllint --xpath 'string(dsas/config/users/first)' $VAR/dsas_conf.xml)
     [ -z "$_first" ] || _users="$_users\n      <first>true</first>"
     _users="$_users\n      <user>\n        <username>tc</username>\n        <description>Default account</description>\n        <type>admin</type>"
-    _users="$_users\n        <ssh>false</ssh>\n        <active>true</active>\n    </users>"
+    _users="$_users\n        <active>true</active>\n      </user>\n    </users>"
     cp /var/dsas/dsas_conf.xml /var/dsas/dsas_conf.xml.old
     awk '/^ +<\/users>/ && found {found=""; next} /^ +<users>/ {found=1} NF && !found' $VAR/dsas_conf.xml.old \
         | sed -e "s:<config>:<config>\n$_users:" > $VAR/dsas_conf.xml

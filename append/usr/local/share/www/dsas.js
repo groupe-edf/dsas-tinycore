@@ -27,7 +27,6 @@ function modal_action(text, action = null, hide = false){
   modalDSAS.removeAttribute("body");
   modalDSAS.removeAttribute("type");
   modalDSAS.removeAttribute("size");
-
   if (hide)
     modalDSAS.setAttribute("hideonclick", true);
   else
@@ -189,21 +188,17 @@ function modal_errors(errors, feedback = false){
   }
 }
 
-function dsas_loggedin(update_timeout = true){
+function dsas_loggedin(update_timeout = true, is_admin = true){
   var uri;
-  if (update_timeout) 
-    uri = "api/login.php";
-  else {
-    uri  = new URL("api/login.php", window.location.origin);
-    uri.search = new URLSearchParams({timeout: false});
-  }
+  uri  = new URL("api/login.php", window.location.origin);
+  uri.search = new URLSearchParams({timeout: update_timeout, admin : is_admin});
   fetch(uri).then(response => {
     if (! response.ok)
       return Promise.reject({status: response.status, 
           statusText: response.statusText});
     else {
       // Check if logged in once every 15 seconds, but don't update the timeout
-      timeout_login = setTimeout(dsas_loggedin, 15000, false);
+      timeout_login = setTimeout(dsas_loggedin, 15000, false, is_admin);
     }
   }).catch(error => {
     modal_message(_("You are not connected. Click 'Ok' to reconnect."),
@@ -220,10 +215,18 @@ function fail_loggedin(status){
     return false;
 }
 
-function dsas_init_loggedin(){
-  fetch("api/login.php").then(reponse => {
-    if (reponse.ok)
-      window.location = "/";
+function dsas_init_loggedin(is_admin = true){
+  var uri;
+  uri  = new URL("api/login.php", window.location.origin);
+  uri.search = new URLSearchParams({admin : is_admin});
+  fetch(uri).then(response => {
+    if (response.ok)
+      if (is_admin)
+        window.location = "/";
+      else
+        window.location = "passwd.html";   
+  }).catch(error => {
+    // Catch and ignore errors.
   });
 }
 
@@ -254,15 +257,61 @@ function dsas_login(){
   formData.append("password", password);
   fetch("api/login.php", {method: "POST", body: formData 
     }).then(response => {
-      if (response.ok)
-        window.location = "/";
-      else
+      if (response.ok) {
+        dsas_init_loggedin(true);
+        dsas_init_loggedin(false);
+      } else
         return Promise.reject({status: response.status, 
             statusText: response.statusText});
     }).catch(error => {
       document.getElementById("inp_user").setAttribute("class", "form-control is-invalid");
       document.getElementById("inp_pass").setAttribute("class", "form-control is-invalid");
       document.getElementById("feed_pass").innerHTML = _("Username or password invalid.");
+    });
+}
+
+function dsas_display_passwd(){
+  fetch("api/dsas-passwd.php").then(response => {
+      if (response.ok) 
+        return response.json();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(obj => {
+      document.getElementById("User").innerHTML = obj.username;
+      document.getElementById("Type").innerHTML = obj.type;
+    }).catch(error => {
+      if (! fail_loggedin(error.statusText))
+        if (error.status)
+          modal_message(_("Error ({0}) during the machine detection : {1}", error.status, error.statusText));
+        else
+          modal_message(_("Error : {0}", error));
+    });
+}
+
+function dsas_change_passwd(){
+  var user = document.getElementById("User").innerHTML;
+  var passwd = document.getElementById("inp_pass").value;
+  var formData = new FormData;
+  formData.append("data", JSON.stringify({username : user, passwd : passwd}));
+  fetch("api/dsas-passwd.php", {method: "POST", body: formData 
+    }).then(response => {
+      if (response.ok)
+        return response.text();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(text => {
+      try {
+        const errors = JSON.parse(text);
+        modal_errors(errors);
+      } catch (e) {
+        // Its text => here always just "Ok". 
+       modal_message(_("Password sucessfully changed"));
+      }
+    }).catch(error => {
+      if (! fail_loggedin(error.statusText))
+        modal_message(_("Error during password change : {0}", error.statusText));
     });
 }
 
@@ -455,7 +504,6 @@ function dsas_verify_line(str){
 }
 
 function dsas_display_users(){
-  var tbodyUsers = document.getElementById("Users");
   fetch("api/dsas-users.php").then(response => {
       if (response.ok) 
         return response.json();
@@ -465,36 +513,37 @@ function dsas_display_users(){
     }).then(obj => {
       users=obj.user;
       body = "";
-      for (user of Object.values(users)) {
+      for (user of (users.constructor === Object ? [users] : users)) {
         is_tc = user.username === "tc";
-        body = body + '<tr><th scope="row">' + user.username + '</th>';
-        body = body + '<td><input type="text" id="description_' + user.username + '" value="' + user.description + '" class="form-control"' + (is_tc ? '' : ' disabled readonly') + '></td>';
-        body = body + '<select class="form-select" name="UserType" id="UserType"' + (is_tc ? '' : ' disabled') + '>' +
+        body = body + '<tr><th scope="row" id="username_' + user.username + '">' + user.username + '</th>';
+        body = body + '<td><input type="text" id="description_' + user.username + '" value="' + print_obj(user.description) + '" class="form-control"' + (is_tc ? ' disabled readonly' : '') + '></td>';
+        body = body + '<td><select class="form-select" name="UserType" id="UserType"' + (is_tc ? ' disabled' : '') + '>' +
           '<option id="admin_' + user.username + '" value="admin"' + (user.type === "admin" ? ' selected' : '') + '>' + _('administrator') + '</option>' +
           '<option id="bas_' + user.username + '" value="bas"' + (user.type === "bas" ? ' selected' : '') + '>' + _('lower') + '</option>' +
           '<option id="haut_' + user.username + '" value="haut"' + (user.type === "haut" ? ' selected' : '') + '>' + _('upper') + '</option>' +
-          '</select>';
-        body = body + '<td><input type="checkbox" id="ssh_' + user.username + '" value="' + user.ssh + '" class="form-check-input"></td>';
-        body = body + '<td><input type="checkbox" id="active_' + user.username + '" value="' + user.active + '" class="form-check-input"></td>';
+          '</select></td>';
+        body = body + '<td><input type="checkbox" id="active_' + user.username + '" class="form-check-input"' + (user.active == 'true' ? ' checked' : '') + '></td>';
         body = body + '<td><a data-toggle="tooltip" title="' + _("Change Password") + '" onclick="dsas_user_passwd(\'' + 
-          user.username + '\');"><img src="lock.svg"></a>' +
-          '&nbsp;<a data-toggle="tooltip" title="' + _("Delete") + '" onclick="dsas_user_delete(\'' + 
-          user.username + '\');"><img src="x-lg.svg"></a></td>';
+          user.username + '\');"><img src="lock.svg"></a>';
+        if (! is_tc)
+          body = body + '&nbsp;<a data-toggle="tooltip" title="' + _("Delete") + '" onclick="dsas_user_delete(\'' + 
+          user.username + '\');"><img src="x-lg.svg"></a>';
+        body = body + '</td>';
       }
-      tbodyUsers.innerHTML = body;
+      document.getElementById("Users").innerHTML = body;
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
         modal_message(_("Error ({0}) during the download of users : {1}", error.status, error.statusText));
     });
 }
 
-dsas_user_passwd(user){
+function dsas_user_passwd(user){
   var modalDSAS = document.getElementById("modalDSAS");
   var body = "";
-  modal_action(_("Set password for user '{0}'", user), 'dsas_real_user_passwd(' + user + ');', true);
+  modal_action(_("Set password for user '{0}'", user), "dsas_real_user_passwd('" + user + "');", true);
   body = '    <div class="col-9 d-flex justify-content-center">\n' +
-         '      <label for="UserPassword">' + _("User password :") + '</label>\n' +
-         '      <input type="password" id="UserPassword" value="" class="form-control" onkeypress="if (event.key === \'Enter\'){ modalDSAS.hide(); dsas_real_user_passwd(" + user + ");}">\n' +
+         '      <label for="UserPassword">' + _("Password :") + '</label>\n' +
+         '      <input type="password" id="UserPassword" value="" class="form-control" onkeypress="if (event.key === \'Enter\'){ modalDSAS.hide(); dsas_real_user_passwd(\'' + user + '\');}">\n' +
          '    </div>';
   modalDSAS.setAttribute("body", body);
 }
@@ -504,7 +553,7 @@ function dsas_real_user_passwd(user){
   var formData = new FormData;
   formData.append("op", "passwd");
   formData.append("data", JSON.stringify({username : user, passwd : passwd}));
-  fetch("api/dsas-user.php", {method: "POST", body: formData 
+  fetch("api/dsas-users.php", {method: "POST", body: formData 
     }).then(response => {
       if (response.ok)
         return response.text();
@@ -524,15 +573,15 @@ function dsas_real_user_passwd(user){
     });
 }
 
-dsas_user_delete(user){
+function dsas_user_delete(user){
   modal_action(_("Delete the user '{0}' ?", user),"dsas_real_user_delete('" + user + "');", true);
 }
 
-dsas_real_user_delete(user){
+function dsas_real_user_delete(user){
   var formData = new FormData;
   formData.append("op", "delete");
   formData.append("data", JSON.stringify({username : user}));
-  fetch("api/dsas-user.php", {method: "POST", body: formData 
+  fetch("api/dsas-users.php", {method: "POST", body: formData 
     }).then(response => {
       if (response.ok)
         return response.text();
@@ -544,7 +593,8 @@ dsas_real_user_delete(user){
         const errors = JSON.parse(text);
         modal_errors(errors);
       } catch (e) {
-        // Its text => here always just "Ok". Do nothing
+        // Its text => here always just "Ok". 
+        dsas_display_users();
       }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
@@ -552,7 +602,7 @@ dsas_real_user_delete(user){
     });
 }
 
-dsas_user_new(){
+function dsas_user_new(){
   var modalDSAS = document.getElementById("modalDSAS");
   var body = "";
   modal_action(_("New username"), 'dsas_real_user_new();', true);
@@ -563,12 +613,12 @@ dsas_user_new(){
   modalDSAS.setAttribute("body", body);
 }
 
-dsas_real_user_new(){
+function dsas_real_user_new(){
   var username = document.getElementById("NewUser").value;
   var formData = new FormData;
-  formData.append("op", "new");
-  formData.append("data", JSON.stringify({username : user}));
-  fetch("api/dsas-user.php", {method: "POST", body: formData 
+  formData.append("op", "add");
+  formData.append("data", JSON.stringify({username : username}));
+  fetch("api/dsas-users.php", {method: "POST", body: formData 
     }).then(response => {
       if (response.ok)
         return response.text();
@@ -580,7 +630,8 @@ dsas_real_user_new(){
         const errors = JSON.parse(text);
         modal_errors(errors);
       } catch (e) {
-        // Its text => here always just "Ok". Do nothing
+        // Its text => here always just "Ok".
+        dsas_display_users();
       }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
@@ -588,33 +639,56 @@ dsas_real_user_new(){
     });
 }
 
-dsas_change_users(){
-  var data = [];
-
-
-
-
-
-  var formData = new FormData;
-  formData.append("op", "modify");
-  formData.append("data", JSON.stringify(users));
-  fetch("api/dsas-user.php", {method: "POST", body: formData 
-    }).then(response => {
-      if (response.ok)
-        return response.text();
+function dsas_change_users(){
+  fetch("api/dsas-users.php").then(response => {
+      if (response.ok) 
+        return response.json();
       else
         return Promise.reject({status: response.status, 
             statusText: response.statusText});
-    }).then(text => {
-      try {
-        const errors = JSON.parse(text);
-        modal_errors(errors);
-      } catch (e) {
-        // Its text => here always just "Ok". Do nothing
+    }).then(obj => {
+      users=obj.user;
+      var data = [];
+      for (user of (users.constructor === Object ? [users] : users)) {
+        username = user.username;
+        description = document.getElementById("description_" + username).value;
+        for (opt of document.getElementsByTagName("option")) {
+          if (opt.id === ("admin_" + username) && opt.selected)
+            type = "admin";
+          if (opt.id === ("bas_" + username) && opt.selected)
+            type = "bas";
+          if (opt.id === ("haut_" + username) && opt.selected)
+            type = "haut";
+        }
+        active = (document.getElementById("active_" + username).checked ? "true" : "false");
+        data.push({username : username, description :  description, type : type, active : active});
       }
+
+      var formData = new FormData;
+      formData.append("op", "modify");
+      formData.append("data", JSON.stringify(data));
+      fetch("api/dsas-users.php", {method: "POST", body: formData 
+        }).then(response => {
+          if (response.ok)
+            return response.text();
+          else
+            return Promise.reject({status: response.status, 
+                statusText: response.statusText});
+        }).then(text => {
+          try {
+            const errors = JSON.parse(text);
+            modal_errors(errors);
+          } catch (e) {
+            // Its text => here always just "Ok".
+            dsas_display_users();
+          }
+        }).catch(error => {
+          if (! fail_loggedin(error.statusText))
+            modal_message(_("Error during user creation : {0}", error.statusText));
+        });
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
-        modal_message(_("Error during user creation : {0}", error.statusText));
+        modal_message(_("Error ({0}) during the download of users : {1}", error.status, error.statusText));
     });
 }
 
