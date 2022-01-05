@@ -588,30 +588,17 @@ dsas_real_user_new(){
     });
 }
 
-
 dsas_change_users(){
-
-}
-
-function dsas_set_passwd(){
-  var Users = document.getElementsByTagName("dsas-user");
-  var Passwords = document.getElementsByTagName("input");
   var data = [];
-  for (let i = 0; i < Users.length; i++) {
-    data.push({username:  Users[i].getAttribute("user"),
-               password:  Passwords[i].value,
-               old: (i === 0)});
-  }
 
-  // Clear old invalid feedbacks
-  for (feed of document.getElementsByClassName("invalid-feedback")) 
-     feed.innerHTML = "";
-  for (feed of document.getElementsByClassName("form-control")) 
-     feed.setAttribute("class", "form-control");
 
-  var formData = new FormData();
-  formData.append("data", JSON.stringify(data));
-  fetch("api/dsas-users.php", {method: "POST", body: formData 
+
+
+
+  var formData = new FormData;
+  formData.append("op", "modify");
+  formData.append("data", JSON.stringify(users));
+  fetch("api/dsas-user.php", {method: "POST", body: formData 
     }).then(response => {
       if (response.ok)
         return response.text();
@@ -621,26 +608,13 @@ function dsas_set_passwd(){
     }).then(text => {
       try {
         const errors = JSON.parse(text);
-        for (err of errors) {
-          if (typeof err.old !== "undefined") {
-            document.getElementsByClassName("form-control")[0].setAttribute("class", "form-control is-invalid");
-            document.getElementsByClassName("invalid-feedback")[0].innerHTML = _(err.old);
-          } else if (typeof err.error !== "undefined") {
-            modal_message(_(err.error));
-          } else {
-            key = Object.keys(err)[0];
-            document.getElementById("inp_" + key).setAttribute("class", "form-control is-invalid");
-            document.getElementById("feed_" + key).innerHTML = _(err[key]);
-          }
-        }
+        modal_errors(errors);
       } catch (e) {
-        // Its text => here always just "Ok"
-        // Reload page to clear errors 
-        modal_message(_("The passwords have been changed"), "window.location='passwd.html'");
+        // Its text => here always just "Ok". Do nothing
       }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
-        modal_message(_("Error during password change : {0}", error.statusText));
+        modal_message(_("Error during user creation : {0}", error.statusText));
     });
 }
 
