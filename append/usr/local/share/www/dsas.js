@@ -454,8 +454,8 @@ function dsas_verify_line(str){
   return ret;
 }
 
-function dsas_display_passwd(){
-  var divPasswd = document.getElementById("Passwords");
+function dsas_display_users(){
+  var tbodyUsers = document.getElementById("Users");
   fetch("api/dsas-users.php").then(response => {
       if (response.ok) 
         return response.json();
@@ -464,22 +464,133 @@ function dsas_display_passwd(){
             statusText: response.statusText});
     }).then(obj => {
       users=obj.user;
-      if (!users) {
-        divPasswd.innerHTML = '<div class="alert alert-danger">Aucun utilisateur trouvé !</div>';
-      } else {
-        body = '<form>\n<dsas-user user="' + users[0] + '" label="' + users[0] + 
-               _(" (existing password)") + '" old="old"></dsas-user>\n'
-        for (user of Object.values(users))
-           body = body + '<dsas-user user="' + user + '"></dsas-user>\n'
-        body = body + '<div class="form-group">\n' +
-              '<input type="submit" class="btn btn-primary" value="' + _("Modify the passwords") + '"' +
-              ' onclick="dsas_set_passwd(); return false;">\n</div>';     
-        divPasswd.innerHTML = body;
+      body = "";
+      for (user of Object.values(users)) {
+        is_tc = user.username === "tc";
+        body = body + '<tr><th scope="row">' + user.username + '</th>';
+        body = body + '<td><input type="text" id="description_' + user.username + '" value="' + user.description + '" class="form-control"' + (is_tc ? '' : ' disabled readonly') + '></td>';
+        body = body + '<select class="form-select" name="UserType" id="UserType"' + (is_tc ? '' : ' disabled') + '>' +
+          '<option id="admin_' + user.username + '" value="admin"' + (user.type === "admin" ? ' selected' : '') + '>' + _('administrator') + '</option>' +
+          '<option id="bas_' + user.username + '" value="bas"' + (user.type === "bas" ? ' selected' : '') + '>' + _('lower') + '</option>' +
+          '<option id="haut_' + user.username + '" value="haut"' + (user.type === "haut" ? ' selected' : '') + '>' + _('upper') + '</option>' +
+          '</select>';
+        body = body + '<td><input type="checkbox" id="ssh_' + user.username + '" value="' + user.ssh + '" class="form-check-input"></td>';
+        body = body + '<td><input type="checkbox" id="active_' + user.username + '" value="' + user.active + '" class="form-check-input"></td>';
+        body = body + '<td><a data-toggle="tooltip" title="' + _("Change Password") + '" onclick="dsas_user_passwd(\'' + 
+          user.username + '\');"><img src="lock.svg"></a>' +
+          '&nbsp;<a data-toggle="tooltip" title="' + _("Delete") + '" onclick="dsas_user_delete(\'' + 
+          user.username + '\');"><img src="x-lg.svg"></a></td>';
       }
+      tbodyUsers.innerHTML = body;
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
         modal_message(_("Error ({0}) during the download of users : {1}", error.status, error.statusText));
     });
+}
+
+dsas_user_passwd(user){
+  var modalDSAS = document.getElementById("modalDSAS");
+  var body = "";
+  modal_action(_("Set password for user '{0}'", user), 'dsas_real_user_passwd(' + user + ');', true);
+  body = '    <div class="col-9 d-flex justify-content-center">\n' +
+         '      <label for="UserPassword">' + _("User password :") + '</label>\n' +
+         '      <input type="password" id="UserPassword" value="" class="form-control" onkeypress="if (event.key === \'Enter\'){ modalDSAS.hide(); dsas_real_user_passwd(" + user + ");}">\n' +
+         '    </div>';
+  modalDSAS.setAttribute("body", body);
+}
+
+function dsas_real_user_passwd(user){
+  var passwd = document.getElementById("UserPassword").value;
+  var formData = new FormData;
+  formData.append("op", "passwd");
+  formData.append("data", JSON.stringify({username : user, passwd : passwd}));
+  fetch("api/dsas-user.php", {method: "POST", body: formData 
+    }).then(response => {
+      if (response.ok)
+        return response.text();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(text => {
+      try {
+        const errors = JSON.parse(text);
+        modal_errors(errors);
+      } catch (e) {
+        // Its text => here always just "Ok". Do nothing
+      }
+    }).catch(error => {
+      if (! fail_loggedin(error.statusText))
+        modal_message(_("Error during password change : {0}", error.statusText));
+    });
+}
+
+dsas_user_delete(user){
+  modal_action(_("Delete the user '{0}' ?", user),"dsas_real_user_delete('" + user + "');", true);
+}
+
+dsas_real_user_delete(user){
+  var formData = new FormData;
+  formData.append("op", "delete");
+  formData.append("data", JSON.stringify({username : user}));
+  fetch("api/dsas-user.php", {method: "POST", body: formData 
+    }).then(response => {
+      if (response.ok)
+        return response.text();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(text => {
+      try {
+        const errors = JSON.parse(text);
+        modal_errors(errors);
+      } catch (e) {
+        // Its text => here always just "Ok". Do nothing
+      }
+    }).catch(error => {
+      if (! fail_loggedin(error.statusText))
+        modal_message(_("Error during user deletion : {0}", error.statusText));
+    });
+}
+
+dsas_user_new(){
+  var modalDSAS = document.getElementById("modalDSAS");
+  var body = "";
+  modal_action(_("New username"), 'dsas_real_user_new();', true);
+  body = '    <div class="col-9 d-flex justify-content-center">\n' +
+         '      <label for="NewUser">' + _("New Username :") + '</label>\n' +
+         '      <input type="text" id="NewUser" value="" class="form-control" onkeypress="if (event.key === \'Enter\'){ modalDSAS.hide(); dsas_real_user_new();}">\n' +
+         '    </div>';
+  modalDSAS.setAttribute("body", body);
+}
+
+dsas_real_user_new(){
+  var username = document.getElementById("NewUser").value;
+  var formData = new FormData;
+  formData.append("op", "new");
+  formData.append("data", JSON.stringify({username : user}));
+  fetch("api/dsas-user.php", {method: "POST", body: formData 
+    }).then(response => {
+      if (response.ok)
+        return response.text();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(text => {
+      try {
+        const errors = JSON.parse(text);
+        modal_errors(errors);
+      } catch (e) {
+        // Its text => here always just "Ok". Do nothing
+      }
+    }).catch(error => {
+      if (! fail_loggedin(error.statusText))
+        modal_message(_("Error during user creation : {0}", error.statusText));
+    });
+}
+
+
+dsas_change_users(){
+
 }
 
 function dsas_set_passwd(){
@@ -2455,7 +2566,7 @@ class DSASHeader extends HTMLElement {
 '        ' + _("System") + '\n' +
 '        </a>\n' +
 '        <div class="dropdown-menu">\n' +
-'          <a class="dropdown-item" href="passwd.html">' + _("Password") + '</a>\n' +
+'          <a class="dropdown-item" href="users.html">' + _("Users") + '</a>\n' +
 '          <a class="dropdown-item ' + disablenav + '" onclick="dsas_backup();">' + _("Backup") + '</a>\n' +
 '          <a class="dropdown-item" onclick="dsas_restore();">' + _("Restore") + '</a>\n' +
 '          <a class="dropdown-item ' + disablenav + '" onclick="modal_action(\'' + _("Are you sure you want to restart ?") + '\', \'dsas_reboot();\')">' + _("Restart") + '</a>\n' + 

@@ -773,6 +773,16 @@ check_xml_version(){
   if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "8" ]; then 
     sed -i -e "s:</config>:<antivirus>\n        <active>false</active>\n        <uri></uri>\n      </antivirus>\n    </config>:" $VAR/dsas_conf.xml
   fi
+  if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "9" ]; then 
+    _users="    <users>\n      $(xmllint --xpath 'dsas/config/users/hash' $VAR/dsas_conf.xml)"
+    _first=$(xmllint --xpath 'string(dsas/config/users/first)' $VAR/dsas_conf.xml)
+    [ -z "$_first" ] || _users="$_users\n      <first>true</first>"
+    _users="$_users\n      <user>\n        <username>tc</username>\n        <description>Default account</description>\n        <type>admin</type>"
+    _users="$_users\n        <ssh>false</ssh>\n        <active>true</active>\n    </users>"
+    cp /var/dsas/dsas_conf.xml /var/dsas/dsas_conf.xml.old
+    awk '/^ +<\/users>/ && found {found=""; next} /^ +<users>/ {found=1} NF && !found' $VAR/dsas_conf.xml.old \
+        | sed -e "s:<config>:<config>\n$_users:" > $VAR/dsas_conf.xml
+  fi
 
   # Now that the XML is upgraded, save the new version number
   if [ "$_ver" != "$DSAS_XML_VERSION" ]; then

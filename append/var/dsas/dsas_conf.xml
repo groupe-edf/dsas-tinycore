@@ -1,12 +1,16 @@
 <dsas>
-  <version>0.8</version>
+  <version>0.9</version>
   <config>
     <users>
       <hash>sha512</hash>
       <first>true</first>
-      <user>tc</user>
-      <user>bas</user>
-      <user>haut</user>
+      <user>
+        <username>tc</username>
+        <description>Default account</description>
+        <type>admin</type>
+        <ssh>false</ssh>
+        <active>true</active>
+      </user>
     </users>
     <network>
       <bas>

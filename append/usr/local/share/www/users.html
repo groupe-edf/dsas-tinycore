@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Users</title>
+    <link rel="stylesheet" type="text/css" href="bootstrap-5.0.2.min.css" />
+    <script src="bootstrap-5.0.2.bundle.min.js"></script>
+    <script src="dsas.js"></script>
+    <link rel="stylesheet" type="text/css" href="dsas.css" />
+</head>
+<body>
+
+<dsas-header></dsas-header>
+<div class="container p-3 my-3 border" id="Passwords"></div>
+<script>
+  dsas_loggedin();
+  dsas_check_warnings(true, false);
+  dsas_display_users();
+</script>
+
+
+<div class="container p-3 my-3 border">
+  <div class="row">
+    <div class="col-md-10"><h5 data-i18n>Users</h5></div>
+    <div class="col-md-2 text-end">
+      <img src="plus-lg.svg" data-toggle="tooltip" title="Add" onclick="dsas_user_new();" data-i18n-title>
+    </div>
+  </div>
+  <form class="g-2">
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+           <th scope="col" data-i18n>Username</th>
+           <th scope="col" data-i18n>Description</th>
+           <th scope="col" data-i18n>Type</th>
+           <th scope="col" data-i18n>ssh/sftp</th>
+           <th scope="col" data-i18n>Active</th>
+           <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody id="Users></tbody>    
+      </table>
+    </div>
+    <div class="form-group">
+      <input type="submit" class="btn btn-primary" value="Save changes" onclick="dsas_change_users(); return false;" data-i18n-value>
+    </div>
+  </form>
+</div>
+
+</body>
+</html>
