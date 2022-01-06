@@ -69,19 +69,19 @@ msg() {
 msgline() {
   local file=$1
   local status=$2
-  local md5=$(cat $file | md5sum | sed -e "s/  -$//g")
-  local _file=`echo $file | sed -e "s:^${DSAS_HAUT}/::g"`
+  local md5=$(cat "$file" | md5sum | sed -e "s/  -$//g")
+  local _file=`echo "$file" | sed -e "s:^${DSAS_HAUT}/::g"`
   local d=$(utc_date)
   case $status in
-    0)   msg "  "  "Ok"              $md5 $d $_file ;;
-    -1)  msg "XX"  "Unknown type"   $md5  $d $_file ;;
-    1)   msg "**"  "Bad Sig"        $md5  $d $_file ;;
-    2)   msg "--"  "Checksum fail"  $md5  $d $_file ;;
-    3)   msg "**"  "Bad Interm Sig" $md5  $d $_file ;;
-    4)   msg "**"  "Fail virus chk" $md5  $d $_file ;;
-    5)   msg "**"  "Bad RPM Sig"    $md5  $d $_file ;;
-    255) msg "**"  "Not signed"     $md5  $d $_file ;;
-    *)   msg "XX"  "Unknown status" $md5  $d $_file ;;
+    0)   msg "  "  "Ok"              $md5 $d "$_file" ;;
+    -1)  msg "XX"  "Unknown type"   $md5  $d "$_file" ;;
+    1)   msg "**"  "Bad Sig"        $md5  $d "$_file" ;;
+    2)   msg "--"  "Checksum fail"  $md5  $d "$_file" ;;
+    3)   msg "**"  "Bad Interm Sig" $md5  $d "$_file" ;;
+    4)   msg "**"  "Fail virus chk" $md5  $d "$_file" ;;
+    5)   msg "**"  "Bad RPM Sig"    $md5  $d "$_file" ;;
+    255) msg "**"  "Not signed"     $md5  $d "$_file" ;;
+    *)   msg "XX"  "Unknown status" $md5  $d "$_file" ;;
   esac
 }
 
@@ -126,7 +126,7 @@ task_id_to_idx(){
 
 ln() {
   if [ "$dryrun" == "0" ]; then
-    [ -d $(dirname "$2") ] || ( mkdir -m 770 -p $(dirname "$2"); chgrp -R $grp $(dirname "$2"))
+    [ -d "$(dirname "$2")" ] || ( mkdir -m 770 -p "$(dirname "$2")"; chgrp -R $grp "$(dirname "$2")")
     # This script is not running as root so can't change the owner. We
     # first have to copy the file.
     # FIXME : Hardcode path to gnu version of cp for the "--preserve" flag
