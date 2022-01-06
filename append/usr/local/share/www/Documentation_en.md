@@ -1342,10 +1342,10 @@ with a shell.
 | bas     | /bin/false | Used for connection to the sensitive zone       |
 | verif   | /bin/false | Used internally to the DSAS                     |
 
-Each user added via the DSAS adminsitration interface will have a sheel `/bin/ash`.
+Each user added via the DSAS adminsitration interface will have a shell `/bin/ash`.
 
 
-### The zrite permissions of each user
+### The write permissions of each user
 
 The write permission of each user is as seen in the following table
 
