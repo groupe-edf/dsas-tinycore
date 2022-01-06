@@ -45,7 +45,7 @@ verifauthenticode(){
 
   if [ -f "$tempdir/cert.0" ]; then
     osslsigncode verify -CAfile "$tempdir/cert.0" "$file" 2>&1 > /dev/null || \
-        osslsigncode verify -CAfile "$tempdir/cert.0" -TSA-CAfile "$tempdir/cert.0" $file 2>&1 > /dev/null || \
+        osslsigncode verify -CAfile "$tempdir/cert.0" -TSA-CAfile "$tempdir/cert.0" "$file" 2>&1 > /dev/null || \
         return $?
   else
     osslsigncode verify "$file" 2>&1 > /dev/null || return $?
@@ -62,7 +62,7 @@ verifauthenticode(){
     # There can be multiple signatures in the PKCS7 file. openssl will only treat the 
     # first one normally. Find the offsets in the file for each signature block, and treat
     # each seperately
-    offsets="0 $(openssl asn1parse -inform pem -in "$sigdir/sig.pkcs7" | grep -B 1 pkcs7-signedData | \
+    offsets="0 $(openssl asn1parse -inform pem -in "$sigdir/sig.pkcs7" 2> /dev/null | grep -B 1 pkcs7-signedData | \
         grep -x -A 1 '\-\-' | grep ':' | cut -d: -f1)"
 
     hashes=""
@@ -358,9 +358,13 @@ verifdirectory() {
   # Create directory if needed
   [ -d "$DSAS_BAS/$dir" ] || $(umask 007; mkdir -p "$DSAS_BAS/$dir"; chgrp -R $grp "$DSAS_BAS/$(echo $dir | cut -d/ -f1)")
 
+  # Set IFS to '\3', so the loop over the files and directories work with spaces in the file names
+  OLD_IFS=$IFS
+  IFS=$'\3'
+
   # Remove the files in our tree bas and not in haut.
   filetable=$(cd "$DSAS_HAUT/$dir"; find . -type f)
-  for file in $(cd "$DSAS_BAS/$dir"; find . -type f); do
+  for file in $(cd "$DSAS_BAS/$dir"; find . -type f -exec echo -n -e "{}\x03" \; ); do
     if [[ "$filetable" != *"${file:2}"* ]]; then
       myecho "Removing stale file ${file:2}"
       rm -f "$DSAS_BAS/$dir/${file:2}"
@@ -392,7 +396,7 @@ verifdirectory() {
       /bin/rm -fr "$zipdir"
     done 
   else
-    for file in $(cd "$DSAS_HAUT"; find $dir -type f); do
+    for file in $(cd "$DSAS_HAUT"; find $dir -type f -exec echo -n -e "{}\x03" \; ); do
       # If file exists in bas skip. Hardlinked, so test is fast
       [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
 
@@ -431,6 +435,7 @@ verifdirectory() {
     done
   fi
   /bin/rm -fr "$tempdir"
+  IFS=$OLD_IFS
 }
 
 verify_packages() {
@@ -735,21 +740,25 @@ passdirectory(){
     [ "$have_pool" == "0" ] && $(1>&2 echo "Debian pool directory not found"; exit 1)
   fi
 
-  # Create directories if needed
-  for _d in $(cd "$DSAS_HAUT"; find "$dir" -type d); do
-    [ -d "$DSAS_BAS/$_d" ] || $(umask 007; mkdir -p "$DSAS_BAS/$_d"; chgrp $grp -R "$DSAS_BAS/$_d")
+  # Set IFS to '\0', so the loop over the files and directories work with spaces in the file names
+  OLD_IFS=$IFS
+  IFS=$'\3'
+
+  # Create directory if needed
+  for _d in $(cd "$DSAS_HAUT"; find "$dir" -type d -exec echo -n -e "{}\x03" \; ); do
+    [ -d "$DSAS_BAS/$_d" ] || $(umask 007; mkdir -p "$DSAS_BAS/$_d"; chgrp -R $grp "$DSAS_BAS/$(echo $_d | cut -d/ -f1)")
   done
 
   # Remove the files in our tree bas and not in haut.
   filetable=$(cd "$DSAS_HAUT/$dir"; find . -type f)
-  for file in $(cd "$DSAS_BAS/$dir"; find . -type f); do
+  for file in $(cd "$DSAS_BAS/$dir"; find . -type f -exec echo -n -e "{}\x03" \; ); do
     if [[ "$filetable" != *"${file:2}"* ]]; then
       myecho "Removing stale file ${file:2}"
       rm -f "$DSAS_BAS/$dir/${file:2}"
     fi
   done
 
-  for file in $(cd "$DSAS_HAUT"; find "$dir" -type f); do
+  for file in $(cd "$DSAS_HAUT"; find "$dir" -type f -exec echo -n -e "{}\x03" \; ); do
     # If file exists in bas skip. Hardlinked, so test is fast
     [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
 
@@ -760,20 +769,20 @@ passdirectory(){
 
   if [ "$2" == "deb" ]; then
     # Create directories if needed
-    for _d in $(cd "$DSAS_HAUT"; find "$pool/pool" -type d); do
+    for _d in $(cd "$DSAS_HAUT"; find "$pool/pool" -type d -exec echo -n -e "{}\x03" \; ); do
       [ -d "$DSAS_BAS/$_d" ] || $(umask 007; mkdir -p "$DSAS_BAS/$_d"; chgrp $grp -R "$DSAS_BAS/$_d")
     done
 
     # Remove the files in our tree bas and not in haut.
     filetable=$(cd "$DSAS_HAUT/$pool/pool"; find . -type f)
-    for file in $(cd "$DSAS_BAS/$pool/pool"; find . -type f); do
+    for file in $(cd "$DSAS_BAS/$pool/pool"; find . -type f -exec echo -n -e "{}\x03" \; ); do
       if [[ "$filetable" != *"${file:2}"* ]]; then
         myecho "Removing stale file ${file:2}"
         rm -f "$DSAS_BAS/$pool/pool/${file:2}"
       fi
     done
 
-    for file in $(cd "$DSAS_HAUT"; find "$pool/pool" -type f); do
+    for file in $(cd "$DSAS_HAUT"; find "$pool/pool" -type f -exec echo -n -e "{}\x03" \; ); do
       # If file exists in bas skip. Hardlinked, so test is fast
       [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
 
@@ -782,6 +791,8 @@ passdirectory(){
       ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
     done
   fi
+
+  IFS=$OLD_IFS
 }
 
 verifclamav(){
