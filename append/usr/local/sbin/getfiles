@@ -375,11 +375,14 @@ while [ "$#" -gt 0 ]; do
     -*) 1>&2 echo "Unrecognized option : $1"; help; exit 1 ;;
      *)
        # Only allow a single task to be able to exit en error correctly 
-       [ -n "$ids" ] && { 1>&2 ecdo "Only a single task is allowed"; exit 1; }
+       [ -n "$ids" ] && { 1>&2 echo "Only a single task is allowed"; exit 1; }
        ids="$ids $1" ;;
   esac
   shift 1
 done
+ 
+# Change to a directory where the user 'haut' has write permissions
+cd $DSAS_HAUT
 
 # If dryrun, force verbose
 [ $dryrun -ne 0 ] && verbose=1
