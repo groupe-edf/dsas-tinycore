@@ -33,6 +33,11 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
               // unsaved changes by an eadminstrator will also be backed up. Have to
               // untar the existing backup in tgz format, replace /etc/shadow and 
               // rearchive it. This is going to be ugly !!
+
+              // mv /etc/sysconfig/tcedir/mydata.tgz /etc/sysconfig/tcedir/mydata.tgz.old 
+              // zcat /etc/sysconfig/tcedir/mydata.tgz.old | sudo tar -Cr / etc/shadow | gzip > /etc/sysconfig/tcedir/mydata.tgz
+
+              
             }
           }
           break;

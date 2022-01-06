@@ -522,7 +522,7 @@ function dsas_display_users(){
           '<option id="bas_' + user.username + '" value="bas"' + (user.type === "bas" ? ' selected' : '') + '>' + _('lower') + '</option>' +
           '<option id="haut_' + user.username + '" value="haut"' + (user.type === "haut" ? ' selected' : '') + '>' + _('upper') + '</option>' +
           '</select></td>';
-        body = body + '<td><input type="checkbox" id="active_' + user.username + '" class="form-check-input"' + (user.active == 'true' ? ' checked' : '') + '></td>';
+        body = body + '<td style="text-align:center"><input type="checkbox" id="active_' + user.username + '" class="form-check-input"' + (user.active == 'true' ? ' checked' : '') + '></td>';
         body = body + '<td><a data-toggle="tooltip" title="' + _("Change Password") + '" onclick="dsas_user_passwd(\'' + 
           user.username + '\');"><img src="lock.svg"></a>';
         if (! is_tc)

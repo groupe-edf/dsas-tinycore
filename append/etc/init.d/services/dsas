@@ -503,13 +503,61 @@ start_sshd(){
     [ "$(xmllint --xpath "string(dsas/config/ssh/active)" $VAR/dsas_conf.xml)" == "false" ] && return 0
     USER_TC=$(xmllint --xpath "string(dsas/config/ssh/user_tc)" $VAR/dsas_conf.xml) 
     USER=$(xmllint --xpath "string(dsas/config/ssh/user_bas)" $VAR/dsas_conf.xml)
-
+    UID_TC=""
+    i=1
+    while :; do
+      _username=$(xmllint --xpath "string(dsas/config/users/user[$i]/username)" $VAR/dsas_conf.xml)
+      [ -z "${_username// }" ] && break
+      _active=$(xmllint --xpath "string(dsas/config/users/user[$i]/active)" $VAR/dsas_conf.xml)
+      _type=$(xmllint --xpath "string(dsas/config/users/user[$i]/type)" $VAR/dsas_conf.xml)
+      if [ "$_active" == "true" ] && [ "$_type" == "admin" ]; then
+        if [ -z "$UID_TC" ]; then
+          UID_TC="$_username"
+        else
+          UID_TC="$UID_TC,$_username"
+        fi
+      fi
+      i=$((i + 1))
+    done
+    UID_TYP=""
+    i=1
+    while :; do
+      _username=$(xmllint --xpath "string(dsas/config/users/user[$i]/username)" $VAR/dsas_conf.xml)
+      [ -z "${_username// }" ] && break
+      _active=$(xmllint --xpath "string(dsas/config/users/user[$i]/active)" $VAR/dsas_conf.xml)
+      _type=$(xmllint --xpath "string(dsas/config/users/user[$i]/type)" $VAR/dsas_conf.xml)
+      if [ "$_active" == "true" ] && [ "$_type" == "$TYP" ]; then
+        if [ -z "$UID_TYP" ]; then
+          UID_TYP="$_username"
+        else
+          UID_TYP="$UID_TC,$_username"
+        fi
+      fi
+      i=$((i + 1))
+    done
     NETDEVICES="$(awk -F: '/eth.:|tr.:/{print $1}' /proc/net/dev 2>/dev/null)"
     ETH0=$(echo $NETDEVICES | cut -d" " -f1)
     LISTEN=$(ifconfig $ETH0 | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
   else
     USER_TC="$INTERCO_BAS"
     USER=$(xmllint --xpath "string(dsas/config/ssh/user_haut)" $VAR/dsas_conf.xml)
+    UID_TC="tc"
+    UID_TYP=""
+    i=1
+    while :; do
+      _username=$(xmllint --xpath "string(dsas/config/users/user[$i]/username)" $VAR/dsas_conf.xml)
+      [ -z "${_username// }" ] && break
+      _active=$(xmllint --xpath "string(dsas/config/users/user[$i]/active)" $VAR/dsas_conf.xml)
+      _type=$(xmllint --xpath "string(dsas/config/users/user[$i]/type)" $VAR/dsas_conf.xml)
+      if [ "$_active" == "true" ] && [ "$_type" == "$TYP" ]; then
+        if [ -z "$UID_TYP" ]; then
+          UID_TYP="$_username"
+        else
+          UID_TYP="$UID_TC,$_username"
+        fi
+      fi
+      i=$((i + 1))
+    done
     if [ -z "$USER" ]; then
       LISTEN="$INTERCO_HAUT"
     else
@@ -518,23 +566,33 @@ start_sshd(){
       [[ "$USER" =~ "/0$" ]] && USER="$USER,!$INTERCO_BAS"
     fi
   fi
+
+  # Setup groups to allow access by sftp to the users
+  if [ -z "$UID_TYP" ]; then
+    sed -i -e "s/\($TYP:.*\):verif\(.*\)$/\1:verif/" /etc/group
+    sed -i -e "s/\(share:.*\):verif,bas,haut\(.*\)$/\1:verif,bas,haut/" /etc/group
+  else
+    sed -i -e "s/\($TYP:.*\):verif\(.*\)$/\1:verif,$UID_TYP/" /etc/group
+    sed -i -e "s/\(share:.*\):verif,bas,haut\(.*\)$/\1:verif,bas,haut,$UID_TYP/" /etc/group
+  fi
+
   [ -z $USER_TC ] && [ -z $USER ] && return 0
   cp -f /usr/local/etc/ssh/sshd_config.dsas /usr/local/etc/ssh/sshd_config
-  if [ ! -z $USER_TC ]; then
+  if [ ! -z $USER_TC ] && [ ! -z "$UID_TC" ]; then
     cat << EOF >> /usr/local/etc/ssh/sshd_config
 
 ListenAddress $LISTEN
 
-Match User tc Address $USER_TC
+Match User $UID_TC Address $USER_TC
 	PasswordAuthentication yes
 	PubkeyAuthentication yes
 
 EOF
   fi
 
-  if [ ! -z $USER ]; then
+  if [ ! -z $USER ] && [ ! -z "$UID_TYP" ]; then
     cat << EOF >> /usr/local/etc/ssh/sshd_config
-Match User $TYP Address $USER
+Match User $UID_TYP Address $USER
 	PasswordAuthentication yes
 	PubkeyAuthentication yes
 	ChrootDirectory /home/dsas/$TYP
