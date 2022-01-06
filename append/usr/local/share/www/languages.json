@@ -277,7 +277,7 @@
     "Error during password change : {0}" : "erreur pendant la changement de mot de passe : {0}",
     "lower" : "bas",
     "upper" : "haut",
-    "administrator" : "adminsitrateur",
+    "administrator" : "administrateur",
     "Modify the passwords" : "Modify les mots de password",
     "Set password for user '{0}'" : "Changer le mot de passe pour l'utilisateur '{0}'",
     "The passwords have been changed" : "Les mots de passe ont été changés",

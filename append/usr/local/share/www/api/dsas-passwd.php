@@ -27,17 +27,20 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
               if ($user->username === "tc")
                 unset($dsas->config->users->first);
 
-              // FIXME !!!
-              // To make the password change permenant across a reboot need to backup
+              // To make the password change permanent across a reboot need to backup
               // /etc/shadow on both machines. Can't use 'filetool.sh -b' for this as
-              // unsaved changes by an eadminstrator will also be backed up. Have to
+              // unsaved changes by an adminstrator will also be backed up. Have to
               // untar the existing backup in tgz format, replace /etc/shadow and 
-              // rearchive it. This is going to be ugly !!
-
-              // mv /etc/sysconfig/tcedir/mydata.tgz /etc/sysconfig/tcedir/mydata.tgz.old 
-              // zcat /etc/sysconfig/tcedir/mydata.tgz.old | sudo tar -Cr / etc/shadow | gzip > /etc/sysconfig/tcedir/mydata.tgz
-
-              
+              // rearchive it. This is going to be ugly !! Package the ugliness in a 
+              // script
+              $output = dsas_exec(["ssh", "tc@haut", "/usr/local/sbin/dsaspasswd"]);
+              if ($output["retval"] != 0)
+                $errors[] = ["error" => ["Error during user addition '{0}'", (string)$output["stderr"]]];
+              else {
+                $output = dsas_exec(["/usr/local/sbin/dsaspasswd"]);
+                if ($output["retval"] != 0)
+                  $errors[] = ["error" => ["Error during user addition '{0}'", (string)$output["stderr"]]];
+              }            
             }
           }
           break;
