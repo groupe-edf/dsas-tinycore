@@ -23,8 +23,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $ret = change_passwd($data["username"], $passwd, $dsas->config->users->hash);
             if ($ret["retval"] != 0) {
               $errors[] = [$name => $ret["stderr"]];
-            } else 
-              if ($user->username === "tc")
+            } else {
+              if ($user->username == "tc")
                 unset($dsas->config->users->first);
 
               // To make the password change permanent across a reboot need to backup

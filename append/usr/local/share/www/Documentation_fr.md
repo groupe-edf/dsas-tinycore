@@ -492,47 +492,73 @@ En cliquant `Ok` sur ce message vous serez redirigé vers l'écran de connexion 
 
 ### Changement initiale des mots de passe
 
-Si ceci est votre première connexion au DSAS, un message d'erreur sera affiché et après, 
-l'écran suivant vous sera présenté :
+Si ceci est votre première connexion au DSAS, il faut connecter avec l'utilisateur 'tc',
+un message d'erreur sera affiché et après, l'écran suivant vous sera présenté :
 
 ![Ecran de changement des mots de passe initiale](fr/DSAS2.png)
 
-A votre première connexion, tous les mots de passe sont à changer. Il est impossible de 
-continuer avec l'interface d'administration sans modifier les mots de passes. 
-
-L'écran de changement de mots de passe comporte 4 lignes. Sur la première, le mot de
-passe existant de l'utilisateur __tc__ doit être rentré. Les trois autres lignes 
-concernent les utilisateurs suivants :
-
-- __tc__ - L'utilisateur administrateur du DSAS. Il a tous les privilèges sur le DSAS y compris
-le doit de devenir __root__. Si `ssh` est actif pour l'utilisateur __tc__ il peut se connecter
-avec une interface `ssh` afin de faire de la maintenance avancée sur la DSAS.
-- __bas__ - Cet utilisateur n'a qu'un seul rôle. Si le DSAS est configuré avec 
-`ssh` pour l'utilisateur __bas__ il aura le droit de se connecter en `sftp` et seulement en `sftp`
-depuis la zone sensible. Ceci pourrait être utile pour la récupération des fichiers transmis
-par le DSAS dans certains scenarios. Ne seront présentés à cet utilisateur que des fichiers vérifiés 
-par le DSAS et un [chroot](https://fr.m.wikipedia.org/wiki/Chroot) est utilisé afin d'empêcher 
-l'utilisateur de voir autre chose.
-- __haut__ - Cet utilisateur comme l'utilisateur __bas__ est utilisé pour une connexion en `sftp`
-depuis la zone non sensible afin de permettre la dépôt de fichiers directement sur le DSAS. Il est
-également cloisonné et ne peut voir qu'une zone de dépôt de fichiers. __L'utilisation de cette
-fonctionnalité est fortement déconseillés__ car elle ouvre la possibilité d'attaques contre le DSAS
-
-Donc, en configuration normale seulement l'utilisateur __tc__ est à utiliser. Mais les trois
-mots de passe sont néanmoins à modifier afin d'éliminer l'ensemble des éléments secrets par 
-défaut. Les mots de passe des utilisateurs __bas__ et __haut__ peuvent toujours être modifiés 
-depuis cette interface et si vous ne pensez pas utiliser les fonctions `sftp`, il est recommander 
-de choisir des mots de passe longs et aléatoires pour ces utilisateurs __bas__ et __haut__.
-
-Les limitations imposées sur les mots de passe sont 
+A votre première connexion, le mot de passe du compte 'tc' doit-être changé. Les limitations 
+imposées sur les mots de passe sont 
 
 - ils ont au moins 8 caractères de long (12 recommandés)
 - ils ne contiennent pas d'espaces ni de tabulations
 - Ils contiennent au moins 3 types de caractères (majuscule, minuscule, nombre, caractère spécial)
 
-Rentrez vos nouveaux mots de passe et cliquez sur `Modifier les mots de passe`. 
+Rentrez vos nouveau mot de passe et cliquez sur `Mise à jour`. Vous pouvez maintenant cliquer
+sur `Deconnecter` et en réconectant vous auriez accès à l'interface d'adminsitration.
+ 
+### Configuration des utilisatuers
 
-![Ecran en cas de modification réussie de changement des mots de passe](fr/DSAS4.png)
+L'écran de configuration des utilisateurs est accédé depuis le onglet `Configuration` et 
+l'option `Utilisateurs`. L'écran de configuration se presente comme
+
+![Menu de configuration des utilisateurs du DSAS](fr/DSAS34.png)
+
+A la premiere utilisation, seulement l'utilisateur par défaut `tc` est configuré. Il est 
+récommandé de créer des comptes nominative pour chaque utilisateur et de désactiver le 
+compte `tc`. L'utilisateur `tc` est le seul avec le droit de devenir `root` sur la DSAS. 
+Si le compte `tc` est désactivé les autres utilisateurs pourrait quand devenir `root` avec
+la conaissance de la mot de passe de l'utilisateur `tc`. Un utilsiateur désactivé ne pourrait
+que connecté depuis la console du DSAS.
+
+Un noveau compte est créer en cliquant sur la bouton ![](fr/DSAS23.png) à droit de l'écran. 
+Vous seriez demandé de rentrer le nom de l'utilisateur comme
+
+![Ecran d'ajout de nouveau utilisateur](fr/DSAS35.png)
+
+Les noms d'utilisateurs de devraientt contenir que des miniscules et de des chiffres. Ici
+nous avons ajouté l'utilisateur `ua12345`
+
+![Menu de configuration des utilisateurs du DSAS](fr/DSAS37.png)
+
+Pour chaque utilisateur nous pourrions plusieurs modifications ou actions
+
+- __Déscription__ - De l'information libre pourrait être ajouté sur l'utilisateur
+- __Type__ - Trois type d'utilisateur sont possible
+  * __administrateur__ - Un utilisateur administrateur du DSAS. Il a tous les privilèges sur le DSAS, 
+si `ssh` est actif pour il peut se connecter avec une interface `ssh` afin de faire de la maintenance 
+avancée sur la DSAS. 
+  * __bas__ - Cet utilisateur n'a qu'un seul rôle. Si le DSAS est configuré avec 
+`ssh` pour l'utilisateur __bas__ il aura le droit de se connecter en `sftp` et seulement en `sftp`
+depuis la zone sensible. Ceci pourrait être utile pour la récupération des fichiers transmis
+par le DSAS dans certains scenarios. Ne seront présentés à cet utilisateur que des fichiers vérifiés 
+par le DSAS et un [chroot](https://fr.m.wikipedia.org/wiki/Chroot) est utilisé afin d'empêcher 
+l'utilisateur de voir autre chose.
+  * __haut__ - Cet utilisateur comme l'utilisateur __bas__ est utilisé pour une connexion en `sftp`
+depuis la zone non sensible afin de permettre la dépôt de fichiers directement sur le DSAS. Il est
+également cloisonné et ne peut voir qu'une zone de dépôt de fichiers. __L'utilisation de cette
+fonctionnalité est fortement déconseillés__ car elle ouvre la possibilité d'attaques contre le DSAS
+- __Active__ - Un compte pourrait existe mais ne pas être fonctionel. Ceci pemettre de temporairement
+désactivé un compte sans le supprimer
+- ![](fr/DSAS39.png) - En cliquant sur cette icone nous pourrions modifier le mot de passe de 
+l'utilisateur
+- ![](fr/DSAS35.png) - En cliquant sur cette icone, l'utilisateur pourrait être supprimé définitivement.
+
+Les modifications fait ne sera pas prise en compte tant que l'utilisateur n'a pas appuyé sur
+la bouton `Sauvegarder les changements`. Un exemple de configuration des utilisateur pourrait
+resemblé à
+
+![Menu de configuration des utilisateurs du DSAS](fr/DSAS38.png)
 
 A ce point il est recommandé d'appuyer sur le bouton `Appliquer` afin de rendre ces 
 modifications permanentes. Sinon au prochain redémarrage les anciens mots de passe seront 
@@ -624,9 +650,9 @@ d'autre service de SSH depuis le zone sensible et/ou non-sensible.
 
 Le serveur OpenSSH n'est jamais démarrer avec des accès ouverts à tous les utilisateurs sur 
 le DSAS. Il faut explicitement donner l'accès a chaque utilisateur, et cet accès n'est valable
-que depuis certain zones de sécurité. Par exemple, ci-dessus le service OpenSSH est coché est 
-l'utilisateur __tc__  peut connecté que depuis des adresses IP dans le sous-réseau 10.0.2.0/24. 
-Les utilisateurs bas et haut n'ont aucun droit d'accès.
+que depuis certain zones de sécurité. Par exemple, ci-dessus le service OpenSSH est coché et 
+les utilisateurs administration  peut connecté que depuis des adresses IP dans le sous-réseau 
+10.0.2.0/24. Les utilisateurs  de type bas et haut n'ont aucun droit d'accès.
 
 Les adresses d'écoute pour chaque utilisateur peuvent être très complexe avec plusieurs adresses 
 possible séparées par des virgules. Un exemple complexe pourrait-être
@@ -642,17 +668,17 @@ réseau du DSAS concerné.
 
 Chaque utilisateur ne peut que connecter depuis certaines zones de sécurité :
 
-- __tc__ - L'utilisateur __tc__ ne peut que connecter depuis la zone sensible et peut 
-connecter en ssh, scp et sftp
-- __bas__ - L'utilisateur bas ne peut que connecter en sftp depuis la zone sensible. Cette
+- __Administration__ - Les utilisateurs de type __Administrateur__ ne peut que connecter depuis la 
+zone sensible et peut  connecter en ssh, scp et sftp
+- __bas__ - Les utilisateurs de type bas ne peut que connecter en sftp depuis la zone sensible. Cette
 fonctionnalité de sftp pourrait être utilisé pour remplacer le serveur http de dépôt
 (ou en complément). Il n'a que accès à la zone du DSAS avec les fichiers vérifiés et ne
 peut pas accéder ailleurs dans le DSAS.
-- __haut__ - `Utilisation du compte haut en SSH en fortement déconseillé`. La raison qu'il est 
-déconseillé est qu'il ne respecte pas le sens de l'ouverture des flux de la zone plus sensible 
+- __haut__ - `Utilisation d'un compte de type haut en SSH en fortement déconseillé`. La raison qu'il 
+est  déconseillé est qu'il ne respecte pas le sens de l'ouverture des flux de la zone plus sensible 
 vers la zone moins sensible. Mais en absence d'autre moyen de téléchargement ce compte ouvre
 la possibilité depuis la zone non sensible à déposer des fichiers sur la machine haute du DSAS.
-L'utilisateur __haut__ n'a accès que en sftp et que à la zone du DSAS avec les fichiers non
+Les utilisateurs de type  __haut__ n'a accès que en sftp et que à la zone du DSAS avec les fichiers non
 vérifiés.
 
 Si le service SSH est activé vers une zone le port 22 est ouverte sur la machine du DSAS
@@ -1339,7 +1365,7 @@ de garantir le niveau de sécurité du DSAS.
 
 ## Les comptes utilisateurs sur la DSAS
 
-Il existe cinq comptes sur la DSAS, avec seulement un avec les droits de 
+Il existe cinq comptes de base sur la DSAS, avec seulement un avec les droits de 
 connexion avec un shell.
 
 | compte | shell      | commentaire                                     |
@@ -1349,6 +1375,8 @@ connexion avec un shell.
 | haut   | /bin/false | Utilisé pour connexion vers zone moins sensible |
 | bas    | /bin/false | Utilisé pour connexion vers zone plus sensible  |
 | verif  | /bin/false | Utilisé que à l'intérieur du DSAS               |
+
+Chaque utilisateur ajouté via l'interface d'adminsitration du DSAS aurait le shell /bin/ash.
 
 ### Les droits d'écriture de chaque utilisateur
 

@@ -476,54 +476,79 @@ the following message:
 
 By clicking `Ok` on this message you will be redirected to the DSAS login screen.
 
-## Initial password change
+### Initial password change
 
-If this is your first connection to the DSAS, an error message will be displayed and after
-you will be presented with the following screen:
+If this is your first connection to the DSAS, the password of the user `tc` must
+be changed. Connect with the user `tc` and you will be presented with the following screen:
 
 ![Initial password change screen](en/DSAS2.png)
 
-At your first connection, all passwords must be changed. It is impossible to
-continue with the administration interface without changing the passwords.
-
-The password change screen has 4 lines. On the first, the existing password of user
-__tc__ must be entered. The other three lines concern the following users:
-
-- __tc__ - The administration user of the DSAS. It has all the privileges on the 
-DSAS including the ability to become __root__. If `ssh` is active for user __tc__ 
-it can used to connect with `ssh` for advanced maintenance on the DSAS.
-- __bas__ - This user has only one role. If the DSAS is configured with
-`ssh` for the user __bas__ it will have the right to connect via `sftp` and only via 
-`sftp` from the sensitive zone. This could be useful for the recovery of transmitted files.
-by DSAS in certain scenarios. Only verified files will be shown to this user
-by DSAS and a [chroot](https://fr.m.wikipedia.org/wiki/Chroot) is used to prevent
-the user from seeing anything else.
-- __haut__ - This user, like user __bas__, is used for an `sftp` connection
-from the non-sensitive area to allow files to be uploaded directly to the DSAS. It is 
-also isolated with chroot and can only see the zone where files should be deposited. The
-use of this feature is strongly discouraged as it opens up the possibility of attacks 
-against the DSAS
-
-Therefore, in a normal configuration only the user __tc__ is used. But the three
-passwords must nevertheless be modified in order to eliminate all default secret elements.
-Passwords for users __bas__ and __haut__ can always be changed from this interface later and 
-if you don't plan to use the `sftp` functions, it is recommended to choose long and random 
-passwords for these __bas__ and __haut__ users.
-
-The limitations on passwords are
+It is impossible to continue with the administration interface without changing the 
+password. The limitations on passwords are
 
 - they are at least 8 characters long (12 recommended)
 - they do not contain spaces or tabs
 - They contain at least 3 types of characters (upper case, lower case, number, special character)
 
-Enter your new passwords and click on `Change passwords`.
+Enter your new passwords and click on `Update`. You can now click on `Logout` and after
+logging in again with the user `tc` you will have accès to the adminsitration interface. 
 
-![Screen in case of successful modification of the passwords](en/DSAS4.png)
+
+
+### User Configuration
+
+The user configuratuion screen is found under the tab `System` and the option `Users`. The 
+configuration screen is as follows
+
+![DSAS user configuration menu](en/DSAS34.png)
+
+At the first connection only the default user `tc` is configured. It is recommanded create 
+nominative users account for each user and to deactivate the account `tc`. The user `tc` is
+the only one with the rights to become `root` on the DSAS. Even though the account is déactivate
+it remains usable from the console of the DSAS and other adminsitrative users, knowong the 
+password for the account `tc` can use this knowledge to become `root`.
+
+A new account is created by clicking on the button  ![](en/DSAS23.png) to the right of the
+screen. You will be asked to enter a new user name like
+
+![Add new user screen](en/DSAS35.png)
+
+New user names can only include lower case characters and numbers. Here we have added the 
+user `ua12345`.
+
+![DSAS user configuration menu]](en/DSAS37.png)
+
+For each users several modifications or actions are possible
+
+- __Description__ - Information about the user can be freely added in this field
+- __Type__ _ Three types of users are possible 
+  * __tc__ - An administration user of the DSAS. It has all the privileges on the 
+DSAS, and if `ssh` is active for adminsitrateurs, it can used to connect with `ssh` 
+for advanced maintenance on the DSAS.
+- __bas__ - This type of user has only one role. If the DSAS is configured with
+`ssh` for the user __bas__ it will have the right to connect via `sftp` and only via 
+`sftp` from the sensitive zone. This could be useful for the recovery of transmitted files.
+by DSAS in certain scenarios. Only verified files will be shown to this user
+by DSAS and a [chroot](https://fr.m.wikipedia.org/wiki/Chroot) is used to prevent
+the user from seeing anything else.
+- __haut__ - This type of user, like user __bas__, is used for an `sftp` connection
+from the non-sensitive area to allow files to be uploaded directly to the DSAS. It is 
+also isolated with chroot and can only see the zone where files should be deposited. The
+use of this feature is strongly discouraged as it opens up the possibility of attacks 
+against the DSAS
+- __Active__ - An account can be deactivate without deleting it. This allows for an account to be
+temporarily suspended without deleting it.
+- ![](en/DSAS39.png) - By clicking on this icon, it is possible to change the password of the user.
+- ![](en/DSAS35.png) - By clicking on this icon, it is possible to permenantly delete the user.
+ 
+The modifications will not be taken into account unless the `Save Changes` button has been pressed.
+An example of the user configuration might be 
+
+![DSAS user configuration menu]](en/DSAS38.png)
 
 At this point it is recommended to press the `Apply` button in order to make these
 permanent changes. Otherwise on the next restart the old passwords will be
 requested.  
-
 
 ### Network configuration
 
@@ -610,10 +635,10 @@ between the two DSAS machines, the DSAS administrator can choose to open
 other SSH services from the sensitive and/or non-sensitive zones.
 
 The OpenSSH server is never started with open access to all users on the DSAS. You 
-must explicitly give access to each user, and this access is only valid from certain
+must explicitly give access to each user type, and this access is only valid from certain
 security zones. For example, above the OpenSSH service is checked and the
-user __tc__ can only logged in from IP addresses in the 10.0.2.0/24 subnet.
-__haut__ and __bas__ users have no access rights.
+adminstration users can only logged in from IP addresses in the 10.0.2.0/24 subnet.
+Users of type __upper__ and __lower__ users have no access rights.
 
 Listening addresses for each user can be very complex with multiple addresses
 possible separated by commas. A complex example could be
@@ -629,16 +654,16 @@ concerned.
 
 Each user can only log in from certain sensitvity zones:
 
-- __tc__ - User __tc__ can only connect from the sensitive area and can
-connect with ssh, scp and sftp
-- __bas__ - User __bas__ can only connect with sftp from the sensitive zone. This
+- __Administration__ - The users of type `Administrator` can only connect from the sensitive area 
+and can connect with ssh, scp and sftp
+- __lower__ - The users of type __lower__ can only connect with sftp from the sensitive zone. This
 sftp functionality could be used to replace http server repository (or in addition). It only has 
 access to the DSAS area with the verified files and can not access files elsewhere.
-- __haut__ - `Use of the __haut__ account in SSH and strongly discouraged`. The reason it is
+- __upper__ - `Use users of type __upper__ in SSH and strongly discouraged`. The reason it is
 not recommended is that it does not respect the direction of the initiation of network flows, from
 the more sensitive zone to the less ensitive zone. But in the absence of other means of downloading,
 this account opens the possibility from the non-sensitive zone to deposit files on the upper
-machine of the DSAS. The user __haut__ only has access with sftp and only to the DSAS zones 
+machine of the DSAS. The users of type  __upper__ only have access with sftp and only to the DSAS zones 
 with the unverifed files.
 
 If the SSH service is enabled towards a zone, port 22 is open on the DSAS machine
@@ -1306,7 +1331,7 @@ to ensure its security.
 
 ## The user accounts of the DSAS
 
-There are 5 accounts on the DSAS, with only one have to rights to connect 
+There are 5 default accounts on the DSAS, with only one have to rights to connect 
 with a shell.
 
 | account | shell      | comment                                         |
@@ -1316,6 +1341,9 @@ with a shell.
 | haut    | /bin/false | Used for connection to the non sensitive zone   |
 | bas     | /bin/false | Used for connection to the sensitive zone       |
 | verif   | /bin/false | Used internally to the DSAS                     |
+
+Each user added via the DSAS adminsitration interface will have a sheel `/bin/ash`.
+
 
 ### The zrite permissions of each user
 
