@@ -374,8 +374,8 @@ verifdirectory() {
 
   # If LiveUpdate, test files *livetri.zip first as they can sign other files
   if [ "$type" == "liveupdate" ]; then
-    for file in $(cd "$DSAS_HAUT"; find "$dir" -type f -name "*livetri.zip" -o -name "minitri.flg" \
-        -o -name "SymantecProductCatalog.zip" -o -name "*.jdb"); do
+    for file in $(cd "$DSAS_HAUT"; find "$dir" -type f \( -name "*livetri.zip" -o -name "minitri.flg" \
+        -o -name "SymantecProductCatalog.zip" -o -name "*.jdb" \) -exec echo -n -e "{}\x03" \; ); do
       IFS=$OLD_IFS
 
       # If file exists in bas skip. Hardlinked, so test is fast
@@ -771,6 +771,7 @@ passdirectory(){
 
     # Don't log the transfers with msgline for the machine haut as
     # the logs aren't yet used
+    myecho "ln '$DSAS_HAUT/$file' '$DSAS_BAS/$file'"
     ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
   done
 
@@ -795,6 +796,7 @@ passdirectory(){
 
       # Don't log the transfers with msgline for the machine haut as
       # the logs aren't yet used
+      myecho "ln '$DSAS_HAUT/$file' '$DSAS_BAS/$file'"
       ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
     done
   fi

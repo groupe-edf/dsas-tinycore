@@ -23,7 +23,8 @@ HLOG0="/var/log/messages.0"
 
 syslog=$(xmllint --xpath "string(dsas/config/syslog/active)" $VAR/dsas_conf.xml)
 server=$(xmllint --xpath "string(dsas/config/syslog/server)" $VAR/dsas_conf.xml)
-[ "$syslog" != "true" ] || [ -z "$server" ] || exit 0 
+[ "$syslog" != "true" ] && exit 0 
+[ -z "$server" ] && exit 0 
 
 # Get the status of the last run
 HLOGSZ=0
