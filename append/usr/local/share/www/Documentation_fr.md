@@ -566,12 +566,8 @@ demandés.
 
 ### Configuration des réseaux
 
-L'écran de configuration du réseau est accédé depuis le menu `Configuration` du DSAS, comme 
-suivant :
-
-![Menu de configuration réseau du DSAS](fr/DSAS5.png)
-
-en cliquant dessus l'écran suivant vous sera présenté 
+L'écran de configuration du réseau est accédé depuis le menu `Configuration` du DSAS, et l'option
+`reseau`. En cliquant dessus l'écran suivant vous sera présenté 
 
 ![Ecran de configuration réseau du DSAS](fr/DSAS6.png)
 

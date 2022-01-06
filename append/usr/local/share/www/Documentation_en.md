@@ -552,12 +552,8 @@ requested.
 
 ### Network configuration
 
-The network configuration screen is accessed from the DSAS `Configuration` menu, as
-follows :
-
-![DSAS network configuration menu](en/DSAS5.png)
-
-by selecting "Network",  the following screen will be presented
+The network configuration screen is accessed from the DSAS `Configuration` menu, and the
+option `Network`. Selecting this option, the following screen will be presented
 
 ![DSAS network configuration screen](en/DSAS6.png)
 
