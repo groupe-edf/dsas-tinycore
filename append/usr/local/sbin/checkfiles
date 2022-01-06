@@ -68,7 +68,7 @@ verifauthenticode(){
     hashes=""
     for offset in $offsets; do
       openssl pkcs7 -inform pem -in "$sigdir/sig.pkcs7" -outform der | dd bs=1 skip=$offset status=none | \
-          openssl pkcs7 -inform der -print_certs | \
+          openssl pkcs7 -inform der -print_certs 2> /dev/null | \
           awk -v tmp="$sigdir" 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if (length($0) > 0) print > tmp "/sig" n ".pem"}'
 
       for _file in $(find "$sigdir" -name "sig*.pem"); do
@@ -371,10 +371,13 @@ verifdirectory() {
     fi
   done
 
+
   # If LiveUpdate, test files *livetri.zip first as they can sign other files
   if [ "$type" == "liveupdate" ]; then
     for file in $(cd "$DSAS_HAUT"; find "$dir" -type f -name "*livetri.zip" -o -name "minitri.flg" \
         -o -name "SymantecProductCatalog.zip" -o -name "*.jdb"); do
+      IFS=$OLD_IFS
+
       # If file exists in bas skip. Hardlinked, so test is fast
       [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
 
@@ -394,9 +397,12 @@ verifdirectory() {
       msgline "$DSAS_HAUT/$file" $status
       [ $status -eq 0 ] && ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
       /bin/rm -fr "$zipdir"
+      IFS=$'\3'
     done 
   else
     for file in $(cd "$DSAS_HAUT"; find $dir -type f -exec echo -n -e "{}\x03" \; ); do
+      IFS=$OLD_IFS
+
       # If file exists in bas skip. Hardlinked, so test is fast
       [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
 
@@ -432,6 +438,7 @@ verifdirectory() {
         fi
         [ "$type" == "openssl" ] && ln "$DSAS_HAUT/$file.sig" "$DSAS_BAS/$file.sig"
       fi
+      IFS=$'\3'
     done
   fi
   /bin/rm -fr "$tempdir"
