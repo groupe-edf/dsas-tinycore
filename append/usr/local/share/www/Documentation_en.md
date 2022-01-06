@@ -539,7 +539,7 @@ against the DSAS
 - __Active__ - An account can be deactivate without deleting it. This allows for an account to be
 temporarily suspended without deleting it.
 - ![](en/DSAS39.png) - By clicking on this icon, it is possible to change the password of the user.
-- ![](en/DSAS35.png) - By clicking on this icon, it is possible to permenantly delete the user.
+- ![](en/DSAS40.png) - By clicking on this icon, it is possible to permenantly delete the user.
  
 The modifications will not be taken into account unless the `Save Changes` button has been pressed.
 An example of the user configuration might be 
@@ -1021,14 +1021,14 @@ Symantec LiveUpdate.
 by user are available for addition to verification tasks. The certicate type
 must be appropriate for the type of task. Each selected certificate is
 added to the list of certificates for the task, and can be removed by
-clicking on the ![](en/DSAS35.png) next to the certificate.
+clicking on the ![](en/DSAS40.png) next to the certificate.
 
 An example of an added task is
 
 ![Example task added](en/DSAS31.png)
 
 Next to each task, the icon ![](en/DSAS36.png) allows the task to be modified,
-![](en/DSAS35.png) allows the task to be removed and ![](en/DSAS34.png) allows
+![](en/DSAS40.png) allows the task to be removed and ![](en/DSAS34.png) allows
 the task to be executed immediately. The status of the task is provided via the color of the
 task title. In blue, the task was not executed, in green, the execution of the task was successful,
 and in red the execution has failed. The last execution of the task is visible by opening

@@ -552,7 +552,7 @@ fonctionnalité est fortement déconseillés__ car elle ouvre la possibilité d'
 désactivé un compte sans le supprimer
 - ![](fr/DSAS39.png) - En cliquant sur cette icone nous pourrions modifier le mot de passe de 
 l'utilisateur
-- ![](fr/DSAS35.png) - En cliquant sur cette icone, l'utilisateur pourrait être supprimé définitivement.
+- ![](fr/DSAS40.png) - En cliquant sur cette icone, l'utilisateur pourrait être supprimé définitivement.
 
 Les modifications fait ne sera pas prise en compte tant que l'utilisateur n'a pas appuyé sur
 la bouton `Sauvegarder les changements`. Un exemple de configuration des utilisateur pourrait
@@ -1054,14 +1054,14 @@ Symantec LiveUpdate.
 par l'utilisateur sont disponible pour l'ajout à la vérification par le tache. Le type
 de certificat doit être adapté à la type de tache. Chaque certificat sélectionné est
 ajouté à la liste des certificats pour le tache, et pourrait être supprimé en 
-cliquant sur le [](fr/DSAS35.png) à côté du certificat.
+cliquant sur le [](fr/DSAS40.png) à côté du certificat.
 
 Un exemple de tache après ajout est 
 
 ![Exemple de tache ajouté](fr/DSAS31.png)
 
 A côté de chaque tache, l'icone ![](fr/DSAS36.png) permets de modifier le tache, 
-![](fr/DSAS35.png) permet de supprimer le tache, et ![](fr/DSAS34.png) permets 
+![](fr/DSAS40.png) permet de supprimer le tache, et ![](fr/DSAS34.png) permets 
 à l'exécuter immédiatement. Le statut de la tâche et fournit via la couleur du titre 
 de la tâche. En bleu, la tâche n'a pas été exécuté, en vert l'exécution de la tâche a réussi,
 et en rouge l'exécution a échoué. La dernière exécution de la tâche est visible en ouvrant 
