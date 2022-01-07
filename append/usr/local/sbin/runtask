@@ -64,7 +64,7 @@ if [ -z $ids ]; then
         hourly|daily|weekly|monthly) : ;;
         *) i=$((i + 1)); continue; ;;
       esac
-      _last=$(cat $RUNLOG | grep $_id | cut -d' ' -f2) 
+      _last=$(cat $RUNLOG | grep $_id | xargs | cut -d' ' -f2) 
       [ -z "$_last" ] || should_run $_last $_run && ids="$ids $_id"    
     else
       ids="$ids $_id"
@@ -88,7 +88,7 @@ elif [ -z "$force" ]; then
       hourly|daily|weekly|monthly) :; ;;
       *) continue; ;;
     esac
-    _last=$(cat $RUNLOG | grep $_id | cut -d' ' -f2)
+    _last=$(cat $RUNLOG | grep $_id | xargs | cut -d' ' -f2)
     [ -z "$_last" ] || should_run $_last $_run && newids="$newids $_id" 
   done
   ids=$newids
