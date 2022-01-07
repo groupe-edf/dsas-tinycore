@@ -352,7 +352,7 @@ verifdirectory() {
   done
   if [ "$type" == "gpg" ]; then
     # Need to dearmor gpg certificate before use
-    gpg --dearmor "$tempdir/cert.0"
+    gpg --dearmor "$tempdir/cert.0" >& /dev/null
   fi
 
   # Create directory if needed
@@ -496,7 +496,7 @@ verifrepo() {
   idx=$(get_certificate $fprint)
   [ -z "$idx" ] && { 1>&2 echo "Certificate used by task\($id\) not found !!"; exit 1; }
   /bin/mv "/tmp/cert.$$" "$tempdir/cert.0"
-  gpg --dearmor "$tempdir/cert.0"
+  gpg --dearmor "$tempdir/cert.0" >& /dev/null
 
   if [ "$type" == "repomd" ]; then
     if ! gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg"  \
@@ -617,7 +617,7 @@ verifdeb(){
     cat /tmp/cert.$$ >> $tempdir/cert.0
     j=$((j + 1))
   done
-  gpg --dearmor "$tempdir/cert.0"
+  gpg --dearmor "$tempdir/cert.0" >& /dev/null
 
   if ! gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg"  \
         --verify "$DSAS_HAUT/$dir/Release.gpg" \
