@@ -144,7 +144,7 @@ download() {
   if [ $forcedownload -eq 0 ]; then
     if [ ! -f "$2/$(basename $1)" ]; then
       case $(echo $1 | sed -e "s/.*\(\..*\)$/\1/g") in
-        .tgz|.tbz|.tar|.gz|.bz2) get $*; ;;
+        .tgz|.tbz|.tar|.gz|.bz2|.xz) get $*; ;;
         *) error "Unknown file extension $1"; ;;
       esac
     fi
@@ -171,6 +171,13 @@ unpack() {
         tar xvjCf $2 $1;
       else
         error "An archive can not be a bzip2"
+      fi
+      ;;
+    .xz)
+      if [ "${1: -7}" == ".tar.xz" ]; then
+        tar xvJCf $2 $1;
+      else
+        error "An archive can not be a xz"
       fi
       ;;
     *)
@@ -218,7 +225,6 @@ build_pkg() {
         chown tc.staff $extract/home/tc
         $as_user mkdir -p $extract/$builddir
         $as_user mkdir -p $extract/$destdir
-        echo "here"
         unpack $src_dir/$_src $extract/$builddir
         chown -R $SUDO_USER $extract/$builddir
 
@@ -414,6 +420,7 @@ case $1 in
   install_tcz p7zip         # Needed by LiveUpdate
   install_tcz zip-unzip     # Needed to allow repacking of unsigned zip files
   install_tcz clamav
+  install_tcz libpam-radius-auth
 
   # Copy the pre-extracted packages to work dir. This must be after packages
   # are installed to allow for files to be overwritten. Run as root 

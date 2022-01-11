@@ -1,0 +1,19 @@
+_pkg=libpam-radius-auth
+_version=2.0.0
+_uri="https://github.com/FreeRADIUS/pam_radius/archive/release_2_0_0.tar.gz"
+_dep="Linux-PAM"
+_build_dep="compiletc Linux-PAM-dev"
+_pkg_path="pam_radius-release_2_0_0"
+_conf_cmd="./configure --prefix=/usr/local --exec-prefix=/usr/local"
+_make_cmd="make"
+_install_cmd=\
+"echo Installing in $destdir;
+mkdir -p $destdir/usr/local/lib/security; 
+mkdir -p $destdir/usr/local/etc/security;
+cp pam_radius_auth.so $destdir/usr/local/lib/security; 
+cp pam_radius_auth.conf $destdir/usr/local/etc/security; 
+chmod 0600 $destdir/usr/local/etc/security/pam_radius_auth.conf; 
+# "
+_post_build=""
+_pkgs="main{/usr/local}"
+_post_install=""
