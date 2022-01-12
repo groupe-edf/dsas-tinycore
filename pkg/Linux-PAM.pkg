@@ -7,7 +7,30 @@ _pkg_path="Linux-PAM-1.5.2"
 _conf_cmd="./configure --prefix=/usr/local --exec-prefix=/usr/local --includedir=/usr/local/include/security"
 _make_cmd="make"
 _install_cmd="make install DESTDIR="
-_post_build=""
+_post_build=\
+"mkdir -p usr/local/etc/pam.d
+cat << EOF > usr/local/etc/pam.d/other
+#%PAM-1.0
+auth            required        pam_unix.so
+account         required        pam_unix.so
+password        required        pam_unix.so
+session         required        pam_unix.so
+EOF
+cat << EOF > usr/local/etc/pam.d/system-auth
+#system-authentication
+auth     required       pam_env.so
+auth     sufficient     pam_unix.so nullok
+auth     required       pam_deny.so
+
+account  required       pam_unix.so
+
+password sufficient     pam_unix.so use_authtok nullok
+password required       pam_deny.so
+
+session  required       pam_limits.so
+session  required       pam_unix.so
+EOF
+"
 _pkgs="main{/usr/local/sbin,/usr/local/etc,/usr/local/lib/*.so*,/usr/local/lib/security/*.so*,/usr/local/lib/systemd,/usr/local/share/locale};dev{/usr/local/include,/usr/local/lib/*.a,/usr/local/lib/*.la,/usr/local/lib/secutity/*.a,/usr/local/lib/secutiy/*.la,/usr/local/lib/pkgconfig};doc{/usr/local/share/doc,/usr/local/share/man}"
 _post_install=\
 "[ -d /var/run/sepermit ] || mkdir -p /var/run/sepermit
