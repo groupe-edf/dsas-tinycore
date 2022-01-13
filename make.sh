@@ -22,9 +22,11 @@ tce_dir=/mnt/sda1/tce/optional
 if [ "$arch" -eq "64" ]; then
   livecd_url=http://tinycorelinux.net/12.x/x86/release/Core-current.iso
   tcz_url=http://tinycorelinux.net/12.x/x86/tcz
+  tcz_src=http://tinycorelinux.net/12.x/x86/release/src
 else
   livecd_url=http://tinycorelinux.net/12.x/x86_64/release/CorePure64-current.iso
   tcz_url=http://tinycorelinux.net/12.x/x86_64/tcz
+  tcz_src=http://tinycorelinux.net/12.x/x86_64/release/src
 fi
 
 # internally used dirs and paths
@@ -218,6 +220,10 @@ build_pkg() {
         for dep in $_build_dep; do
           install_tcz $dep
         done
+
+        # Copy /etc/resolv.conf file 
+        cp -p /etc/resolv.conf $extract/etc/resolv.conf
+
         msg "Building $_pkg.tcz"
         mkdir -p $src_dir
         download $_uri $src_dir
@@ -400,6 +406,7 @@ case $1 in
   fi
 
   # Install the needed packages
+  install_tcz busybox  # Busybox with PAM and TMOUT support
   install_tcz openssl-1.1.1  # explicitly install openssl first so avail to ca-certificate
   install_tcz lftp 
   install_tcz kmaps

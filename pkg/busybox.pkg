@@ -1,0 +1,121 @@
+_pkg=busybox
+_version=1.35.0
+_uri="https://busybox.net/downloads/busybox-1.35.0.tar.bz2"
+_dep="Linux-PAM libtirpc"
+_build_dep="compiletc Linux-PAM-dev sstrip curl libssh2 libtirpc-dev"
+_pkg_path="busybox-1.35.0"
+_pre_config=\
+"cd $builddir/$_pkg_path
+for file in busybox-1.27.1-wget-make-default-timeout-configurable.patch \
+            busybox-1.29.3_root_path.patch \
+            busybox-1.33.0_modprobe.patch \
+            busybox-1.33.0_tc_depmod.patch \
+            busybox-1.33.0_skip-loop-control.patch; do
+  curl -L -o \$file $tcz_src/busybox/\$file
+  if \$(grep -q '\-\-\- a/' \$file); then
+    patch -Np1 -i \$file
+  else
+    patch -Np0 -i \$file
+  fi
+done
+
+# Make a copy of source as will build twice
+mkdir $builddir/$_pkg_path.nosuid
+tar -cf - * | tar -xpC $builddir/$_pkg_path.nosuid -f -
+chown $SUDO_USER $builddir/$_pkg_path.nosuid
+ 
+# Config for SUID version of busybox
+curl -L -o .config $tcz_src/busybox/busybox-1.33.0_config_suid
+
+# Allow TMOUT in ash
+sed -i -e 's/^# CONFIG_ASH_IDLE_TIMEOUT.*/CONFIG_ASH_IDLE_TIMEOUT=y/' .config
+# Use PAM
+sed -i -e 's/^# CONFIG_PAM.*/CONFIG_PAM=y/' .config
+# Force use of libtirpc for RPC support dropped in glibc >= 2.32
+sed -i -e 's/CONFIG_EXTRA_LDLIBS=\"/CONFIG_EXTRA_LDLIBS=\"tirpc /' .config
+sed -i -e 's:CONFIG_EXTRA_CFLAGS=\":CONFIG_EXTRA_CFLAGS=\"-I/usr/local/include/tirpc :' .config
+# New options since busybox 1.33.0
+cat << EOF >> .config
+CONFIG_FEATURE_TIMEZONE=y
+# CONFIG_CRC32 is not set
+# CONFIG_ASCII is not set
+EOF
+chown $SUDO_USER .config
+
+# Config for NOSUID version of busybox
+cd $builddir/$_pkg_path.nosuid
+curl -L -o .config $tcz_src/busybox/busybox-1.33.0_config_nosuid
+
+# Allow TMOUT in ash
+sed -i -e 's/^# CONFIG_ASH_IDLE_TIMEOUT.*/CONFIG_ASH_IDLE_TIMEOUT=y/' .config
+# Use PAM
+sed -i -e 's/^# CONFIG_PAM.*/CONFIG_PAM=y/' .config
+# Force use of libtirpc for RPC support dropped in glibc >= 2.32
+sed -i -e 's/CONFIG_EXTRA_LDLIBS=\"/CONFIG_EXTRA_LDLIBS=\"tirpc /' .config
+sed -i -e 's:CONFIG_EXTRA_CFLAGS=\":CONFIG_EXTRA_CFLAGS=\"-I/usr/local/include/tirpc :' .config
+# New options since busybox 1.33.0
+cat << EOF >> .config
+CONFIG_FEATURE_TIMEZONE=y
+CONFIG_CRC32=y
+CONFIG_ASCII=y
+CONFIG_FEATURE_CPIO_IGNORE_DEVNO=y
+CONFIG_FEATURE_CPIO_RENUMBER_INODES=y
+CONFIG_FEATURE_CUT_REGEX=y
+CONFIG_FEATURE_VI_COLON_EXPAND=y
+CONFIG_FEATURE_VI_VERBOSE_STATUS=y
+CONFIG_FEATURE_FIND_ATIME=y
+CONFIG_FEATURE_FIND_CTIME=y
+
+CONFIG_FEATURE_FIND_AMIN=y
+CONFIG_FEATURE_FIND_CMIN=y
+CONFIG_FEATURE_FIND_SAMEFILE=y
+CONFIG_FEATURE_WGET_FTP=y
+CONFIG_UDHCPC_DEFAULT_INTERFACE=\"eth0\"
+EOF
+chown $SUDO_USER .config
+"
+_conf_cmd="make oldconfig; cd $builddir/$_pkg_path.nosuid; make oldconfig"
+_make_cmd=\
+"make CC='gcc -flto -Os -pipe' CXX='g++ -flto -Os -pipe -fno-exceptions -fno-rtti'
+cd $builddir/$_pkg_path.nosuid
+make CC='gcc -flto -Os -pipe' CXX='g++ -flto -Os -pipe -fno-exceptions -fno-rtti'"
+_install_cmd="
+busybox_install() {
+make install CC='gcc -flto -Os -pipe' CXX='g++ -flto -Os -pipe -fno-exceptions -fno-rtti' CONFIG_PREFIX=\$1
+# Mv busybox and all its links to busybox.suid
+cd \$1
+mv bin/busybox bin/busybox.suid
+chmod u+s bin/busybox.suid
+for file in \$(find . -type l); do
+  case \$(dirname \$file) in
+   ./bin)
+     rm \$file
+     ln -s busybox.suid \$file
+     ;;
+   ./sbin)
+     rm \$file
+     ln -s ../bin/busybox.suid \$file
+     ;;
+   ./usr/bin)
+     rm \$file
+     ln -s ../../bin/busybox.suid \$file
+     ;;
+   *)
+     echo 'FAIL IN BUSYBOX LINK'
+     exit 1
+    ;;
+  esac
+done
+cd $builddir/$_pkg_path.nosuid
+make install CC='gcc -flto -Os -pipe' CXX='g++ -flto -Os -pipe -fno-exceptions -fno-rtti' CONFIG_PREFIX=\$1
+}
+busybox_install "
+_post_build=""
+_pkgs="main{bin,sbin,usr}"
+_post_install=\
+"#!/bin/sh
+cd /lib
+ln -s /usr/local/lib/libtirpc.so.3
+ln -s /usr/local/lib/libpam.so.0
+ln -s /usr/local/lib/libpam_misc.so.0
+"
