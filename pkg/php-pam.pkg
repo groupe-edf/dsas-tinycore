@@ -1,0 +1,20 @@
+_pkg=php-pam
+_version=2.2.3
+_uri="https://pecl.php.net/get/pam-2.2.3.tgz"
+_dep="Linux-PAM"
+_build_dep="compiletc autoconf php-8.0-dev Linux-PAM-dev"
+_pkg_path="pam-2.2.3"
+_conf_cmd="phpize; ./configure"
+_make_cmd="make"
+_install_cmd=\
+"
+cat << EOF > /tmp/install
+#!/bin/sh
+mkdir -p $1 /usr/local/lib/php/extensions/
+/bin/cp modules/* \$1/usr/local/lib/php/extensions/
+EOF
+chmod 755 /tmp/install
+/tmp/install "
+_post_build=""
+_pkgs="main{/usr/local}"
+_post_install=""

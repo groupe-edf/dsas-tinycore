@@ -14,11 +14,14 @@ cp pam_radius_auth.so $destdir/usr/local/lib/security;
 cp pam_radius_auth.conf $destdir/usr/local/etc/security; 
 chmod 0600 $destdir/usr/local/etc/security/pam_radius_auth.conf; 
 # "
-_post_build=\
-"mkdir -p usr/local/etc/pam.d
-cat << EOF > usr/local/etc/pam.d/common-radius
-auth           sufficient                               pam_radius_auth.so localifdown
-EOF
-"
+_post_build=""
 _pkgs="main{/usr/local}"
-_post_install=""
+_post_install=\
+"
+cd /usr/local/etc/pam.d
+for file in login sshd php; do
+  [ -f "\$file" ] || continue
+  sed -i -e 's/\(^auth[ \t]*include.*$\)/auth           sufficient        pam_radius_auth.so localifdown\n\1/' "\$file"
+done
+sed -i -e 's/pam_unix.so/pam_unix.so try_first_pass/' common-auth
+"

@@ -431,6 +431,7 @@ case $1 in
   install_tcz lighttpd
   install_tcz php-8.0-cgi
   install_tcz php-8.0-ext
+  install_tcz php-pam
   install_tcz pcre2
   install_tcz dialog
   install_tcz rpm

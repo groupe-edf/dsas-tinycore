@@ -43,6 +43,18 @@ account        include                                  common-account
 password       include                                  common-password
 session        include                                  common-session
 EOF
+cat << EOF > usr/local/etc/pam.d/sshd
+#%PAM-1.0
+auth           optional                                 pam_faildelay.so delay=3000000
+auth           requisite                                pam_nologin.so
+session        required                                 pam_env.so readenv=1
+auth           include                                  common-auth
+auth           optional                                 pam_group.so
+session        required                                 pam_limits.so
+account        include                                  common-account
+password       include                                  common-password
+session        include                                  common-session
+EOF
 cat << EOF > usr/local/etc/pam.d/other
 #%PAM-1.0
 auth            required        pam_unix.so
