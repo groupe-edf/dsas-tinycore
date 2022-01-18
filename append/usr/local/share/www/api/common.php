@@ -143,31 +143,11 @@ function dsas_exec($args, $cwd = null, $stdin = []){
   }
 }
 
-function sasl_checkpass($user, $pass){
-    // FIXME : I should really reimplement this using sockets like in
-    //   testsasldauth.c on the Cyrus github
-    // Till then use proc_open with an array to avoid spawning a shell that
-    // could be attacked. The testsaslauthd command doesn't really expose
-    // any parameters that could be attacked
-
-  $descriptorspec = array(
-    0 => array("pipe", "r"), // stdin
-    1 => array("pipe", "w"), // stdout
-    2 => array("pipe", "w") //stderr
-  );
-
-  $cwd = "/tmp";
-  // Call command as an array to avoid creating a shell
-  $process = proc_open(["/usr/local/sbin/testsaslauthd", "-s", "dsas", "-u", $user, "-p", $pass], $descriptorspec, $pipes, $cwd);
-  if (is_resource($process)) {
-    fclose($pipes[0]);
-    fclose($pipes[1]);
-    $stderr = fgets($pipes[2]);
-    fclose($pipes[2]);
-    return proc_close($process);
-  } else {
-    return -1;    
-  }
+function dsas_checkpass($user, $pass){
+    if (pam_auth($user, $pass, $error, false, "php"))
+      return 0;
+    else
+      return -1;
 }
 
 function complexity_test($passwd) {

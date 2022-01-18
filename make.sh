@@ -426,8 +426,6 @@ case $1 in
   install_tcz osslsigncode
   install_tcz libxml2-bin   # For xmllint
   install_tcz gnupg
-  install_tcz gdbm          # Needed for sasl
-  install_tcz cyrus-sasl-lite
   install_tcz lighttpd
   install_tcz php-8.0-cgi
   install_tcz php-8.0-ext
