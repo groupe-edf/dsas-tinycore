@@ -45,16 +45,17 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         foreach ($dsas->config->users->user as $user) {
           if ($user->username == $data["username"]) {
             $found = true;
+            $name = $data["username"];
             $passwd = $data["passwd"];
             if ($passwd != str_replace("/\s+/", "", $passwd))
               $errors[] = [$name => "The password can not contain white spaces"];
             else if (! complexity_test($passwd))
               $errors[] = [$name => "The password is insufficently complex"];
             else {
-              $ret = change_passwd($data["username"], $passwd, $dsas->config->users->hash);
+              $ret = change_passwd($name, $passwd, $dsas->config->users->hash);
               if ($ret["retval"] != 0) {
                 $errors[] = [$name => $ret["stderr"]];
-              } else if ($user->username == "tc") {
+              } else if ($name == "tc") {
                 unset($dsas->config->users->first);
               }
             }

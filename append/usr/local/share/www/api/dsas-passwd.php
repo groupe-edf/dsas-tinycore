@@ -15,12 +15,13 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         if ($user->username == $data["username"]) {
           $found = true;
           $passwd = $data["passwd"];
+          $name = $data["username"];
           if ($passwd != str_replace("/\s+/", "", $passwd))
             $errors[] = [$name => "The password can not contain white spaces"];
           else if (! complexity_test($passwd))
             $errors[] = [$name => "The password is insufficently complex"];
           else {
-            $ret = change_passwd($data["username"], $passwd, $dsas->config->users->hash);
+            $ret = change_passwd($name, $passwd, $dsas->config->users->hash);
             if ($ret["retval"] != 0) {
               $errors[] = [$name => $ret["stderr"]];
             } else {

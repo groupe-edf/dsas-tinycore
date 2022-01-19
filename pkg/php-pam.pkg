@@ -7,39 +7,49 @@ _pkg_path="pam-2.2.3"
 # FIXME : Really need to fix the segfault in pam_auth correctly rather that 
 # using this kludge to work around it
 _conf_cmd=\
-'patch << EOF
+"patch << EOF
 --- pam.c.orig	2021-06-08 06:30:45.000000000 +0000
 +++ pam.c	2022-01-16 02:54:32.450513524 +0000
-@@ -172,7 +172,8 @@
- 	userinfo.name = username;
- 	userinfo.pw = password;
+@@ -290,6 +289,9 @@
+  */
+ PHP_MINIT_FUNCTION(pam)
+ {
++#if defined(ZTS) && defined(COMPILE_DL_PAM)
++	ZEND_TSRMLS_CACHE_UPDATE();
++#endif
+ 	ZEND_INIT_MODULE_GLOBALS(pam, php_pam_init_globals, NULL);
+ 	REGISTER_INI_ENTRIES();
+ 	return SUCCESS;
+@@ -305,6 +307,17 @@
+ }
+ /* }}} */
  
--	if ((result = pam_start((PAM_G(force_servicename) || !srvname || srvname_len < 1 || !srvname[0]) ? PAM_G(servicename) : srvname, userinfo.name, &conv_info, &pamh)) != PAM_SUCCESS) {
++/* {{{ PHP_RINIT_FUNCTION
++ */
++PHP_RINIT_FUNCTION(pam)
++{
++#if defined(ZTS) && defined(COMPILE_DL_PAM)
++	ZEND_TSRMLS_CACHE_UPDATE();
++#endif
++	return SUCCESS;
++}
++/* }}} */
 +
-+	if ((result = pam_start("php", userinfo.name, &conv_info, &pamh)) != PAM_SUCCESS) {
- 		if (status) {
- 			spprintf(&error_msg, 0, "%s (in %s)", (char *) pam_strerror(pamh, result), "pam_start");
- 			zval_dtor(status);
-@@ -182,11 +183,11 @@
- 		RETURN_FALSE;
- 	}
- 
--	if ((server = zend_hash_str_find(&EG(symbol_table), "_SERVER", sizeof("_SERVER")-1)) != NULL && Z_TYPE_P(server) == IS_ARRAY) {
--		if ((remote_addr = zend_hash_str_find(Z_ARRVAL_P(server), "REMOTE_ADDR", sizeof("REMOTE_ADDR")-1)) != NULL && Z_TYPE_P(remote_addr) == IS_STRING) {
--			pam_set_item(pamh, PAM_RHOST, Z_STRVAL_P(remote_addr));
--		}
--	}
-+	//if ((server = zend_hash_str_find(&EG(symbol_table), "_SERVER", sizeof("_SERVER")-1)) != NULL && Z_TYPE_P(server) == IS_ARRAY) {
-+	//	if ((remote_addr = zend_hash_str_find(Z_ARRVAL_P(server), "REMOTE_ADDR", sizeof("REMOTE_ADDR")-1)) != NULL && Z_TYPE_P(remote_addr) == IS_STRING) {
-+	//		pam_set_item(pamh, PAM_RHOST, Z_STRVAL_P(remote_addr));
-+	//	}
-+	//}
- 
- 	if ((result = pam_authenticate(pamh, PAM_DISALLOW_NULL_AUTHTOK)) != PAM_SUCCESS) {
- 		if (status) {
+ /* {{{ PHP_MINFO_FUNCTION
+  */
+ PHP_MINFO_FUNCTION(pam)
+@@ -326,7 +339,7 @@
+ 	ext_functions,
+ 	PHP_MINIT(pam),
+ 	PHP_MSHUTDOWN(pam),
+-	NULL,	/* Replace with NULL if there's nothing to do at request start */
++	PHP_RINIT(pam),
+ 	NULL,	/* Replace with NULL if there's nothing to do at request end */
+ 	PHP_MINFO(pam),
+ 	PHP_PAM_VERSION,
 EOF
 
-phpize; ./configure'
+phpize; ./configure"
 _make_cmd="make"
 _install_cmd=\
 "
@@ -51,6 +61,21 @@ chown root.root \\\$1/usr/local/lib/php/extensions/pam.so
 EOF
 chmod 755 /tmp/install
 /tmp/install "
-_post_build=""
+_post_build=\
+"mkdir -p usr/local/etc/pam.d
+cat << EOF > usr/local/etc/pam.d/php
+#%PAM-1.0
+auth           optional                                 pam_faildelay.so delay=3000000
+auth           [success=ok ignore=ignore user_unknown=ignore default=die]       pam_securetty.so
+auth           requisite                                pam_nologin.so
+session        required                                 pam_env.so readenv=1
+auth           include                                  common-auth
+auth           optional                                 pam_group.so
+session        required                                 pam_limits.so
+account        include                                  common-account
+password       include                                  common-password
+session        include                                  common-session
+EOF
+"
 _pkgs="main{/usr/local}"
 _post_install=""

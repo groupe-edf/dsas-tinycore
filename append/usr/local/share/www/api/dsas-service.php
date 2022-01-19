@@ -58,7 +58,20 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $dsas->config->ssh->user_haut = $user_haut;
         else
           $errors[] = [ "user_haut" => $user_haut_err];
-
+        $dsas->config->radius->active = ($data["radius"]["active"] === "true" ? "true" : "false");
+        $radius_server = htmlspecialchars(trim($data["radius"]["server"]));
+        if (! empty($radius_server))
+          $radius_server_err = inet_valid($radius_server);
+        if (empty($radius_server_err))
+          $dsas->config->radius->server = $radius_server;
+        else
+          $errors[] = ["radius_server" => $radius_server_err];
+        $radius_secret = htmlspecialchars(trim($data["radius"]["secret"]));
+        # FIXME should we control the complexity of the radius secret ?
+        if ($radius_secret == trim($data["radius"]["secret"]))
+          $dsas->config->radius->secret = $radius_secret;
+        else
+          $errors[] = ["radius_secret" => "Illegal radius secret"]; // Avoid XSS at least
         $dsas->config->syslog->active = ($data["syslog"]["active"] === "true" ? "true" : "false");
         $dsas->config->ntp->active = ($data["ntp"]["active"] === "true" ? "true" : "false");
 

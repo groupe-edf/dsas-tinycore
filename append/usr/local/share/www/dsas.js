@@ -158,14 +158,18 @@ function modal_task(action = "dsas_add_task();", ca = ""){
 '</form>');
 }
 
-function modal_errors(errors, feedback = false){
-  if (feedback) {
-    // Clear old invalid feedbacks
+function clear_feedback(){
     for (feed of document.getElementsByClassName("invalid-feedback")) 
        feed.innerHTML = "";
     for (feed of document.getElementsByClassName("form-control")) 
        feed.setAttribute("class", "form-control");
-  }
+}
+
+function modal_errors(errors, feedback = false){
+  if (feedback)
+    // Clear old invalid feedbacks
+    clear_feedback();
+  
   if (errors && errors != "Ok") {
     var body = "";
     for (err of errors)
@@ -307,6 +311,7 @@ function dsas_change_passwd(){
         modal_errors(errors);
       } catch (e) {
         // Its text => here always just "Ok". 
+       clear_feedback();
        modal_message(_("Password sucessfully changed"));
       }
     }).catch(error => {
@@ -566,6 +571,7 @@ function dsas_real_user_passwd(user){
         modal_errors(errors);
       } catch (e) {
         // Its text => here always just "Ok". Do nothing
+       clear_feedback();
       }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
@@ -594,6 +600,7 @@ function dsas_real_user_delete(user){
         modal_errors(errors);
       } catch (e) {
         // Its text => here always just "Ok". 
+        clear_feedback();
         dsas_display_users();
       }
     }).catch(error => {
@@ -631,6 +638,7 @@ function dsas_real_user_new(){
         modal_errors(errors);
       } catch (e) {
         // Its text => here always just "Ok".
+        clear_feedback();
         dsas_display_users();
       }
     }).catch(error => {
@@ -680,6 +688,7 @@ function dsas_change_users(){
             modal_errors(errors);
           } catch (e) {
             // Its text => here always just "Ok".
+            clear_feedback();
             dsas_display_users();
           }
         }).catch(error => {
@@ -835,6 +844,7 @@ function dsas_renew_cert_real(){
             dsas_display_web("cert");
           } catch (e) {
             // Its text => here always just "Ok"
+            clear_feedback();
             dsas_display_web("cert");
           }
         });
@@ -864,6 +874,7 @@ function dsas_upload_crt() {
         modal_errors(errors);
       } catch (e) {
         // Its text => here always just "Ok"
+        clear_feedback();
         modal_message(_("CRT sucessfully uploaded"), "dsas_display_web('cert');", true);
       }
     }).catch(error => {
@@ -1011,6 +1022,7 @@ function dsas_change_net(what= "all", i = 0) {
               modal_errors(errors, true);
             } catch (e) {
               // Its text => here always just "Ok"
+              clear_feedback();
               dsas_display_net("all");
             }
           }).catch(error => {
@@ -1039,6 +1051,20 @@ function dsas_display_service(what = "all"){
        document.getElementById("user_bas").disabled = (serv.ssh.active !== "true");
        document.getElementById("user_haut").value = print_obj(serv.ssh.user_haut);
        document.getElementById("user_haut").disabled = (serv.ssh.active !== "true");
+     }
+     if (what === "radius" || what === "all") {
+       if (empty_obj(serv.radius)) {
+         // This allow me to not have to artificially upgrade the XML file version
+         document.getElementById("radius").checked = false;
+         document.getElementById("radius_server").disabled = true;
+         document.getElementById("radius_secret").disabled = true;
+       } else {
+         document.getElementById("radius").checked = (serv.radius.active === "true");
+         document.getElementById("radius_server").value = print_obj(serv.radius.server);
+         document.getElementById("radius_server").disabled = (serv.radius.active !== "true");
+         document.getElementById("radius_secret").value = print_obj(serv.radius.secret);
+         document.getElementById("radius_secret").disabled = (serv.radius.active !== "true");
+       }
      }
      if (what === "syslog" || what === "all") {
        document.getElementById("syslog").checked = (serv.syslog.active === "true");
@@ -1072,6 +1098,9 @@ function dsas_change_service(what) {
      document.getElementById("user_tc").disabled = 
        document.getElementById("user_bas").disabled = 
        document.getElementById("user_haut").disabled =  ! document.getElementById("ssh").checked;
+  } else if (what === "radius") {
+     document.getElementById("radius_server").disabled = 
+       document.getElementById("radius_secret").disabled =  ! document.getElementById("radius").checked;
   } else if (what === "syslog") {
     document.getElementById("syslog_server").disabled = ! document.getElementById("syslog").checked;
   } else if (what === "ntp") {
@@ -1091,6 +1120,11 @@ function dsas_change_service(what) {
        serv.ssh.user_tc = document.getElementById("user_tc").value;
        serv.ssh.user_bas = document.getElementById("user_bas").value;
        serv.ssh.user_haut = document.getElementById("user_haut").value;
+       if (! serv.radius)
+         serv.radius = {};
+       serv.radius.active = (document.getElementById("radius").checked ? "true" : "false");
+       serv.radius.server = document.getElementById("radius_server").value;
+       serv.radius.secret = document.getElementById("radius_secret").value;
        serv.syslog.active = (document.getElementById("syslog").checked ? "true" : "false");
        serv.syslog.server = document.getElementById("syslog_server").value;
        serv.ntp.active = (document.getElementById("ntp").checked ? "true" : "false");
@@ -1122,6 +1156,7 @@ function dsas_change_service(what) {
              modal_errors(errors, true);
            } catch (e) {
              // Its text => here always just "Ok"
+             clear_feedback();
              dsas_display_service(what);
            }
          }).catch(error => {
@@ -1280,6 +1315,7 @@ function dsas_cert_real_delete(name, finger) {
         modal_errors(errors);
       } catch (e) {
         // Its text => here always just "Ok"
+        clear_feedback();
         dsas_display_cert("cert");
         dsas_display_cert("pubkey");
         dsas_display_cert("gpg");
@@ -1384,6 +1420,7 @@ function dsas_upload_cert(type = "x509", name ="") {
         modal_errors(errors);
       } catch (e) {
         // Its text => here always just "Ok"
+        clear_feedback();
         modal_message(_("Certificate sucessfully sent"), "dsas_display_cert();", true);
       }
     }).catch(error => {
@@ -1521,6 +1558,7 @@ function dsas_task_real_delete(id) {
         modal_errors(errors);
       } catch (e) {
         // Its text => here always just "Ok"
+        clear_feedback();
         dsas_display_tasks("tasks");
       }
     }).catch(error => {
@@ -1621,6 +1659,7 @@ function dsas_task_real_run(id) {
         modal_errors(errors);
       } catch (e) {
         // Its text => here always just "Ok"
+        clear_feedback();
         dsas_display_tasks("tasks");
       }
     }).catch(error => {
@@ -1724,6 +1763,7 @@ function dsas_add_task(oldname = "", oldid="") {
         modal_errors(errors);
       } catch (e) {
         // Its text => here always just "Ok"
+        clear_feedback();
         dsas_display_tasks("tasks");
       }
     }).catch(error => {
