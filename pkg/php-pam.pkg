@@ -1,55 +1,10 @@
 _pkg=php-pam
-_version=2.2.3
-_uri="https://pecl.php.net/get/pam-2.2.3.tgz"
+_version=2.2.4
+_uri="https://pecl.php.net/get/pam-2.2.4.tgz"
 _dep="Linux-PAM"
 _build_dep="compiletc autoconf php-8.0-dev Linux-PAM-dev"
-_pkg_path="pam-2.2.3"
-# FIXME : Really need to fix the segfault in pam_auth correctly rather that 
-# using this kludge to work around it
-_conf_cmd=\
-"patch << EOF
---- pam.c.orig	2021-06-08 06:30:45.000000000 +0000
-+++ pam.c	2022-01-16 02:54:32.450513524 +0000
-@@ -290,6 +289,9 @@
-  */
- PHP_MINIT_FUNCTION(pam)
- {
-+#if defined(ZTS) && defined(COMPILE_DL_PAM)
-+	ZEND_TSRMLS_CACHE_UPDATE();
-+#endif
- 	ZEND_INIT_MODULE_GLOBALS(pam, php_pam_init_globals, NULL);
- 	REGISTER_INI_ENTRIES();
- 	return SUCCESS;
-@@ -305,6 +307,17 @@
- }
- /* }}} */
- 
-+/* {{{ PHP_RINIT_FUNCTION
-+ */
-+PHP_RINIT_FUNCTION(pam)
-+{
-+#if defined(ZTS) && defined(COMPILE_DL_PAM)
-+	ZEND_TSRMLS_CACHE_UPDATE();
-+#endif
-+	return SUCCESS;
-+}
-+/* }}} */
-+
- /* {{{ PHP_MINFO_FUNCTION
-  */
- PHP_MINFO_FUNCTION(pam)
-@@ -326,7 +339,7 @@
- 	ext_functions,
- 	PHP_MINIT(pam),
- 	PHP_MSHUTDOWN(pam),
--	NULL,	/* Replace with NULL if there's nothing to do at request start */
-+	PHP_RINIT(pam),
- 	NULL,	/* Replace with NULL if there's nothing to do at request end */
- 	PHP_MINFO(pam),
- 	PHP_PAM_VERSION,
-EOF
-
-phpize; ./configure"
+_pkg_path="pam-2.2.4"
+_conf_cmd="phpize; ./configure"
 _make_cmd="make"
 _install_cmd=\
 "
