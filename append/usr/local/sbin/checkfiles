@@ -442,6 +442,11 @@ verifdirectory() {
     done
   fi
   /bin/rm -fr "$tempdir"
+
+  # There might be empty directories lying about. Remove them
+  for _dir in $(find "$DSAS_HAUT/$dir" -mindepth 1 -type d -empty -exec echo -n -e "{}\x03" \; ); do
+    rmdir "$_dir"
+  done
   IFS=$OLD_IFS
 }
 
@@ -801,6 +806,10 @@ passdirectory(){
     done
   fi
 
+  # There might be empty directories lying about. Remove them
+  for _dir in $(find "$DSAS_HAUT/$dir" -mindepth 1 -type d -empty -exec echo -n -e "{}\x03" \; ); do
+    rmdir "$_dir"
+  done
   IFS=$OLD_IFS
 }
 
