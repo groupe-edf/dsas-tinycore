@@ -105,6 +105,14 @@ getdirectory() {
 
   [ -f "/tmp/cert.$$" ] && rm /tmp/cert.$$
 
+  # There might be empty directories lying about. Remove them
+  OLD_IFS=$IFS
+  IFS=$'\3'
+  for _dir in $(find "$DSAS_HAUT/$dir" -mindepth 1 -type d -empty -exec echo -n -e "{}\x03" \; ); do
+    rmdir "$_dir"
+  done
+  IFS=$OLD_IFS
+
   exit 0
 }
 
