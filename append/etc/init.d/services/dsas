@@ -812,7 +812,7 @@ reboot_required(){
 save_config(){
   # Make a copy of the config file for later comparison
   $as_tc cp -f $VAR/dsas_conf.xml $VAR/dsas_conf.xml.active
-  $as_tc chmod 640 $VAR/dsas_conf.xml $VAR/dsas_conf.xml.active
+  $as_tc chmod 644 $VAR/dsas_conf.xml $VAR/dsas_conf.xml.active
 
   echo "Saving DSAS configuration"
   $as_tc filetool.sh -b
