@@ -7,4 +7,4 @@ _pkg_path=npth-1.6
 _conf_cmd="./configure"
 _make_cmd="make"
 _install_cmd="make install DESTDIR=" 
-_pkgs='main{/usr/local/bin,/usr/local/lib,/usr/local/share}'
+_pkgs='main{/usr/local}'
