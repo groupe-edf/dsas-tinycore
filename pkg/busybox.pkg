@@ -22,7 +22,7 @@ done
 # Make a copy of source as will build twice
 mkdir $builddir/$_pkg_path.nosuid
 tar -cf - * | tar -xpC $builddir/$_pkg_path.nosuid -f -
-chown $SUDO_USER $builddir/$_pkg_path.nosuid
+chown -R tc.staff $builddir/$_pkg_path.nosuid
  
 # Config for SUID version of busybox
 curl -L -o .config $tcz_src/busybox/busybox-1.33.0_config_suid
@@ -40,7 +40,7 @@ CONFIG_FEATURE_TIMEZONE=y
 # CONFIG_CRC32 is not set
 # CONFIG_ASCII is not set
 EOF
-chown $SUDO_USER .config
+chown tc.staff .config
 
 # Config for NOSUID version of busybox
 cd $builddir/$_pkg_path.nosuid
@@ -72,7 +72,7 @@ CONFIG_FEATURE_FIND_SAMEFILE=y
 CONFIG_FEATURE_WGET_FTP=y
 CONFIG_UDHCPC_DEFAULT_INTERFACE=\"eth0\"
 EOF
-chown $SUDO_USER .config
+chown tc.staff .config
 "
 _conf_cmd="make oldconfig; cd $builddir/$_pkg_path.nosuid; make oldconfig"
 _make_cmd=\
