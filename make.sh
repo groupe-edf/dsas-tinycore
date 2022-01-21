@@ -1,25 +1,23 @@
 #!/bin/sh
 
-cd $(dirname $0)
-
 # Force to run as root
 if [ $(id -u) != 0 ]; then
   sudo -E $0 $* 
   exit $?
 fi
 
-# Get architecture
-if [ `uname -m` ]; then
-  arch=64
-else
-  arch=32
-fi
+# Set LANG so that perl doesn't complain
+LANG="C"
 
-# local hosts package directory
+# Get architecture
+arch="32"
+[ "$(uname -m)" == "x86_64" ] && arch="64"
+
+# local hosts package directory on Tinycore for package reuse
 tce_dir=/mnt/sda1/tce/optional
 
 # tiny core related
-if [ "$arch" -eq "64" ]; then
+if [ "$arch" != "64" ]; then
   livecd_url=http://tinycorelinux.net/12.x/x86/release/Core-current.iso
   tcz_url=http://tinycorelinux.net/12.x/x86/tcz
   tcz_src=http://tinycorelinux.net/12.x/x86/release/src
@@ -38,7 +36,11 @@ src_dir=$work/src
 pkg_dir=./pkg
 destdir=/home/tc/dest
 builddir=/home/tc/build
-squashfs=$newiso/boot/core.gz
+if [ "$arch" != "64" ]; then
+  squashfs=$newiso/boot/core.gz
+else
+  squashfs=$newiso/boot/corepure64.gz
+fi
 mnt=$work/mnt
 image=$work/extract
 build=$work/build
@@ -52,8 +54,6 @@ keep=0
 
 # Force the umask
 umask 0022
-
-test "$SUDO_USER" && as_user="sudo -E -u $SUDO_USER" || as_user=
 
 msg() {
     echo '[*]' $*
@@ -228,12 +228,12 @@ build_pkg() {
         mkdir -p $src_dir
         download $_uri $src_dir
         mkdir -p $extract/home/tc
-        chown tc.staff $extract/home/tc
-        $as_user mkdir -p $extract/$builddir
-        $as_user mkdir -p $extract/$destdir
-        unpack $src_dir/$_src $extract/$builddir
-        chown -R $SUDO_USER $extract/$builddir
 
+        mkdir -p $extract/$builddir
+        mkdir -p $extract/$destdir
+        unpack $src_dir/$_src $extract/$builddir
+        chroot $extract chown -R tc.staff /home/tc
+        
         cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 $_pre_config
@@ -251,7 +251,7 @@ $_conf_cmd
 exit \$?
 EOF
         chmod a+x $extract/tmp/script
-        [ -z "$_conf_cmd" ] || chroot --userspec=$SUDO_USER $extract /tmp/script || { error "Unexpected error ($?) in configuration"; exit 1; }
+        [ -z "$_conf_cmd" ] || chroot --userspec=tc $extract /tmp/script || { error "Unexpected error ($?) in configuration"; exit 1; }
         msg "Building $_pkg"
         cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
@@ -260,7 +260,7 @@ $_make_cmd
 exit \$?
 EOF
         chmod a+x $extract/tmp/script
-        [ -z "$_make_cmd" ] || chroot --userspec=$SUDO_USER $extract /tmp/script $_make_cmd || { error "Unexpected error ($?) in build"; exit 1; }
+        [ -z "$_make_cmd" ] || chroot --userspec=tc $extract /tmp/script $_make_cmd || { error "Unexpected error ($?) in build"; exit 1; }
         msg "Installing $_pkg"
         cat << EOF > $extract/tmp/script
 export DESTDIR=$destdir
@@ -546,7 +546,12 @@ EOF
   done
 
   # customize boot screen
-  rsync -rv ./boot/ $newiso/boot/
+  cp -p ./boot/boot.msg $newiso/boot/
+  if [ "$arch" != "64" ]; then
+    cp -p ./boot/isolinux/isolinux.cfg $newiso/boot/isolinux
+  else
+    cp -p ./boot/isolinux/isolinux64.cfg $newiso/boot/isolinux/isolinux.cfg
+  fi
 
   msg creating $dsascd
   tmp=$work/squashfs.gz
