@@ -1,0 +1,10 @@
+_pkg=libarchive3
+_version=3.5.2
+_uri=https://www.libarchive.org/downloads/libarchive-3.5.2.tar.gz
+_build_dep="compiletc coreutils nettle3-dev acl-dev lzo-dev liblzma-dev libxml2-dev bzip2-lib libzstd liblz4-dev openssl-1.1.1-dev"
+_deps="nettle3 acl lzo liblzma libxml2 bzip2-lib libzstd liblz4 openssl-1.1.1"
+_pkg_path=libarchive-3.5.2
+_conf_cmd="./configure"
+_make_cmd="make"
+_install_cmd="make install DESTDIR=" 
+_pkgs='main{/usr/local/bin,/usr/local/lib/*.so*};dev{/usr/local/include,/usr/local/lib/.a,/usr/local/lib/*.la,/usr/local/lib/pkgconfig};doc{/usr/local/share} '
