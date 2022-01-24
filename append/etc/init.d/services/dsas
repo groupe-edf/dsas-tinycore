@@ -817,7 +817,7 @@ check_xml_version(){
   
   REAL_VER_MAJOR="$(echo $DSAS_XML_VERSION | cut -d. -f1)"
   REAL_VER_MINOR="$(echo $DSAS_XML_VERSION | cut -d. -f2)"
-  if [ $REAL_VER_MAJOR -lt $VER_MAJOR ] || [[ $REAL_VER_MAJOR -eq $VER_MAJOR ] && [ $REAL_VER_MINOR -lt $VER_MINOR ]]; then
+  if [ $REAL_VER_MAJOR -lt $VER_MAJOR ] || ([ $REAL_VER_MAJOR -eq $VER_MAJOR ] && [ $REAL_VER_MINOR -lt $VER_MINOR ]); then
     echo "${RED}Can not downgrade XML file.${NORMAL}"
     return
   fi
