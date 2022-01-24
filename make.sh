@@ -222,6 +222,7 @@ build_pkg() {
         done
 
         # Copy /etc/resolv.conf file 
+        mkdir -p $extract/etc
         cp -p /etc/resolv.conf $extract/etc/resolv.conf
 
         msg "Building $_pkg.tcz"
@@ -546,7 +547,7 @@ EOF
   done
 
   # customize boot screen
-  cp -p ./boot/boot.msg $newiso/boot/
+  cp -p ./boot/isolinux/boot.msg $newiso/boot/
   if [ "$arch" != "64" ]; then
     cp -p ./boot/isolinux/isolinux.cfg $newiso/boot/isolinux
   else
