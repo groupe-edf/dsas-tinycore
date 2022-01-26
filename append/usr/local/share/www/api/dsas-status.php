@@ -38,18 +38,16 @@ else {
     $mem = explode(" ", $free_arr[1]);
     $mem = array_filter($mem);
     $mem = array_merge($mem);
-    $output = dsas_exec(["ssh", "tc@" . $hautip, "cat", "/proc/cpuinfo"]);
+    $output = dsas_exec(["ssh", "tc@" . $hautip, "cat", "/proc/loadavg", "/proc/cpuinfo"]);
+    $loadavg = explode(" ", $output["stdout"])[0];
     $cpuinfo = $output["stdout"];
     preg_match("/^cpu cores.*:(.*)$/m", $cpuinfo, $matches);
     $cores = trim($matches[1]);
-    $output = dsas_exec(["ssh", "tc@" . $hautip, "cat", "/proc/loadavg"]);
-    $loadavg = explode(" ", $output["stdout"])[0];
-    $output = dsas_exec(["ssh", "tc@" . $hautip, "stat", "-f", "-c", "%S", $d]);
-    $blksz = (int)$output["stdout"];
-    $output = dsas_exec(["ssh", "tc@" . $hautip, "stat", "-f", "-c", "%a", $d]);
-    $free = (int)$output["stdout"] * $blksz;
-    $output = dsas_exec(["ssh", "tc@" . $hautip, "stat", "-f", "-c", "%b", $d]);
-    $total = (int)$output["stdout"] * $blksz;
+    $output = dsas_exec(["ssh", "tc@" . $hautip, "stat", "-f", "-c", "'%S %a %b'", $d]);
+    $output_arr = explode(" ", (string)trim($output["stdout"]));
+    $blksz = (int)$output_arr[0];
+    $free = (int)$output_arr[1] * $blksz;
+    $total = (int)$output_arr[2] * $blksz;
     $haut = ["status" => "up",
              "disk" =>  $d,
              "disk_free" => $free,
