@@ -229,7 +229,7 @@ getnetdevices(){
   # stupid and allocates randomly the names and order of the interfaces returned
   # by /proc/net/dev. I get around this by allocating an interface prefix (typically "doc")
   # that is alphabetically first to the principal interface
-  _tmp="$(awk -F: 'NR>2&&!/lo:/{print $1}' /proc/net/dev 2>/dev/null)"
+  _tmp="$(awk -F: 'NR>2&&!/lo:|dummy.:|tunl.:/{print $1}' /proc/net/dev 2>/dev/null)"
   echo -e "$(echo $_tmp | xargs -n1 | sort -)"
 }  
   
