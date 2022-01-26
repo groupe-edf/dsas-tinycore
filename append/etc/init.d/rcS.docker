@@ -1,0 +1,27 @@
+ #! /bin/sh
+ 
+ while [ "$#" -gt 0 ]; do
+   case $1 in
+     -i|--install) 
+       mkdir -p /mnt/sda1/tce/optional
+       chown -R root:staff /mnt/sda1/tce /usr/local/tce.installed
+       chmod -R g+w /mnt/sda1/tce
+       etc/init.d/services/dsas start
+       exit $?
+       ;;
+     -r|--reconfig)
+       filetool.sh -r
+       etc/init.d/services/dsas reconfig
+       exit $?
+       ;;
+     *) 
+       1>&2 echo "$0: Unrecognized option: $1"
+       exit 1 
+       ;;
+   esac
+ done
+ 
+ filetool.sh -r
+ /etc/init.d/services/crond start
+ /etc/init.d/services/dsas start
+ sleep infinity 
