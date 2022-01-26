@@ -14,8 +14,6 @@ var/dsas/dsas_conf.xml
 var/dsas/dsas_priv.pem
 var/dsas/dsas_pub.pem
 var/dsas/dsas_typ
-var/log
 home/tc
 home/bas
 home/haut
-

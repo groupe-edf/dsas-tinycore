@@ -15,6 +15,9 @@ as_tc="sudo -E -u tc"
 as_bas="sudo -E -u bas"
 as_haut="sudo -E -u haut"
 
+# In an unprivelged docker, /dev is not available, and so 'fdisk -l' returns nothing
+[ -z "$(fdisk -l)" ] && ISDOCKER=1
+
 mounted(){
   grep $1 /etc/mtab > /dev/null 2>&1
   if [ $? == 0 ]; then return 0; fi
@@ -22,22 +25,29 @@ mounted(){
 }
 
 mount_dsas(){
-  if [ ! $(mounted /home/dsas) ]; then
-    echo "Mounting ${GREEN}$DSAS${NORMAL} on ${GREEN}/home/dsas${NORMAL}"
-    mkdir -p /home/dsas
-    chown root.staff /home/dsas
-    chmod 755 /home/dsas
-    # remount main disk as noexec. Strip trail "/dsas" from $DSAS to get the real partition
-    mount -o remount,noexec ${DSAS:0:-5}
-    mount --noexec --nobind $DSAS /home/dsas
+  if [ -z "$ISDOCKER" ]; then
+    if [ ! $(mounted /home/dsas) ]; then
+      echo "Mounting ${GREEN}$DSAS${NORMAL} on ${GREEN}/home/dsas${NORMAL}"
+      mkdir -p /home/dsas
+      chown root.staff /home/dsas
+      chmod 755 /home/dsas
+      # remount main disk as noexec. Strip trail "/dsas" from $DSAS to get the real partition
+      mount -o remount,noexec ${DSAS:0:-5}
+      mount --noexec --nobind $DSAS /home/dsas
+    fi
+    # For persistent /var/log. Do this before launching syslog
+    [ -d ${DSAS:0:-5}/log ] && [ ! $(mounted /var/log) ] && mount ${DSAS:0:-5}/log /var/log
+  else
+    [ -L /home/dsas ] || ln -s "$DSAS" /home
+    # If docker a persisent /var/log can be a symlink
+    mv /var/log var/log.old
+    ln -s ${DSAS:0:-5}/log /var/log
   fi
-
-  # For persistent /var/log. Do this before launching syslog
-  [ -d ${DSAS:0:-5}/log ] && [ ! $(mounted /var/log) ] && mount ${DSAS:0:-5}/log /var/log
 }
 
 init_disk(){
-  FDISKL=$(fdisk -l | awk '$1 ~ /dev/{printf " %s ",$1}')
+  [ -z "$ISDOCKER" ] && FDISKL=$(fdisk -l | awk '$1 ~ /dev/{printf " %s ",$1}')
+  [ -z "$ISDOCKER" ] || FDISKL=$(cat /etc/mtab | grep "^/dev/" | cut -f1 -d' ' | uniq)
   FOUND=""
   DISK=""
   ARGS="--stdout --no-cancel --radiolist 'Select device to format for the DSAS:' 0 0 0"
@@ -213,6 +223,16 @@ audit_perms(){
   IFS=$OLD_IFS
 }
 
+getnetdevices(){
+  # The order of the interfaces returned by this function is extremely important
+  # The interface between the upper and lower machines must be last. Docker is 
+  # stupid and allocates randomly the names and order of the interfaces returned
+  # by /proc/net/dev. I get around this by allocating an interface prefix (typically "doc")
+  # that is alphabetically first to the principal interface
+  _tmp="$(awk -F: 'NR>2&&!/lo:/{print $1}' /proc/net/dev 2>/dev/null)"
+  echo -e "$(echo $_tmp | xargs -n1 | sort -)"
+}  
+  
 valid_ip(){
   if [[ $1 =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     for i in 1 2 3 4; do
@@ -389,7 +409,7 @@ config_network(){
               continue 2
             fi
             ARGS="${ARGS}<nameserver>$S</nameserver>"
-            i = $((i + 1))
+            i=$((i + 1))
           done
         fi
         ARGS="${ARGS}\nsave"
@@ -401,7 +421,7 @@ config_network(){
 }
 
 start_network(){
-  NETDEVICES="$(awk -F: '/eth.:|tr.:/{print $1}' /proc/net/dev 2>/dev/null)"
+  NETDEVICES=$(getnetdevices)
   if [ $(echo $NETDEVICES | wc -w) -lt 2 ]; then
     echo "${RED}At least two network devices are needed. Aborting !!${NORMAL}"
     exit 1
@@ -469,7 +489,7 @@ start_network(){
 }
 
 stop_network(){
-  NETDEVICES="$(awk -F: '/eth.:|tr.:/{print $1}' /proc/net/dev 2>/dev/null)"
+  NETDEVICES=$(getnetdevices)
   ETH0=$(echo $NETDEVICES | cut -d" " -f1)
   ETH1=$(echo $NETDEVICES | cut -d" " -f2)
   GWAY=$(xmllint --xpath 'string(dsas/config/network/'${TYP}'/gateway)' $VAR/dsas_conf.xml.active)
@@ -488,7 +508,7 @@ stop_network(){
 
 start_web_admin(){
   cp $VAR/admin.conf.dsas $VAR/admin.conf
-  NETDEVICES="$(awk -F: '/eth.:|tr.:/{print $1}' /proc/net/dev 2>/dev/null)"
+  NETDEVICES=$(getnetdevices)
   ETH0=$(echo $NETDEVICES | cut -d" " -f1)
   ip=$(ifconfig $ETH0 | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
   echo "Binding webserver to ${GREEN}$ETH0${NORMAL} and address ${GREEN}$ip${NORMAL}." 
@@ -539,7 +559,7 @@ start_sshd(){
       fi
       i=$((i + 1))
     done
-    NETDEVICES="$(awk -F: '/eth.:|tr.:/{print $1}' /proc/net/dev 2>/dev/null)"
+    NETDEVICES=$(getnetdevices)
     ETH0=$(echo $NETDEVICES | cut -d" " -f1)
     LISTEN=$(ifconfig $ETH0 | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
   else
@@ -713,7 +733,7 @@ start_repo(){
   repo="$(xmllint --xpath 'string(dsas/config/web/repo)' $VAR/dsas_conf.xml)"
   if [ "$repo" != "true" ]; then return 0; fi
   cp $VAR/repo.conf.dsas $VAR/repo.conf
-  NETDEVICES="$(awk -F: '/eth.:|tr.:/{print $1}' /proc/net/dev 2>/dev/null)"
+  NETDEVICES=$(getnetdevices)
   ETH0=$(echo $NETDEVICES | cut -d" " -f1)
   ip=$(ifconfig $ETH0 | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
   echo "Binding repo to ${GREEN}$ETH0${NORMAL} and address ${GREEN}$ip${NORMAL}." 
@@ -817,7 +837,7 @@ check_xml_version(){
   
   REAL_VER_MAJOR="$(echo $DSAS_XML_VERSION | cut -d. -f1)"
   REAL_VER_MINOR="$(echo $DSAS_XML_VERSION | cut -d. -f2)"
-  if [ $REAL_VER_MAJOR -lt $VER_MAJOR ] || [[ $REAL_VER_MAJOR -eq $VER_MAJOR ] && [ $REAL_VER_MINOR -lt $VER_MINOR ]]; then
+  if [ $REAL_VER_MAJOR -lt $VER_MAJOR ] || ([ $REAL_VER_MAJOR -eq $VER_MAJOR ] && [ $REAL_VER_MINOR -lt $VER_MINOR ]); then
     echo "${RED}Can not downgrade XML file.${NORMAL}"
     return
   fi
@@ -868,7 +888,7 @@ case "${1}" in
     audit_perms &
     check_xml_version
 
-    NETDEVICES="$(awk -F: '/eth.:|tr.:/{print $1}' /proc/net/dev 2>/dev/null)"
+    NETDEVICES=$(getnetdevices)
     if [ $(echo $NETDEVICES | wc -w) -lt 2 ]; then
       echo "${RED}At least two network devices are needed. Aborting !!${NORMAL}"
       exit 1
@@ -888,7 +908,7 @@ case "${1}" in
       CONFIG_SSH="true"
     fi
     setup_interco
-    /usr/bin/sethostname $TYP
+    [ -z "$ISDOCKER" ] && /usr/bin/sethostname $TYP
     echo "# Hardcoded address of other DSAS machine" >> /etc/hosts
     [ "$TYP" == "bas" ] && echo "$INTERCO_HAUT haut" >> /etc/hosts
     [ "$TYP" == "haut" ] && echo "$INTERCO_BAS bas" >> /etc/hosts
@@ -984,3 +1004,4 @@ case "${1}" in
     exit 1
     ;;
 esac
+

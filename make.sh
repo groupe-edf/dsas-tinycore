@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Force to run as root
 if [ $(id -u) != 0 ]; then
@@ -46,6 +46,7 @@ image=$work/extract
 build=$work/build
 append=./append
 dsascd=$work/dsas.iso
+rootfs64=$work/rootfs64
 
 service_pass_len=24
 rebuild=0
@@ -359,30 +360,31 @@ get_unpack_livecd(){
   fi
 }
 
-case $1 in
--clean)
-  rm -fr $image $build $newiso $mnt $dsascd $dsascd.md5 $work/dsas_pass.txt
+cmd=$1
+shift
+pkgs=""
+while [ "$#" -gt 0 ]; do
+  case $1 in
+    -r|--rebuild) rebuild=1;  ;;
+    -f|--download) forcedownload=1; ;;
+    -k|--keep) keep=1; ;;
+    *) pkgs="$pkgs $1"
+  esac
+  shift
+done
+
+case $cmd in
+-clean|clean)
+  rm -fr $image $build $newiso $mnt $dsascd $rootfs64 $dsascd.md5 $work/docker $work/dsas_pass.txt
   exit 0
   ;;
--realclean)
+-realclean|realclean)
   rm -fr $work
   exit 0
   ;;
--b|-build)
+-b|-build|build)
   shift
   extract=$build
-  pkgs=""
-  newargs=""
-  while [ "$#" -gt 0 ]; do
-    case $1 in
-      -r|--rebuild) rebuild=1; newargs="$newargs $1" ;;
-      -f|--download) forcedownload=1; newargs="$newargs $1" ;;
-      -k|--keep) keep=1; ;;
-      *) pkgs="$pkgs $1"
-    esac
-    shift
-  done
-
   mkdir -p $work
   get_unpack_livecd
 
@@ -392,6 +394,37 @@ case $1 in
   [ -z $pkgs ] && $(echo "No package to build given"; exit 1) 
   build_pkg $pkgs
   exit 0
+  ;;
+docker)
+  # Force build of the ISO
+  shift
+  [ -f "$dsascd" ] || $0 $*
+  
+  # Repack the disk image
+  mkdir -p $newiso
+  mount $dsascd $newiso
+  extract=$rootfs64
+  msg "Extracting DSAS files"
+  rm -fr $extract
+  mkdir -p $extract
+  zcat $squashfs | { cd $extract; cpio -i -H newc -d; }
+  umount $newiso
+  msg "Setting up DSAS for docker"
+  install_tcz squashfs-tools
+  cat docker/tce-load.patch | (cd $extract; patch usr/bin/tce-load; )
+  ln -s /mnt/sda1/tce $extract/etc/sysconfig/tcedir
+  echo -n tc > $extract/etc/sysconfig/tcuser
+  msg "Compressing DSAS files"  
+  mkdir -p $work/docker
+  tar -czC $extract -f $work/docker/rootfs64.tar.gz .
+  msg "Creating docker install package in $work/docker.tgz"
+  cp -pr docker/Makefile docker/Dockerfile $work/docker
+  tar -czC $work/docker -f $work/docker.tgz .
+  if [ "$keep" == "0" ]; then
+    rm -fr $newiso $extract $work/docker
+  fi
+  exit 0
+  
   ;;
 *)
   extract=$image
@@ -564,7 +597,7 @@ EOF
   msg creating $dsascd.md5
   (cd $work; md5sum `basename $dsascd`; ) > $dsascd.md5
 
-  if [ "$1" != "-keep" ] && [ "$1" != "-k" ]; then
+  if [ "$keep" == "0" ]; then
     rm -fr $image $newiso $mnt
   fi
   exit 0
