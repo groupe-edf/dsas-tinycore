@@ -26,27 +26,24 @@ uninstall:
 	docker network rm $(CONTAINER)_eth0 || true
 	
 install: network_virt
+	docker container ls | grep -q $(CONTAINER) && docker container stop $(CONTAINER) || true
+	docker container prune --force
+	docker container ls | grep -q $(CONTAINER) && docker container rm --force $(CONTAINER) || true
 	docker images | grep $(IMAGE_NAME) | grep -q $(IMAGE_TAG) || docker build \
 	  -t $(IMAGE_NAME):$(IMAGE_TAG) .
 	# Iface name of "doc" to get the DSAS to always recognize the main iface
 	docker network ls | grep $(CONTAINER)_eth0 || docker network create \
 	  --subnet=$(NET0) --gateway=$(GW0) \
 	  --opt com.docker.network.container_iface_prefix=doc $(CONTAINER)_eth0
-	docker volume ls | grep -q $(CONTAINER)_sda1 || docker volume create $(CONTAINER)_sda1
-	docker create --network=$(CONTAINER)_eth0 --ip $(IP_ETH0) --tty --interactive \
-	  --cap-add=CAP_NET_ADMIN -v $(CONTAINER)_sda1:/mnt/sda1  --name $(CONTAINER) \
-	  $(IMAGE_NAME):$(IMAGE_TAG) /bin/sh -c "mkdir -p /mnt/sda1/tce/optional \
-	  && chown -R root:staff /mnt/sda1/tce /usr/local/tce.installed \
-	  && chmod -R g+w /mnt/sda1/tce && /etc/init.d/services/dsas start"
-	docker network connect --ip $(IP_ETH1) dsas_eth1  $(CONTAINER)
-	docker container start --interactive $(CONTAINER)
-	docker container stop $(CONTAINER)
-	docker container rm $(CONTAINER)
-	docker create --network=$(CONTAINER)_eth0 --ip $(IP_ETH0) --cap-add=CAP_NET_ADMIN \
-	  -v $(CONTAINER)_sda1:/mnt/sda1  --name $(CONTAINER) \
-	  $(IMAGE_NAME):$(IMAGE_TAG) /bin/sh -c "filetool.sh -r; \
-	  /etc/init.d/services/dsas start; sleep infinity"
-	docker network connect --ip $(IP_ETH1) dsas_eth1  $(CONTAINER)	
+	docker volume ls | grep -q $(CONTAINER)_sda1 || \
+	  $(shell docker volume create $(CONTAINER)_sda1 && \
+	  docker create --network=$(CONTAINER)_eth0 --ip $(IP_ETH0) --tty --interactive \
+	    --cap-add=CAP_NET_ADMIN -v $(CONTAINER)_sda1:/mnt/sda1  --name $(CONTAINER) \
+	    $(IMAGE_NAME):$(IMAGE_TAG) /bin/sh -c "/etc/init.d/rcS.docker --install" && \
+	  docker network connect --ip $(IP_ETH1) dsas_eth1  $(CONTAINER) && \
+	  docker container start --interactive $(CONTAINER) && \
+	  docker container stop $(CONTAINER) && \
+	  docker container rm $(CONTAINER) )
 
 network_phy:
 	docker network ls | grep dsas_eth1 || docker network create --driver=macvlan \
@@ -56,9 +53,12 @@ network_virt:
 	docker network ls | grep dsas_eth1 || docker network create \
 	  --subnet=$(NET1) --gateway=$(GW1) dsas_eth1
 
-run:	
+run:
+	docker create --network=$(CONTAINER)_eth0 --ip $(IP_ETH0) \
+	  --cap-add=CAP_NET_ADMIN --cap-add=SYS_PTRACE --ulimit nofile=65535 \
+	  -v $(CONTAINER)_sda1:/mnt/sda1  --name $(CONTAINER) \
+	  $(IMAGE_NAME):$(IMAGE_TAG) /bin/sh -c "/etc/init.d/rcS.docker"
+	docker network connect --ip $(IP_ETH1) dsas_eth1  $(CONTAINER)
 	docker container start $(CONTAINER)
-	
-bad:
 
 
