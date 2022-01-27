@@ -1,9 +1,14 @@
-#!/bin/bash
+#!/bin/sh
 
-# Force to run as root
-if [ $(id -u) != 0 ]; then
-  sudo -E $0 $* 
+# If not running as root and/or running /bin/dash restart as root with a compatible shell
+readlink /proc/$$/exe | grep -q dash && _shell="/bin/bash"
+[ $(id -u) -ne 0 ] && _asroot="sudo -E"
+if [ -n "$_shell" ]; then
+  $_asroot $_shell $0 $*
   exit $?
+elif [ -n "$_asroot" ]; then
+  $_asroot $0 $*
+  exit $§?
 fi
 
 # Set LANG so that perl doesn't complain
