@@ -8,7 +8,7 @@ if [ -n "$_shell" ]; then
   exit $?
 elif [ -n "$_asroot" ]; then
   $_asroot $0 $*
-  exit $§?
+  exit $?
 fi
 
 # Set LANG so that perl doesn't complain
