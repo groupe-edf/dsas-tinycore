@@ -47,6 +47,8 @@ build=$work/build
 append=./append
 dsascd=$work/dsas.iso
 rootfs64=$work/rootfs64
+docker=$work/docker
+dockimage=$work/docker.tgz
 
 service_pass_len=24
 rebuild=0
@@ -360,22 +362,27 @@ get_unpack_livecd(){
   fi
 }
 
-cmd=$1
-shift
+cmd=""
 pkgs=""
 while [ "$#" -gt 0 ]; do
   case $1 in
     -r|--rebuild) rebuild=1;  ;;
     -f|--download) forcedownload=1; ;;
     -k|--keep) keep=1; ;;
-    *) pkgs="$pkgs $1"
+    *) 
+      if [ -z "$cmd" ]; then
+        cmd=$1
+      else
+        pkgs="$pkgs $1"
+      fi
+      ;;
   esac
   shift
 done
 
 case $cmd in
 -clean|clean)
-  rm -fr $image $build $newiso $mnt $dsascd $rootfs64 $dsascd.md5 $work/docker $work/dsas_pass.txt
+  rm -fr $image $build $newiso $mnt $dsascd $rootfs64 $dsascd.md5 $docker $dockimage $work/dsas_pass.txt
   exit 0
   ;;
 -realclean|realclean)
@@ -415,13 +422,13 @@ docker)
   ln -s /mnt/sda1/tce $extract/etc/sysconfig/tcedir
   echo -n tc > $extract/etc/sysconfig/tcuser
   msg "Compressing DSAS files"  
-  mkdir -p $work/docker
-  tar -czC $extract -f $work/docker/rootfs64.tar.gz .
-  msg "Creating docker install package in $work/docker.tgz"
-  cp -pr docker/Makefile docker/Dockerfile $work/docker
-  tar -czC $work/docker -f $work/docker.tgz .
+  mkdir -p $docker
+  tar -czC $extract -f $docker/rootfs64.tar.gz .
+  msg "Creating docker install package in $dockimage"
+  cp -pr docker/Makefile docker/Dockerfile $docker
+  tar -czC $docker -f $dockimage .
   if [ "$keep" == "0" ]; then
-    rm -fr $newiso $extract $work/docker
+    rm -fr $newiso $extract $docker
   fi
   exit 0
   
