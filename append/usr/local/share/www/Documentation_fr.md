@@ -145,9 +145,7 @@ machine haute, et elle doit être configurée en premier afin d'être prête à 
 Dans les sections suivantes si ce n'est pas dit explicitement la configuration concerne les
 deux machines.
 
-## Configuration des machines virtuelles
-
-### Choix des tailles des disques
+## Espace disques utilisé par le DSAS 
 
 Le DSAS a besoin de disques indépendants, un pour chacun des deux machines utilisées 
 dans son implémentation. Donc le DSAS a besoin de deux fois plus de disques que le 
@@ -155,6 +153,17 @@ maximum utilisé pour les transferts. Le DSAS est configuré afin de faire des "
 des disques à télécharger, et les anciens fichiers sont supprimés s'ils ne sont 
 plus disponibles sur leur site de téléchargement. Donc seulement l'addition des espaces
 utilisés par les sites externes est nécessaire, plus un peu de marge.
+
+Le formula pour l'espace disaue nécessaire pour chaque machine du DSAS est 
+
+```
+Espace = D1 + D2 + ... Dn + max(D1, D2, ..., Dn) + (EstDocker ? 150Moctets : 60Moctets)
+```
+
+ou `Di` est l'espace nécessaire pour le dépôt de fichier `Di`. Deux copies d'un dépôt 
+sont temporairement nécessaire pendant des mise à jour, ce qui explique la besoin
+de `max(D1, D2, ... Dn)` de disque en plus. Le DSAS sous Docker utilise un image
+non compressé, mais les autres installations ne requiert que le copie de l'ISO.
 
 Les mises à jour de Windows des "Patch Tuesday" sont souvent une centaine de mégaoctets en
 taille, donc multiplier ça par le nombre à garder représente potentiellement plusieurs 
@@ -166,12 +175,37 @@ transfère des mises à jour de linux notre besoin de disque peut vite exploser.
 configurations suivantes, nous avons utilisé une taille de 50 gigaoctets, mais nous
 recommandons au moins 500 Go pour chaque machine du DSAS.
 
-### Création des machines virtuelles
+## Memoire nécessaire pour le DSAS
+
+Le DSAS a besoin un minimum absolue de 500 MOctets de démarrage est donctionner 
+correctement. A cet espace minimal, il faut compter des espace supplementaire 
+dependant sur la configuration DU DSAS. Dans l'installation sur un machine virtual
+classique, le dossier `/tmp` est un partie de la systeme fichier racine et stocké
+en mémoire. Par ce que ce dossier est largement utilisé pour la décompression des
+archives à vérifier, la taille maximale de fichier décompressé est nécessaire en
+mémoire de plus. En teste, nous avons trouvé qu'un minima de __1Goctet__ est 
+nécessaire sur les deux machines du DSAS.
+
+Si le DSAS est configuré afin d'utiliser l'antivirus, la daemon de l'antivirus va
+utiliser de la mémoire supplementaire. L'antivirus n'est qu'utiliser sur la 
+machine `basse` et nous avons trouvé qu'un minima de __3Goctets__ sont nécessaire.
+
+L'utilisation de Docker pourrait legerement modifié ces calculs, mais l'image Docker
+va partagé la mémoire de l'hôte à un valuer semblant a ci-dessus sera nécssaire.
+
+## Configuration des machines virtuelles
 
 Le DSAS est fourni sous forme d'une ISO à utiliser en "live CD". Ceci veut dire que le 
 système exploitation doit démarrer toujours sur ce disque ISO. La grand avantage de
 cela est que les mises à jour du DSAS vont être très simples en exploitation et se résument
 par l'arrêt du DSAS, le remplacement de l'ISO et le redémarrage.
+
+L'installation de trois type de machine virtuel est discuté ci-dessous, avec VirtualBox, 
+avec VMWare and avec Docker.
+
+### Installion sous VirtualBox
+
+#### Création des machines virtuelles
 
 L'ISO du DSAS est une souche linux en 32 bits, et la machine virtuelle est à configurer
 en conséquence. Par exemple, sous VirtualBox la configuration initiale devrait être
@@ -196,7 +230,7 @@ DSAS en maître primaire IDE
 
 Si le disque de démarrage est mal configuré, le DSAS ne pourrait pas démarrer. 
 
-### Interconnexion réseau entre les machines du DSAS
+#### Interconnexion réseau entre les machines du DSAS
 
 Les machines virtuelles sont à configurer avec deux cartes réseaux. La première carte 
 réseau est toujours utilisée pour les connexions vers les réseaux externes du DSAS
@@ -215,6 +249,113 @@ Nous sommes maintenant prêts a démarrer la machine pour la première fois.
 
 Cette étape démarre ainsi une initialisation qui se fait en deux phases : la première à 
 l'aide de la console Linux, et la deuxième à partir de l'interface d'administration en https.
+
+### Installion sous VMWare
+
+FIXME
+
+### Installation sous Docker
+
+L'image docker est fourni dans un fichier `docker.tgz`. Ce fichier devrait être 
+décompressé avec la commande
+
+```
+tar xvzf docker.tgz
+```
+
+Ceci va créer un dossier `docker` contenant trois fichiers
+
+- rootfs64.tar.gz - Ce fichier conteint tous les fichier nécessaire pour la création
+du système racine du DSAS dans Docker
+- Dockerfile - Ce fichier contient des instructions pour la conversion du ficher
+`rootfs64.tar.gz`  vers un image Docker.
+- Makefile - Ce ficheir contient nombreuse cible permettant la simplification de 
+l'installation de l'image Docker du DSAS.
+
+La configuration reseau dans le fichier `Makefile` est à adapter avant l'usage. Le
+DSAS doit egalement configurer le reseau (voir le section Docker à la fin du document),
+et la configuration reseau de Docker doit-être identique à la configuration dans le 
+DSAS.
+
+#### Configuration reseau principal du Docker
+
+La configuration du reseau principal du DSAS dans la Docker est toujours configuré 
+comme un `bridge` dans le fichier `Makefile`. Ceci veut dire que si l'administration du
+DSAS doit-être visible sur une machine distante, le hôte doit-être configuré afin de
+router ces connexions. Si une type de réseau different est nécessaire à l'utilisateur 
+de créer un image Docker approprié sans utilisation du `Makefile`.
+
+Trois variables sont à configurer pour le reseau principal
+
+- NET0 - Le reseau en format CIDR. Par défaut le `Makefile` est configuré avec la
+machine basse avec le reseau `192.168.0.0/24` and the machine haut avec le reseau
+`192.168.1.0/24`. Ces reseaux sont à adapter comme besoin.
+- GW0 - Ceci est l'adresse du passerelle du reseau, et il doit-être un adresse valable
+dans le reseau
+- IP_ETH0 - Ceci est l'adresse des machines basse et haute respectivement.
+
+#### Configuration du reseau d'interconnection du Docker
+
+Le reseau d'interconnexion pourait être virtuel ou physique dependant sur la
+configuration. Il y a 4 variables afin de configurer pour le reseau d'interconnexion
+
+- ETH1 - Si le reseu est physique ceci doit être un nomme d'interface valable sur
+la machine d'hôte. Ce reseau sera configuré comme un `macvlan` sous lunux sur 
+l'interface physique.
+- NET1 -  Le reseau en format CIDR. Par défaut les deux machines du DSAS sont
+consideré comme sur le même LAN et du coup ce reseau est identique sur les deux 
+machines. Il est possible de mettre un pare-feu entre les deux machine du DSAS
+et dans ce cas les reseau seraient differents. Le reseau par défaut est 
+`192.168.192.0/24`.
+- GW1 - Si les deux machines sont sur le même reseau, le passerelle pourrait être
+vide ou pas definé. Sinon il doit être configuré avec l'adresse permettant la routage
+de paquets entre les deux machines
+- IP_ETH1 - L'adresse IP specifique des deux machines. Par défaut l'adresse de la
+machine haut est `192.168.192.2` et la machine basse est `192.168.192.1`.
+
+#### Installation sous Docker
+
+L'installation sous Docker doit-être fait individuellement sur les deux machine du DSAS
+et elle compris deux étapes. Le premier étape est sur la machine haute comme 
+
+```
+make install CONTAINER=haut
+```
+
+Cet étape démarrera la process d'installation 
+[comme détaillé dans la section suivale](#premier-phase-dinitialisation). A la fin
+de cet étape, le conteneur Docker sera installé et configuré. Avant de continuer avec
+l'installation sur la machine basse, la machine haute doit-être démarré. Ceci est
+fait via la Makefile avec la commande 
+
+```
+make start CONTAINER=haut
+```
+
+ou directement via Docker avec la commande
+
+```
+docker container start haut
+```
+
+A ce point la machine basse pourrait être configuré, démarrant avec la commande
+
+```
+make install CONTAINER=bas
+```
+
+Et après, d'avoir [configuré la machine basse avec instructions dans la chapitre suivante],
+elle pourrait être démarré avec la commande
+
+```
+make start CONTAINER=bas
+```
+
+ou directement via Docker avec la commande
+
+```
+docker container start bas
+```
 
 ## Premier phase d'initialisation
 
@@ -458,6 +599,8 @@ redémarrage. Les fonctions d'arrêt et redémarrage sont disponibles dans le me
 DSAS, comme
 
 ![Menu système du DSAS](fr/DSAS8.png)
+
+Avec Docker ces commandes seraient ignorés
 
 #### Sauvegarde et Restauration
 
@@ -1268,6 +1411,24 @@ comme
 
 ![Replacement du ISO pour un mise à jour sur VirtualBox](fr/vbox3.png)
 
+ou avec Docker en utilisant les commandes
+
+```
+docker container stop haut
+make install CONTAINER=haut
+docker container start haut
+```
+
+et 
+
+```
+docker container stop bas
+make install CONTAINER=bas
+docker container start bas
+```
+
+les deux images Docker sera reinstallé sans perte de la configuration existante
+
 ## Mise à jour source
 
 Si une vulnérabilité est identifiée sur une package du DSAS est une mise à jour
@@ -1887,4 +2048,93 @@ accéder que des fichiers disponible pour l'utilisateur `bas`. Cette liste de fi
 très limité est inclut en gros que des fichiers préinstallé ou vérifié par le DSAS. Le site 
 est disponible seulement en https sur la port `443`. Les utilisateurs du dépôt n’ont que le droit
 de télécharger des fichiers et en aucun cas, ils auraient le droit d’ajouter des fichiers au dépôt.
+
+## Des problemes associés avec Docker
+
+Un installation Docker va significamment reduire la cloissonnement entre des conteneurs
+eux-mêmes et la machine hôte. De coup, il n'est recommandé que d'utiliser Docker avec 
+les deux machines du DSAS sur deux machine physique disctinct.
+
+### ulimit sur Docker
+
+Les conteneur Docker utilise un systeme de dicker en couche, avec plusieurs systeme
+les uns sur les autres en utilisant [le systme de fichier FuseFS]). Ceci aurait un
+impact sur la vitesse de certain `ioctl` utilisé dans les conteneurs. Un cas 
+specifique est le ioctl de systeme de fichier, `fclose`. Plusieurs logiciels bien
+connu, y compris `OpenSSH`, inclut du code comme
+
+```
+do (int i=0; i < FD_MAX; i++)
+  fclose(i);
+```
+
+afin d'assurer que tous les fichiers sont correctement fermés. Dans un installation de
+Docker par défaut la valeur de `FD_MAX` est `1024*1024`. Dans un installation standard,
+un appel d'ioctl sur un fichier non ouvert est tellement vite que cette code se termine
+en quelques milliseconds, En revanche, avec Docker et plus d'un million de descripteur 
+de fichier, il va prendre plus que 2 seconds pour le code co-dessus sur un installation
+de Docker par défaut.
+
+Parce que le DSAS utilise SSH pour plusieurs opérations, cette delai pourrait
+seriousement dégrader la performance, et l'image Docker doit-être configuré avec un
+nombre reduit de descripteurs de fichier. Nous avons trouvé avec la limite reduite à
+`65535` une bonne performance est retrouvé, mais nous suggerons une valuer de `4096`.
+Ceci pourrait être configuré avec l'option `--ulimit nofile=4096` pendant la phase
+de création d'image Docker.
+
+### Docker privileged mode
+
+Actuellement le seul privilege nécessaire pour le DSAS sur Docker est CAP_NET_ADMIN.
+Ceci est nécessaire parce que le DSAS a besoin de configurer ses reseaux, plutot que
+le model de Docker ou le conteneur est déjà pré-configuré avec ses réseaux. En revanche,
+des implication de sécurité sont associé avec l'usage de CAP_NET_ADMIN qui doit-être
+adressé.
+
+Comme discuté dan l'article [Docker running an app with NET_ADMIN capability: involved risks]
+https://unix.stackexchange.com/questions/508809/docker-running-an-app-with-net-admin-capability-involved-risks), 
+l'utilisation de CAP_NET_ADMIN va ouvrir la possibilité d'usage de ioctl permettant la
+réprogrammation de la carte reseau (NIC). Ceci pourrait permettant un attaquant a rendre
+la carte reseau instable (même après un rédémarrage), ou même dans des situation extreme,
+va permettre l'installation de code dans l'EEPRIM du NIC permettant un attaque contre le
+noyau de la hôte et va permettant un acces root à la hôte.
+
+Il y a deux strategies afin de traiter cette risque 
+
+1. Garder CAP_NET_ADMIN : Afin d'utiliser cet défaillance, l'attaquant a déjà besoin 
+un accès root au DSAS. Si ceci est le cas, l'attaquant peut déjà utilisé cet accès afin
+de faire une rupture de la cloissonnement fournit par le DSAS. Donc dans un installation
+réel, le DSAS est au même niveau de sensibilité que la hôte utilisé par le DSAS. Cet
+attaque semble alors de ne pas être un probleme. Même si nous decidons à garder l'option
+CAP_NET_ADMIN, l'impact sur la hôte pourrait être reduite par des parades :
+  - Utiliser seulement le type de reseau `bridge`. Avec un type de réseau purement virtuel,
+  an attaque n'ouvrira pas un accès à la système d'hôte. Ceci aurait certain implications
+  pour la configuration reseau qui pourrait être non souhaitable.
+  - Dedier un carte réseau physique pour l'interconnexion entre les machines du DSAS. Même
+  si un attaque DOS contre un carte physique reste réel, un attaque de réprogrammation de
+  l'EEPROM semble rélativement theorique. Donc de dédier une carte physique à interconnexion
+  du DSAS semble être un bon compromis. Un attaque réussi n'impactera que le DSAS lui-même.
+2. Ne pas garder CAP_NET_ADMIN : Dans ce cas le DSAS ne peut plus modifier les parametres 
+réseau. Dans un VM ou en version autonome, le DSAS a abolusement besoin la capacité de 
+modifier ses réseaux. Donc l'implication est qu'il va falloir avoir une logique complexe
+afin de désactivé la configuration des réseaux dans `dsas.js` et le script de démarrage 
+`dsas`. Aucun de ces deux options est désireable.
+
+Pour le moment l'option CAP_NET_ADMIN a été gardé.
+
+### Noms d'interface de reseau de Docker
+
+Avec Docker il n'y a aucun garantie sur l'ordre d'initialisation des interfaces réseaux
+ou même l'ordre rétourné par `cat /proc/net/dev`. Parce que le DSAS, comme tout
+équiepement utilisé pour la routage des paquets, depends sur l'ordre des interfaces
+physique pour sa configuration, ceci est un contraint problematique/
+
+Nous pourrions adresser ceci en laissant la configuration réseau purement à Docker
+comme discuté ci-dessus, mais les contraints ne sont pas acceptable. La solution
+actuellement implementé par le DSAS est de changer le prefix utilisé pour le nom
+d'interface réseau sur l'interafce principale avec l'option 
+`--opt com.docker.network.container_iface_prefix=doc`. Avec le nom d'interface
+par défaut étant `eth`, ceci veut dire que le nom d'interafce principal sera 
+toujours alphabetiquement premier. Cet option n'est que disponible sur le type de 
+reseau `bridge`, et actuellement l'interface principal doit toujours être configuré 
+en `bridge`.
 
