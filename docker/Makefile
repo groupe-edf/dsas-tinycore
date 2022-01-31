@@ -9,13 +9,15 @@ CONTAINER := haut
 NET0 := $(shell if [ "$(CONTAINER)" = "bas" ]; then echo "192.168.0.0/24"; else echo "192.168.1.0/24"; fi)
 GW0 := $(shell if [ "$(CONTAINER)" = "bas" ]; then echo "192.168.0.254"; else echo "192.168.1.254"; fi)
 IP_ETH0 := $(shell if [ "$(CONTAINER)" = "bas" ]; then echo "192.168.0.1"; else echo "192.168.1.1"; fi)
-ETH1 := enp0s3
+#ETH1 := "enp0s3"
 NET1 := 192.168.192.0/24
 GW1 := 192.168.192.254
 IP_ETH1 := $(shell if [ "$(CONTAINER)" = "bas" ]; then echo "192.168.192.1"; else echo "192.168.192.2"; fi)
 
-.PHONY: install uninstall network_phy network_virt run
-	
+# WARNING : No user servicable parts below this point
+
+.PHONY: install uninstall network network_phy network_virt start stop
+
 uninstall:
 	docker container ls | grep -q $(CONTAINER) && \
 	  docker container stop $(CONTAINER) || true
@@ -26,7 +28,7 @@ uninstall:
 	docker network rm dsas_eth1 || true
 	docker network rm $(CONTAINER)_eth0 || true
 	
-install: remove_container build_image network_virt
+install: remove_container build_image network
 	# Iface name of "doc" to get the DSAS to always recognize the main iface
 	docker network ls | grep -q $(CONTAINER)_eth0 || docker network create \
 	  --subnet=$(NET0) --gateway=$(GW0) \
@@ -41,7 +43,7 @@ install: remove_container build_image network_virt
 	  docker container stop $(CONTAINER) && \
 	  docker container rm $(CONTAINER);)
 	docker create --network=$(CONTAINER)_eth0 --ip $(IP_ETH0) \
-	  --cap-add=CAP_NET_ADMIN --cap-add=SYS_PTRACE --ulimit nofile=65535 \
+	  --cap-add=CAP_NET_ADMIN --cap-add=SYS_PTRACE --ulimit nofile=4096 \
 	  -v $(CONTAINER)_sda1:/mnt/sda1  --name $(CONTAINER) \
 	  $(IMAGE_NAME):$(IMAGE_TAG) /bin/sh -c "/etc/init.d/rcS.docker"
 	docker network connect --ip $(IP_ETH1) dsas_eth1  $(CONTAINER)
@@ -55,6 +57,16 @@ remove_container:
 build_image:
 	docker images | grep $(IMAGE_NAME) | grep -q $(IMAGE_TAG) || docker build \
 	  -t $(IMAGE_NAME):$(IMAGE_TAG) .
+
+ifeq ($(ETH1),"")
+network: network_virt
+else
+  ifndef ($(ETH1))
+network: network_virt
+  else
+network: network_phy
+  endif
+endif
 
 network_phy:
 	docker network ls | grep -q dsas_eth1 || docker network create --driver=macvlan \
