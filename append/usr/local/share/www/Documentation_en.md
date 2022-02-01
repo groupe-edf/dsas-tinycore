@@ -237,16 +237,24 @@ the use of an internal network of the hypervisor configured with VirtualBox like
 
 ![Configuration of the interconnection network with VirtualBox](en/vbox4.png)
 
-We are now ready to start the machines for the first time.
-
-This step starts with an initialisation in two phases : the first using the linux 
-console, and the second with the administration console of the DSAS using https.
-
 ### Installation with VMWare
 
-FIXME
+The configuration under VMWare is very similar to the configuration with Virtual. 
+As shown in the screen below, the virtual machine must be configured with
 
+- The desired disk space - Here a value of 150 Mbytes has been used
+- A cdrom device - As discussed below
+- Two network cards - The first card must be configured will be used for the connection 
+to the outside the DSAS and their configuration will be depend upon the environment in 
+which the DSAS is installed. The second card is always used for the interconnexion between
+the two machines of the DSAS.
 
+![Creation of a VM with VMWare](en/vmware1.png)
+
+The ISO boot image can be uploaded by clicking on the device, uploading a new image
+with the menu below, selecting it and saving the changes 
+
+![Selection of the iSO boot image with VMWare](en/vmware2.png)
 
 ### Installation on Docker 
 
@@ -353,7 +361,12 @@ docker container start bas
 
 ## First initialisation phase
 
-This initial phase is performed from the machine consoles, because before the first
+We are now ready to start the machines for the first time.
+
+This step starts with an initialisation in two phases : the first using the linux 
+console, and the second with the administration console of the DSAS using https.
+
+The initial phase is performed from the machine consoles, because before the first
 configuration there is no guarantee that the machines will be visible from the outside.
 A minimum of configuration from the console for the network configuration is needed
 before continuing in a second phase from the DSAS administration interface.

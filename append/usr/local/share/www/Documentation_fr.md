@@ -245,14 +245,26 @@ réseau interne à l'hyperviseur configuré en VirtualBox comme
 
 ![Configuration réseau d'interconnexion sous VirtualBox](fr/vbox4.png)
 
-Nous sommes maintenant prêts a démarrer la machine pour la première fois. 
-
-Cette étape démarre ainsi une initialisation qui se fait en deux phases : la première à 
-l'aide de la console Linux, et la deuxième à partir de l'interface d'administration en https.
-
 ### Installion sous VMWare
 
-FIXME
+La configuration sous VMWare est très semblant à la configuration sous VirtualBox.
+Comme vue ci-dessous, la machine virtuel est configuré avec
+
+- Un disque de taille voulu - Ici 150 MOctets ont été utilisé
+- Un lecteur de CD - Comme discuté ci-dessous.
+- Deux carte reseaux - La premiere carte est configuré pour les connexions vers les
+réseaux externes du DSAS et leur configuration dépendent de l'environnement où est 
+installé le DSAS. La deux carte est toujours utilisé pour les interconnexion entre les
+deux machines.
+
+
+![Création d'une machine virtuel sous VMWare](fr/vmware1.png)
+
+
+L'image ISO pourrait être modifié en cliquant sur le lectuer, téléchargeant une nouvelle
+image, la selectionnant et sauvegardant les modifications.
+
+![Selection de l'image ISO de démarrage sous VMWare](fr/vmware2.png)
 
 ### Installation sous Docker
 
@@ -358,6 +370,11 @@ docker container start bas
 ```
 
 ## Premier phase d'initialisation
+
+Nous sommes maintenant prêts a démarrer la machine pour la première fois. 
+
+Cette étape démarre ainsi une initialisation qui se fait en deux phases : la première à 
+l'aide de la console Linux, et la deuxième à partir de l'interface d'administration en https.
 
 Cette phase est faite depuis les consoles des machines, car avant la première
 configuration il n'y a aucun garanti que les machines soit visible depuis l'extérieur.
@@ -2058,9 +2075,10 @@ les deux machines du DSAS sur deux machine physique disctinct.
 ### ulimit sur Docker
 
 Les conteneur Docker utilise un systeme de dicker en couche, avec plusieurs systeme
-les uns sur les autres en utilisant [le systme de fichier FuseFS]). Ceci aurait un
-impact sur la vitesse de certain `ioctl` utilisé dans les conteneurs. Un cas 
-specifique est le ioctl de systeme de fichier, `fclose`. Plusieurs logiciels bien
+les uns sur les autres en utilisant 
+[le systme de fichier FuseFS](https://en.wikipedia.org/wiki/Filesystem_in_Userspace). 
+Ceci aurait un impact sur la vitesse de certain `ioctl` utilisé dans les conteneurs. Un
+cas specifique est le ioctl de systeme de fichier, `fclose`. Plusieurs logiciels bien
 connu, y compris `OpenSSH`, inclut du code comme
 
 ```
