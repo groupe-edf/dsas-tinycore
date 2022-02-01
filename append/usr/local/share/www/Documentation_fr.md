@@ -335,7 +335,7 @@ make install CONTAINER=haut
 ```
 
 Cet étape démarrera la process d'installation 
-[comme détaillé dans la section suivale](#premier-phase-dinitialisation). A la fin
+[comme détaillé dans la section suivante](#premier-phase-dinitialisation). A la fin
 de cet étape, le conteneur Docker sera installé et configuré. Avant de continuer avec
 l'installation sur la machine basse, la machine haute doit-être démarré. Ceci est
 fait via la Makefile avec la commande 
