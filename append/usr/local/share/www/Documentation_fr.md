@@ -2108,8 +2108,7 @@ le model de Docker ou le conteneur est déjà pré-configuré avec ses réseaux.
 des implication de sécurité sont associé avec l'usage de CAP_NET_ADMIN qui doit-être
 adressé.
 
-Comme discuté dan l'article [Docker running an app with NET_ADMIN capability: involved risks]
-https://unix.stackexchange.com/questions/508809/docker-running-an-app-with-net-admin-capability-involved-risks), 
+Comme discuté dan l'article [Docker running an app with NET_ADMIN capability: involved risks](https://unix.stackexchange.com/questions/508809/docker-running-an-app-with-net-admin-capability-involved-risks), 
 l'utilisation de CAP_NET_ADMIN va ouvrir la possibilité d'usage de ioctl permettant la
 réprogrammation de la carte reseau (NIC). Ceci pourrait permettant un attaquant a rendre
 la carte reseau instable (même après un rédémarrage), ou même dans des situation extreme,

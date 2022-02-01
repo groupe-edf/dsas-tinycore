@@ -239,7 +239,7 @@ the use of an internal network of the hypervisor configured with VirtualBox like
 
 ### Installation with VMWare
 
-The configuration under VMWare is very similar to the configuration with Virtual. 
+The configuration under VMWare is very similar to the configuration with VirtualBox. 
 As shown in the screen below, the virtual machine must be configured with
 
 - The desired disk space - Here a value of 150 Mbytes has been used
@@ -2061,8 +2061,7 @@ model where the container is already started with the network preconfigured. The
 however security implications of the use of the CAP_NET_ADMIN flag that need to be taken 
 into account.
 
-As discussed in the article [Docker running an app with NET_ADMIN capability: involved risks]
-https://unix.stackexchange.com/questions/508809/docker-running-an-app-with-net-admin-capability-involved-risks), 
+As discussed in the article [Docker running an app with NET_ADMIN capability: involved risks](https://unix.stackexchange.com/questions/508809/docker-running-an-app-with-net-admin-capability-involved-risks), 
 the use of CAP_NET_ADMIN opens the possibility to use the ioctl that allow reprogrammation 
 of the network card (NIC). This can allow the network card to be made unusuable (even after 
 a reboot for a physical card), or in extreme cases allow the installation of code in the 
