@@ -1,9 +1,9 @@
 _pkg=openssl-1.1.1
-_version=1.1.1l
-_uri=https://www.openssl.org/source/openssl-1.1.1l.tar.gz
+_version=1.1.1m
+_uri=https://www.openssl.org/source/openssl-1.1.1m.tar.gz
 _dep=""
 _build_dep="compiletc perl5"
-_pkg_path=openssl-1.1.1l
+_pkg_path=openssl-1.1.1m
 _conf_cmd="./config --openssldir=/usr/local/etc/ssl"
 _make_cmd="make"
 _install_cmd="make install DESTDIR="
