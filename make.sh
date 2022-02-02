@@ -454,7 +454,7 @@ docker)
   # FIXME
   # We have a chicken and the egg problem with busybox. Our custom built busybox 
   # depends en /lib/libtirpc.3 that needs to be linked to /usr/local/lib/libtirpc.3
-  # The libtirpc does do this, and it can'tcreated in the post install script of 
+  # The libtirpc doesn't do this, and it can't created in the post install script of 
   # busybox because the toolchain is broken at that point. So we need to install libtirpc
   # first and manually created the link
   install_tcz libtirpc
