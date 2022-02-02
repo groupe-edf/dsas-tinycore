@@ -1,9 +1,9 @@
 _pkg=clamav
-_version=0.104.1
-_uri="https://www.clamav.net/downloads/production/clamav-0.104.1.tar.gz"
+_version=0.104.2
+_uri="https://www.clamav.net/downloads/production/clamav-0.104.2.tar.gz"
 _dep="bzip2-lib json-c curl libxml2 ncursesw check openssl-1.1.1 libssh2 pcre2 libzip"
 _build_dep="cmake bzip2-dev json-c-dev libxml2-dev ncursesw-dev check-dev curl-dev openssl-1.1.1-dev libssh2-dev pcre2-dev libzip-dev compiletc"
-_pkg_path="clamav-0.104.1"
+_pkg_path="clamav-0.104.2"
 _pre_config=""
 _conf_cmd='cat << EOF | patch cmake/FindCURSES.cmake
 --- cmake/FindCURSES.cmake.old	2021-12-07 03:35:40.902075699 +0000
