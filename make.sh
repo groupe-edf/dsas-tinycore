@@ -23,13 +23,13 @@ tce_dir=/mnt/sda1/tce/optional
 
 # tiny core related
 if [ "$arch" != "64" ]; then
-  livecd_url=http://tinycorelinux.net/12.x/x86/release/Core-current.iso
-  tcz_url=http://tinycorelinux.net/12.x/x86/tcz
-  tcz_src=http://tinycorelinux.net/12.x/x86/release/src
+  livecd_url=http://tinycorelinux.net/13.x/x86/release/Core-current.iso
+  tcz_url=http://tinycorelinux.net/13.x/x86/tcz
+  tcz_src=http://tinycorelinux.net/13.x/x86/release/src
 else
-  livecd_url=http://tinycorelinux.net/12.x/x86_64/release/CorePure64-current.iso
-  tcz_url=http://tinycorelinux.net/12.x/x86_64/tcz
-  tcz_src=http://tinycorelinux.net/12.x/x86_64/release/src
+  livecd_url=http://tinycorelinux.net/13.x/x86_64/release/CorePure64-current.iso
+  tcz_url=http://tinycorelinux.net/13.x/x86_64/tcz
+  tcz_src=http://tinycorelinux.net/13.x/x86_64/release/src
 fi
 
 # internally used dirs and paths
