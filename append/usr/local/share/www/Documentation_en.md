@@ -1210,7 +1210,7 @@ Software impacted by this risk
 
 | software      | version    | comment                                                                        | 
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [1.1.1l](https://www.openssl.org/source/openssl-1.1.1l.tar.gz) | Only the functionality used by ssh impacted |
+| openssl | [1.1.1m](https://www.openssl.org/source/openssl-1.1.1m.tar.gz) | Only the functionality used by ssh impacted |
 | openssh | [8.8p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-8.8p1.tar.gz) | ssh and sftp used |
 
 ### Risk: Attack on signature verification
@@ -1224,12 +1224,12 @@ Software impacted by this risk
 
 | software | version | comment |
 | -------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [1.1.1l](https://www.openssl.org/source/openssl-1.1.1l.tar.gz) | Used for authenticode, LiveUpdate and OpenSSL verification |
+| openssl | [1.1.1m](https://www.openssl.org/source/openssl-1.1.1m.tar.gz) | Used for authenticode, LiveUpdate and OpenSSL verification |
 | gnupg | [2.2.27](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.27.tar.bz2) | Used for RPM, DEB and GPG verification |
 | libgcrypt | [1.9.3](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.9.3.tar.bz2) | Used for RPM, DEB and GPG verification |
 | rpm | [4.16.1.3](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.16.x/rpm-4.16.1.3.tar.bz2) | Used for RPM checking |
 | osslsigncode | [2.2.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.2/osslsigncode-2.2.0.tar.gz) | Used for authenicode verification |
-| clamav | [0.104.1](https://www.clamav.net/downloads/production/clamav-0.104.1.tar.gz) | Used for antivirus tests |
+| clamav | [0.104.2](https://www.clamav.net/downloads/production/clamav-0.104.2.tar.gz) | Used for antivirus tests |
 
 
 ### Risk: Attack on the means of downloading files
@@ -1243,7 +1243,7 @@ Software impacted by this risk
 
 | software | version | comment |
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [1.1.1l](https://www.openssl.org/source/openssl-1.1.1l.tar.gz) | only the functionality used by ssh impacted |
+| openssl | [1.1.1m](https://www.openssl.org/source/openssl-1.1.1m.tar.gz) | only the functionality used by ssh impacted |
 | lftp    | [4.9.2](https://lftp.yar.ru/ftp/lftp-4.9.2.tar.bz2) | Used for http, https, ftp, ftps, sftp |
  
 ### Risk: Attack against DSAS administrator authentication
