@@ -856,8 +856,8 @@ https://database.clamav.net/daily.cvd
 https://database.clamav.net/bytecode.cvd
 ```
 
-and the URI to configure on the DSAS coud be `https://database.clamav.net/` or its mirror
-on the local network. The DSAS will update these files from this URI once a day.
+and the URI to configure on the DSAS can not be `https://database.clamav.net/` but rather
+a mirror for example on the local network. The DSAS will update these files from this URI once a day.
 
 # DSAS Operation
 
@@ -1179,7 +1179,7 @@ An example of an added task is
 ![Example task added](en/DSAS31.png)
 
 Next to each task, the icon ![](en/DSAS36.png) allows the task to be modified,
-![](en/DSAS40.png) allows the task to be removed and ![](en/DSAS34.png) allows
+![](en/DSAS40.png) allows the task to be removed and ![](en/DSAS41.png) allows
 the task to be executed immediately. The status of the task is provided via the color of the
 task title. In blue, the task was not executed, in green, the execution of the task was successful,
 and in red the execution has failed. The last execution of the task is visible by opening
@@ -1267,11 +1267,11 @@ and proposed fixes will be applied.
 
 ## DSAS build process
 
-### Preparing a build machine
+### Preparing a build machine under TinyCore
 
 You will need a build machine. The easiest way is to use the same operating system
 to build as is used by the DSAS itself. For example the system
-[CorePlus v12.x](http://tinycorelinux.net/12.x/x86/release/CorePlus-current.iso)
+[CorePlus v13.x](http://tinycorelinux.net/13.x/x86/release/CorePlus-current.iso)
 is currently used for the build of DSAS. After as you have set up
 this machine, you would need a number of tools in order to do the build.
 
@@ -1287,22 +1287,22 @@ It will be useful to add these two lines to the `~/.profile` file so that it is
 configured at each login. After the command
 
 ```shell
-tce-load -wi compiletc rsync coreutils mkisofs-tools squashfs-tools git curl ncursesw-dev
+tce-load -wi Xorg-7.7 compiletc rsync coreutils mkisofs-tools squashfs-tools git curl ncursesw-dev
 ```
 
 will install all the tools necessary for the build
 
-### French keyboard
+#### French keyboard
 
 If you have a French keyboard, the easier is to add
 
 ```shell
-setxkmap fr
+/usr/local/bin/setxkmap fr
 ```
 
 to the `~/.xession` file or run this command from an X11 console. 
 
-### Preparing the DSAS source tree
+#### Preparing the DSAS source tree
 
 For the next step, we have to temporarily disable the http proxy like 
 
@@ -1331,7 +1331,15 @@ Now we are ready to download the DSAS source code with the command
 git clone https://gitlab.devops-unitep.edf.fr/dsao-cyber/dsas---tinycore.git
 ```
 
-Finally, we can configure the next actions on the source tree to ignore the http
+The version of `less` that is installed by default doesn't accept the option `-R` needed to
+correctly colour the output of the commande `git diff`. To allow this the commandes 
+
+```
+tce-load -wi less
+git config core.pager /usr/local/bin/less
+```
+
+is needed. Finally, we can configure the next actions on the source tree to ignore the http
 proxy with the commands
 
 ```shell
@@ -1340,6 +1348,22 @@ git config --add remote.origin.proxy ""
 ```
 
 Can we now restore the values of the proxy environment variables.
+
+### Building with a differnt distribution than TinyCore
+
+It is possible to build the DSAS without TinyCore, however, the names of the packages to 
+install will depend on the distribution. At a minimum the tools
+
+- The build essential including make, gcc, etc
+- rsync
+- genisoimage ou mkisofs
+- squashfs-tolls
+- curl
+- git
+- nwcurses
+
+are needed. After, the instructions above should be used to inspire the means to configure the
+build tree for use. A different distribution than TinyCore is needed to build a `Docker` image.
 
 ### DSAS build commands
 
@@ -1371,6 +1395,15 @@ deleted. To completely clean the build tree, use the command
 ```
 ./make.sh -realclean
 ```
+
+A compilation of the `Docker` image is performed with the command
+
+```
+./make.sh docker
+```
+
+This creates a package `work/docker.tgz` contains a Makefile that needs to be adjusted to 
+the parameters needed for the Docker installation.
 
 ## Binary upgrade
 
@@ -2107,3 +2140,25 @@ prefix used by the principal interface of the DSAS with the option
 options is only available on the `bridge` network type, the principal network of the DSAS
 must for now always be configured as a bridge.
 
+## CDN DDOS protection
+
+Many websites use services such as [Cloudflare](www.cloudflare.com) to provide protection
+against attacks. These CDN services relies on a number of features that might or
+might not include
+
+- Identification of the `User-Agent`
+- Fingerprinting of the TLS certificate
+- Cookies with access tokens
+- Running javascript of the browser for detetcion
+- Capatcha
+- ...
+
+These protections are extremely efficient at eliminating the use of `bots` to access a 
+website and force the atatcker to use as many ressources as a modern browser to allow them
+to simulate a browser and gain access. This can significantly reduce the attack traffic to
+a web site. Unfortunately, the light-weight tehnologies used by the DSAS means that these
+CDN see the DSAS as a ` bot` and will not allow it access to websites protected by them.
+
+As an example the `ClamAV` databases can be found at the website `https://database.clamav.net` 
+which is protected by CloudFlare. The DSAS can not access this site. So the ClamAV 
+databases can not be direcrtly downlaoded by the DSAS from this site. 

@@ -1,29 +1,30 @@
- #! /bin/sh
+#! /bin/sh
+
+# Setup tcedir
+ln -s $MNT /etc/sysconfig/tcedir
+mkdir -p /mnt/${MNT}/tce/optional
+chown -R root:staff /mnt/${MNT}/tce /usr/local/tce.installed
+chmod -R g+w /mnt/${MNT}/tce
+
+while [ "$#" -gt 0 ]; do
+  case $1 in
+    -i|--install)
+      /etc/init.d/services/dsas start
+      exit $?
+      ;;
+    -r|--reconfig)
+      filetool.sh -r
+      /etc/init.d/services/dsas reconfig
+      exit $?
+      ;;
+    *)
+      1>&2 echo "$0: Unrecognized option: $1"
+      exit 1
+      ;;
+  esac
+done
  
- while [ "$#" -gt 0 ]; do
-   case $1 in
-     -i|--install) 
-       MNT=$(ls -1 /mnt | head -1)   
-       ln -s $MNT /etc/sysconfig/tcedir     
-       mkdir -p /mnt/${MNT}/tce/optional
-       chown -R root:staff /mnt/${MNT}/tce /usr/local/tce.installed
-       chmod -R g+w /mnt/${MNT}/tce
-       /etc/init.d/services/dsas start
-       exit $?
-       ;;
-     -r|--reconfig)
-       filetool.sh -r
-       /etc/init.d/services/dsas reconfig
-       exit $?
-       ;;
-     *) 
-       1>&2 echo "$0: Unrecognized option: $1"
-       exit 1 
-       ;;
-   esac
- done
- 
- filetool.sh -r
- /etc/init.d/services/crond start
- /etc/init.d/services/dsas start
- sleep infinity 
+filetool.sh -r
+/etc/init.d/services/crond start
+/etc/init.d/services/dsas start
+sleep infinity 

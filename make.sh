@@ -20,6 +20,7 @@ arch="32"
 
 # local hosts package directory on Tinycore for package reuse
 tce_dir=/mnt/sda1/tce/optional
+curl_cmd="curl --connect-timeout 300"
 
 # tiny core related
 if [ "$arch" != "64" ]; then
@@ -101,7 +102,7 @@ get_tcz() {
         fi
       else
         msg fetching package $package ...
-        curl -o $target $tcz_url/$package.tcz
+        $curl_cmd -o $target $tcz_url/$package.tcz
       fi
     fi
 
@@ -110,7 +111,7 @@ get_tcz() {
       if test -f $tce_dir/$package.tcz.dep; then
         cp $tce_dir/$package.tcz.dep $dep
       else
-         curl -o $dep $tcz_url/$package.tcz.dep || touch $dep
+         $curl_cmd -o $dep $tcz_url/$package.tcz.dep || touch $dep
       fi
       grep -q 404 $dep && >$dep
       if test -s $dep; then
@@ -147,7 +148,7 @@ install_tcz() {
 get() {
   _src=$(basename $1)
   msg "Downloading $_src"
-  curl -L -o $2/$_src $1
+  $curl_cmd -L -o $2/$_src $1
 }
 
 download() {
@@ -199,10 +200,13 @@ unpack() {
 
 build_pkg() {
   for pkg in $1; do
-    pkg_file=$pkg_dir/$pkg.pkg
+    pkg_file=$pkg_dir/${pkg%%-dev}.pkg
     if [ $rebuild -eq "1" ] || [ ! -f "$tcz_dir/$pkg.tcz" ]; then
       if [ -f "$pkg_file" ]; then
         msg "Building $pkg_file"
+        # Unset build variables before sourcing package file
+        unset _build_dep _conf_cmd _dep _install_cmd _make_cmd _pkg _pkg_path _pkgs \
+          _post_build _post_install _pre_config _uri _version
         . $pkg_file
         _src=$(basename $_uri)
         for dep in $_build_dep; do
@@ -357,7 +361,7 @@ EOF
 
 get_unpack_livecd(){
   test -f $livecd0 || msg Downloading $livecd_url
-  test -f $livecd0 || cmd curl -o $livecd0 $livecd_url
+  test -f $livecd0 || cmd $curl_cmd -o $livecd0 $livecd_url
   mkdir -pv $mnt
   if ! ls $squashfs >/dev/null 2> /dev/null; then
     msg Unpacking the ISO $livecd_url
@@ -403,7 +407,7 @@ case $cmd in
   [ -d $extract ] || mkdir -p $extract
   [ -d $build_dir ] || mkdir -p $build_dir
   [ -d $destdir ] || mkdir -p $destdir
-  [ -z $pkgs ] && $(echo "No package to build given"; exit 1) 
+  [ -z $pkgs ] && error "No package to build given"
   build_pkg $pkgs
   exit 0
   ;;
