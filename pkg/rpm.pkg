@@ -2,14 +2,14 @@ _pkg=rpm
 _version=4.16.1.3
 _uri=https://ftp.osuosl.org/pub/rpm/releases/rpm-4.16.x/rpm-4.16.1.3.tar.bz2
 if [ "$arch" != "64" ]; then
-  _dep="popt file libarchive3 libgcrypt db lua-lib acl libxml2"
-  _build_dep="compiletc lua-dev db db-dev libarchive3 libarchive3-dev zlib_base-dev popt popt-dev file-dev libgcrypt acl-dev libxml2-dev"
+  _dep="popt file libarchive3 libgcrypt lua-lib acl libxml2"
+  _build_dep="compiletc lua-dev libarchive3 libarchive3-dev zlib_base-dev popt popt-dev file-dev libgcrypt acl-dev libxml2-dev"
 else
-  _dep="popt file libarchive3 libgcrypt db lua-5.3-lib acl libxml2"
-  _build_dep="compiletc lua-5.3-dev db db-dev libarchive3 libarchive3-dev zlib_base-dev popt popt-dev file-dev libgcrypt acl-dev libxml2-dev"
+  _dep="popt file libarchive3 libgcrypt lua-5.3-lib acl libxml2"
+  _build_dep="compiletc lua-5.3-devlibarchive3 libarchive3-dev zlib_base-dev popt popt-dev file-dev libgcrypt acl-dev libxml2-dev"
 fi
 _pkg_path=rpm-4.16.1.3
-_conf_cmd="./configure"
+_conf_cmd="./configure --enable-ndb --disable-bdb"
 _make_cmd="make"
 _install_cmd="make install DESTDIR=" 
 _pkgs='main{/usr}'
