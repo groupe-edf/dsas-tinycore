@@ -4,7 +4,7 @@
 # To have to containers on the same machine for testing
 
 IMAGE_NAME := dsas
-IMAGE_TAG := 12.0-x86_64
+IMAGE_TAG := 13.0-x86_64
 CONTAINER := haut
 NET0 := $(shell if [ "$(CONTAINER)" = "bas" ]; then echo "192.168.0.0/24"; else echo "192.168.1.0/24"; fi)
 GW0 := $(shell if [ "$(CONTAINER)" = "bas" ]; then echo "192.168.0.254"; else echo "192.168.1.254"; fi)
@@ -42,7 +42,7 @@ install: remove_container build_image network
 	  docker container start --interactive $(CONTAINER) && \
 	  docker container stop $(CONTAINER) && \
 	  docker container rm $(CONTAINER);)
-	docker create --network=$(CONTAINER)_eth0 --ip $(IP_ETH0) \
+	docker create --network=$(CONTAINER)_eth0 --ip $(IP_ETH0) --tty \
 	  --cap-add=CAP_NET_ADMIN --cap-add=SYS_PTRACE --ulimit nofile=4096 \
 	  -v $(CONTAINER)_sda1:/mnt/sda1  --name $(CONTAINER) \
 	  $(IMAGE_NAME):$(IMAGE_TAG) /bin/sh -c "/etc/init.d/rcS.docker"
