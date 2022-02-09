@@ -407,7 +407,7 @@ case $cmd in
   [ -d $extract ] || mkdir -p $extract
   [ -d $build_dir ] || mkdir -p $build_dir
   [ -d $destdir ] || mkdir -p $destdir
-  [ -z $pkgs ] && $(echo "No package to build given"; exit 1) 
+  [ -z $pkgs ] && error "No package to build given"
   build_pkg $pkgs
   exit 0
   ;;

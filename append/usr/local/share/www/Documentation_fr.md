@@ -1305,11 +1305,11 @@ cours et des correctifs proposé sera appliqué.
 
 ## Processus de build du DSAS
 
-### Préparation d'une souche de build
+### Préparation d'une souche de build sous TinyCore
 
 Vous auriez besoin une machine de build. Le plus simple est d'utiliser la même souche
 de build que utilisé par le DSAS lui-même. Par exemple la souche 
-[CorePlus v12.x](http://tinycorelinux.net/12.x/x86/release/CorePlus-current.iso)
+[CorePlus v13.x](http://tinycorelinux.net/13.x/x86/release/CorePlus-current.iso)
 est utilisé actuellement pour la build du DSAS. Tant que vous avez mise en place
 cette machine, vous auriez besoin un certain nombre d'outils afin de faire le build.
 
@@ -1325,21 +1325,21 @@ export https_proxy=http://vip-users.proxy.edf.fr:3131
 configuré à chaque fois. Après, la commande
 
 ```shell
-tce-load -wi compiletc rsync coreutils mkisofs-tools squashfs-tools git curl ncursesw-dev
+tce-load -wi Xorg-7.7 compiletc rsync coreutils mkisofs-tools squashfs-tools git curl ncursesw-dev
 ```
 va installer l'ensemble des outils nécessaire pour la build 
 
-### Clavier français
+#### Clavier français
 
 Si vous avez un clavier français, le plus simple est d'ajouter 
 
 ```
-setxkmap fr
+/usr/local/bin/setxkmap fr
 ```
 
 au fichier `~/.xession` ou d'exécuter cette commande depuis un console en X11.
 
-### Préparation d'un arbre de source DSAS
+#### Préparation d'un arbre de source DSAS
 
 Pour cette étape il faut temporairement désactiver le proxy http en faisant
 
@@ -1368,6 +1368,15 @@ Maintenant, nous sommes prêts à récupérer l'arbre de code source du DSAS ave
 git clone https://gitlab.devops-unitep.edf.fr/dsao-cyber/dsas---tinycore.git
 ```
 
+La version de `less` installé par défaut n'accepte pas l'option `-R` nécessaire pour la 
+colorisation des avec la commande `git diff`. Afin d'avoir les changement proprement montré,
+il faut faire les commandes
+
+```
+tce-load -wi less
+git config core.pager /usr/local/bin/less
+``` 
+
 Finalement, nous pourrions configurer les prochaines actions sur cet arbre à ignorer
 le proxy http avec les commandes
 
@@ -1377,6 +1386,22 @@ git config --add remote.origin.proxy ""
 ```
 
 Nous pourrions maintenant rétablir les valeurs des variables d'environnement du proxy.
+
+### Souche de build autre que TinyCore
+
+Il est possible de faire une build du DSAS sur une souche d'autre que TinyCore, en revanche les
+noms de packages à installer va deprendre sur la souche. La minimum d'outil nécessaire est
+
+- Les outils de build essentiel, y compris make, gcc, etc
+- rsync
+- genisoimage ou mkisofs
+- squashfs-tolls
+- curl
+- git
+- nwcurses
+
+Après il faut inspiré des instructions ci-dessus afin de configured la build. Une souche different 
+que TinyCore est nécessaire afin de compiler le DSAS sous `Docker`
 
 ### Commande de build du DSAS
 
@@ -1410,7 +1435,15 @@ sont détruit. Afin de complétement nettoyer le build utiliser la commande
 ./make.sh -realclean
 ```
 
-est utilisé. 
+est utilisé.
+
+La compilation d'un image `Docker` est fait avec la commande
+
+```
+./make.sh docker
+``` 
+Une package d'installation docker est créé dans work/docker.tgz avec une fichier `Makefile` a
+modifier avec les parametres d'installation voulu.
 
 ## Mise à jour binaire
 
