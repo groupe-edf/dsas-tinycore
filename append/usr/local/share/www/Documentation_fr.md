@@ -1218,7 +1218,7 @@ Un exemple de tache après ajout est
 ![Exemple de tache ajouté](fr/DSAS31.png)
 
 A côté de chaque tache, l'icone ![](fr/DSAS36.png) permets de modifier le tache, 
-![](fr/DSAS40.png) permet de supprimer le tache, et ![](fr/DSAS34.png) permets 
+![](fr/DSAS40.png) permet de supprimer le tache, et ![](fr/DSAS41.png) permets 
 à l'exécuter immédiatement. Le statut de la tâche et fournit via la couleur du titre 
 de la tâche. En bleu, la tâche n'a pas été exécuté, en vert l'exécution de la tâche a réussi,
 et en rouge l'exécution a échoué. La dernière exécution de la tâche est visible en ouvrant 
