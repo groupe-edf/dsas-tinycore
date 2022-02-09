@@ -12,8 +12,10 @@ lftp_ca_options() {
   local opt=""
 
   if [ "$TYP" == "haut" ]; then
-    # Setup the LFTP CA if needed
-    ca_finger=$(xmllint --xpath "string(dsas/tasks/task[$id]/ca/fingerprint)" $CONF)
+    # Setup the LFTP CA if needed. If ClamAv force self_sugned for now
+    # ClamAV signatures are verified elsewhere before use
+    [ "$clamav" == "1" ] && ca_finger="self"
+    [ "$clamav" == "1" ] || ca_finger=$(xmllint --xpath "string(dsas/tasks/task[$id]/ca/fingerprint)" $CONF)
 
     case $ca_finger in
       "")  opt="" ;;
@@ -31,7 +33,7 @@ getclamav() {
   local uri
   local dir="ClamAV"
   local name="ClamAV"
-  local opt=$(lftp_ca_options $id)
+  local opt=$(lftp_ca_options)
 
   # Return if antivirus is not active
   [ "$(xmllint --xpath "string(dsas/config/antivirus/active)" "$CONF")" == "true" ] || return
