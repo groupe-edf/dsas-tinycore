@@ -2107,3 +2107,25 @@ prefix used by the principal interface of the DSAS with the option
 options is only available on the `bridge` network type, the principal network of the DSAS
 must for now always be configured as a bridge.
 
+## CDN DDOS protection
+
+Many websites use services such as [Cloudflare](www.cloudflare.com) to provide protection
+against attacks. These CDN services relies on a number of features that might or
+might not include
+
+- Identification of the `User-Agent`
+- Fingerprinting of the TLS certificate
+- Cookies with access tokens
+- Running javascript of the browser for detetcion
+- Capatcha
+- ...
+
+These protections are extremely efficient at eliminating the use of `bots` to access a 
+website and force the atatcker to use as many ressources as a modern browser to allow them
+to simulate a browser and gain access. This can significantly reduce the attack traffic to
+a web site. Unfortunately, the light-weight tehnologies used by the DSAS means that these
+CDN see the DSAS as a ` bot` and will not allow it access to websites protected by them.
+
+As an example the `ClamAV` databases can be found at the website `https://database.clamav.net` 
+which is protected by CloudFlare. The DSAS can not access this site. So the ClamAV 
+databases can not be direcrtly downlaoded by the DSAS from this site. 

@@ -2156,3 +2156,27 @@ toujours alphabetiquement premier. Cet option n'est que disponible sur le type d
 reseau `bridge`, et actuellement l'interface principal doit toujours être configuré 
 en `bridge`.
 
+
+## Protection DDOS par des CDN
+
+Beaucoup de site web utilisent des services comme [Cloudflare](www.cloudflare.com) pour
+des protection contre des attques. Ces services de CDN utilisent (ou pas) nombreuse outils 
+comme
+
+- L'identification de `User-Agent`
+- Empriente numerique des certificats TLS
+- Des cookies avec des jetons d'acess
+- Execution d'outil en javascript dans le navigateur
+- Capatcha
+- ...
+
+Ces protections sont très efficace en eliminant l'utilisation des `bots` afin d'acceder 
+au site web et force les attaquants à utiliser autant de ressources qu'un navigateur
+modern afin de simuler ce navigateur et acceder au site web. ceci pourrait reduire 
+significtivement la charge d'attaque. Malheureusement, les technologies legeré utilisé par
+le DSAS veut dire que ces CDN vont consideré le DSAS comme un attaquant et ne vont pas
+permettre le DSAS a acceder les sites protegés
+
+An exemple est les bases de données de ` ClamAV` trouvé sur la site `https://database.clamav.net` 
+protegé par CloudFlare. Le DSAS ne peut pas acceder à ce site. Donc les bases de données
+ClamAV ne peut pas être telechargé directement sdepuis ce site par le DSAS.
