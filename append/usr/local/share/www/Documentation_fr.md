@@ -879,8 +879,9 @@ https://database.clamav.net/daily.cvd
 https://database.clamav.net/bytecode.cvd
 ```
 
-et dans ce cas, la configuration du URI du DSAS pourrait être alors `https://database.clamav.net/`
-ou la site de replication locale. Le DSAS mettra à jour ces signatures un fois par jour.
+et dans ce cas, la configuration du URI du DSAS ne pourrait pas être `https://database.clamav.net/`
+mais plutôt une site de replication, par exemple sur le reseau local. Le DSAS mettra à jour ces 
+signatures un fois par jour.
 
 # Exploitation du DSAS
 

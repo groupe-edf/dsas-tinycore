@@ -856,8 +856,8 @@ https://database.clamav.net/daily.cvd
 https://database.clamav.net/bytecode.cvd
 ```
 
-and the URI to configure on the DSAS coud be `https://database.clamav.net/` or its mirror
-on the local network. The DSAS will update these files from this URI once a day.
+and the URI to configure on the DSAS can not be `https://database.clamav.net/` but rather
+a mirror for example on the local network. The DSAS will update these files from this URI once a day.
 
 # DSAS Operation
 
