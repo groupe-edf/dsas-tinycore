@@ -200,7 +200,7 @@ unpack() {
 
 build_pkg() {
   for pkg in $1; do
-    pkg_file=$pkg_dir/$pkg.pkg
+    pkg_file=$pkg_dir/${pkg%%-dev}.pkg
     if [ $rebuild -eq "1" ] || [ ! -f "$tcz_dir/$pkg.tcz" ]; then
       if [ -f "$pkg_file" ]; then
         msg "Building $pkg_file"
