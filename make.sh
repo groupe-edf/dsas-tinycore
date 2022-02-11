@@ -205,7 +205,7 @@ build_pkg() {
       if [ -f "$pkg_file" ]; then
         msg "Building $pkg_file"
         # Unset build variables before sourcing package file
-        unset _build_dep _conf_cmd _dep _deps _install_cmd _make_cmd _pkg _pkg_path _pkgs \
+        unset _build_dep _conf_cmd _dep _install_cmd _make_cmd _pkg _pkg_path _pkgs \
           _post_build _post_install _pre_config _uri _version
         . $pkg_file
         _src=$(basename $_uri)
