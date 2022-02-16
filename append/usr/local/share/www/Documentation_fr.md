@@ -1441,7 +1441,8 @@ La compilation d'un image `Docker` est fait avec la commande
 
 ```
 ./make.sh docker
-``` 
+```
+
 Une package d'installation docker est créé dans work/docker.tgz avec une fichier `Makefile` a
 modifier avec les parametres d'installation voulu.
 
