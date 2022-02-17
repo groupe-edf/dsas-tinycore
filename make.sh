@@ -66,6 +66,9 @@ done
 [ "$arch" == 32 ] && [ "$(uname -m)" == "i686" ] && \
   [ -d "/etc/sysconfig/tcedir/optional" ] && tce_dir="/etc/sysconfig/tcedir/optional"
 
+# Can't build 64-bit DSAS on 32-bit host
+[ "$arch" == 64 ] && [ "$(uname -m)" == "i686" ] && { echo "Can not build 64-bit DSAS on 32-bit host"; exit 1; }
+
 # Longer curl timeout
 curl_cmd="curl --connect-timeout 300"
 
