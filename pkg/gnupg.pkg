@@ -4,7 +4,7 @@ _uri=https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.27.tar.bz2
 _dep="libassuan libgcrypt libksba npth pinentry"
 _build_dep="compiletc coreutils glibc_gconv libassuan libgcrypt libksba npth pinentry"
 _pkg_path=gnupg-2.2.27
-_conf_cmd="./configure"
+_conf_cmd="setarch linux$arch ./configure"
 _make_cmd="make"
 _install_cmd="make install DESTDIR=" 
 _pkgs='main{/usr}'

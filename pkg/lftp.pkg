@@ -13,7 +13,7 @@ sed -i -e 's/HAVE_NCURSES_TERM_H/HAVE_NCURSESW_TERM_H/' src/lftp_tinfo.cc
 sed -i -e 's:include <ncurses/:include <ncursesw/:' src/lftp_tinfo.cc
 LIBS='-lncursesw' CC='gcc -flto -mtune=generic -Os -pipe' \
 CXX='g++ -flto -mtune=generic -Os -pipe -fno-exceptions -fno-rtti' \
-./configure --prefix=/usr/local --localstatedir=/var --enable-static --disable-shared --with-openssl
+setarch linux$arch ./configure --prefix=/usr/local --localstatedir=/var --enable-static --disable-shared --with-openssl
 "
 _make_cmd="
 find . -name Makefile -type f -exec sed -i 's/-g -O2//g' \;

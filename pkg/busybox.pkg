@@ -68,7 +68,7 @@ CONFIG_FEATURE_WGET_FTP=y
 EOF
 chown tc.staff .config
 "
-_conf_cmd="make oldconfig; cd $builddir/$_pkg_path.nosuid; make oldconfig"
+_conf_cmd="setarch linux$arch make oldconfig; cd $builddir/$_pkg_path.nosuid; setarch linux$arch make oldconfig"
 _make_cmd=\
 "make CC='gcc -flto -Os -pipe' CXX='g++ -flto -Os -pipe -fno-exceptions -fno-rtti'
 cd $builddir/$_pkg_path.nosuid

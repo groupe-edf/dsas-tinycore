@@ -4,7 +4,7 @@ _uri=https://www.gnupg.org/ftp/gcrypt/npth/npth-1.6.tar.bz2
 _build_dep="compiletc coreutils"
 _dep=""
 _pkg_path=npth-1.6
-_conf_cmd="./configure"
+_conf_cmd="setarch linux$arch ./configure"
 _make_cmd="make"
 _install_cmd="make install DESTDIR=" 
 _pkgs='main{/usr/local}'

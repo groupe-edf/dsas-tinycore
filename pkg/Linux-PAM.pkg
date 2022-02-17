@@ -4,7 +4,7 @@ _uri="https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-
 _dep=""
 _build_dep="compiletc isl-dev"
 _pkg_path="Linux-PAM-1.5.2"
-_conf_cmd="./configure --enable-db=no --prefix=/usr/local --exec-prefix=/usr/local --includedir=/usr/local/include/security"
+_conf_cmd="setarch linux$arch ./configure --enable-db=no --prefix=/usr/local --exec-prefix=/usr/local --includedir=/usr/local/include/security"
 _make_cmd="make"
 _install_cmd="make install DESTDIR="
 _post_build=\

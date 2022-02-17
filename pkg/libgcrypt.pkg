@@ -5,7 +5,7 @@ _dep="libgpg-error"
 _build_dep="libgpg-error"
 _build_dep="compiletc coreutils libgpg-error"
 _pkg_path=libgcrypt-1.9.3
-_conf_cmd="./configure"
+_conf_cmd="setarch linux$arch ./configure"
 _make_cmd="make"
 _install_cmd="make install DESTDIR=" 
 _pkgs='main{/usr}'

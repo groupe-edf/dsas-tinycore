@@ -4,7 +4,7 @@ _uri=https://github.com/mtrojnar/osslsigncode/releases/download/2.2/osslsigncode
 _dep="curl openssl-1.1.1 libssh2"
 _build_dep="compiletc coreutils openssl-1.1.1-dev curl-dev libssh2-dev"
 _pkg_path=osslsigncode-2.2.0
-_conf_cmd="./configure"
+_conf_cmd="setarch linux$arch ./configure"
 _make_cmd="make"
 _install_cmd="make install DESTDIR=" 
 _pkgs='main{/usr}'

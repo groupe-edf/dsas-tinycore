@@ -14,12 +14,59 @@ fi
 # Set LANG so that perl doesn't complain
 LANG="C"
 
-# Get architecture
+# Get default architecture
 arch="32"
 [ "$(uname -m)" == "x86_64" ] && arch="64"
 
-# local hosts package directory on Tinycore for package reuse
-tce_dir=/mnt/sda1/tce/optional
+# Parse commandline args
+rebuild=0
+forcedownload=0
+keep=0
+cmd=""
+pkgs=""
+while [ "$#" -gt 0 ]; do
+  case $1 in
+
+    -r|--rebuild) rebuild=1;  ;;
+    -f|--download) forcedownload=1; ;;
+    -k|--keep) keep=1; ;;
+    -32) arch="32"; ;;
+    -64) arch="64"; ;;
+    -?|-h|--help)
+      echo "Usage: $(basename $0)  [Options] [Command]"
+      echo "Build DSAS packages and distributions. Valid commands are"
+      echo "     build [pkg]     Build the packge pkg from source code"
+      echo "     docker          Build a docker distribution package"
+      echo "     clean           Remove the distribution files"
+      echo "     realclean       Remove all files, leaving a clean build tree"
+      echo "     iso             Build the DSAS ISO file. This the default command"
+      echo "Valid options are"
+      echo "     -r|--rebuild    Force the rebuild of source packages"
+      echo "     -f|--download   Force the source packages to be re-downloaded"
+      echo "     -k|--keep       Keep intermediate build files for debugging"
+      echo "     -32             Force the build for 32 bit architectures"
+      echo "     -64             Force the build for 64 bit architectures"
+      echo "     -h|--help       Print this help"
+      exit 0
+      ;;
+    *)
+      if [ -z "$cmd" ]; then
+        cmd=$1
+      else
+        pkgs="$pkgs $1"
+      fi
+      ;;
+  esac
+  shift
+done
+
+# local hosts package directory on Tinycore for package reuse if possible
+[ "$arch" == 64 ] && [ "$(uname -m)" == "x86_64" ] && \
+  [ -d "/etc/sysconfig/tcedir/optional" ] && tce_dir="/etc/sysconfig/tcedir/optional"
+[ "$arch" == 32 ] && [ "$(uname -m)" == "i686" ] && \
+  [ -d "/etc/sysconfig/tcedir/optional" ] && tce_dir="/etc/sysconfig/tcedir/optional"
+
+# Longer curl timeout
 curl_cmd="curl --connect-timeout 300"
 
 # tiny core related
@@ -35,8 +82,8 @@ fi
 
 # internally used dirs and paths
 work=./work
-tcz_dir=$work/tcz
-livecd0=$work/livecd.iso
+tcz_dir=$work/tcz$arch
+livecd0=$work/livecd$arch.iso
 newiso=$work/newiso
 src_dir=$work/src
 pkg_dir=./pkg
@@ -55,11 +102,7 @@ dsascd=$work/dsas.iso
 rootfs64=$work/rootfs64
 docker=$work/docker
 dockimage=$work/docker.tgz
-
 service_pass_len=24
-rebuild=0
-forcedownload=0
-keep=0
 
 # Force the umask
 umask 0022
@@ -102,7 +145,7 @@ get_tcz() {
         fi
       else
         msg fetching package $package ...
-        $curl_cmd -o $target $tcz_url/$package.tcz
+        $curl_cmd -o $target $tcz_url/$package.tcz || exit 1
       fi
     fi
 
@@ -148,7 +191,7 @@ install_tcz() {
 get() {
   _src=$(basename $1)
   msg "Downloading $_src"
-  $curl_cmd -L -o $2/$_src $1
+  $curl_cmd -L -o $2/$_src $1 || exit 1
 }
 
 download() {
@@ -246,7 +289,6 @@ build_pkg() {
         mkdir -p $extract/$destdir
         unpack $src_dir/$_src $extract/$builddir
         chroot $extract chown -R tc.staff /home/tc
-        
         cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 $_pre_config
@@ -361,7 +403,7 @@ EOF
 
 get_unpack_livecd(){
   test -f $livecd0 || msg Downloading $livecd_url
-  test -f $livecd0 || cmd $curl_cmd -o $livecd0 $livecd_url
+  test -f $livecd0 || cmd $curl_cmd -o $livecd0 $livecd_url || exit 1
   mkdir -pv $mnt
   if ! ls $squashfs >/dev/null 2> /dev/null; then
     msg Unpacking the ISO $livecd_url
@@ -371,34 +413,17 @@ get_unpack_livecd(){
   fi
 }
 
-cmd=""
-pkgs=""
-while [ "$#" -gt 0 ]; do
-  case $1 in
-    -r|--rebuild) rebuild=1;  ;;
-    -f|--download) forcedownload=1; ;;
-    -k|--keep) keep=1; ;;
-    *) 
-      if [ -z "$cmd" ]; then
-        cmd=$1
-      else
-        pkgs="$pkgs $1"
-      fi
-      ;;
-  esac
-  shift
-done
-
 case $cmd in
--clean|clean)
-  rm -fr $image $build $newiso $mnt $dsascd $rootfs64 $dsascd.md5 $docker $dockimage $work/dsas_pass.txt
+clean)
+  rm -fr $image $build $newiso $mnt $dsascd $rootfs64 $dsascd.md5 \
+      $docker $dockimage $work/dsas_pass.txt
   exit 0
   ;;
--realclean|realclean)
+realclean)
   rm -fr $work
   exit 0
   ;;
--b|-build|build)
+build)
   shift
   extract=$build
   mkdir -p $work
@@ -438,10 +463,9 @@ docker)
   if [ "$keep" == "0" ]; then
     rm -fr $newiso $extract $docker
   fi
-  exit 0
-  
+  exit 0  
   ;;
-*)
+""|iso)
   extract=$image
 
   # Get the ISO
@@ -617,6 +641,9 @@ EOF
   fi
   exit 0
   ;;
+*)
+  echo "Invalid command $cmd"
+  exit 1
 esac
 
 

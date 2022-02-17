@@ -53,20 +53,27 @@ Nous pourrait garder les fichiers temporaires avec option "-keep" et faire
 la build d'un package (voir pkg/*.pkg) à partir des sources avec
 
 ```
-./make.sh -build gnupg
+./make.sh build gnupg
 ```
+
+La compilation d'un version 32-bit du DSAS est possible depuis une souch 64-bit
+avec une commande comme
+
+```
+./make.sh -32
+``` 
 
 ## Nettoyage de la build
 
 Afin de néttoyer les fichiers utilisé pendant le build vous pouvez faire
 
 ```
-./make.sh -clean
+./make.sh clean
 ```
 
 Les ISOs du DSAS sont gardés, mais l'ensemble des fichiers intermediaire 
 sont détruit. Afin de completement nettoyer le build utiliser le commande
 
 ```
-./make.sh -realclean
+./make.sh realclean
 ```

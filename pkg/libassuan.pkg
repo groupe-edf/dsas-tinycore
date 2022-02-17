@@ -4,7 +4,7 @@ _uri=https://www.gnupg.org/ftp/gcrypt/libassuan/libassuan-2.5.5.tar.bz2
 _dep="libgpg-error"
 _build_dep="compiletc coreutils libgpg-error"
 _pkg_path=libassuan-2.5.5
-_conf_cmd="./configure"
+_conf_cmd="setarch linux$arch ./configure"
 _make_cmd="make"
 _install_cmd="make install DESTDIR=" 
 _pkgs='main{/usr}'
