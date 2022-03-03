@@ -45,6 +45,24 @@
             <input type="text" id="user_haut" value="" class="form-control">
             <div class="invalid-feedback" id="feed_user_haut"></div>
           </div>
+          <div class="col-12">
+            <input class="form-check-input" type="checkbox" value="" id="repo" onchange="dsas_change_service('repo');">
+            <label class="form-check-label" for="syslog" data-i18n>HTTPS repository</label>
+          </div>
+          <div class="col-12">
+            <input class="form-check-input" type="checkbox" value="" id="snmp" onchange="dsas_change_service('snmp');">
+            <label class="form-check-label" for="snmp" data-i18n>SNMPv3</label>
+          </div>
+          <div class="col-12">
+            <label for="snmp_user" data-i18n>SNMP Username</label>
+            <input type="text" id="snmp_user" value="" class="form-control">
+            <div class="invalid-feedback" id="feed_snmp_user"></div>
+          </div>
+          <div class="col-12">
+            <label for="snmp_pass" data-i18n>SNMP Password</label>
+            <input type="text" id="snmp_pass" value="" class="form-control">
+            <div class="invalid-feedback" id="feed_snmp_pass"></div>
+          </div>
         </div>
       </div>
       <div class="col-6">

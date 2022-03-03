@@ -11,13 +11,6 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
 
   try {
     switch ($_POST["op"]){
-      case "repo":
-        if ($_POST["repo"] != $dsas->config->web->repo)  {
-          $dsas->config->web->repo = ($_POST["repo"] = "true" ? "true" : "false");
-          $dsas->asXml(_DSAS_XML);
-        }
-        break;
- 
       case "renew":
         $options = array(
           "countryName" => htmlspecialchars(trim($_POST["countryName"])),

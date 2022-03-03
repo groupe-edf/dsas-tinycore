@@ -89,6 +89,26 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         else
           $errors[] = ["antivirus_uri" => $antivirus_err];
 
+        $dsas->config->web->repo = ($data["web"]["repo"] === "true" ? "true" : "false");
+
+        $dsas->config->snmp->active = ($data["snmp"]["active"] === "true" ? "true" : "false");
+        $snmp_username = htmlspecialchars(trim($data["snmp"]["username"]));
+        if (($data["snmp"]["active"] === "true") && empty($snmp_username))
+          $errors[] = ["snmp_user" => "Empty SMNP Username"];
+        else if (preg_match('/[^A-Za-z0-9]/', $snmp_username))
+          $errors[] = ["snmp_user" => ["Username '{0}' is illegal", $snmp_username]];
+        else
+          $dsas->config->snmp->username = $snmp_username;
+        $snmp_password = htmlspecialchars($data["snmp"]["password"]);
+        if ($snmp_password != $data["snmp"]["password"])
+          $errors[] = ["snmp_pass" => "The SNMP password is illegal"];
+        else if ($snmp_password != str_replace("/\s+/", "", $snmp_password))
+          $errors[] = ["snmp_pass" => "The SNMP password can not contain white spaces"];
+        else if (! complexity_test($snmp_password))
+          $errors[] = ["snmp_pass" => "The SNMP password is insufficently complex"];
+        else
+          $dsas->config->snmp->password = $snmp_password;
+
         break;
 
       default:

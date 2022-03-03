@@ -513,6 +513,7 @@ docker)
   install_tcz zip-unzip     # Needed to allow repacking of unsigned zip files
   install_tcz clamav
   install_tcz Linux-PAM
+  install_tcz net-snmp
 
   # Copy the pre-extracted packages to work dir. This must be after packages
   # are installed to allow for files to be overwritten. Run as root 

@@ -709,12 +709,6 @@ function dsas_display_web(what = "all"){
         return Promise.reject({status: response.status, 
             statusText: response.statusText});
     }).then(web => {
-      if (what === "all" || what === "repo") {
-        document.getElementById("web_repo").innerHTML = _("Repository publication");
-        document.getElementById("repolabel").innerHTML = _("Publication of the repository by HTTPS is {0}",
-            (web.repo  === "true" ? _("Active") : _("Inactive"))) + " :";
-        document.getElementById("reposubmit").value = (web.repo === "true"  ? _("Deactivate") : _("Activate"));
-      }
       if (what === "all" || what === "cert") {
         document.getElementById("web_csr").innerHTML = '  <h5><a class="text-toggle" data-bs-toggle="collapse" href="#csr"\n' +
             '    role="button" aria-controls="csr" aria-expanded="false"> \n' +
@@ -776,27 +770,6 @@ function dsas_display_web(what = "all"){
              document.getElementById("valid" + i).setAttribute("selected", "");
         }
       }
-    }).catch(error => {
-      if (! fail_loggedin(error.statusText))
-        modal_message(_("Error while loading the page : {0}", (error.statusText ? error.statusText : error)));
-    });
-}
-
-function dsas_toggle_repo(){
-  fetch("api/dsas-web.php").then(response => {
-      if (response.ok) 
-        return response.json();
-      else
-        return Promise.reject({status: response.status, 
-            statusText: response.statusText});
-    }).then(web => {
-      var formData = new FormData;
-      formData.append("op", "repo");
-      formData.append("repo", (web.repo === "true" ? "false" : "true"));
-      fetch("api/dsas-web.php", {method: "POST", body: formData 
-        }).finally(() => {
-          dsas_display_web("repo");
-        });
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
         modal_message(_("Error while loading the page : {0}", (error.statusText ? error.statusText : error)));
@@ -1073,7 +1046,16 @@ function dsas_display_service(what = "all"){
        document.getElementById("antivirus_uri").value = print_obj(serv.antivirus.uri);
        document.getElementById("antivirus_uri").disabled = (serv.antivirus.active !== "true");
      }
-
+     if (what === "repo" || what === "all") {
+       document.getElementById("repo").checked = (serv.web.repo === "true");
+     }
+     if (what === "snmp" || what === "all") {
+       document.getElementById("snmp").checked = (serv.snmp.active === "true");
+       document.getElementById("snmp_user").value = print_obj(serv.snmp.username);
+       document.getElementById("snmp_user").disabled = (serv.snmp.active !== "true");
+       document.getElementById("snmp_pass").value = print_obj(serv.snmp.password);
+       document.getElementById("snmp_pass").disabled = (serv.snmp.active !== "true");
+     }
   }).catch(error => {
       fail_loggedin(error.statusText);
   });
@@ -1090,7 +1072,10 @@ function dsas_change_service(what) {
     document.getElementById("ntp_pool").disabled = ! document.getElementById("ntp").checked;
   } else if (what === "antivirus") {
     document.getElementById("antivirus_uri").disabled = ! document.getElementById("antivirus").checked;
-  } else {
+  } else if (what === "snmp") {
+    document.getElementById("snmp_user").disabled = ! document.getElementById("snmp").checked;
+    document.getElementById("snmp_pass").disabled = ! document.getElementById("snmp").checked;
+  } else if (what !== "repo") {
     fetch("api/dsas-service.php").then(response => {
       if (response.ok) 
         return response.json();
@@ -1106,6 +1091,11 @@ function dsas_change_service(what) {
        serv.syslog.active = (document.getElementById("syslog").checked ? "true" : "false");
        serv.syslog.server = document.getElementById("syslog_server").value;
        serv.ntp.active = (document.getElementById("ntp").checked ? "true" : "false");
+       serv.web.repo = (document.getElementById("repo").checked ? "true" : "false");
+
+       serv.snmp.active = (document.getElementById("snmp").checked ? "true" : "false");
+       serv.snmp.username = document.getElementById("snmp_user").value;
+       serv.snmp.password = document.getElementById("snmp_pass").value;
 
        server = [];
        for (s of document.getElementById("ntp_pool").value.split(/((\r?\n)|(\r\n?))/)) {
