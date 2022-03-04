@@ -807,11 +807,13 @@ start_snmp(){
   if [ "$snmp" == "true" ]; then
     snmp_username=$(xmllint --xpath "string(dsas/config/snmp/username)" $VAR/dsas_conf.xml)
     snmp_password=$(xmllint --xpath "string(dsas/config/snmp/password)" $VAR/dsas_conf.xml)
+    dsas_oid=$(grep "OID=" /usr/local/sbin/snmpdsas | cut -d= -f2)
     mkdir -p /usr/local/etc/snmp
     chown root.staff /usr/local/etc/snmp
     chmod 750 /usr/local/etc/snmp
     echo "CreateUser $snmp_username SHA $snmp_password AES $snmp_password" > /usr/local/etc/snmp/snmpd.conf
     echo "rouser $snmp_username priv 1" >> /usr/local/etc/snmp/snmpd.conf
+    echo "pass $dsas_oid /usr/local/sbin/snmpdsas" >> /usr/local/etc/snmp/snmpd.conf
     /usr/local/sbin/snmpd &
   fi
 }
