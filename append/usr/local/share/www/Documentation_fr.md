@@ -792,8 +792,10 @@ Autre que le service web d'administration et service web de repositoire, il y a 
 qui pourrait être démarrer sur les machines du DSAS;
 
 - Un serveur OpenSSH pour les connexions depuis l'extérieur,
-- Un client ntpd pour la mise à l'heure des machines, et
-- Un client syslogd pour les logs d'administration locale et distante
+- Un dépôt HTTPS pour la distribution des fichiers vérfié par le DSAS,
+- Un client ntpd pour la mise à l'heure des machines,
+- Un client syslogd pour les logs d'administration locale et distante,
+- Un serveur SNMPD pour la remonté du statut du DSAS, et 
 - Un serveur de verification antivirale
 
 ![Menu de configuration du serveur web](fr/DSAS16.png)
@@ -839,6 +841,31 @@ vérifiés.
 
 Si le service SSH est activé vers une zone le port 22 est ouverte sur la machine du DSAS
 concernée.
+
+### Dépôt HTTPS
+
+Le DSAS peut publié l'ensemble des fichiers vérifié de manière lecture seul en selectionner l'option
+`Dépôt HTTPS`. Si l'adresse IP du DSAS sur le réseau bas est `10.0.2.15` par exemple, le dépôt sera
+disponible sur `https://10.0.2.15`.
+
+### Serveur SNMP
+
+Un serveur SNMP pourrait être activé sur le DSAS. Cette service n'est dipsonible que en SNMPv3 avec
+chiffrement et authentification. En selectionnant l'option `SNMPv3` le service sera activé. Après il
+faut avoir un `Nom d'utilisateur SNMP` et `Mot de pass SNMP` valable. Le même mot de passe sera 
+utilisé pour l'authentification et la chiffrement. 
+
+L'ensemble des données SNMP du machine bas sera publié SNMP. Les données specifique au DSAS sont
+disponible sur les OID
+
+1.3.6.1.4.1.16845.100.100.1.0   - Statut de la machine haute. `0` si la machine est disponible
+1.3.6.1.4.1.16845.100.100.2.0   - Statut des tâches du DSAS. `0` si l'ensmble des tâches sont ok.
+1.3.6.1.4.1.16845.100.100.3.1.1 - Nom du tâche 1.
+1.3.6.1.4.1.16845.100.100.3.1.2 - ID du tâche 1.
+1.3.6.1.4.1.16845.100.100.3.1.3 - Statut de la tâche 1.
+1.3.6.1.4.1.16845.100.100.3.N.1 - Nom du tâche N.
+1.3.6.1.4.1.16845.100.100.3.N.2 - ID du tâche N.
+1.3.6.1.4.1.16845.100.100.3.N.3 - Statut de la tâche N.
 
 ### Client syslogd
 
