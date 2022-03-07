@@ -830,7 +830,7 @@ of the DSAS on the lower network is `10.0.2.15` for example, the repositoty will
 
 ### SNMP Server
 
-A SNMP server can be activiated on the DSAS. This service is only available with authentification and
+A SNMP server can be activated on the DSAS. This service is only available with authentification and
 encryption and so only SNMPv3 is supported. Selecting `SNMPv3` the service xith by activated. After a
 valid `SNMP Username` and `SNMP Password` must be entered. The password will be used for both the
 authentification and encryption. 
@@ -838,14 +838,14 @@ authentification and encryption.
 All of the readonly data available from a typical SNMP server on a linux machine will be published. The
 data specific to the DSAS are available with the following OIDs 
 
-1.3.6.1.4.1.16845.100.100.1.0   - Status of the upper machine. `0` if the machine is available.
-1.3.6.1.4.1.16845.100.100.2.0   - Status of the DSAS tasks. `0` if all of the tasks are ok.
-1.3.6.1.4.1.16845.100.100.3.1.1 - Name of the task 1.
-1.3.6.1.4.1.16845.100.100.3.1.2 - ID of the task 1.
-1.3.6.1.4.1.16845.100.100.3.1.3 - Status of the task 1.
-1.3.6.1.4.1.16845.100.100.3.N.1 - Name of the task N.
-1.3.6.1.4.1.16845.100.100.3.N.2 - ID of the task N.
-1.3.6.1.4.1.16845.100.100.3.N.3 - Status of the task N.
+- 1.3.6.1.4.1.16845.100.100.1.0   - Status of the upper machine. `0` if the machine is available.
+- 1.3.6.1.4.1.16845.100.100.2.0   - Status of the DSAS tasks. `0` if all of the tasks are ok.
+- 1.3.6.1.4.1.16845.100.100.3.1.1 - Name of the task 1.
+- 1.3.6.1.4.1.16845.100.100.3.1.2 - ID of the task 1.
+- 1.3.6.1.4.1.16845.100.100.3.1.3 - Status of the task 1.
+- 1.3.6.1.4.1.16845.100.100.3.N.1 - Name of the task N.
+- 1.3.6.1.4.1.16845.100.100.3.N.2 - ID of the task N.
+- 1.3.6.1.4.1.16845.100.100.3.N.3 - Status of the task N.
 
 ### syslogd client
 
