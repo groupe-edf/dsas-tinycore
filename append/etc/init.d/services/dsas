@@ -209,6 +209,9 @@ audit_perms(){
     chgrp -R users "$_d"
     chmod go-rwx "$_d"
   done
+  chgrp verif $DSAS/log
+  chmod 770 $DSAS/log
+  chmod g+s $DSAS/log
   for _user in bas haut; do
     chown root.$_user $DSAS/$_user
     chmod 750 $DSAS/$_user
