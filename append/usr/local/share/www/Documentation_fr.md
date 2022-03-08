@@ -867,6 +867,8 @@ disponible sur les OID
 - 1.3.6.1.4.1.16845.100.100.3.N.2 - ID du tâche N.
 - 1.3.6.1.4.1.16845.100.100.3.N.3 - Statut de la tâche N.
 
+Un [fichier MIB avec ces OID est disponible pour téléchargement](DSAS.mib).
+
 ### Client syslogd
 
 Si le service `syslogd` du DSAS est activé, des logs des services sont fait localement au DSAS.
