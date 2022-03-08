@@ -28,11 +28,11 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $newuser->description = "";
             $newuser->type = "admin";
             $newuser->active = "false";
-            $output = dsas_exec(["ssh", "tc@haut", "sudo", "adduser", "-h", dsas_dir() . "/" . $duser, "-s", "/bin/sh", "-D", $duser]);
+            $output = dsas_exec(["ssh", "tc@haut", "sudo", "adduser", "-G" "users", "-h", dsas_dir() . "/" . $duser, "-s", "/bin/sh", "-D", $duser]);
             if ($output["retval"] != 0)
               $errors[] = ["error" => ["Error during user addition '{0}'", (string)$output["stderr"]]];
             else {
-              $output = dsas_exec(["sudo", "adduser", "-h", dsas_dir() . "/" . $duser, "-s", "/bin/sh", "-D", $duser]);
+              $output = dsas_exec(["sudo", "adduser", "-G", "users", "-h", dsas_dir() . "/" . $duser, "-s", "/bin/sh", "-D", $duser]);
               if ($output["retval"] != 0)
                 $errors[] = ["error" => ["Error during user addition '{0}'", (string)$output["stderr"]]];
             }

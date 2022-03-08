@@ -201,6 +201,14 @@ audit_perms(){
   echo "Auditing permissions of ${GREEN}$DSAS${NORMAL} in the background"
   OLD_IFS=$IFS
   IFS=$'\3'
+  grep users /etc/group || addgroup -g 51 users
+  for _d in $(find $DSAS -type d -mindepth 1 -maxdepth 1 -exec basename "{}" \; ); do
+    for _user in bas haut log; do
+       [ "$_d" == "$_user" ] && break 2
+    done
+    chgrp -R users "$_d"
+    chmod go-rwx "$_d"
+  done
   for _user in bas haut; do
     chown root.$_user $DSAS/$_user
     chmod 750 $DSAS/$_user

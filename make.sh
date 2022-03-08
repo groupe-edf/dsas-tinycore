@@ -587,6 +587,7 @@ addgroup haut share
 addgroup -g 2004 repo
 addgroup bas repo
 addgroup tc repo
+addgroup -g 51 users
 
 # Hardening
 # Fix directory and file permissions
