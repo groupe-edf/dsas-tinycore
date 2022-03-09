@@ -199,35 +199,35 @@ get_dsas(){
 
 audit_perms(){
   echo "Auditing permissions of ${GREEN}$DSAS${NORMAL} in the background"
-  OLD_IFS=$IFS
-  IFS=$'\3'
-  grep users /etc/group || addgroup -g 51 users
-  for _d in $(find $DSAS -type d -mindepth 1 -maxdepth 1 -exec basename "{}" \; ); do
+  grep -q users /etc/group || addgroup -g 51 users
+  for _d in $(find "$DSAS" -type d -mindepth 1 -maxdepth 1 -exec basename "{}" \; ); do
     for _user in bas haut log; do
        [ "$_d" == "$_user" ] && break 2
     done
     chgrp -R users "$_d"
     chmod go-rwx "$_d"
   done
-  chgrp verif $DSAS/log
-  chmod 770 $DSAS/log
-  chmod g+s $DSAS/log
+  chgrp verif "$DSAS/log"
+  chmod 770 "$DSAS/log"
+  chmod g+s "$DSAS/log"
+  OLD_IFS=$IFS
+  IFS=$'\3'
   for _user in bas haut; do
-    chown root.$_user $DSAS/$_user
-    chmod 750 $DSAS/$_user
-    for _d in $(find $DSAS/$_user/share -type d -exec echo -n -e "{}\x03" \; ); do
+    chown root.$_user "$DSAS/$_user"
+    chmod 750 "$DSAS/$_user"
+    for _d in $(find "$DSAS/$_user/share" -type d -exec echo -n -e "{}\x03" \; ); do
       chown $_user.$_user "$_d"
       chmod 770 "$_d"
     done
   done
-  for _f in $(find $DSAS/haut/share -type f -exec echo -n -e "{}\x03" \; ); do
+  for _f in $(find "$DSAS/haut/share" -type f -exec echo -n -e "{}\x03" \; ); do
     if [ $(stat -c%h "$_f") -eq 1 ]; then
       # not hardlinked so only in haut
       chown $_user.$_user "$_f"
       chmod 640 "$_f"
     fi
   done
-  for _f in $(find $DSAS/bas/share -type f -exec echo -n -e "{}\x03" \; ); do
+  for _f in $(find "$DSAS/bas/share" -type f -exec echo -n -e "{}\x03" \; ); do
     chown verif.share "$_f"
     chmod 640 "$_f"
   done
