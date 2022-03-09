@@ -847,7 +847,7 @@ data specific to the DSAS are available with the following OIDs
 - 1.3.6.1.4.1.16845.100.100.3.N.2 - ID of the task N.
 - 1.3.6.1.4.1.16845.100.100.3.N.3 - Status of the task N.
 
-A [MIB file with these OID is available for download](DSAS.mib).
+A [MIB file with these OID is available for download](DSAS-MIB.txt).
 
 ### syslogd client
 

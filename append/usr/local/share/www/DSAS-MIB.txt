@@ -1,0 +1,100 @@
+DSAS-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+	OBJECT-GROUP, MODULE-COMPLIANCE
+				FROM SNMPv2-CONF
+	enterprises, MODULE-IDENTITY, OBJECT-TYPE, Integer32
+				FROM SNMPv2-SMI;
+
+dsas MODULE-IDENTITY
+    LAST-UPDATED   "202203081200Z"
+    ORGANIZATION   "www.edf.fr"
+    CONTACT-INFO
+         "postal:   David Bateman
+          email:    David.Bateman@edf.fr"
+    DESCRIPTION	   "UNITEP sub-organisational unit"
+    REVISION	   "202203081200Z"
+    DESCRIPTION	   "First draft."
+    ::= { unitep 100 }
+
+edfgdf	 OBJECT IDENTIFIER
+    ::= { enterprises 16845 }
+
+unitep	OBJECT IDENTIFIER
+    ::= { edfgdf 100 }
+
+Upper	OBJECT IDENTIFIER
+    ::= { dsas 1 }
+
+upperMachineStatus		OBJECT-TYPE
+    SYNTAX	  Integer32(0..1)
+    MAX-ACCESS	  read-only
+    STATUS	  current
+    DESCRIPTION	  "The status of the upper machine seen from lower machine. Zero if ok"
+    ::= { Upper 0 }
+
+Tasks	OBJECT IDENTIFIER
+    ::= { dsas 2 }
+
+tasksStatus	   OBJECT-TYPE
+    SYNTAX	   Integer32(0..1)
+    MAX-ACCESS	   read-only
+    STATUS	   current
+    DESCRIPTION    "The status all tasks on the DSAS. Zero if ok"
+    ::= { Tasks 0 }
+
+taskTable OBJECT-TYPE
+    SYNTAX	   SEQUENCE OF TaskEntry
+    MAX-ACCESS	   not-accessible
+    STATUS	   current
+    DESCRIPTION    "DSAS task table"
+    ::= { dsas 3 }
+
+taskEntry OBJECT-TYPE
+    SYNTAX	  TaskEntry
+    MAX-ACCESS	  not-accessible
+    STATUS	  current
+    DESCRIPTION	  "for all task entries"
+    INDEX	  { taskIndex }
+    ::=		  { taskTable 1 }
+
+TaskEntry ::= SEQUENCE {
+    taskIndex		Integer32,
+    taskName		OCTET STRING,
+    taskID		OCTET STRING,
+    taskStatus		Integer32
+}
+
+taskIndex OBJECT-TYPE
+    SYNTAX	   Integer32(0..1)
+    MAX-ACCESS	   read-only
+    STATUS	   current
+    DESCRIPTION	   "index of task entries"
+    ::=	{ taskEntry 1 }
+
+taskName OBJECT-TYPE
+    SYNTAX	   OCTET STRING
+    MAX-ACCESS	   read-only
+    STATUS	   current
+    DESCRIPTION    "DSAS task name
+	 The name of each task will be shown here."
+    ::= { taskEntry 2 }
+
+taskID OBJECT-TYPE
+    SYNTAX	   OCTET STRING
+    MAX-ACCESS	   read-only
+    STATUS	   current
+    DESCRIPTION    "DSAS task ID
+	 The ID of each task will be shown here."
+    ::= { taskEntry 3 }
+
+taskStatus OBJECT-TYPE
+    SYNTAX	   Integer32(0..1)
+    MAX-ACCESS	   read-only
+    STATUS	   current
+    DESCRIPTION    "DSAS task status
+	 Success(0): The task has sucessfully been completed or never run
+	 Fail(1): The task has failed"
+    ::= { taskEntry 4 }
+
+END
