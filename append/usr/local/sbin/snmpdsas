@@ -28,11 +28,10 @@ if [ "$1" == "-n" ]; then
   case "$REQ" in
     $OID|$OID.0|$OID.0.*|$OID.1) RET=$OID.1.0 ;; # StatusUpperMachine
     $OID.1.*|$OID.2) RET=$OID.2.0 ;; # StatusTasks
-    $OID.2.*|$OID.3)
+    $OID.2.*|$OID.3|$OID.3.1.0)
       [ "$n" == "0" ] && exit 0
       RET=$OID.3.1.1.1
       ;;
-    $OID.3.1.0) RET=$OID.3.1.1.1 ;;
     $OID.3.*)
       _arg=${REQ:$((${#OID}+5))}
       _subtask=$(echo $_arg | cut -f1 -d.)
