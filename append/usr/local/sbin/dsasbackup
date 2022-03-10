@@ -17,7 +17,7 @@ else
 fi
 
 # Only these specific files are saved. Anything else is forbidden.
-# The SSH directories are need to keep authorized keys, known_hosts, etc files
+# The SSH directories are needed to keep authorized keys, known_hosts, etc files
 FILES="usr/local/etc/ssh/ssh_host_dsa_key
 usr/local/etc/ssh/ssh_host_dsa_key.pub
 usr/local/etc/ssh/ssh_host_ecdsa_key
@@ -143,6 +143,36 @@ else
   done
   args="$args\nsave"
   echo -e "$arg" | xmllint --shell $VAR/dsas_conf.xml > /dev/null 2>&1
+
+  # The installed users need to be updated with adduser/deluser to correspond to
+  # the users in the xml config file, but only on the machine bas
+  while read -r line; do
+    user=$(echo $line | cut -d: -f1)
+    uid=$(echo $line | cut -d: -f3)
+    [ $uid -lt 1000 ] && continue
+    [ "$user" == "tc" ] && continue
+    [ "$user" == "bas" ] && continue
+    [ "$user" == "haut" ] && continue
+    [ "$user" == "verif" ] && continue
+    # Have an added user
+    id=1
+    while :; do
+      _user=$(xmllint --xpath "string(dsas/config/users/user[$id]/username" $VAR/dsas_conf.xml)
+      [ -z "$_user" ] && break
+      [ "$user" == "$_user" ] && continue 2
+      id=$(($id + 1))
+    done
+    deluser $user
+  done < /etc/passwd
+  id=1
+  while :; do
+    _user=$(xmllint --xpath "string(dsas/config/users/user[$id]/username" $VAR/dsas_conf.xml)
+    [ -z "$_user" ] && break
+    if ! cut -f1 -d: /etc/passwd | grep -x -q $_user; then
+      adduser -G users -h $DSAS_HOME/$_user -s /bin/sh -D $_user
+    fi
+    id=$(($id + 1))
+  done
 
   # Save the restored files to the active configuration.   
   /usr/bin/filetool.sh -b 2>&1 > /dev/null
