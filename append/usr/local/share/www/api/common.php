@@ -6,7 +6,7 @@ define("_DSAS_XML", _DSAS_VAR . "/dsas_conf.xml");
 
 function dsas_ca_file() {
   foreach (["/etc/ssl/ca-bundle.crt", "/etc/ssl/ca-certificates.crt",
-           "/usr/local/etc/ssl/ca-bundle.crt", "/ust/local/etc/ssl/ca-certificates.crt"] as $f) {
+           "/usr/local/etc/ssl/ca-bundle.crt", "/usr/local/etc/ssl/ca-certificates.crt"] as $f) {
     if (is_file($f))
       return $f;
   }
