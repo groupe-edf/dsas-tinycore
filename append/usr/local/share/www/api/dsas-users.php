@@ -28,13 +28,9 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $newuser->description = "";
             $newuser->type = "admin";
             $newuser->active = "false";
-            $output = dsas_exec(["ssh", "tc@haut", "sudo", "adduser", "-G" "users", "-h", dsas_dir() . "/" . $duser, "-s", "/bin/sh", "-D", $duser]);
+            $output = dsas_exec(["sudo", "adduser", "-G", "users", "-h", dsas_dir() . "/" . $duser, "-s", "/bin/sh", "-D", $duser]);
             if ($output["retval"] != 0)
               $errors[] = ["error" => ["Error during user addition '{0}'", (string)$output["stderr"]]];
-            else {
-              $output = dsas_exec(["sudo", "adduser", "-G", "users", "-h", dsas_dir() . "/" . $duser, "-s", "/bin/sh", "-D", $duser]);
-              if ($output["retval"] != 0)
-                $errors[] = ["error" => ["Error during user addition '{0}'", (string)$output["stderr"]]];
             }
           }
         }
@@ -79,13 +75,9 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             if ($user->username == $data["username"]) {
               $found = true;
               unset($dsas->config->users->user[$i]);
-              $output = dsas_exec(["ssh", "tc@haut", "sudo", "deluser", $data["username"]]);
+              $output = dsas_exec(["sudo", "deluser", $data["username"]]);
               if ($output["retval"] != 0)
                 $errors[] = ["error" => ["Error during user deletion '{0}'", (string)$output["stderr"]]];
-              else {
-                $output = dsas_exec(["sudo", "deluser", $data["username"]]);
-                if ($output["retval"] != 0)
-                  $errors[] = ["error" => ["Error during user deletion '{0}'", (string)$output["stderr"]]];
               }
               break;
             }
