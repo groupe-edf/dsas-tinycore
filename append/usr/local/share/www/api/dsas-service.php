@@ -84,6 +84,13 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         $antivirus_uri = htmlspecialchars(trim($data["antivirus"]["uri"]));
         if (! empty($antivirus_uri))
           $antivirus_err = uri_valid($antivirus_uri);
+        // Set ClamAV client UUID if empty
+        if (empty($dsas->config->antivirus->uuid))
+          $dsas->config->antivirus->uuid = sprintf("%04x%04x-%04x-%04x-%04x-%04x%04x%04x",
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff), mt_rand(0, 0x0fff) | 0x4000, // 4 MSB contain version 4 number
+            mt_rand(0, 0x3fff) | 0x8000, // 2 MSB holds DCE1.1 variant
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff));
         if (empty($antivirus_err))
           $dsas->config->antivirus->uri = $antivirus_uri;
         else

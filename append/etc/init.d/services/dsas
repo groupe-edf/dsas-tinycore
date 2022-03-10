@@ -7,7 +7,7 @@ NORMAL="$(echo -e '\033[1;39m')"
 MNT=/mnt
 
 # The version of the DSAS xml file supported by this version
-DSAS_XML_VERSION="0.10"
+DSAS_XML_VERSION="0.11"
 
 VAR=/var/dsas
 
@@ -910,6 +910,10 @@ check_xml_version(){
 
   if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "10" ]; then 
     sed -i -e "s:</config>:<snmp>\n        <active>false</active>\n        <username></username>\n        <password></password>\n      </snmp>\n    </config>:" $VAR/dsas_conf.xml
+  fi
+
+  if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "11" ]; then 
+    sed -i -e "s:</antivirus>:  <uuid></uuid>\n      </antivirus>:" $VAR/dsas_conf.xml
   fi
 
   # Now that the XML is upgraded, save the new version number
