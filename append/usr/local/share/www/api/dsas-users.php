@@ -31,7 +31,6 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $output = dsas_exec(["sudo", "adduser", "-G", "users", "-h", dsas_dir() . "/" . $duser, "-s", "/bin/sh", "-D", $duser]);
             if ($output["retval"] != 0)
               $errors[] = ["error" => ["Error during user addition '{0}'", (string)$output["stderr"]]];
-            }
           }
         }
         break;
@@ -78,7 +77,6 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
               $output = dsas_exec(["sudo", "deluser", $data["username"]]);
               if ($output["retval"] != 0)
                 $errors[] = ["error" => ["Error during user deletion '{0}'", (string)$output["stderr"]]];
-              }
               break;
             }
             $i++;
