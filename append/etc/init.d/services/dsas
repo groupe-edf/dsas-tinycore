@@ -189,8 +189,8 @@ get_dsas(){
   fi
 
   TCE=$(readlink /etc/sysconfig/tcedir)
-  if [ "${TCE:0:8}" == "/tmp/tce" ]; then
-    TCE=$(echo $DSAS | sed -e "s/dsas//")
+  if [ -z "$TCE" ] || [ "${TCE:0:8}" == "/tmp/tce" ]; then
+    TCE=$(echo $DSAS | sed -e "s:/dsas::")
     echo "Setting up TCE directory on ${GREEN}$TCE${NORMAL}"
     /usr/bin/tce-setdrive -s $TCE
     chmod -R o-rwx $TCE/tce
