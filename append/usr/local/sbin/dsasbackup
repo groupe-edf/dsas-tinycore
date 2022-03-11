@@ -32,9 +32,9 @@ var/dsas/dsas_conf.xml
 var/dsas/dsas_priv.pem
 var/dsas/dsas_pub.pem
 var/dsas/dsas_typ
-home/tc/.ssh
-home/haut/.ssh
-home/bas/.ssh"
+home/tc/.ssh/
+home/haut/.ssh/
+home/bas/.ssh/"
 
 RESTORE=0
 APPLY=0
@@ -114,7 +114,11 @@ else
   for bkp in /tmp/bas.tgz /tmp/haut.tgz; do
     for file in $(tar tzf $bkp); do
       for p in $FILES; do
-        [ "$file" == "$p" ] && continue 2
+        if [ "${p%/}" == "$p" ]; then
+          [ "$file" == "$p" ] && continue 2  # legal file
+        else
+          [ "${file:0:${#p}}" == "$p" ] && continue 2  # legal directory
+        fi
       done
       { 1>&2 echo "The backup contains illegal files"; exit 1; }
     done
@@ -154,22 +158,23 @@ else
     [ "$user" == "bas" ] && continue
     [ "$user" == "haut" ] && continue
     [ "$user" == "verif" ] && continue
+    [ "$user" == "$nobody" ] && continue
     # Have an added user
     id=1
     while :; do
-      _user=$(xmllint --xpath "string(dsas/config/users/user[$id]/username" $VAR/dsas_conf.xml)
+      _user=$(xmllint --xpath "string(dsas/config/users/user[$id]/username)" $VAR/dsas_conf.xml)
       [ -z "$_user" ] && break
       [ "$user" == "$_user" ] && continue 2
       id=$(($id + 1))
     done
-    deluser $user
+    sudo deluser $user
   done < /etc/passwd
   id=1
   while :; do
-    _user=$(xmllint --xpath "string(dsas/config/users/user[$id]/username" $VAR/dsas_conf.xml)
+    _user=$(xmllint --xpath "string(dsas/config/users/user[$id]/username)" $VAR/dsas_conf.xml)
     [ -z "$_user" ] && break
     if ! cut -f1 -d: /etc/passwd | grep -x -q $_user; then
-      adduser -G users -h $DSAS_HOME/$_user -s /bin/sh -D $_user
+      sudo adduser -G users -h $DSAS_HOME/$_user -s /bin/sh -D $_user
     fi
     id=$(($id + 1))
   done
