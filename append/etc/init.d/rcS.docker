@@ -1,6 +1,7 @@
 #! /bin/sh
 
 # Setup tcedir
+MNT=$(ls -1 /mnt | head -1)
 ln -s $MNT /etc/sysconfig/tcedir
 mkdir -p /mnt/${MNT}/tce/optional
 chown -R root:staff /mnt/${MNT}/tce /usr/local/tce.installed
@@ -13,7 +14,7 @@ while [ "$#" -gt 0 ]; do
       exit $?
       ;;
     -r|--reconfig)
-      filetool.sh -r
+      /usr/bin/filetool.sh -r
       /etc/init.d/services/dsas reconfig
       exit $?
       ;;
@@ -24,7 +25,7 @@ while [ "$#" -gt 0 ]; do
   esac
 done
  
-filetool.sh -r
+/usr/bin/filetool.sh -r
 /etc/init.d/services/crond start
 /etc/init.d/services/dsas start
 sleep infinity 
