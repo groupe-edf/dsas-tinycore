@@ -56,8 +56,9 @@ remove_container:
 	  docker container rm $(CONTAINER) || true
 
 build_image:
-	docker images | grep $(IMAGE_NAME) | grep -q $(IMAGE_TAG) || docker build \
-	  -t $(IMAGE_NAME):$(IMAGE_TAG) .
+	docker images | grep -q $(IMAGE_NAME):$(IMAGE_TAG) && \
+	  docker image rm $(IMAGE_NAME):$(IMAGE_TAG)
+	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) .
 
 ifeq (ETH1,"")
 network: network_virt
