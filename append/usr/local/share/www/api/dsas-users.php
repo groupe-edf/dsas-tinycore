@@ -74,7 +74,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             if ($user->username == $data["username"]) {
               $found = true;
               unset($dsas->config->users->user[$i]);
-              $output = dsas_exec(["sudo", "deluser", $data["username"]]);
+              $output = dsas_exec(["sudo", "deluser", "--remove-home", $data["username"]]);
               if ($output["retval"] != 0)
                 $errors[] = ["error" => ["Error during user deletion '{0}'", (string)$output["stderr"]]];
               break;
