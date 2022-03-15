@@ -1550,6 +1550,7 @@ to ensure its security.
 | sensitive network | lower             | 443         | tcp/udp | https    | optional  | file repository               |
 | sensitive network | lower             | 22          | tcp     | ssh      | optional  | user 'tc' console access      |
 | sensitive network | lower             | 22          | tcp     | sftp     | optional  | user 'bas' file access        |
+| sensitive network | lower             | 161         | udp     | snmp     | optional  | surveillance of the DSAS      |
 | open network      | upper             | 22          | tcp     | sftp     | not reco. | user 'haut' file deposit      |
 | lower             | sensitive network | 123         | udp     | ntp      | optional  | time synchronisation          |
 | lower             | sensitive network | 514         | udp     | syslog   | optional  | log service                   | 

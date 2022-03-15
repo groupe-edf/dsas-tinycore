@@ -1592,6 +1592,7 @@ de garantir le niveau de sécurité du DSAS.
 | réseau sensible | bas             | 443         | tcp/udp | https    | optionnel | repositoire de fichier       |
 | réseau sensible | bas             | 22          | tcp     | ssh      | optionnel | accès console user 'tc'      |
 | réseau sensible | bas             | 22          | tcp     | sftp     | optionnel | accès fichiers user 'bas'    |
+| réseau sensible | bas             | 161         | udp     | snmp     | optional  | surveillance du DSAS         |
 | réseau ouverte  | haut            | 22          | tcp     | sftp     | non reco. | dépôt fichier user 'haut'    |
 | bas             | réseau sensible | 123         | udp     | ntp      | optionnel | synchronisation temps        |
 | bas             | réseau sensible | 514         | udp     | syslog   | optionnel | service de log               | 
