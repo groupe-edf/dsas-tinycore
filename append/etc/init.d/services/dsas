@@ -565,7 +565,7 @@ start_sshd(){
         if [ -z "$UID_TYP" ]; then
           UID_TYP="$_username"
         else
-          UID_TYP="$UID_TC,$_username"
+          UID_TYP="$UID_TYP,$_username"
         fi
       fi
       i=$((i + 1))
@@ -588,7 +588,7 @@ start_sshd(){
         if [ -z "$UID_TYP" ]; then
           UID_TYP="$_username"
         else
-          UID_TYP="$UID_TC,$_username"
+          UID_TYP="$UID_TYP,$_username"
         fi
       fi
       i=$((i + 1))
