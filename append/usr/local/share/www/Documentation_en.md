@@ -1239,8 +1239,8 @@ Software impacted by this risk
 
 | software      | version    | comment                                                                        | 
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [1.1.1m](https://www.openssl.org/source/openssl-1.1.1m.tar.gz) | Only the functionality used by ssh impacted |
-| openssh | [8.8p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-8.8p1.tar.gz) | ssh and sftp used |
+| openssl | [1.1.1n](https://www.openssl.org/source/openssl-1.1.1n.tar.gz) | Only the functionality used by ssh impacted |
+| openssh | [8.9p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-8.9p1.tar.gz) | ssh and sftp used |
 
 ### Risk: Attack on signature verification
 
@@ -1253,11 +1253,11 @@ Software impacted by this risk
 
 | software | version | comment |
 | -------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [1.1.1m](https://www.openssl.org/source/openssl-1.1.1m.tar.gz) | Used for authenticode, LiveUpdate and OpenSSL verification |
+| openssl | [1.1.1n](https://www.openssl.org/source/openssl-1.1.1n.tar.gz) | Used for authenticode, LiveUpdate and OpenSSL verification |
 | gnupg | [2.2.27](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.27.tar.bz2) | Used for RPM, DEB and GPG verification |
 | libgcrypt | [1.9.3](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.9.3.tar.bz2) | Used for RPM, DEB and GPG verification |
 | rpm | [4.16.1.3](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.16.x/rpm-4.16.1.3.tar.bz2) | Used for RPM checking |
-| osslsigncode | [2.2.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.2/osslsigncode-2.2.0.tar.gz) | Used for authenicode verification |
+| osslsigncode | [2.3.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.3/osslsigncode-2.3.0.tar.gz) | Used for authenicode verification |
 | clamav | [0.104.2](https://www.clamav.net/downloads/production/clamav-0.104.2.tar.gz) | Used for antivirus tests |
 
 
@@ -1272,7 +1272,7 @@ Software impacted by this risk
 
 | software | version | comment |
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [1.1.1m](https://www.openssl.org/source/openssl-1.1.1m.tar.gz) | only the functionality used by ssh impacted |
+| openssl | [1.1.1n](https://www.openssl.org/source/openssl-1.1.1n.tar.gz) | only the functionality used by ssh impacted |
 | lftp    | [4.9.2](https://lftp.yar.ru/ftp/lftp-4.9.2.tar.bz2) | Used for http, https, ftp, ftps, sftp |
  
 ### Risk: Attack against DSAS administrator authentication
@@ -1288,7 +1288,7 @@ Software impacted by this risk
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
 | php-cgi | [8.0.1](http://tinycorelinux.net/12.x/x86/tcz/php-8.0-cgi.tcz) | Backend of the administration site |
 | lighttpd | [1.4.58](http://tinycorelinux.net/12.x/x86/tcz/lighttpd.tcz) | Backend of the administration site |
-| cyrus-sasl-lite | [2.1.27](http://tinycorelinux.net/12.x/x86/tcz/cyrus-sasl-lite.tcz) | Authentication on the administration site |
+| Linux PAM | [1.5.2](https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz) | Authentication on the administration site |
 | DSAS website | [-](https://gitlab.devops-unitep.edf.fr/dsao-cyber/dsas---tinycore) | Backend and frontend of the administration site |
 
 The DSAS website is specially developed for this project. A code audit is in progress
