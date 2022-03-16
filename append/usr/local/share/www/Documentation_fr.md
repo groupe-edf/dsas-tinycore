@@ -177,9 +177,9 @@ recommandons au moins 500 Go pour chaque machine du DSAS.
 
 ## Memoire nécessaire pour le DSAS
 
-Le DSAS a besoin un minimum absolue de 500 MOctets de démarrage est donctionner 
-correctement. A cet espace minimal, il faut compter des espace supplementaire 
-dependant sur la configuration DU DSAS. Dans l'installation sur un machine virtual
+Le DSAS a besoin un minimum absolue de 500 MOctets de démarrage est de fonctionner 
+correctement. A cet espace minimal, il faut compter des espaces supplementaires 
+dependant sur la configuration du DSAS. Dans l'installation sur un machine virtual
 classique, le dossier `/tmp` est un partie de la systeme fichier racine et stocké
 en mémoire. Par ce que ce dossier est largement utilisé pour la décompression des
 archives à vérifier, la taille maximale de fichier décompressé est nécessaire en
@@ -250,7 +250,7 @@ réseau interne à l'hyperviseur configuré en VirtualBox comme
 La configuration sous VMWare est très semblant à la configuration sous VirtualBox.
 Comme vue ci-dessous, la machine virtuel est configuré avec
 
-- Un disque de taille voulu - Ici 150 MOctets ont été utilisé
+- Un disque de taille voulu - Ici 150 GOctets ont été utilisé
 - Un lecteur de CD - Comme discuté ci-dessous.
 - Deux carte reseaux - La premiere carte est configuré pour les connexions vers les
 réseaux externes du DSAS et leur configuration dépendent de l'environnement où est 

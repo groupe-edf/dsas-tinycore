@@ -242,7 +242,7 @@ the use of an internal network of the hypervisor configured with VirtualBox like
 The configuration under VMWare is very similar to the configuration with VirtualBox. 
 As shown in the screen below, the virtual machine must be configured with
 
-- The desired disk space - Here a value of 150 Mbytes has been used
+- The desired disk space - Here a value of 150 Gbytes has been used
 - A cdrom device - As discussed below
 - Two network cards - The first card must be configured will be used for the connection 
 to the outside the DSAS and their configuration will be depend upon the environment in 
