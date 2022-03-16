@@ -272,7 +272,7 @@ directory of the DSAS with Docker
 - Dockerfile - This contains the instructions need to convert the file `rootfs64.tar.gz`
 into a valid Docker image
 - Makefile - This file contains a number of make targets that allow the simplification 
-of the installation of the DOcker image of the DSAS 
+of the installation of the Docker image of the DSAS 
 
 The network configuration in the `Makefile` must be adapted before use. The DSAS will
 also configure the network (see the section on Docker at the end of this document), and
