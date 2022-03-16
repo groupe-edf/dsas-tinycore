@@ -875,10 +875,9 @@ done
 # If dryrun, force verbose
 [ $dryrun -ne 0 ] && verbose=1
 
-
 # If ClamAV download request do it now and exit
-[ "$clamav" == "1" ] && (verifclamav; exit 0)
 antivirus="$(xmllint --xpath "string(dsas/config/antivirus/active)" "$CONF")"
+[ "$clamav" == "1" ] && (verifclamav; exit 0)
 
 # Check that all ids are valid before doing anything
 idx=""
