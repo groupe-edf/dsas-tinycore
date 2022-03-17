@@ -838,14 +838,14 @@ authentification and encryption.
 All of the readonly data available from a typical SNMP server on a linux machine will be published. The
 data specific to the DSAS are available with the following OIDs 
 
-- 1.3.6.1.4.1.16845.100.100.1.0   - Status of the upper machine. `0` if the machine is available.
-- 1.3.6.1.4.1.16845.100.100.2.0   - Status of the DSAS tasks. `0` if all of the tasks are ok.
-- 1.3.6.1.4.1.16845.100.100.3.1.1 - Name of the task 1.
-- 1.3.6.1.4.1.16845.100.100.3.1.2 - ID of the task 1.
-- 1.3.6.1.4.1.16845.100.100.3.1.3 - Status of the task 1.
-- 1.3.6.1.4.1.16845.100.100.3.N.1 - Name of the task N.
-- 1.3.6.1.4.1.16845.100.100.3.N.2 - ID of the task N.
-- 1.3.6.1.4.1.16845.100.100.3.N.3 - Status of the task N.
+- 1.3.6.1.4.1.16845.100.100.1.0     - Status of the upper machine. `0` if the machine is available.
+- 1.3.6.1.4.1.16845.100.100.2.0     - Status of the DSAS tasks. `0` if all of the tasks are ok.
+- 1.3.6.1.4.1.16845.100.100.3.1.1.1 - Name of the task 1.
+- 1.3.6.1.4.1.16845.100.100.3.1.1.N - Name of the task N.
+- 1.3.6.1.4.1.16845.100.100.3.1.2.1 - ID of the task 1.
+- 1.3.6.1.4.1.16845.100.100.3.1.2.N - ID of the task N.
+- 1.3.6.1.4.1.16845.100.100.3.1.3.1 - Status of the task 1.
+- 1.3.6.1.4.1.16845.100.100.3.1.3.N - Status of the task N.
 
 A [MIB file with these OID is available for download](DSAS-MIB.txt).
 

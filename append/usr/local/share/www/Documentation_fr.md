@@ -858,14 +858,14 @@ utilisé pour l'authentification et la chiffrement.
 L'ensemble des données SNMP du machine bas sera publié SNMP. Les données specifique au DSAS sont
 disponible sur les OID
 
-- 1.3.6.1.4.1.16845.100.100.1.0   - Statut de la machine haute. `0` si la machine est disponible
-- 1.3.6.1.4.1.16845.100.100.2.0   - Statut des tâches du DSAS. `0` si l'ensmble des tâches sont ok.
-- 1.3.6.1.4.1.16845.100.100.3.1.1 - Nom du tâche 1.
-- 1.3.6.1.4.1.16845.100.100.3.1.2 - ID du tâche 1.
-- 1.3.6.1.4.1.16845.100.100.3.1.3 - Statut de la tâche 1.
-- 1.3.6.1.4.1.16845.100.100.3.N.1 - Nom du tâche N.
-- 1.3.6.1.4.1.16845.100.100.3.N.2 - ID du tâche N.
-- 1.3.6.1.4.1.16845.100.100.3.N.3 - Statut de la tâche N.
+- 1.3.6.1.4.1.16845.100.100.1.0     - Statut de la machine haute. `0` si la machine est disponible
+- 1.3.6.1.4.1.16845.100.100.2.0     - Statut des tâches du DSAS. `0` si l'ensmble des tâches sont ok.
+- 1.3.6.1.4.1.16845.100.100.3.1.1.1 - Nom de la tâche 1.
+- 1.3.6.1.4.1.16845.100.100.3.1.1.N - Nom de la tâche N.
+- 1.3.6.1.4.1.16845.100.100.3.1.2.1 - ID de la tâche 1.
+- 1.3.6.1.4.1.16845.100.100.3.1.2.N - ID de la tâche N.
+- 1.3.6.1.4.1.16845.100.100.3.1.3.1 - Statut de la tâche 1.
+- 1.3.6.1.4.1.16845.100.100.3.1.3.N - Statut de la tâche N.
 
 Un [fichier MIB avec ces OID est disponible pour téléchargement](DSAS-MIB.txt).
 
