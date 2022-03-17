@@ -35,7 +35,7 @@ while [ "$#" -gt 0 ]; do
     -?|-h|--help)
       echo "Usage: $(basename $0)  [Options] [Command]"
       echo "Build DSAS packages and distributions. Valid commands are"
-      echo "     build [pkg]     Build the packge pkg from source code"
+      echo "     build pkg       Build the package 'pkg' from source code"
       echo "     source          Package DSAS source code"
       echo "     docker          Build a docker distribution package"
       echo "     clean           Remove the distribution files"
