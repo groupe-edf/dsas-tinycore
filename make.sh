@@ -249,7 +249,8 @@ unpack() {
 build_pkg() {
   for pkg in $1; do
     pkg_file=$pkg_dir/${pkg%%-dev}.pkg
-    if [ $rebuild -eq "1" ] || [ ! -f "$tcz_dir/$pkg.tcz" ]; then
+    if [ ! -f "$tcz_dir/$pkg.tcz" ] || { [ $rebuild -eq "1" ]  &&  \
+        [ $startdate -gt $(date -r "$tcz_dir/$pkg.tcz" +%s) ]; } then
       if [ -f "$pkg_file" ]; then
         msg "Building $pkg_file"
         # Unset build variables before sourcing package file
@@ -417,6 +418,8 @@ get_unpack_livecd(){
     cmd umount $mnt
   fi
 }
+
+startdate=$(date +%s)
 
 case $cmd in
 source)
