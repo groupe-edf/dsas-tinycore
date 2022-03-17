@@ -36,6 +36,7 @@ while [ "$#" -gt 0 ]; do
       echo "Usage: $(basename $0)  [Options] [Command]"
       echo "Build DSAS packages and distributions. Valid commands are"
       echo "     build [pkg]     Build the packge pkg from source code"
+      echo "     source          Package DSAS source code"
       echo "     docker          Build a docker distribution package"
       echo "     clean           Remove the distribution files"
       echo "     realclean       Remove all files, leaving a clean build tree"
@@ -105,6 +106,7 @@ dsascd=$work/dsas.iso
 rootfs64=$work/rootfs64
 docker=$work/docker
 dockimage=$work/docker.tgz
+source=$work/dsas.tgz
 service_pass_len=24
 
 # Force the umask
@@ -417,9 +419,13 @@ get_unpack_livecd(){
 }
 
 case $cmd in
+source)
+  tar cvzf $source --exclude=work --exclude=.git .
+  exit 0
+  ;;
 clean)
   rm -fr $image $build $newiso $mnt $dsascd $rootfs64 $dsascd.md5 \
-      $docker $dockimage $work/dsas_pass.txt
+      $docker $dockimage $source $work/dsas_pass.txt
   exit 0
   ;;
 realclean)
