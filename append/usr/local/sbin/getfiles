@@ -200,7 +200,6 @@ getrepo() {
              xmllint --xpath "string(//repomd/data[$i]/checksum/@type)" - )
          if  check_checksum "$DSAS_HAUT/$dir/$f" $chksum $chktype; then
              1>&2 echo "Error verifiying checksum of $f"
-           cleanup_and_exit 1 $tempdir
          fi
          i=$(($i + 1))
        done
