@@ -45,7 +45,7 @@ install: remove_container build_image network
 	  docker container stop $(CONTAINER) && \
 	  docker container rm $(CONTAINER);)
 	docker create --network=$(CONTAINER)_eth0 --ip $(IP_ETH0) $(PUBLISH) --tty \
-	  --cap-add=CAP_NET_ADMIN --cap-add=SYS_PTRACE --ulimit nofile=4096 \
+	  --cap-add=CAP_NET_ADMIN --restart always --ulimit nofile=4096 \
 	  -v $(CONTAINER)_$(VOLUME):/mnt/$(VOLUME)  --name $(CONTAINER) \
 	  $(IMAGE_NAME):$(IMAGE_TAG) /bin/sh -c "/etc/init.d/rcS.docker"
 	docker network connect --ip $(IP_ETH1) dsas_eth1  $(CONTAINER)
