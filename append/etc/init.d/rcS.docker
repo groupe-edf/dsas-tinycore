@@ -1,8 +1,8 @@
 #! /bin/sh
 
 # Setup tcedir
-MNT=$(ls -1 /mnt | head -1)
-ln -s $MNT /etc/sysconfig/tcedir
+MNT=$(ls -1 /mnt | head -1 | sed -e "s:/$::")
+ln -s /mnt/$MNT/tce /etc/sysconfig/tcedir
 mkdir -p /mnt/${MNT}/tce/optional
 chown -R root:staff /mnt/${MNT}/tce /usr/local/tce.installed
 chmod -R g+w /mnt/${MNT}/tce
