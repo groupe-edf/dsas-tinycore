@@ -62,7 +62,7 @@ _conf_cmd="cat << EOF | patch cmake/FindCURSES.cmake
    endif()
  endif()
 EOF
-setarch linux$arch cmake . -D ENABLE_MILTER=Off -D CMAKE_INSTALL_PREFIX=/usr/local"
+setarch linux$arch cmake . -D ENABLE_MILTER=Off -D CMAKE_INSTALL_PREFIX=/usr/local -D CMAKE_INSTALL_LIBDIR=/usr/local/lib"
 _make_cmd="cmake --build ."
 _install_cmd="cmake --build . --target install #"
 _post_build=""
