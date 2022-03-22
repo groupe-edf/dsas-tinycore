@@ -18,11 +18,12 @@ lftp_ca_options() {
     [ "$clamav" == "1" ] || ca_finger=$(xmllint --xpath "string(dsas/tasks/task[$id]/ca/fingerprint)" $CONF)
 
     case $ca_finger in
-      "")  opt="" ;;
-      "self") opt="set ssl:verify-certificate false; " ;;
+      "")  opt="set net:timeout 3; set net:max-retries 3; " ;;
+      "self") opt="set net:timeout 3; set net:max-retries 3; set ssl:verify-certificate false; " ;;
       *)
         idx=$(get_certificate $ca_finger)
-        [ -z "$idx" ] || opt="set ssl:ca-file /tmp/cert.$$; "
+        [ -z "$idx" ] || opt="set net:timeout 3; set net:max-retries 3; set ssl:ca-file /tmp/cert.$$; "
+        [ -z "$idx" ] && opt="set net:timeout 3; set net:max-retries 3; "
         ;;
     esac
   fi
@@ -89,7 +90,8 @@ getdirectory() {
   isdir=""
   [ "${uri: -1}" == "/" ] && isdir="1"
   [ "${uri: -1}" == "\\" ] && isdir="1"
-  [ -z "$isdir" ] && $(lftp -c "$opt open '$uri'") && isdir="1"
+  [ -z "$isdir" ] && _stderr=$(2>&1 lftp -c "$opt open '$uri'") && isdir="1"
+  echo $_stderr | grep -q "Fatal" && (1>&2 echo "Fatal: Server not found"; exit 1)
 
   if [ -z "$isdir" ]; then
     myecho "Downloading file : $(basename "$uri")"
