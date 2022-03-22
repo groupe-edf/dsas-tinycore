@@ -35,7 +35,8 @@ while [ "$#" -gt 0 ]; do
     -?|-h|--help)
       echo "Usage: $(basename $0)  [Options] [Command]"
       echo "Build DSAS packages and distributions. Valid commands are"
-      echo "     build [pkg]     Build the packge pkg from source code"
+      echo "     build pkg       Build the package 'pkg' from source code"
+      echo "     source          Package DSAS source code"
       echo "     docker          Build a docker distribution package"
       echo "     clean           Remove the distribution files"
       echo "     realclean       Remove all files, leaving a clean build tree"
@@ -105,6 +106,7 @@ dsascd=$work/dsas.iso
 rootfs64=$work/rootfs64
 docker=$work/docker
 dockimage=$work/docker.tgz
+source=$work/dsas.tgz
 service_pass_len=24
 
 # Force the umask
@@ -247,7 +249,8 @@ unpack() {
 build_pkg() {
   for pkg in $1; do
     pkg_file=$pkg_dir/${pkg%%-dev}.pkg
-    if [ $rebuild -eq "1" ] || [ ! -f "$tcz_dir/$pkg.tcz" ]; then
+    if [ ! -f "$tcz_dir/$pkg.tcz" ] || { [ $rebuild -eq "1" ]  &&  \
+        [ $startdate -gt $(date -r "$tcz_dir/$pkg.tcz" +%s) ]; } then
       if [ -f "$pkg_file" ]; then
         msg "Building $pkg_file"
         # Unset build variables before sourcing package file
@@ -416,10 +419,16 @@ get_unpack_livecd(){
   fi
 }
 
+startdate=$(date +%s)
+
 case $cmd in
+source)
+  tar cvzf $source --exclude=work --exclude=.git .
+  exit 0
+  ;;
 clean)
   rm -fr $image $build $newiso $mnt $dsascd $rootfs64 $dsascd.md5 \
-      $docker $dockimage $work/dsas_pass.txt
+      $docker $dockimage $source $work/dsas_pass.txt
   exit 0
   ;;
 realclean)
@@ -587,6 +596,7 @@ addgroup haut share
 addgroup -g 2004 repo
 addgroup bas repo
 addgroup tc repo
+addgroup -g 51 users
 
 # Hardening
 # Fix directory and file permissions

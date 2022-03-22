@@ -14,11 +14,11 @@ else if ($_SERVER["REQUEST_METHOD"] == "POST") {
        else
         $ret = dsas_exec(["/usr/local/sbin/dsasbackup", "-r", $_FILES["file"]["tmp_name"], "-p", $_POST["passwd"]]);
       if ($ret["retval"] != 0)
-        throw new RuntimeException(["Error during the restoration : {0}", (string)$ret["stderr"]]);
+        throw new RuntimeException($ret["stderr"]);
       echo "Ok";
     }  catch (RuntimeException $e) {
       header("Content-Type: application/json");
-      echo json_encode([["restore" => $e->getMessage()]]);
+      echo json_encode([["restore" => ["Error during the restoration : {0}", $e->getMessage()]]]);
     }
 } else {
   $BKP = "/tmp/dsasbackup.tgz";

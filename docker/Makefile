@@ -14,6 +14,7 @@ IP_ETH0 := $(shell if [ "$(CONTAINER)" = "bas" ]; then echo "192.168.0.1"; else 
 NET1 := 192.168.192.0/24
 GW1 := 192.168.192.254
 IP_ETH1 := $(shell if [ "$(CONTAINER)" = "bas" ]; then echo "192.168.192.1"; else echo "192.168.192.2"; fi)
+PUBLISH := $(shell if [ "$(CONTAINER)" = "bas" ]; then echo "-p 161:161/udp -p 443:443/tcp -p 5000:5000/tcp -p 8222:22/tcp"; else echo ""; fi)
 
 # WARNING : No user servicable parts below this point
 
@@ -43,8 +44,8 @@ install: remove_container build_image network
 	  docker container start --interactive $(CONTAINER) && \
 	  docker container stop $(CONTAINER) && \
 	  docker container rm $(CONTAINER);)
-	docker create --network=$(CONTAINER)_eth0 --ip $(IP_ETH0) --tty \
-	  --cap-add=CAP_NET_ADMIN --cap-add=SYS_PTRACE --ulimit nofile=4096 \
+	docker create --network=$(CONTAINER)_eth0 --ip $(IP_ETH0) $(PUBLISH) --tty \
+	  --cap-add=CAP_NET_ADMIN --restart always --ulimit nofile=4096 \
 	  -v $(CONTAINER)_$(VOLUME):/mnt/$(VOLUME)  --name $(CONTAINER) \
 	  $(IMAGE_NAME):$(IMAGE_TAG) /bin/sh -c "/etc/init.d/rcS.docker"
 	docker network connect --ip $(IP_ETH1) dsas_eth1  $(CONTAINER)
@@ -56,8 +57,9 @@ remove_container:
 	  docker container rm $(CONTAINER) || true
 
 build_image:
-	docker images | grep $(IMAGE_NAME) | grep -q $(IMAGE_TAG) || docker build \
-	  -t $(IMAGE_NAME):$(IMAGE_TAG) .
+	docker images | grep -q $(IMAGE_NAME):$(IMAGE_TAG) && \
+	  docker image rm $(IMAGE_NAME):$(IMAGE_TAG) || true
+	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) .
 
 ifeq (ETH1,"")
 network: network_virt

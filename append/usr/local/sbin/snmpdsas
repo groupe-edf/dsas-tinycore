@@ -28,24 +28,26 @@ if [ "$1" == "-n" ]; then
   case "$REQ" in
     $OID|$OID.0|$OID.0.*|$OID.1) RET=$OID.1.0 ;; # StatusUpperMachine
     $OID.1.*|$OID.2) RET=$OID.2.0 ;; # StatusTasks
-    $OID.2.*|$OID.3)
+    $OID.2.*|$OID.3|$OID.3.1.0)
       [ "$n" == "0" ] && exit 0
-      RET=$OID.3.1.1
+      RET=$OID.3.1.1.1
       ;;
     $OID.3.*)
-      _arg=${REQ:$((${#OID}+3))}
-      _task=$(echo $_arg | cut -f1 -d.)
-      _subtask=$(echo $_arg | cut -f2 -d.)
+      _arg=${REQ:$((${#OID}+5))}
+      _subtask=$(echo $_arg | cut -f1 -d.)
+      _task=$(echo $_arg | cut -s -f2 -d.)
 
-      case "$_subtask" in
-        1) RET=$OID.3.$_task.2 ;; # TaskID
-        2) RET=$OID.3.$_task.3 ;; # TaskStatus
-        3)
+      case "$_task" in
+        '') RET=$OID.3.1.$_subtask.1 ;;
+        *)
           _task=$(($_task + 1))
-          [ $_task -gt $n ] && exit 0
-          RET=$OID.3.$_task.1  # TaskName
+          if [ $_task -gt $n ]; then
+            _subtask=$(($_subtask + 1))
+            [ $_subtask -gt 4 ] && exit 0
+            _task=1
+          fi
+          RET=$OID.3.1.$_subtask.$_task
           ;;
-        *) exit 0 ;;
       esac
       ;;
     *) exit 0 ;;
@@ -54,14 +56,14 @@ else
   # GET
   case "$REQ" in
     $OID.1.0|$OID.2.0) RET=$REQ ;;
-    $OID.3.*)
-      _arg=${REQ:$((${#OID}+3))}
-      _task=$(echo $_arg | cut -f1 -d.)
-      _subtask=$(echo $_arg | cut -f2 -d.)
-      [ $_task -lt 1 ] && exit 0
+    $OID.3.1.*)
+      _arg=${REQ:$((${#OID}+5))}
+      _subtask=$(echo $_arg | cut -f1 -d.)
+      _task=$(echo $_arg | cut -f2 -d.)
+      [ $_task -lt 0 ] && exit 0
       [ $_task -gt $n ] && exit 0
       [ $_subtask -lt 1 ] && exit 0
-      [ $_subtask -gt 3 ] && exit 0
+      [ $_subtask -gt 4 ] && exit 0
       RET=$REQ
       ;;
     *) exit 0 ;;
@@ -92,20 +94,24 @@ case "$RET" in
     echo "integer"
     echo $_status
     ;;
-  $OID.3.*)
-    _arg=${RET:$((${#OID}+3))}
-    _task=$(echo $_arg | cut -f1 -d.)
-    _subtask=$(echo $_arg | cut -f2 -d.)
+  $OID.3.1.*)
+    _arg=${RET:$((${#OID}+5))}
+    _subtask=$(echo $_arg | cut -f1 -d.)
+    _task=$(echo $_arg | cut -s -f2 -d.)
     case "$_subtask" in
-      1) 
+      1)
+        echo "integer"
+        echo $_task
+        ;;
+      2)
         echo "string"
         echo $(xmllint --xpath "string(dsas/tasks/task[$_task]/name)" $CONF)
         ;; 
-      2)
+      3)
         echo "string"
         echo $(xmllint --xpath "string(dsas/tasks/task[$_task]/id)" $CONF)
         ;;
-      3)
+      4)
         echo "integer"
         _id=$(xmllint --xpath "string(dsas/tasks/task[$_task]/id)" $CONF)
         _status="$(grep $_id $LOG | xargs | cut -f3 -d' ')" 

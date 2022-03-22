@@ -242,7 +242,7 @@ the use of an internal network of the hypervisor configured with VirtualBox like
 The configuration under VMWare is very similar to the configuration with VirtualBox. 
 As shown in the screen below, the virtual machine must be configured with
 
-- The desired disk space - Here a value of 150 Mbytes has been used
+- The desired disk space - Here a value of 150 Gbytes has been used
 - A cdrom device - As discussed below
 - Two network cards - The first card must be configured will be used for the connection 
 to the outside the DSAS and their configuration will be depend upon the environment in 
@@ -272,7 +272,7 @@ directory of the DSAS with Docker
 - Dockerfile - This contains the instructions need to convert the file `rootfs64.tar.gz`
 into a valid Docker image
 - Makefile - This file contains a number of make targets that allow the simplification 
-of the installation of the DOcker image of the DSAS 
+of the installation of the Docker image of the DSAS 
 
 The network configuration in the `Makefile` must be adapted before use. The DSAS will
 also configure the network (see the section on Docker at the end of this document), and
@@ -830,7 +830,7 @@ of the DSAS on the lower network is `10.0.2.15` for example, the repositoty will
 
 ### SNMP Server
 
-A SNMP server can be activiated on the DSAS. This service is only available with authentification and
+A SNMP server can be activated on the DSAS. This service is only available with authentification and
 encryption and so only SNMPv3 is supported. Selecting `SNMPv3` the service xith by activated. After a
 valid `SNMP Username` and `SNMP Password` must be entered. The password will be used for both the
 authentification and encryption. 
@@ -838,14 +838,16 @@ authentification and encryption.
 All of the readonly data available from a typical SNMP server on a linux machine will be published. The
 data specific to the DSAS are available with the following OIDs 
 
-1.3.6.1.4.1.16845.100.100.1.0   - Status of the upper machine. `0` if the machine is available.
-1.3.6.1.4.1.16845.100.100.2.0   - Status of the DSAS tasks. `0` if all of the tasks are ok.
-1.3.6.1.4.1.16845.100.100.3.1.1 - Name of the task 1.
-1.3.6.1.4.1.16845.100.100.3.1.2 - ID of the task 1.
-1.3.6.1.4.1.16845.100.100.3.1.3 - Status of the task 1.
-1.3.6.1.4.1.16845.100.100.3.N.1 - Name of the task N.
-1.3.6.1.4.1.16845.100.100.3.N.2 - ID of the task N.
-1.3.6.1.4.1.16845.100.100.3.N.3 - Status of the task N.
+- 1.3.6.1.4.1.16845.100.100.1.0     - Status of the upper machine. `0` if the machine is available.
+- 1.3.6.1.4.1.16845.100.100.2.0     - Status of the DSAS tasks. `0` if all of the tasks are ok.
+- 1.3.6.1.4.1.16845.100.100.3.1.1.1 - Name of the task 1.
+- 1.3.6.1.4.1.16845.100.100.3.1.1.N - Name of the task N.
+- 1.3.6.1.4.1.16845.100.100.3.1.2.1 - ID of the task 1.
+- 1.3.6.1.4.1.16845.100.100.3.1.2.N - ID of the task N.
+- 1.3.6.1.4.1.16845.100.100.3.1.3.1 - Status of the task 1.
+- 1.3.6.1.4.1.16845.100.100.3.1.3.N - Status of the task N.
+
+A [MIB file with these OID is available for download](DSAS-MIB.txt).
 
 ### syslogd client
 
@@ -1237,7 +1239,7 @@ Software impacted by this risk
 
 | software      | version    | comment                                                                        | 
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [1.1.1m](https://www.openssl.org/source/openssl-1.1.1m.tar.gz) | Only the functionality used by ssh impacted |
+| openssl | [1.1.1n](https://www.openssl.org/source/openssl-1.1.1n.tar.gz) | Only the functionality used by ssh impacted |
 | openssh | [8.8p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-8.8p1.tar.gz) | ssh and sftp used |
 
 ### Risk: Attack on signature verification
@@ -1251,11 +1253,11 @@ Software impacted by this risk
 
 | software | version | comment |
 | -------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [1.1.1m](https://www.openssl.org/source/openssl-1.1.1m.tar.gz) | Used for authenticode, LiveUpdate and OpenSSL verification |
+| openssl | [1.1.1n](https://www.openssl.org/source/openssl-1.1.1n.tar.gz) | Used for authenticode, LiveUpdate and OpenSSL verification |
 | gnupg | [2.2.27](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.27.tar.bz2) | Used for RPM, DEB and GPG verification |
 | libgcrypt | [1.9.3](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.9.3.tar.bz2) | Used for RPM, DEB and GPG verification |
 | rpm | [4.16.1.3](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.16.x/rpm-4.16.1.3.tar.bz2) | Used for RPM checking |
-| osslsigncode | [2.2.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.2/osslsigncode-2.2.0.tar.gz) | Used for authenicode verification |
+| osslsigncode | [2.3.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.3/osslsigncode-2.3.0.tar.gz) | Used for authenicode verification |
 | clamav | [0.104.2](https://www.clamav.net/downloads/production/clamav-0.104.2.tar.gz) | Used for antivirus tests |
 
 
@@ -1270,7 +1272,7 @@ Software impacted by this risk
 
 | software | version | comment |
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [1.1.1m](https://www.openssl.org/source/openssl-1.1.1m.tar.gz) | only the functionality used by ssh impacted |
+| openssl | [1.1.1n](https://www.openssl.org/source/openssl-1.1.1n.tar.gz) | only the functionality used by ssh impacted |
 | lftp    | [4.9.2](https://lftp.yar.ru/ftp/lftp-4.9.2.tar.bz2) | Used for http, https, ftp, ftps, sftp |
  
 ### Risk: Attack against DSAS administrator authentication
@@ -1286,7 +1288,7 @@ Software impacted by this risk
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
 | php-cgi | [8.0.1](http://tinycorelinux.net/12.x/x86/tcz/php-8.0-cgi.tcz) | Backend of the administration site |
 | lighttpd | [1.4.58](http://tinycorelinux.net/12.x/x86/tcz/lighttpd.tcz) | Backend of the administration site |
-| cyrus-sasl-lite | [2.1.27](http://tinycorelinux.net/12.x/x86/tcz/cyrus-sasl-lite.tcz) | Authentication on the administration site |
+| Linux PAM | [1.5.2](https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz) | Authentication on the administration site |
 | DSAS website | [-](https://gitlab.devops-unitep.edf.fr/dsao-cyber/dsas---tinycore) | Backend and frontend of the administration site |
 
 The DSAS website is specially developed for this project. A code audit is in progress
@@ -1548,6 +1550,7 @@ to ensure its security.
 | sensitive network | lower             | 443         | tcp/udp | https    | optional  | file repository               |
 | sensitive network | lower             | 22          | tcp     | ssh      | optional  | user 'tc' console access      |
 | sensitive network | lower             | 22          | tcp     | sftp     | optional  | user 'bas' file access        |
+| sensitive network | lower             | 161         | udp     | snmp     | optional  | surveillance of the DSAS      |
 | open network      | upper             | 22          | tcp     | sftp     | not reco. | user 'haut' file deposit      |
 | lower             | sensitive network | 123         | udp     | ntp      | optional  | time synchronisation          |
 | lower             | sensitive network | 514         | udp     | syslog   | optional  | log service                   | 

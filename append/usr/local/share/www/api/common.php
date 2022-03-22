@@ -6,7 +6,7 @@ define("_DSAS_XML", _DSAS_VAR . "/dsas_conf.xml");
 
 function dsas_ca_file() {
   foreach (["/etc/ssl/ca-bundle.crt", "/etc/ssl/ca-certificates.crt",
-           "/usr/local/etc/ssl/ca-bundle.crt", "/ust/local/etc/ssl/ca-certificates.crt"] as $f) {
+           "/usr/local/etc/ssl/ca-bundle.crt", "/usr/local/etc/ssl/ca-certificates.crt"] as $f) {
     if (is_file($f))
       return $f;
   }
@@ -197,26 +197,24 @@ function change_passwd($name, $passwd, $hash = "sha512"){
   );
   $cwd="/tmp";
   
-  // User proc_open with a command array to avoid spawning
-  // a shell that can be attacked
-  // Set the machine "haut" first as it might not be available
-  $process = proc_open(["ssh", "tc@" . interco_haut(), "sudo", "/usr/sbin/chpasswd", "-c", $hash], $descriptorspec, $pipes, $cwd);
-  // password and username can't be used to attack here as
-  // there is no shell to attack. At this point its also too late
-  // to pass args to chpasswd like "-c md5" to force a weak hash
-  // So this is safe. 
-  fwrite($pipes[0], $name . ":" . $passwd . PHP_EOL);
-  fclose($pipes[0]);
-  fclose($pipes[1]);
-  $stderr = fgets($pipes[2]);
-  fclose($pipes[2]);
-  $retval = proc_close($process); 
-  $ret["retval"] = $retval;
-  $ret["stderr"] = $stderr;
-  if (! empty($retval)) {
-    $ret["retval"] = $retval;
-    $ret["stderr"] = $stderr;
-    return $ret;
+  // Only change password on machine haut if the user is "tc". The only users aren't
+  // installed on th emachine haut. Use proc_open with a command array to avoid spawning 
+  // a shell that can be attacked. Set the machine "haut" first as it might not be available
+  if ($name == "tc") {
+    $process = proc_open(["ssh", "tc@" . interco_haut(), "sudo", "/usr/sbin/chpasswd", "-c", $hash], $descriptorspec, $pipes, $cwd);
+
+    // password and username can't be used to attack here as
+    // there is no shell to attack. At this point its also too late
+    // to pass args to chpasswd like "-c md5" to force a weak hash
+    // So this is safe. 
+    fwrite($pipes[0], $name . ":" . $passwd . PHP_EOL);
+    fclose($pipes[0]);
+    fclose($pipes[1]);
+    $stderr = fgets($pipes[2]);
+    fclose($pipes[2]);
+    $retval = proc_close($process); 
+    if ($retval != 0)
+      return ["retval" => $retval, "stdout" => "", "stderr" => $stderr];
   }
 
   // Now set the password on the machine "bas"
@@ -227,7 +225,7 @@ function change_passwd($name, $passwd, $hash = "sha512"){
   $stderr = fgets($pipes[2]);
   fclose($pipes[2]);
   $retval = proc_close($process);
-  return $ret;
+  return ["retval" => $retval, "stdout" => "", "stderr" => $stderr];
 }
 
 function mask2cidr($mask){

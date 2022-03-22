@@ -1,5 +1,5 @@
 <dsas>
-  <version>0.9</version>
+  <version>0.11</version>
   <config>
     <users>
       <hash>sha512</hash>
@@ -71,7 +71,13 @@
     <antivirus>
       <active>false</active>
       <uri></uri>
+      <uuid></uuid>
     </antivirus>
+    <snmp>
+      <active>false</active>
+      <username></username>
+      <password></password>
+    </snmp>
   </config>
   <tasks>
   </tasks>
