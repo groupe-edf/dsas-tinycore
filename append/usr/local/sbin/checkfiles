@@ -476,7 +476,7 @@ verify_packages() {
       elif [ "$rpm_k" == "1" ] && ! rpm -K "$DSAS_HAUT/$dir/$file" 2>&1 1> /dev/null; then
         msgline "$DSAS_HAUT/$dir/$file" 5      
       elif [ "$antivirus" == "true" ]; then
-        if clamdscan "$DSAS_HAUT/$dir/$file" >& /dev/null; then
+        if rpm2cpio "$DSAS_HAUT/$dir/$file" | clamdscan - >& /dev/null; then
           msgline "$DSAS_HAUT/$dir/$file" 0
           ln "$DSAS_HAUT/$dir/$file" "$DSAS_BAS/$dir/$file"
         else
@@ -715,7 +715,7 @@ EOF
             [ -d "$(dirname i"$DSAS_BAS/$pool/$_file")" ] || $(umask 007; mkdir -p "$(dirname "$DSAS_BAS/$pool/$_file")"; chgrp $grp -R "$(dirname "$DSAS_BAS/$pool/$_file")")
 
             if [ "$antivirus" == "true" ]; then
-              if clamdscan "$DSAS_HAUT/$pool/$_file" >& /dev/null; then
+              if ar p "$DSAS_HAUT/$pool/$_file" | clamdscan - >& /dev/null; then
                 msgline "$DSAS_HAUT/$pool/$_file" 0
                 ln "$DSAS_HAUT/$pool/$_file" "$DSAS_BAS/$pool/$_file"
               else
