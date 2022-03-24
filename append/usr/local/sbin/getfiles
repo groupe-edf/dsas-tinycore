@@ -25,11 +25,12 @@ lftp_ca_options() {
     [ "$clamav" == "1" ] || ca_finger=$(xmllint --xpath "string(dsas/tasks/task[$id]/ca/fingerprint)" $CONF)
 
     case $ca_finger in
-      "")  opt="$opt " ;;
-      "self") opt="$opt set ssl:verify-certificate false; " ;;
+      "")  opt="$opt set net:timeout 3; set net:max-retries 3; " ;;
+      "self") opt="$opt set net:timeout 3; set net:max-retries 3; set ssl:verify-certificate false; " ;;
       *)
         idx=$(get_certificate $ca_finger)
-        [ -z "$idx" ] || opt="$opt set ssl:ca-file /tmp/cert.$$; "
+        [ -z "$idx" ] || opt="$opt set net:timeout 3; set net:max-retries 3; set ssl:ca-file /tmp/cert.$$; "
+        [ -z "$idx" ] && opt="$opt set net:timeout 3; set net:max-retries 3; "
         ;;
     esac
 
@@ -97,7 +98,8 @@ getdirectory() {
   isdir=""
   [ "${uri: -1}" == "/" ] && isdir="1"
   [ "${uri: -1}" == "\\" ] && isdir="1"
-  [ -z "$isdir" ] && $(lftp -c "$opt open '$uri'") && isdir="1"
+  [ -z "$isdir" ] && _stderr=$(2>&1 lftp -c "$opt open '$uri'") && isdir="1"
+  echo $_stderr | grep -q "Fatal" && (1>&2 echo "Fatal: Server not found"; exit 1)
 
   if [ -z "$isdir" ]; then
     myecho "Downloading file : $(basename "$uri")"
@@ -203,7 +205,6 @@ getrepo() {
              xmllint --xpath "string(//repomd/data[$i]/checksum/@type)" - )
          if  check_checksum "$DSAS_HAUT/$dir/$f" $chksum $chktype; then
              1>&2 echo "Error verifiying checksum of $f"
-           cleanup_and_exit 1 $tempdir
          fi
          i=$(($i + 1))
        done
