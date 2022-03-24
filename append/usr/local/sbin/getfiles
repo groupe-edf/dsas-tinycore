@@ -12,24 +12,27 @@ lftp_ca_options() {
   local opt=""
 
   if [ "$TYP" == "haut" ]; then
+    opt="set sftp:auto-confirm true;" 
+    if [ "$clamav" == "1" ]; then
+      # Set ClamAV User-Agent including our ClamAV client UUID to get around anti DDOS protections
+      uuid=$(xmllint --xpath "string(dsas/config/antivirus/uuid)" "$CONF")
+      opt="$opt set http:user-agent 'CVDUPDATE/1.0.2 ($uuid)'; "
+    fi
+
     # Setup the LFTP CA if needed. If ClamAv force self_signed for now
     # ClamAV signatures are verified elsewhere before use
     [ "$clamav" == "1" ] && ca_finger="self"
     [ "$clamav" == "1" ] || ca_finger=$(xmllint --xpath "string(dsas/tasks/task[$id]/ca/fingerprint)" $CONF)
 
     case $ca_finger in
-      "")  opt="" ;;
-      "self") opt="set ssl:verify-certificate false; " ;;
+      "")  opt="$opt " ;;
+      "self") opt="$opt set ssl:verify-certificate false; " ;;
       *)
         idx=$(get_certificate $ca_finger)
-        [ -z "$idx" ] || opt="set ssl:ca-file /tmp/cert.$$; "
+        [ -z "$idx" ] || opt="$opt set ssl:ca-file /tmp/cert.$$; "
         ;;
     esac
-    if [ "$clamav" == "1" ]; then
-      # Set ClamAV User-Agent including our ClamAV client UUID to get around anti DDOS protections
-      uuid=$(xmllint --xpath "string(dsas/config/antivirus/uuid)" "$CONF")
-      opt="$opt set http:user-agent 'CVDUPDATE/1.0.2 ($uuid)'; "
-    fi
+
   fi
   echo $opt
 }
