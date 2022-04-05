@@ -21,12 +21,12 @@ function modal_message(text, action = null, hide = false){
   modalDSAS.show();
 }
 
-function modal_info(text){
+function modal_info(name, text){
   var modalDSAS = document.getElementById("modalDSAS");
   modalDSAS.removeAttribute("disable");
   modalDSAS.setAttribute("hideonclick", true);
   modalDSAS.setAttribute("action", "");
-  modalDSAS.setAttribute("title", _("Info"));
+  modalDSAS.setAttribute("title", _("Info : {0}", name));
   modalDSAS.setAttribute("type", "Ok");
   modalDSAS.setAttribute("size", "xl");
   modalDSAS.setAttribute("body", "<pre>" + text + "</pre>");
@@ -1435,7 +1435,7 @@ function dsas_display_tasks(what = "all") {
           body = body + '&nbsp;<a data-toogle="tooltip" title="' + _("Run") + '" onclick="dsas_task_run(\'' + task.id + 
               '\', \'' + task.name + '\');"><img src="play.svg" width="20" height="20"></a>';
           body = body + '&nbsp;<a data-toogle="tooltip" title="' + _("Info") + '" onclick="dsas_task_info(\'' + task.id +
-              '\');"><img src="info.svg"></a>';
+              '\', \'' + task.name + '\');"><img src="info.svg"></a>';
           body = body + 
               '</p><div class="collapse" id="task' + i + '"><div class="card card-body">' +
               '<pre>' + task_body(task) + '</pre></div></div>\n';
@@ -1650,7 +1650,7 @@ function dsas_task_real_run(id) {
     });
 }
 
-function dsas_task_info(id) {
+function dsas_task_info(id, name) {
   var formData = new FormData;
   formData.append("op", "info");
   formData.append("id", id);
@@ -1663,7 +1663,7 @@ function dsas_task_info(id) {
             statusText: response.statusText});
     }).then(text => {
       info = JSON.parse(text);
-      modal_info(info[0]["info"]);
+      modal_info(name, info[0]["info"]);
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
         modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));

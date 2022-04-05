@@ -232,7 +232,7 @@
     "SNMPv3" : "",
     "SNMP Username" : "",
     "SNMP Password" : "",
-    "Info" : ""
+    "Info : {0}" : ""
   },
   "fr" : {
     "Search" : "Rechercher",
@@ -470,6 +470,6 @@
     "SNMPv3" : "SNMPv3",
     "SNMP Username" : "Nom d'utilisateur SNMP",
     "SNMP Password" : "Mot de passe SNMP",
-    "Info" : "Info"
+    "Info : {0}" : "Info : {0}"
   }
 }
