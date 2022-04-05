@@ -231,7 +231,8 @@
     "HTTPS repository" : "",
     "SNMPv3" : "",
     "SNMP Username" : "",
-    "SNMP Password" : ""
+    "SNMP Password" : "",
+    "Info" : ""
   },
   "fr" : {
     "Search" : "Rechercher",
@@ -468,6 +469,7 @@
     "HTTPS repository" : "Dépôt HTTPS",
     "SNMPv3" : "SNMPv3",
     "SNMP Username" : "Nom d'utilisateur SNMP",
-    "SNMP Password" : "Mot de passe SNMP"
+    "SNMP Password" : "Mot de passe SNMP",
+    "Info" : "Info"
   }
 }

@@ -1208,11 +1208,11 @@ An example of an added task is
 ![Example task added](en/DSAS31.png)
 
 Next to each task, the icon ![](en/DSAS36.png) allows the task to be modified,
-![](en/DSAS40.png) allows the task to be removed and ![](en/DSAS41.png) allows
-the task to be executed immediately. The status of the task is provided via the color of the
-task title. In blue, the task was not executed, in green, the execution of the task was successful,
-and in red the execution has failed. The last execution of the task is visible by opening
-the task as
+![](en/DSAS40.png) allows the task to be removed, ![](en/DSAS41.png) allows
+the task to be executed immediately and ![](en/DSAS42.png) allows the logs of the task to be examined. 
+The status of the task is provided via the color of the task title. In blue, the task was not executed,
+in green, the execution of the task was successful, and in red the execution has failed. The last
+execution of the task is visible by opening the task as
 
 ![Example of successful task execution](en/DSAS32.png) 
 
