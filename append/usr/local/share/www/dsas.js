@@ -21,6 +21,18 @@ function modal_message(text, action = null, hide = false){
   modalDSAS.show();
 }
 
+function modal_info(text){
+  var modalDSAS = document.getElementById("modalDSAS");
+  modalDSAS.removeAttribute("disable");
+  modalDSAS.setAttribute("hideonclick", true);
+  modalDSAS.setAttribute("action", "");
+  modalDSAS.setAttribute("title", _("Info"));
+  modalDSAS.setAttribute("type", "Ok");
+  modalDSAS.setAttribute("size", "xl");
+  modalDSAS.setAttribute("body", "<pre>" + text + "</pre>");
+  modalDSAS.show();
+}
+
 function modal_action(text, action = null, hide = false){
   var modalDSAS = document.getElementById("modalDSAS");
   modalDSAS.removeAttribute("disable");
@@ -1422,6 +1434,8 @@ function dsas_display_tasks(what = "all") {
               '\', \'' + task.name + '\');"><img src="x-lg.svg"></a>';
           body = body + '&nbsp;<a data-toogle="tooltip" title="' + _("Run") + '" onclick="dsas_task_run(\'' + task.id + 
               '\', \'' + task.name + '\');"><img src="play.svg" width="20" height="20"></a>';
+          body = body + '&nbsp;<a data-toogle="tooltip" title="' + _("Info") + '" onclick="dsas_task_info(\'' + task.id +
+              '\');"><img src="info.svg"></a>';
           body = body + 
               '</p><div class="collapse" id="task' + i + '"><div class="card card-body">' +
               '<pre>' + task_body(task) + '</pre></div></div>\n';
@@ -1630,6 +1644,26 @@ function dsas_task_real_run(id) {
         clear_feedback();
         dsas_display_tasks("tasks");
       }
+    }).catch(error => {
+      if (! fail_loggedin(error.statusText))
+        modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
+    });
+}
+
+function dsas_task_info(id) {
+  var formData = new FormData;
+  formData.append("op", "info");
+  formData.append("id", id);
+  fetch("api/dsas-task.php", {method: "POST", body: formData 
+    }).then( response => {
+      if (response.ok) 
+        return response.text();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(text => {
+      info = JSON.parse(text);
+      modal_info(info[0]["info"]);
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
         modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));

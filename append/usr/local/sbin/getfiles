@@ -94,12 +94,9 @@ getdirectory() {
   # Create directory if needed
   [ -d "${DSAS_HAUT}/$dir" ] || $(umask 007 && mkdir -p "${DSAS_HAUT}/$dir")
 
-  # Test whether we have a file or a directory
-  isdir=""
-  [ "${uri: -1}" == "/" ] && isdir="1"
-  [ "${uri: -1}" == "\\" ] && isdir="1"
-  [ -z "$isdir" ] && _stderr=$(2>&1 lftp -c "$opt open '$uri'") && isdir="1"
-  echo $_stderr | grep -q "Fatal" && (1>&2 echo "Fatal: Server not found"; exit 1)
+  # Test whether we have a file or a directory, and fail if server not found 
+  _stderr=$(2>&1 lftp -c "$opt open '$uri'") && isdir="1"
+  echo $_stderr | grep -q "Fatal" && (1>&2 echo "Fatal: Server '$uri' not found"; exit 1)
 
   if [ -z "$isdir" ]; then
     myecho "Downloading file : $(basename "$uri")"
@@ -181,7 +178,9 @@ getrepo() {
        myecho "Downloading repodata/repomd.xml from $name"
        [ -d "$DSAS_HAUT/$dir/repodata" ] || $(umask 007 && mkdir -p "$DSAS_HAUT/$dir/repodata")
 
-       lftp -c "$opt get -e '$uri/repodata/repomd.xml' -o '$DSAS_HAUT/$dir/repodata/repomd.xml'" >& /dev/null
+       _stderr=$(2>&1 lftp -c "$opt get -e '$uri/repodata/repomd.xml' -o '$DSAS_HAUT/$dir/repodata/repomd.xml'")
+       echo $_stderr | grep -q "Fatal" && (1>&2 echo "Fatal: Server '$uri' not found"; exit 1)
+
        [ "$type" == "rpm" ] || lftp -c "$opt get -e '$uri/repodata/repomd.xml.asc' -o '$DSAS_HAUT/$dir/repodata/repomd.xml.asc'" >& /dev/null
 
        # Identify all files listed in repomd.xml and download them
@@ -263,6 +262,10 @@ getdeb() {
     deb)
        # Create the destination directory if needed
        [ -d "$DSAS_HAUT/$dir" ] || $(umask 007 && mkdir -p $DSAS_HAUT/$dir)
+
+       # Test server ok before continuing
+       _stderr=$(2>&1 lftp -c "$opt open '$uri/'")
+       echo $_stderr | grep -q "Fatal" && (1>&2 echo "Fatal: Server '$uri' not found"; exit 1)
 
        myecho "Downloading Release/Release.gpg from $name"
        if [ "$verbose" -eq 0 ]; then

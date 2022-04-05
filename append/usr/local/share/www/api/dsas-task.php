@@ -6,6 +6,7 @@ if (! dsas_loggedin())
 else if($_SERVER["REQUEST_METHOD"] == "POST"){
   $dsas = simplexml_load_file(_DSAS_XML);
   $errors = array();
+  $info = array();
 
   try {
     switch ($_POST["op"]){
@@ -248,10 +249,31 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           } else {
             // Force the execution of the task with the "-f" flag.
             // FIXME : seems that we can't use dsas_exec ad it hands
-            exec("runtask -f " . $id . " >& /dev/null &");
+            exec("runtask -v -f " . $id . " >& " . _DSAS_LOG . "/" . $id . ".log &");
           }
         }
 
+        break;
+
+      case "info" :
+        $id = $_POST["id"];;
+        if (! ctype_xdigit($id)) {
+          $errors[] = ["error" => "The task ID is invalid"];
+        } else {
+          $dsas_active = simplexml_load_file(_DSAS_XML . ".active");
+          $infotask = false;
+          foreach ($dsas_active->tasks->task as $task) {
+            if ($task->id == $id) {
+              $infotask = true;
+              break;
+            }
+          }
+          if ( ! $infotask) {
+            $errors[] = ["error" => ["The task '{0}' is not active. Try applying before use",  $id]];
+          } else {
+            $info[] = ["info" => file_get_contents(_DSAS_LOG . "/" . $id . ".log")];
+          }
+        }
         break;
 
       default:
@@ -263,7 +285,12 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
   }
  
   if ($errors == []) {
-    echo "Ok";
+    if ($info == [])
+      echo "Ok";
+    else {
+      header("Content-Type: application/json");
+      echo json_encode($info);
+    }
     $dsas->asXml(_DSAS_XML);    
   } else {
     header("Content-Type: application/json");
