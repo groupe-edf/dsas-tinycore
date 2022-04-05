@@ -365,7 +365,7 @@ verifdirectory() {
   # Remove the files in our tree bas and not in haut.
   filetable=$(cd "$DSAS_HAUT/$dir"; find . -type f)
   for file in $(cd "$DSAS_BAS/$dir"; find . -type f -exec echo -n -e "{}\x03" \; ); do
-    if [[ "$filetable" != *"${file:2}"* ]]; then
+    if [[ "$filetable" != "*${file:2}*" ]]; then
       myecho "Removing stale file ${file:2}"
       rm -f "$DSAS_BAS/$dir/${file:2}"
     fi
