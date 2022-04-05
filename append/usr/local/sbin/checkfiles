@@ -409,7 +409,7 @@ verifdirectory() {
       case $type in
         authenticode) verifauthenticode $id "$tempdir" "$DSAS_HAUT/$file" ;;
         cyberwatch)
-          [ "${file##*.}" != "zip" ]  && continue 
+          [ "${file##*.}" != "zip" ]  && msgline "$DSAS_HAUT/$file" 255 && continue 
           verifcyberwatch $id "$tempdir" "$DSAS_HAUT/$file"
           ;;
         openssl) 
