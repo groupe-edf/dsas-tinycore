@@ -231,16 +231,22 @@ function fail_loggedin(status){
     return false;
 }
 
-function dsas_init_loggedin(is_admin = true){
+function dsas_init_loggedin(){
   var uri;
   uri  = new URL("api/login.php", window.location.origin);
-  uri.search = new URLSearchParams({admin : is_admin});
+  uri.search = new URLSearchParams({admin : true });
   fetch(uri).then(response => {
     if (response.ok)
-      if (is_admin)
-        window.location = "/";
-      else
-        window.location = "passwd.html";   
+      window.location = "/";
+    else {
+      uri.search = new URLSearchParams({admin : false });
+      fetch(uri).then(response => {
+        if (response.ok)
+          window.location = "passwd.html";
+      }).catch(error => {
+        // Catch and ignore errors.
+      });
+    }
   }).catch(error => {
     // Catch and ignore errors.
   });
@@ -274,8 +280,7 @@ function dsas_login(){
   fetch("api/login.php", {method: "POST", body: formData 
     }).then(response => {
       if (response.ok) {
-        dsas_init_loggedin(true);
-        dsas_init_loggedin(false);
+        dsas_init_loggedin();
       } else
         return Promise.reject({status: response.status, 
             statusText: response.statusText});
