@@ -29,7 +29,7 @@ function modal_info(name, text){
   modalDSAS.setAttribute("title", _("Info : {0}", name));
   modalDSAS.setAttribute("type", "Ok");
   modalDSAS.setAttribute("size", "xl");
-  modalDSAS.setAttribute("body", "<pre>" + text + "</pre>");
+  modalDSAS.setAttribute("body", "<pre>" + print_obj(text) + "</pre>");
   modalDSAS.show();
 }
 
