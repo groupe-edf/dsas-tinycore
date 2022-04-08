@@ -83,8 +83,8 @@ of the machines of the DSAS
 - No unverified file is visible in the sensitive zone. The file systems of the
 two machines of the DSAS are seperate
 - The verifications are performed by the DSAS before files are made available in the
-sensitive zone. These verifications are for the moment limited to verifications of the
-integrity, but in the future could include an anti-virus
+sensitive zone. These verifications always include a signature and integrity check, which
+can be completed by an anti-virus control.
 - The maintenance of the security of the DSAS must be assured. This means that all
 of the software elements exposed to an attack must be known, their vulnerabilities
 monitored and the means to protect against these vulnerabilites in place.

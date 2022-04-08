@@ -82,9 +82,8 @@ les zones internes de chaque machine.
 - Aucun fichier non contrôlé ne doit être visible dans la zone sensible. Les systèmes
 fichiers des deux machines du DSAS doivent être distincte.
 - Des vérifications doivent être faites par le DSAS avant de rendre disponible les
-fichiers dans le zone sensible. Ces vérifications sont actuellement limitées à
-des contrôles d'intégrité mais pourraient dans la futur inclure des contrôles des
-menaces avec un moteur d'AV.
+fichiers dans le zone sensible. Ces vérifications inclut toujours une contrôle d'intégrité
+et signature, mais pourraient être completé par une contrôles des menaces avec un moteur d'AV.
 - Le maintien en condition de sécurité doit être assurer. Ceci veut dire que
 l'ensemble des logiciels exposés à l'attaque doivent connus, une veille de sécurité doit 
 être mise en place et des moyens pour pallier les vulnérabilités maitrisées.
@@ -1298,6 +1297,20 @@ Logiciels impactés par ce risque
 | rpm          | [4.16.1.3](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.16.x/rpm-4.16.1.3.tar.bz2) | Utilisé pour la vérification RPM |
 | osslsigncode | [2.3.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.3/osslsigncode-2.3.0.tar.gz) | Utilisé pour la vérification authenicode |
 | clamav | [0.104.2](https://www.clamav.net/downloads/production/clamav-0.104.2.tar.gz) | Utilisé pour des tests antivirale |
+
+### Risque : Elevation des privilèges
+
+| Risque      | Attaque par élévation des privilèges de l'utilsiateurs sur le DSAS       |
+| ----------- | ------------------------------------------------------------------------ |
+| Criticité | Important                                                                  |
+| Commentaire | Un étape nécessaire sur plusieurs vecteur d'attaques est<br />un attaque par élévation de privilège. Ces attaques<br />doit passer par application de type SUID ou le noyau<br /> de linux. | 
+
+Logiciels impactés par ce risque
+
+| logiciel    | version  |  commentaire                                                                      | 
+|-------------|----------|------------------------------------------------------------------------------|
+| noyau linux | [5.15.10](https://tinycorelinux.net/13.x/x86/release/src/kernel/linux-5.15.10-patched.txz) | Des CVE d'évalation de privilege sont les seuls à traiter |
+
 
 ### Risque : Attaque sur le moyen de téléchargement des fichiers 
 
