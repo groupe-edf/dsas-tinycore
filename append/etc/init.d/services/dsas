@@ -1023,12 +1023,9 @@ case "${1}" in
       start_network
     fi
 
-    OLD=$(xmllint --xpath "dsas/config/ssh" $VAR/dsas_conf.xml.active)
-    NEW=$(xmllint --xpath "dsas/config/ssh" $VAR/dsas_conf.xml)
-    if [ "$OLD" != "$NEW" ]; then
-      SSHD_SIGHUP="true"
-      start_sshd
-    fi
+    # Always restart openssh because the users rights might change
+    SSHD_SIGHUP="true"
+    start_sshd
 
     # The other services can be restarted without risk
     stop_syslog
