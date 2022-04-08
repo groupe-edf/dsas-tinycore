@@ -17,7 +17,7 @@ help() {
   echo "Usage: $(basename $0)  [Options] ID [ID...]"
   echo "Verify files given by the task ID."
   echo "     -v|--verbose    Log all files verified"
-  echo "     -q|--quiet      Log only files failing to verifiy"
+  echo "     -q|--quiet      Log only files failing to verify"
   echo "     -n|--dryrun     Perform no actions"
   echo "     -c|--clamav     Check ClamAv signature files"
   echo "     -s|--stdout     Send logs to stdout"

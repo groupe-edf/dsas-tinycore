@@ -29,6 +29,16 @@ force=""
 clamav=0
 while [ "$#" -gt 0 ]; do
   case $1 in
+    -?|-h)
+      echo "Usage: $(basename $0)  [Options] ID"
+      echo "Run verification task given by the task ID"
+      echo "     -f|--force      Force task to run"
+      echo "     -v|--verbose    Log all files verified"
+      echo "     -q|--quiet      Log only files failing to verify"
+      echo "     -c|--clamav     Get ClamAv signature files. The ID is ignored"
+      echo "     -?|-h|--help    Print this help"
+      echo "ID can be the numerical order of the task or its MD5 ID"
+      ;;
     -f|--force) force="true"; ;;
     -v|--verbose) verbose=1; opts="$opts -v"; ;;
     -q|--quiet) verbose=0; opts="$opts -q"; ;;
@@ -71,25 +81,33 @@ if [ -z $ids ]; then
     fi
     i=$((i + 1))
   done
-elif [ -z "$force" ]; then
-  # Delete the tasks not scheduled to run from the list
+else
+  # Delete the tasks not scheduled to run from the list if not forced. Verify task exists
   newids=""
   for _id in $ids; do
-    i=1
-    while :; do
-      _idx=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" $CONF)
-      [ -z "$_idx" ] && break
-      [ "$_id" == "$_idx" ] && break     
-      i=$((i + 1))
-    done
+    if [ ${#_id} -lt 5] && [[ $_id =~ ^[0-9]+$ ]]; then
+      _idx=$(xmllint --xpath "string(dsas/tasks/task[$_id]/id)" $CONF)
+    else
+      i=1
+      while :; do
+        _idx=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" $CONF)
+        [ -z "$_idx" ] && break
+        [ "$_id" == "$_idx" ] && break
+        i=$((i + 1))
+      done
+    if
     [ -z "$_idx" ] && { 1>&2 echo "Task $_id not found"; continue; }
-    _run=$(xmllint --xpath "string(dsas/tasks/task[$i]/run)" $CONF)
-    case "$_run" in
-      hourly|daily|weekly|monthly) :; ;;
-      *) continue; ;;
-    esac
-    _last=$(cat $RUNLOG | grep $_id | xargs | cut -d' ' -f2)
-    [ -z "$_last" ] || should_run $_last $_run && newids="$newids $_id" 
+    if [ -z "$force" ]; then
+      _run=$(xmllint --xpath "string(dsas/tasks/task[$i]/run)" $CONF)
+      case "$_run" in
+        hourly|daily|weekly|monthly) :; ;;
+        *) continue; ;;
+      esac
+      _last=$(cat $RUNLOG | grep $_id | xargs | cut -d' ' -f2)
+      [ -z "$_last" ] || should_run $_last $_run && newids="$newids $_idx" 
+    else
+      newids="$newids $_idx"
+    fi
   done
   ids=$newids
 fi
@@ -117,4 +135,5 @@ for _id in $ids; do
   grep -q $_id $RUNLOG && sed -i -e "s/^$_id.*$/$_str/" $RUNLOG 
   grep -q $_id $RUNLOG || echo $_str >> $RUNLOG
 
+  1>&2 myecho "$0 : #### Tasks Terminated - $(date --utc) ####"
 done
