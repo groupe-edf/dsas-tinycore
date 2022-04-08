@@ -29,15 +29,16 @@ force=""
 clamav=0
 while [ "$#" -gt 0 ]; do
   case $1 in
-    -?|-h)
+    -h|--help)
       echo "Usage: $(basename $0)  [Options] ID"
       echo "Run verification task given by the task ID"
       echo "     -f|--force      Force task to run"
       echo "     -v|--verbose    Log all files verified"
       echo "     -q|--quiet      Log only files failing to verify"
       echo "     -c|--clamav     Get ClamAv signature files. The ID is ignored"
-      echo "     -?|-h|--help    Print this help"
+      echo "     -h|--help       Print this help"
       echo "ID can be the numerical order of the task or its MD5 ID"
+      exit 0
       ;;
     -f|--force) force="true"; ;;
     -v|--verbose) verbose=1; opts="$opts -v"; ;;
@@ -85,7 +86,7 @@ else
   # Delete the tasks not scheduled to run from the list if not forced. Verify task exists
   newids=""
   for _id in $ids; do
-    if [ ${#_id} -lt 5] && [[ $_id =~ ^[0-9]+$ ]]; then
+    if [ ${#_id} -lt 5 ] && [[ $_id =~ ^[0-9]+$ ]]; then
       _idx=$(xmllint --xpath "string(dsas/tasks/task[$_id]/id)" $CONF)
     else
       i=1
@@ -95,7 +96,7 @@ else
         [ "$_id" == "$_idx" ] && break
         i=$((i + 1))
       done
-    if
+    fi
     [ -z "$_idx" ] && { 1>&2 echo "Task $_id not found"; continue; }
     if [ -z "$force" ]; then
       _run=$(xmllint --xpath "string(dsas/tasks/task[$i]/run)" $CONF)
