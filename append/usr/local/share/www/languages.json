@@ -228,10 +228,15 @@
     "The SNMP password is illegal" : "",
     "The SNMP password can not contain white spaces" : "",
     "The SNMP password is insufficently complex" : "",
+    "The SNMP authentification encryption is illegal" : "",
+    "The SNMP privacy encryption is illegal" : "",
     "HTTPS repository" : "",
     "SNMPv3" : "",
     "SNMP Username" : "",
-    "SNMP Password" : "",
+    "SNMP Authentification Password" : "",
+    "SNMP Authentification Protocol" : "",
+    "SNMP Privacy Password" : "",
+    "SNMP Privacy Protocol" : "",
     "Info : {0}" : ""
   },
   "fr" : {
@@ -463,13 +468,18 @@
     "Description" : "Déscription",
     "Type" : "Type",
     "Empty SMNP Username" : "Nom d'utilisateur SNMP vide",
-    "The SNMP password is illegal" : "",
+    "The SNMP password is illegal" : "Le mot de passe SNMP est illegaux",
     "The SNMP password can not contain white spaces" : "Mot de passe SNMP ne peut pas contenir des espaces blancs",
     "The SNMP password is insufficently complex" : "Mot de passe SNMP pas suffisament complexe",
+    "The SNMP authentification encryption is illegal" : "Le chiffrement de authentication est illegaux",
+    "The SNMP privacy encryption is illegal" : "Le chiffrement de confidentialité est illegaux",
     "HTTPS repository" : "Dépôt HTTPS",
     "SNMPv3" : "SNMPv3",
     "SNMP Username" : "Nom d'utilisateur SNMP",
-    "SNMP Password" : "Mot de passe SNMP",
+    "SNMP Authentification Password" : "Mot de passe SNMP d'authentication",
+    "SNMP Authentification Protocol" : "Protocole SNMP d'authentication",
+    "SNMP Privacy Password" : "Mot de passe SNMP de confidentialité",
+    "SNMP Privacy Protocol" : "Protocole SNMP de confidentialité",
     "Info : {0}" : "Info : {0}"
   }
 }

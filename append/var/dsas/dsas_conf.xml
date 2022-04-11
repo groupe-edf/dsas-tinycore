@@ -1,5 +1,5 @@
 <dsas>
-  <version>0.11</version>
+  <version>0.12</version>
   <config>
     <users>
       <hash>sha512</hash>
@@ -77,6 +77,9 @@
       <active>false</active>
       <username></username>
       <password></password>
+      <encrypt>SHA</encrypt>
+      <passpriv></passpriv>
+      <privencrypt>AES</privencrypt>
     </snmp>
   </config>
   <tasks>

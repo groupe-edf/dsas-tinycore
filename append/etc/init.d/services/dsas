@@ -7,7 +7,7 @@ NORMAL="$(echo -e '\033[1;39m')"
 MNT=/mnt
 
 # The version of the DSAS xml file supported by this version
-DSAS_XML_VERSION="0.11"
+DSAS_XML_VERSION="0.12"
 
 VAR=/var/dsas
 
@@ -821,12 +821,15 @@ start_snmp(){
     ip=$(ifconfig $ETH0 | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
     snmp_username=$(xmllint --xpath "string(dsas/config/snmp/username)" $VAR/dsas_conf.xml)
     snmp_password=$(xmllint --xpath "string(dsas/config/snmp/password)" $VAR/dsas_conf.xml)
+    snmp_encrypt=$(xmllint --xpath "string(dsas/config/snmp/encrypt)" $VAR/dsas_conf.xml)
+    snmp_passpriv=$(xmllint --xpath "string(dsas/config/snmp/passpriv)" $VAR/dsas_conf.xml)
+    snmp_privencrypt=$(xmllint --xpath "string(dsas/config/snmp/privencrypt)" $VAR/dsas_conf.xml)
     dsas_oid=$(grep "OID=" /usr/local/sbin/snmpdsas | cut -d= -f2)
     mkdir -p /usr/local/etc/snmp
     chown root.staff /usr/local/etc/snmp
     chmod 750 /usr/local/etc/snmp
     echo "agentAddress udp:$ip:161" > /usr/local/etc/snmp/snmpd.conf
-    echo "CreateUser $snmp_username SHA $snmp_password AES $snmp_password" >> /usr/local/etc/snmp/snmpd.conf
+    echo "CreateUser $snmp_username $snmp_encrypt $snmp_password $snmp_privencrypt $snmp_passpriv" >> /usr/local/etc/snmp/snmpd.conf
     echo "rouser $snmp_username priv 1" >> /usr/local/etc/snmp/snmpd.conf
     echo "pass $dsas_oid /usr/local/sbin/snmpdsas" >> /usr/local/etc/snmp/snmpd.conf
     /usr/local/sbin/snmpd &
@@ -914,6 +917,11 @@ check_xml_version(){
 
   if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "11" ]; then 
     sed -i -e "s:</antivirus>:  <uuid></uuid>\n      </antivirus>:" $VAR/dsas_conf.xml
+  fi
+
+  if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "12" ]; then
+    _passpriv=$(xmllint --xpath 'string(dsas/config/snmp/password)' $VAR/dsas_conf.xml)
+    sed -i -e "s:</snmp>:  <encrypt>SHA</encrypt>\n        <passpriv>${_passpriv}</passpriv>\n        <privencrypt>AES</privencrypt>      </snmp>:" $VAR/dsas_conf.xml
   fi
 
   # Now that the XML is upgraded, save the new version number

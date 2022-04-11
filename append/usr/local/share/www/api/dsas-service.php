@@ -106,6 +106,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $errors[] = ["snmp_user" => ["Username '{0}' is illegal", $snmp_username]];
         else
           $dsas->config->snmp->username = $snmp_username;
+
         $snmp_password = htmlspecialchars($data["snmp"]["password"]);
         if ($snmp_password != $data["snmp"]["password"])
           $errors[] = ["snmp_pass" => "The SNMP password is illegal"];
@@ -115,6 +116,32 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $errors[] = ["snmp_pass" => "The SNMP password is insufficently complex"];
         else
           $dsas->config->snmp->password = $snmp_password;
+        $snmp_encrypt = htmlspecialchars($data["snmp"]["encrypt"]);
+        if ($snmp_encrypt !== "MD5" && $snmp_encrypt !== "SHA" 
+            && $snmp_encrypt !== "SHA256" && $snmp_encrypt !== "SHA512")
+          $errors[] = ["error" => "The SNMP authentification encryption is illegal"];
+        else
+          $dsas->config->snmp->encrypt = $snmp_encrypt;
+
+        $snmp_passpriv = htmlspecialchars($data["snmp"]["passpriv"]);
+        if ($snmp_passpriv != $data["snmp"]["passpriv"])
+          $errors[] = ["snmp_passpriv" => "The SNMP password is illegal"];
+        else if ($snmp_passpriv != str_replace("/\s+/", "", $snmp_passpriv))
+          $errors[] = ["snmp_passpriv" => "The SNMP password can not contain white spaces"];
+        else if (! complexity_test($snmp_passpriv))
+          $errors[] = ["snmp_passpriv" => "The SNMP password is insufficently complex"];
+        else
+          $dsas->config->snmp->passpriv = $snmp_passpriv;
+        $snmp_privencrypt = htmlspecialchars($data["snmp"]["privencrypt"]);
+        if ($snmp_privencrypt !== "DES" && $snmp_privencrypt !== "AES" 
+            // These additional non-standard options require that net-snmp is compiled with
+            // the --enable-blumenthal-aes 
+            // && $snmp_privencrypt !== "AES192" && $snmp_privencrypt !== "AES192C" 
+            // && $snmp_privencrypt !== "AES256" && $snmp_privencrypt !== "AES256C"
+            )
+          $errors[] = ["error" => "The SNMP privacy encryption is illegal"];
+        else
+          $dsas->config->snmp->privencrypt = $snmp_privencrypt;
 
         break;
 

@@ -46,10 +46,6 @@
             <div class="invalid-feedback" id="feed_user_haut"></div>
           </div>
           <div class="col-12">
-            <input class="form-check-input" type="checkbox" value="" id="repo" onchange="dsas_change_service('repo');">
-            <label class="form-check-label" for="syslog" data-i18n>HTTPS repository</label>
-          </div>
-          <div class="col-12">
             <input class="form-check-input" type="checkbox" value="" id="snmp" onchange="dsas_change_service('snmp');">
             <label class="form-check-label" for="snmp" data-i18n>SNMPv3</label>
           </div>
@@ -59,9 +55,37 @@
             <div class="invalid-feedback" id="feed_snmp_user"></div>
           </div>
           <div class="col-12">
-            <label for="snmp_pass" data-i18n>SNMP Password</label>
+            <label for="snmp_pass" data-i18n>SNMP Authentification Password</label>
             <input type="text" id="snmp_pass" value="" class="form-control">
             <div class="invalid-feedback" id="feed_snmp_pass"></div>
+          </div>
+          <div class="col-12">
+            <label for="snmp_encrypt" data-i18n>SNMP Authentification Protocol</label>
+            <select class="form-select" name="snmp_encrypt" id="snmp_encrypt">
+              <option id="snmp_md5" value="MD5">MD5</option>
+              <option id="snmp_sha" value="SHA">SHA</option>
+              <option id="snmp_sha256" value="SHA256">SHA256</option>
+              <option id="snmp_sha512" value="SHA512">SHA512</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label for="snmp_passpriv" data-i18n>SNMP Privacy Password</label>
+            <input type="text" id="snmp_passpriv" value="" class="form-control">
+            <div class="invalid-feedback" id="feed_snmp_passpriv"></div>
+          </div>
+          <div class="col-12">
+            <label for="snmp_privencrypt" data-i18n>SNMP Privacy Protocol</label>
+            <select class="form-select" name="snmp_privencrypt" id="snmp_privencrypt">
+              <option id="snmp_des" value="DES">DES</option>
+              <option id="snmp_aes" value="AES">AES128</option>
+              <!-- 
+              These additional options require that net-snmp is compiled with --enable-blumenthal-aes
+              <option id="snmp_aes192" value="AES192">AES192</option>
+              <option id="snmp_aes192c" value="AES192C">AES192 Cisco</option>
+              <option id="snmp_aes256" value="AES256">AES256</option>
+              <option id="snmp_aes256c" value="AES256C">AES256 Cisco</option>
+              -->
+            </select>
           </div>
         </div>
       </div>
@@ -93,6 +117,10 @@
             <label for="antivirus_uri" data-i18n>CVD Repository</label>
             <input type="text" id="antivirus_uri" value="" class="form-control">
             <div class="invalid-feedback" id="feed_antivirus_uri"></div>
+          </div>
+          <div class="col-12">
+            <input class="form-check-input" type="checkbox" value="" id="repo" onchange="dsas_change_service('repo');">
+            <label class="form-check-label" for="syslog" data-i18n>HTTPS repository</label>
           </div>
         </div>
       </div>

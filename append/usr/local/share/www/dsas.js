@@ -1072,6 +1072,12 @@ function dsas_display_service(what = "all"){
        document.getElementById("snmp_user").disabled = (serv.snmp.active !== "true");
        document.getElementById("snmp_pass").value = print_obj(serv.snmp.password);
        document.getElementById("snmp_pass").disabled = (serv.snmp.active !== "true");
+       document.getElementById("snmp_encrypt").value = print_obj(serv.snmp.encrypt);
+       document.getElementById("snmp_encrypt").disabled = (serv.snmp.active !== "true");
+       document.getElementById("snmp_passpriv").value = print_obj(serv.snmp.passpriv);
+       document.getElementById("snmp_passpriv").disabled = (serv.snmp.active !== "true");
+       document.getElementById("snmp_privencrypt").value = print_obj(serv.snmp.privencrypt);
+       document.getElementById("snmp_privencrypt").disabled = (serv.snmp.active !== "true");
      }
   }).catch(error => {
       fail_loggedin(error.statusText);
@@ -1113,6 +1119,31 @@ function dsas_change_service(what) {
        serv.snmp.active = (document.getElementById("snmp").checked ? "true" : "false");
        serv.snmp.username = document.getElementById("snmp_user").value;
        serv.snmp.password = document.getElementById("snmp_pass").value;
+       for (opt of document.getElementsByTagName("option")) {
+         switch (opt.id) {
+           case "snmp_md5":
+           case "snmp_sha":
+           case "snmp_sha256":
+           case "snmp_sha512":
+             if (opt.selected)
+               serv.snmp.encrypt = opt.value;
+             break;
+         }
+       }
+       serv.snmp.passpriv = document.getElementById("snmp_passpriv").value;
+       for (opt of document.getElementsByTagName("option")) {
+         switch (opt.id) {
+           case "snmp_des":
+           case "snmp_aes":
+           case "snmp_aes192":
+           case "snmp_aes192c":
+           case "snmp_aes256":
+           case "snmp_aes256c":
+             if (opt.selected)
+               serv.snmp.privencrypt = opt.value;
+             break;
+         }
+       }
 
        server = [];
        for (s of document.getElementById("ntp_pool").value.split(/((\r?\n)|(\r\n?))/)) {

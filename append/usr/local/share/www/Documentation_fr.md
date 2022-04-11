@@ -851,20 +851,22 @@ disponible sur `https://10.0.2.15`.
 
 Un serveur SNMP pourrait être activé sur le DSAS. Cette service n'est dipsonible que en SNMPv3 avec
 chiffrement et authentification. En selectionnant l'option `SNMPv3` le service sera activé. Après il
-faut avoir un `Nom d'utilisateur SNMP` et `Mot de pass SNMP` valable. Le même mot de passe sera 
-utilisé pour l'authentification et la chiffrement. 
+faut selectionner des protocoles d'authentifcation et confidentialite, avoir un 
+`Nom d'utilisateur SNMP`, des `Mot de pass SNMP` valables. 
 
 L'ensemble des données SNMP du machine bas sera publié SNMP. Les données specifique au DSAS sont
 disponible sur les OID
 
 - 1.3.6.1.4.1.16845.100.100.1.0     - Statut de la machine haute. `0` si la machine est disponible
 - 1.3.6.1.4.1.16845.100.100.2.0     - Statut des tâches du DSAS. `0` si l'ensmble des tâches sont ok.
-- 1.3.6.1.4.1.16845.100.100.3.1.1.1 - Nom de la tâche 1.
-- 1.3.6.1.4.1.16845.100.100.3.1.1.N - Nom de la tâche N.
-- 1.3.6.1.4.1.16845.100.100.3.1.2.1 - ID de la tâche 1.
-- 1.3.6.1.4.1.16845.100.100.3.1.2.N - ID de la tâche N.
-- 1.3.6.1.4.1.16845.100.100.3.1.3.1 - Statut de la tâche 1.
-- 1.3.6.1.4.1.16845.100.100.3.1.3.N - Statut de la tâche N.
+- 1.3.6.1.4.1.16845.100.100.3.1.1.1 - Indice de la tâche 1.
+- 1.3.6.1.4.1.16845.100.100.3.1.1.N - Indice de la tâche N.
+- 1.3.6.1.4.1.16845.100.100.3.1.2.1 - Nom de la tâche 1.
+- 1.3.6.1.4.1.16845.100.100.3.1.2.N - Nom de la tâche N.
+- 1.3.6.1.4.1.16845.100.100.3.1.3.1 - ID de la tâche 1.
+- 1.3.6.1.4.1.16845.100.100.3.1.4.N - ID de la tâche N.
+- 1.3.6.1.4.1.16845.100.100.3.1.4.1 - Statut de la tâche 1.
+- 1.3.6.1.4.1.16845.100.100.3.1.4.N - Statut de la tâche N.
 
 Un [fichier MIB avec ces OID est disponible pour téléchargement](DSAS-MIB.txt).
 
