@@ -1260,6 +1260,19 @@ Software impacted by this risk
 | osslsigncode | [2.3.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.3/osslsigncode-2.3.0.tar.gz) | Used for authenicode verification |
 | clamav | [0.104.2](https://www.clamav.net/downloads/production/clamav-0.104.2.tar.gz) | Used for antivirus tests |
 
+### Risque : Elevation of privileges
+
+| Risk        | Attack by elevation of DSAS users privileges  |
+| ----------- | ------------------------------------------------------------------------ |
+| Criticality | Important                                                                  |
+| Comment     | A step that is necessary in several attacks is an attack<br />by elevation of privilege. These attacks must pass by an<br />SUID application or the linux kernel. |
+
+Software impacted by this risk
+
+| software    | version  |  comment                                                                      | 
+|-------------|----------|------------------------------------------------------------------------------|
+| linux kernel| [5.15.10](https://tinycorelinux.net/13.x/x86/release/src/kernel/linux-5.15.10-patched.txz) | Only the evalation of privileges CVE need be considered. |
+
 
 ### Risk: Attack on the means of downloading files
 
