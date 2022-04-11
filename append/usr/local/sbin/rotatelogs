@@ -1,16 +1,18 @@
 #! /bin/sh
 
 if [ -f "$(dirname $0)/dsas_common.sh" ]; then
+  # Only the $LOG variable is needed
   . $(dirname $0)/dsas_common.sh
 else
   echo "Common functions not found !!"
   exit -1
 fi
 
-rotatemax=6
+# Maximum number of logs to keep
+rotatemax=9
 
 rotate_logs() {
-  [ -f "${1}.$rotatemax" ] && rm "${1}.$rotatemax"
+  [ -f "${1}.$rotatemax" ] && /bin/rm "${1}.$rotatemax"
   for i in $(seq $rotatemax -1 2); do
     [ -f "${1}.$((i-1))" ] && /bin/mv "${1}.$((i-1))" "${1}.$i"
   done

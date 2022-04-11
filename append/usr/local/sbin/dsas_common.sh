@@ -36,55 +36,6 @@ myecho(){
   return 0
 }
 
-utc_date(){
-  date --utc '+%Y%m%d%H%M%S'
-}
-
-fixdate(){
-  printf "$1" | sed -E -e 's/(....)(..)(..)(..)(..)(..)/\1-\2-\3 \4:\5:\6/'
-}
-
-should_run(){
- _dif=$(($(date -d "$(fixdate $(utc_date) )" '+%s') - $(date -d "$(fixdate $1)" '+%s') ))
-  case "$2" in
-    never) return 1; ;;
-    hourly) [ $_dif -lt 3600 ] && return 1;  ;;
-    daily) [ $_dif -lt 86400 ] && return 1; ;;
-    weekly) [ $_dif -gt 604800 ] && return 1; ;;
-    monthly) [ $_dif -gt 18144000 ] && return 1; ;;
-    *) return 1; ;;
-  esac
-  return 0
-}
-
-msg() {
-  if [ $logstdout -eq 1 ]; then
-    printf "%-3s %-15s %-32s %s %s\n" "$1" "$2" "$3" "$4" "$5"
-  elif [ -n $logfile ]; then
-    [ $verbose -ne 0 ] &&  printf "%-3s %-15s %-32s %s %s\n" "$1" "$2" "$3" "$4" "$5"
-    printf "%-3s %-15s %-32s %s %s\n" "$1" "$2" "$3" "$4" "$5" >> $logfile
-  fi
-}
-
-msgline() {
-  local file=$1
-  local status=$2
-  local md5=$(cat "$file" | md5sum | sed -e "s/  -$//g")
-  local _file=`echo "$file" | sed -e "s:^${DSAS_HAUT}/::g"`
-  local d=$(utc_date)
-  case $status in
-    0)   msg "  "  "Ok"              $md5 $d "$_file" ;;
-    -1)  msg "XX"  "Unknown type"   $md5  $d "$_file" ;;
-    1)   msg "**"  "Bad Sig"        $md5  $d "$_file" ;;
-    2)   msg "--"  "Checksum fail"  $md5  $d "$_file" ;;
-    3)   msg "**"  "Bad Interm Sig" $md5  $d "$_file" ;;
-    4)   msg "**"  "Fail virus chk" $md5  $d "$_file" ;;
-    5)   msg "**"  "Bad RPM Sig"    $md5  $d "$_file" ;;
-    255) msg "**"  "Not signed"     $md5  $d "$_file" ;;
-    *)   msg "XX"  "Unknown status" $md5  $d "$_file" ;;
-  esac
-}
-
 # Usage : check_checksum <file> <chksum> <type>
 check_checksum() {
   local chk
@@ -124,23 +75,6 @@ task_id_to_idx(){
   done
 }
 
-ln() {
-  if [ "$dryrun" == "0" ]; then
-    [ -d "$(dirname "$2")" ] || ( mkdir -m 770 -p "$(dirname "$2")"; chgrp -R $grp "$(dirname "$2")")
-    # This script is not running as root so can't change the owner. We
-    # first have to copy the file.
-    # FIXME : Hardcode path to gnu version of cp for the "--preserve" flag
-    /usr/local/bin/cp --preserve=timestamp "$1" "$1.tmp.$$"
-    /bin/mv -f "$1.tmp.$$" "$1"
-    chmod 0640 "$1"
-    chgrp $grp "$1"
-    /bin/ln -f "$1" "$2" 
-  else
-    [ -d $(dirname $2) ] || echo "[DryRun] mkdir -p $(dirname $2)"
-    echo "[DryRun] ln $*"
-  fi
-}
-
 rm() {
   if [ "$dryrun" == "0" ]; then
     #FIXME is there a better way of handling spaces in the args ?
@@ -151,25 +85,6 @@ rm() {
   else
     echo "[DryRun] rm $*"
   fi
-}
-
-get_uri(){
-  if [ "$TYP" == "haut" ]; then
-    echo $(xmllint --xpath "string(dsas/tasks/task[$1]/uri)" "$CONF") 
-  else
-    local _dir=$(xmllint --xpath "string(dsas/tasks/task[$1]/directory)" "$CONF")
-    local _uri="$DSAS_HOME/bas"
-    _uri=${DSAS_BAS:${#_uri}}
-    echo "sftp://bas:@$INTERCO_HAUT$_uri/$_dir/"
-  fi
-}
-
-fileargs() {
-while [ "$#" -gt 3 ]; do
-  shift 3
-  echo $1
-  shift 1
-done
 }
 
 # Usage get_certificate fingerprint

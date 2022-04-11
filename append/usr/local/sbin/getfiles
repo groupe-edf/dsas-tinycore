@@ -7,6 +7,17 @@ else
   exit -1
 fi
 
+get_uri(){
+  if [ "$TYP" == "haut" ]; then
+    echo $(xmllint --xpath "string(dsas/tasks/task[$1]/uri)" "$CONF") 
+  else
+    local _dir=$(xmllint --xpath "string(dsas/tasks/task[$1]/directory)" "$CONF")
+    local _uri="$DSAS_HOME/bas"
+    _uri=${DSAS_BAS:${#_uri}}
+    echo "sftp://bas:@$INTERCO_HAUT$_uri/$_dir/"
+  fi
+}
+
 lftp_ca_options() {
   local id=$1
   local opt=""

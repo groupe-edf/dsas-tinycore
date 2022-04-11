@@ -19,8 +19,29 @@ fi
 # If on machine haut, quit, as this script is reserved for the machine bas
 [ "$TYP" == "haut" ] && { 1>&2 echo "$0: Must be run from machine 'bas'"; exit 1; }
 
-# Créate run log file if it doesn't exist
+# Create run log file if it doesn't exist
 [ -f "$RUNLOG" ] || touch $RUNLOG
+
+utc_date(){
+  date --utc '+%Y%m%d%H%M%S'
+}
+
+fixdate(){
+  printf "$1" | sed -E -e 's/(....)(..)(..)(..)(..)(..)/\1-\2-\3 \4:\5:\6/'
+}
+
+should_run(){
+ _dif=$(($(date -d "$(fixdate $(utc_date) )" '+%s') - $(date -d "$(fixdate $1)" '+%s') ))
+  case "$2" in
+    never) return 1; ;;
+    hourly) [ $_dif -lt 3600 ] && return 1;  ;;
+    daily) [ $_dif -lt 86400 ] && return 1; ;;
+    weekly) [ $_dif -gt 604800 ] && return 1; ;;
+    monthly) [ $_dif -gt 18144000 ] && return 1; ;;
+    *) return 1; ;;
+  esac
+  return 0
+}
 
 # Parse options
 ids=""
