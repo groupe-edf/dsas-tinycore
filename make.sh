@@ -503,7 +503,6 @@ docker)
   # Install the needed packages
   install_tcz busybox  # Busybox with PAM and TMOUT support
   install_tcz openssl-1.1.1  # explicitly install openssl first so avail to ca-certificate
-  install_tcz lftp 
   install_tcz kmaps
   install_tcz openssh
   install_tcz sshpass
@@ -524,6 +523,37 @@ docker)
   install_tcz Linux-PAM
   install_tcz net-snmp
 
+  # Install lftp and dependencies in /opt so that they can be available in chroot jail
+  # Install missing libraries, etc as hard links 
+  _old=$extract
+  extract=$extract/opt/lftp
+  install_tcz lftp
+  msg "Fixing lftp chroot libraries"
+  mkdir -p $extract/lib $extract/usr/lib $extract/etc
+  chown root.staff $extract/lib $extract/usr/lib $extract/etc
+  chmod 755 $extract/lib $extract/usr/lib $extract/etc
+  for _lib in $(ldd $extract/usr/local/bin/lftp | cut -d= -f1 | cut -d\( -f1); do
+    [[ "$_lib" =~ "linux-gate" ]] && continue
+    [[ "$_lib" =~ "ld-linux.so" ]] && ln $_old/$_lib $extract/$_lib && continue
+    [ -n "$(find $extract -name $_lib)" ] && continue
+    _link=""
+    [ -e "$_old/usr/lib/$_lib" ] && _link="usr/lib/$_lib"
+    [ -e "$_old/lib/$_lib" ] && _link="lib/$_lib"
+    [ -z "$_link" ] && error "library $_lib not found"
+    ln $_old/$_link $extract/$_link
+    while [ -L "$_old/$_link" ]; do
+      _newlink=$(readlink $_old/$_link)
+      if [ "$(dirname $_newlink)" == "." ]; then
+        ln "$_old/$(dirname $_link)/$_newlink" "$extract/$(dirname $_link)/$_newlink"
+      else
+        ln "$_old/$_newlink" "$extract/$_newlink"
+      fi
+      _link=$_newlink
+    done
+  done
+  ln $_old/etc/resolv.conf $extract/etc/resolv.conf
+  extract=$_old
+ 
   # Copy the pre-extracted packages to work dir. This must be after packages
   # are installed to allow for files to be overwritten. Run as root 
   # and correct the ownership of files 
