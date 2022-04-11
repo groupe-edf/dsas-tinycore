@@ -329,7 +329,7 @@ function dsas_change_passwd(){
       } catch (e) {
         // Its text => here always just "Ok". 
        clear_feedback();
-       modal_message(_("Password sucessfully changed"));
+       modal_message(_("Password successfully changed"));
       }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
@@ -706,7 +706,7 @@ function dsas_change_users(){
           } catch (e) {
             // Its text => here always just "Ok".
             clear_feedback();
-            dsas_display_users();
+            modal_message(_("Changes successfully saved"));
           }
         }).catch(error => {
           if (! fail_loggedin(error.statusText))
@@ -865,7 +865,7 @@ function dsas_upload_crt() {
       } catch (e) {
         // Its text => here always just "Ok"
         clear_feedback();
-        modal_message(_("CRT sucessfully uploaded"), "dsas_display_web('cert');", true);
+        modal_message(_("CRT successfully uploaded"), "dsas_display_web('cert');", true);
       }
     }).catch(error => {
       if (!fail_loggedin(error.statusText))
@@ -1406,7 +1406,7 @@ function dsas_upload_cert(type = "x509", name ="") {
       } catch (e) {
         // Its text => here always just "Ok"
         clear_feedback();
-        modal_message(_("Certificate sucessfully sent"), "dsas_display_cert();", true);
+        modal_message(_("Certificate successfully sent"), "dsas_display_cert();", true);
       }
     }).catch(error => {
       if (!fail_loggedin(error.statusText))
