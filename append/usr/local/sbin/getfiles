@@ -1,11 +1,19 @@
 #! /bin/sh
 
+# if not user tc, quit
+[ "$(whoami)" != "tc" ] && { 1>&2 echo "$0: Must be run as user 'tc'"; exit 1; }
+
 if [ -f "$(dirname $0)/dsas_common.sh" ]; then
   . $(dirname $0)/dsas_common.sh
 else
   1>&2 echo "Common functions not found !!"
   exit -1
 fi
+
+# Setup permissions so that the user haut can access files created by tc by default
+as_haut="sudo sudo -E -u haut"
+chroot_lftp="sudo chroot --userspec=haut /opt/lftp /usr/local/bin/lftp"
+umask 022
 
 get_uri(){
   if [ "$TYP" == "haut" ]; then
@@ -22,8 +30,11 @@ lftp_ca_options() {
   local id=$1
   local opt=""
 
+  # Change to a directory where the user 'haut' has write permissions
+  opt="lcd $DSAS_HAUT;"
+
   if [ "$TYP" == "haut" ]; then
-    opt="set sftp:auto-confirm true;" 
+    opt="$opt set sftp:auto-confirm true;" 
     if [ "$clamav" == "1" ]; then
       # Set ClamAV User-Agent including our ClamAV client UUID to get around anti DDOS protections
       uuid=$(xmllint --xpath "string(dsas/config/antivirus/uuid)" "$CONF")
@@ -40,11 +51,12 @@ lftp_ca_options() {
       "self") opt="$opt set net:timeout 3; set net:max-retries 3; set ssl:verify-certificate false; " ;;
       *)
         idx=$(get_certificate $ca_finger)
+        cp /tmp/cert.$$ /opt/lftp/tmp/cert.$$
+        chmod 644 /opt/lftp/tmp/cert.$$
         [ -z "$idx" ] || opt="$opt set net:timeout 3; set net:max-retries 3; set ssl:ca-file /tmp/cert.$$; "
         [ -z "$idx" ] && opt="$opt set net:timeout 3; set net:max-retries 3; "
         ;;
     esac
-
   fi
   echo $opt
 }
@@ -72,18 +84,19 @@ getclamav() {
   fi
 
   # Create directory if needed
-  [ -d "${DSAS_HAUT}/$dir" ] || $(umask 007 && mkdir -p "${DSAS_HAUT}/$dir")
+  [ -d "${DSAS_HAUT}/$dir" ] || $(umask 007 && $as_haut mkdir -p "${DSAS_HAUT}/$dir")
 
   # Download the CVD files. Can't mirror as can't do ls on directory database.clamav.net 
   for _file in main.cvd daily.cvd bytecode.cvd; do
-    [ "$verbose" -eq 0 ] && lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
-    [ "$verbose" -eq 0 ] || lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
+    [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
+    [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
   done
 
   # Correct directory permissions
-  find "$DSAS_HAUT/$dir" -type d -exec chmod 770 {} \;
+  $as_haut find "$DSAS_HAUT/$dir" -type d -exec chmod 770 {} \;
 
   [ -f "/tmp/cert.$$" ] && rm /tmp/cert.$$
+  [ -f "/opt/lftp/tmp/cert.$$" ] &&  rm /opt/lftp/tmp/cert.$$
 
   exit 0
 }
@@ -103,33 +116,34 @@ getdirectory() {
   fi
 
   # Create directory if needed
-  [ -d "${DSAS_HAUT}/$dir" ] || $(umask 007 && mkdir -p "${DSAS_HAUT}/$dir")
+  [ -d "${DSAS_HAUT}/$dir" ] || $(umask 007 && $as_haut mkdir -p "${DSAS_HAUT}/$dir")
 
   # Test whether we have a file or a directory, and fail if server not found 
-  _stderr=$(2>&1 lftp -c "$opt open '$uri'") && isdir="1"
+  _stderr=$(2>&1 $chroot_lftp -c "$opt open '$uri'") && isdir="1"
   echo $_stderr | grep -q "Fatal" && (1>&2 echo "Fatal: Server '$uri' not found"; exit 1)
 
   if [ -z "$isdir" ]; then
     myecho "Downloading file : $(basename "$uri")"
     # FIXME shouldn't always download here !!!
-    [ "$verbose" -eq 0 ] && lftp -c "$opt get -e -O '${DSAS_HAUT}/${dir}' '$uri'" >& /dev/null
-    [ "$verbose" -eq 0 ] || lftp -c "$opt get -e -O '${DSAS_HAUT}/${dir}' '$uri'"
+    [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e -O '${DSAS_HAUT}/${dir}' '$uri'" >& /dev/null
+    [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e -O '${DSAS_HAUT}/${dir}' '$uri'"
   else
     myecho "Mirroring site : $uri"
-    [ "$verbose" -eq 0 ] && (cd "$DSAS_HAUT"; lftp -c "$opt open '$uri'; mirror --delete-first -e -O '$DSAS_HAUT/$dir'" >& /dev/null)
-    [ "$verbose" -eq 0 ] || (cd "$DSAS_HAUT"; lftp -c "$opt open '$uri'; mirror --delete-first -e -O '$DSAS_HAUT/$dir'")
+    [ "$verbose" -eq 0 ] && ($chroot_lftp -c "$opt open '$uri'; mirror --delete-first -e -O '$DSAS_HAUT/$dir'" >& /dev/null)
+    [ "$verbose" -eq 0 ] || ($chroot_lftp -c "$opt open '$uri'; mirror --delete-first -e -O '$DSAS_HAUT/$dir'")
 
     # Correct directory permissions
-    find "$DSAS_HAUT/$dir" -type d -exec chmod 770 {} \;
+    $as_haut find "$DSAS_HAUT/$dir" -type d -exec chmod 770 {} \;
   fi
 
   [ -f "/tmp/cert.$$" ] && rm /tmp/cert.$$
+  [ -f "/opt/lftp/tmp/cert.$$" ] &&  rm /opt/lftp/tmp/cert.$$
 
   # There might be empty directories lying about. Remove them
   OLD_IFS=$IFS
   IFS=$'\3'
-  for _dir in $(find "$DSAS_HAUT/$dir" -mindepth 1 -type d -exec echo -n -e "{}\x03" \; ); do
-    [ "$(ls -A "$_dir")" ] || rmdir "$_dir"
+  for _dir in $($as_haut find "$DSAS_HAUT/$dir" -mindepth 1 -type d -exec echo -n -e "{}\x03" \; ); do
+    [ "$($as_haut ls -A "$_dir")" ] || $as_haut rmdir "$_dir"
   done
   IFS=$OLD_IFS
 
@@ -152,21 +166,21 @@ get_packages() {
      chktype=$1
      chksum=$2
     fi
-    if [ -f "$dest/$file" ]; then
-      if check_checksum "$dest/$file" $chksum $chktype; then
+    if $as_haut [ -f "$dest/$file" ]; then
+      if $as_haut check_checksum "$dest/$file" $chksum $chktype; then
         # Checksum of file is different redownload the file
         myecho "Downloading file $file [Checksum different!!]"
-        [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && mkdir -p $(dirname "$dest/$file"))
-        [ "$verbose" -eq 0 ] && lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" >& /dev/null
-        [ "$verbose" -eq 0 ] || lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'"
+        [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && $as_haut mkdir -p $(dirname "$dest/$file"))
+        [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" >& /dev/null
+        [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'"
       else
         myecho "Skipping file $file"
       fi
     else
       myecho "Downloading file $file"
-      [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && mkdir -p $(dirname "$dest/$file"))
-      [ "$verbose" -eq 0 ] && lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" >& /dev/null
-      [ "$verbose" -eq 0 ] || lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'"
+      [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && $as_haut mkdir -p $(dirname "$dest/$file"))
+      [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" >& /dev/null
+      [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'"
     fi
     shift 3
   done
@@ -184,36 +198,36 @@ getrepo() {
   case $type in
     repomd|rpm)
        # Create the destination directory if needed
-       [ -d "$DSAS_HAUT/$dir" ] || $(umask 007 && mkdir -p "$DSAS_HAUT/$dir")
+       $as_haut [ -d "$DSAS_HAUT/$dir" ] || $(umask 007 && $as_haut mkdir -p "$DSAS_HAUT/$dir")
 
        myecho "Downloading repodata/repomd.xml from $name"
-       [ -d "$DSAS_HAUT/$dir/repodata" ] || $(umask 007 && mkdir -p "$DSAS_HAUT/$dir/repodata")
+       $as_haut [ -d "$DSAS_HAUT/$dir/repodata" ] || $(umask 007 && $as_haut mkdir -p "$DSAS_HAUT/$dir/repodata")
 
-       _stderr=$(2>&1 lftp -c "$opt get -e '$uri/repodata/repomd.xml' -o '$DSAS_HAUT/$dir/repodata/repomd.xml'")
+       _stderr=$(2>&1 $chroot_lftp -c "$opt get -e '$uri/repodata/repomd.xml' -o '$DSAS_HAUT/$dir/repodata/repomd.xml'")
        echo $_stderr | grep -q "Fatal" && (1>&2 echo "Fatal: Server '$uri' not found"; exit 1)
 
-       [ "$type" == "rpm" ] || lftp -c "$opt get -e '$uri/repodata/repomd.xml.asc' -o '$DSAS_HAUT/$dir/repodata/repomd.xml.asc'" >& /dev/null
+       [ "$type" == "rpm" ] || $chroot_lftp -c "$opt get -e '$uri/repodata/repomd.xml.asc' -o '$DSAS_HAUT/$dir/repodata/repomd.xml.asc'" >& /dev/null
 
        # Identify all files listed in repomd.xml and download them
        i=1
        while :; do
          # Note that we have to ignore the xml namespace (initial cat/sed)
-         f=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
+         f=$($as_haut cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
              sed -e "s:repomd xmlns:repomd ignore:g" | \
              xmllint --xpath "string(//repomd/data[$i]/location/@href)" -)
          [ -z "$f" ] && break
          myecho "Downloading file $f listed in repomd.xml for $name"
-         [ "$verbose" -eq 0 ] && lftp -c "$opt get -e '$uri/$f' -o '$DSAS_HAUT/$dir/$f'" >& /dev/null
-         [ "$verbose" -eq 0 ] || lftp -c "$opt get -e '$uri/$f' -o '$DSAS_HAUT/$dir/$f'"
+         [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$f' -o '$DSAS_HAUT/$dir/$f'" >& /dev/null
+         [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$f' -o '$DSAS_HAUT/$dir/$f'"
 
          # Verify its checksum
-         chksum=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
+         chksum=$($as_haut cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
              sed -e "s:repomd xmlns:repomd ignore:g" | \
              xmllint --xpath "string(//repomd/data[$i]/checksum)" - )
-         chktype=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
+         chktype=$($as_haut cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
              sed -e "s:repomd xmlns:repomd ignore:g" | \
              xmllint --xpath "string(//repomd/data[$i]/checksum/@type)" - )
-         if  check_checksum "$DSAS_HAUT/$dir/$f" $chksum $chktype; then
+         if  $as_haut check_checksum "$DSAS_HAUT/$dir/$f" $chksum $chktype; then
              1>&2 echo "Error verifiying checksum of $f"
          fi
          i=$(($i + 1))
@@ -221,19 +235,19 @@ getrepo() {
 
        # Identify the primary file list and download it
        # Note that we have to ignore the xml namespace (initial cat/sed)
-       filelist=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
+       filelist=$($as_haut cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
          sed -e "s:repomd xmlns:repomd ignore:g" | \
          xmllint --xpath 'string(//repomd/data[@type="primary"]/location/@href)' - )
 
        # Recover a table of the hashtype, hash and file names
        if [[ "$filelist" =~ ".*.gz" ]] || [[ "$filelist" =~ ".*.bz2" ]]; then
-         filetable=$(zcat "$DSAS_HAUT/$dir/$filelist" | \
+         filetable=$($as_haut zcat "$DSAS_HAUT/$dir/$filelist" | \
             sed -e "s/xmlns=/ignore=/g" | \
             xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | \
             sed -e 's:.*href="\(.*\)"/>$:\1:g' \
               -e 's:.*type="\([^"]*\)"[^>]*>\([0-9a-fA-F]*\)</checksum>:\1 \2:g')
        else
-         filetable=$(cat "$DSAS_HAUT/$dir/$filelist" | \
+         filetable=$($as_haut cat "$DSAS_HAUT/$dir/$filelist" | \
             sed -e "s/xmlns=/ignore=/g" | \
             xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | \
             sed -e 's:.*href="\(.*\)"/>$:\1:g' \
@@ -241,10 +255,13 @@ getrepo() {
        fi
 
        # Remove the files in our tree not listed in primary.xml
-       for _file in $(cd "$DSAS_HAUT/$dir"; find . -path ./repodata -prune -type f -o -type f); do
-         if [[ "$filetable" != *"${_file:2}"* ]]; then
-           myecho "Removing stale file ${_file:2}"
-           rm -f "$DSAS_HAUT/$dir/${_file:2}"
+       _str="$DSAS_HAUT/$dir"
+       _len=$((${#_len} + 1))
+       [ "${_str: -1}" == "/" ] && $(($_len + 1))
+       for _file in $($as_haut find "$DSAS_HAUT/$dir" -path ./repodata -prune -type f -o -type f); do
+         if [[ "$filetable" != *"${_file:$_len}"* ]]; then
+           myecho "Removing stale file ${_file:$_len}"
+           $as_haut rm -f "$_file"
          fi
        done
 
@@ -255,6 +272,7 @@ getrepo() {
   esac
 
   [ -f "/tmp/cert.$$" ] && rm /tmp/cert.$$
+  [ -f "/opt/lftp/tmp/cert.$$" ] &&  rm /opt/lftp/tmp/cert.$$
 
   exit 0
 }
@@ -272,46 +290,45 @@ getdeb() {
   case $type in
     deb)
        # Create the destination directory if needed
-       [ -d "$DSAS_HAUT/$dir" ] || $(umask 007 && mkdir -p $DSAS_HAUT/$dir)
+       $as_haut [ -d "$DSAS_HAUT/$dir" ] || $(umask 007 && $as_haut mkdir -p $DSAS_HAUT/$dir)
 
        # Test server ok before continuing
-       _stderr=$(2>&1 lftp -c "$opt open '$uri/'")
+       _stderr=$(2>&1 $chroot_lftp -c "$opt open '$uri/'")
        echo $_stderr | grep -q "Fatal" && (1>&2 echo "Fatal: Server '$uri' not found"; exit 1)
 
        myecho "Downloading Release/Release.gpg from $name"
        if [ "$verbose" -eq 0 ]; then
-         lftp -c "$opt get -e '$uri/Release' -o '$DSAS_HAUT/$dir/Release'" >& /dev/null
-         lftp -c "$opt get -e '$uri/Release.gpg' -o '$DSAS_HAUT/$dir/Release.gpg'" >& /dev/null
-         lftp -c "$opt get -e '$uri/InRelease' -o '$DSAS_HAUT/$dir/InRelease'" >& /dev/null
+         $chroot_lftp -c "$opt get -e '$uri/Release' -o '$DSAS_HAUT/$dir/Release'" >& /dev/null
+         $chroot_lftp -c "$opt get -e '$uri/Release.gpg' -o '$DSAS_HAUT/$dir/Release.gpg'" >& /dev/null
+         $chroot_lftp -c "$opt get -e '$uri/InRelease' -o '$DSAS_HAUT/$dir/InRelease'" >& /dev/null
        else
-         lftp -c "$opt get -e '$uri/Release' -o '$DSAS_HAUT/$dir/Release'"
-         lftp -c "$opt get -e '$uri/Release.gpg' -o '$DSAS_HAUT/$dir/Release.gpg'"
-         lftp -c "$opt get -e '$uri/InRelease' -o '$DSAS_HAUT/$dir/InRelease'"
+         $chroot_lftp -c "$opt get -e '$uri/Release' -o '$DSAS_HAUT/$dir/Release'"
+         $chroot_lftp -c "$opt get -e '$uri/Release.gpg' -o '$DSAS_HAUT/$dir/Release.gpg'"
+         $chroot_lftp -c "$opt get -e '$uri/InRelease' -o '$DSAS_HAUT/$dir/InRelease'"
        fi
 
-       [ -f "$DSAS_HAUT/$dir/Release" ] || $(1>&2 echo "Failed to download 'Release'"; exit 1)
-       [ -f "$DSAS_HAUT/$dir/Release.gpg" ] || $(1>&2 echo "Failed to download 'Release.gpg'"; exit 1)
+       $as_haut [ -f "$DSAS_HAUT/$dir/Release" ] || $(1>&2 echo "Failed to download 'Release'"; exit 1)
+       $as_haut [ -f "$DSAS_HAUT/$dir/Release.gpg" ] || $(1>&2 echo "Failed to download 'Release.gpg'"; exit 1)
 
        # Find the pool directory
        pool=$(dirname "$uri")
        pool_local=$(dirname "$dir")
        have_pool="0"
        while [ -n "$pool" ] && [ "${pool: -3}" != "://" ]; do
-         $(lftp -c "$opt open '$pool/pool'" >& /dev/null) && have_pool="1" && break
+         $($chroot_lftp -c "$opt open '$pool/pool'" >& /dev/null) && have_pool="1" && break
          pool=$(dirname "$pool")
          pool_local=$(dirname "$pool_local")
        done
        [ "$have_pool" == "0" ] && $(1>&2 echo "Debian pool directory not found"; exit 1)
 
-
        # Identify if the Release file has SHA256 et/ou MD5 hashes
-       grep -qx "MD5Sum:" "$DSAS_HAUT/$dir/Release" && hashtyp="MD5Sum:" && chktyp="md5"
-       grep -qx "SHA1:" "$DSAS_HAUT/$dir/Release" && hashtyp="SHA1:" && chktyp="sha"
-       grep -qx "SHA256:" "$DSAS_HAUT/$dir/Release" && hashtyp="SHA256:" && chktyp="sha256"
+       $as_haut grep -qx "MD5Sum:" "$DSAS_HAUT/$dir/Release" && hashtyp="MD5Sum:" && chktyp="md5"
+       $as_haut grep -qx "SHA1:" "$DSAS_HAUT/$dir/Release" && hashtyp="SHA1:" && chktyp="sha"
+       $as_haut grep -qx "SHA256:" "$DSAS_HAUT/$dir/Release" && hashtyp="SHA256:" && chktyp="sha256"
 
        # Identify all files listed in Release and download them
        inhash=0
-       while read -r line; do
+       $as_haut cat $DSAS_HAUT/$dir/Release | while read -r line; do
          # Assume that each hash is listed after the correct flag and has
          # a leading space
          [ "$inhash" == "0" ] && [[ "$line" =~ "^$hashtyp$" ]] && inhash="1" && continue
@@ -321,51 +338,51 @@ getdeb() {
          IFS=' ' read _hash _size _file << EOF
 $line
 EOF
-         if [ -f "$DSAS_HAUT/$dir/$_file" ]; then
-           if check_checksum "$DSAS_HAUT/$dir/$_file" $_hash $chktyp; then
+         if $as_haut [ -f "$DSAS_HAUT/$dir/$_file" ]; then
+           if $as_haut check_checksum "$DSAS_HAUT/$dir/$_file" $_hash $chktyp; then
              myecho "Downloading file $_file [Checksum different!!]"
-             [ "$verbose" -eq 0 ] && lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
-             [ "$verbose" -eq 0 ] || lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
+             [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
+             [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
            else
              myecho "Skipping file $_file"
            fi
          else
            myecho "Downloading file $_file"
-           [ -d "$(dirname "$DSAS_HAUT/$dir/$_file")" ] || $(umask 007; mkdir -p "$(dirname "$DSAS_HAUT/$dir/$_file")")
-           [ "$verbose" -eq 0 ] && lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
-           [ "$verbose" -eq 0 ] || lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
+           [ -d "$(dirname "$DSAS_HAUT/$dir/$_file")" ] || $(umask 007; $as_haut mkdir -p "$(dirname "$DSAS_HAUT/$dir/$_file")")
+           [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
+           [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
          fi
-       done < $DSAS_HAUT/$dir/Release
+       done
 
        # For each file Packages.gz download the listed files into the pool directory
-       for packages in $(find "$DSAS_HAUT/$dir" -name "Packages.gz"); do
+       for packages in $($as_haut find "$DSAS_HAUT/$dir" -name "Packages.gz"); do
          inpackage=0
          _file=""
          _hash_md5=""
          _hash_sha256=""
-         zcat "$packages" | while read -r line; do
+         $as_haut zcat "$packages" | while read -r line; do
            # Use sed to strip leading and trailing space, as can't used xargs due to possible
            # illegal characters like single quotes in strings. 
            [[ "$line" =~ "Filename:" ]] && _file="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
            [[ "$line" =~ "MD5sum:" ]] && _hash_md5="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
            [[ "$line" =~ "SHA256:" ]] && _hash_sha256="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
            if [ -z "$(echo $line | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" ]; then
-             if [ -f "$DSAS_HAUT/$pool_local/$_file" ]; then
-               [ -n "$hash_md5" ] && check_checksum "$DSAS_HUAT/$pool_local/$_file" $_hash_md5 md5
-               [ "$?" -eq 0 ] && [ -n "$hash_sha256"  ] && check_checksum "$DSAS_HUAT/$pool_local/$_file" $_hash_sha256 sha256
+             if $as_haut [ -f "$DSAS_HAUT/$pool_local/$_file" ]; then
+               [ -n "$hash_md5" ] && $as_haut check_checksum "$DSAS_HUAT/$pool_local/$_file" $_hash_md5 md5
+               [ "$?" -eq 0 ] && [ -n "$hash_sha256"  ] && $as_haut check_checksum "$DSAS_HUAT/$pool_local/$_file" $_hash_sha256 sha256
                
                if [ "$?" -eq 0 ]; then
                  myecho "Downloading file $_file [Checksum different!!]"
-                 [ "$verbose" -eq 0 ] && lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'" >& /dev/null
-                 [ "$verbose" -eq 0 ] || lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'"
+                 [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'" >& /dev/null
+                 [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'"
                else
                  myecho "Skipping file $_file"
                fi
              elif [ -n "$_file" ]; then
                myecho "Downloading file $_file"
-               [ -d "$(dirname "$DSAS_HAUT/$pool_local/$_file")" ] || $(umask 007 && mkdir -p "$(dirname "$DSAS_HAUT/$pool_local/$_file")")
-               [ "$verbose" -eq 0 ] && lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'" >& /dev/null
-               [ "$verbose" -eq 0 ] || lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'"
+               [ -d "$(dirname "$DSAS_HAUT/$pool_local/$_file")" ] || $(umask 007 && $as_haut mkdir -p "$(dirname "$DSAS_HAUT/$pool_local/$_file")")
+               [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'" >& /dev/null
+               [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'"
              fi
              _file=""
              _hash_md5=""
@@ -378,6 +395,9 @@ EOF
 
      *) 1>&2 echo "Unknown file checking type"; exit 1; ;;
   esac
+
+  [ -f "/tmp/cert.$$" ] && rm /tmp/cert.$$
+  [ -f "/opt/lftp/tmp/cert.$$" ] &&  rm /opt/lftp/tmp/cert.$$
 
   exit 0
 }
@@ -393,7 +413,6 @@ help() {
   echo "     -?|-h|--help    Print this help"
 }
 
-check_dsas
 clamav=0
 
 # Parse options
@@ -413,9 +432,10 @@ while [ "$#" -gt 0 ]; do
   esac
   shift 1
 done
- 
-# Change to a directory where the user 'haut' has write permissions
-cd $DSAS_HAUT
+
+# Check existence of DSAS directories
+[ -d $DSAS_HOME ] || { echo "DSAS home directory missing"; exit 1; }
+$as_haut [ -d "$DSAS_HAUT" ] || { echo "DSAS haut directory missing"; exit 1; }
 
 # If dryrun, force verbose
 [ $dryrun -ne 0 ] && verbose=1

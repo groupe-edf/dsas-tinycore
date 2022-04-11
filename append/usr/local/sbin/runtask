@@ -146,10 +146,10 @@ for _id in $ids; do
   [ -n "$_pid" ] && { 1>&2 myecho "$0 task $_id is running"; continue; }
 
   1>&2 myecho "$0: #### Tasks on machine HAUT ####"
-  ssh tc@$INTERCO_HAUT sudo sudo -u haut $(dirname $0)/getfiles $opts $_id
+  ssh tc@$INTERCO_HAUT $(dirname $0)/getfiles $opts $_id
   [ $? -eq 0 ] && ssh tc@$INTERCO_HAUT sudo sudo -u verif $(dirname $0)/checkfiles $opts $_id
   [ $? -eq 0 ] && 1>&2 myecho "$0: #### Tasks on machine BAS ####"
-  [ $? -eq 0 ] && sudo sudo -u haut $(dirname $0)/getfiles $opts $_id
+  [ $? -eq 0 ] && $(dirname $0)/getfiles $opts $_id
   [ $? -eq 0 ] && sudo sudo -u verif $(dirname $0)/checkfiles $opts -o $logfile $_id
 
   # Log the run date and exit status of the task

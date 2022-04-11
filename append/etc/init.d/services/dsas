@@ -35,6 +35,17 @@ mount_dsas(){
       mount -o remount,noexec ${DSAS:0:-5}
       mount --noexec --nobind $DSAS /home/dsas
     fi
+    if [ ! $(mounted /opt/lftp/home/dsas/haut) ]; then
+      # Create chroot jail for lftp as user haut 
+      mkdir -p  /opt/lftp/home/dsas/haut
+      chown root.haut /opt/lftp/home/dsas/haut
+      chmod 750 /opt/lftp/home/dsas/haut
+      mount --noexec --nobind /home/dsas/haut /opt/lftp/home/dsas/haut
+    fi
+    mkdir -p /opt/lftp/tmp
+    chown root.staff /opt/lftp/tmp
+    chmod 775 /opt/lftp/tmp
+
     # For persistent /var/log. Do this before launching syslog
     [ -d ${DSAS:0:-5}/log ] && [ ! $(mounted /var/log) ] && mount ${DSAS:0:-5}/log /var/log
   else

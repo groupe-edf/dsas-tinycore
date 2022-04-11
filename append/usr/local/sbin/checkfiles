@@ -892,8 +892,6 @@ verifclamav(){
   fi
 }
 
-check_dsas
-
 # Parse options
 ids=""
 while [ "$#" -gt 0 ]; do
@@ -916,6 +914,10 @@ while [ "$#" -gt 0 ]; do
   esac
   shift 1
 done
+
+# Check existence of DSAS directories
+[ -d $DSAS_HOME ] || { echo "DSAS home directory missing"; exit 1; }
+[ -d "$DSAS_BAS" ] || { echo "DSAS bas directory missing"; exit -1; }
 
 # If dryrun, force verbose
 [ $dryrun -ne 0 ] && verbose=1
