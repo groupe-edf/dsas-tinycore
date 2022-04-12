@@ -30,34 +30,6 @@ myecho(){
   return 0
 }
 
-# Usage : check_checksum <file> <chksum> <type>
-check_checksum() {
-  local chk
-
-  case $3 in
-    sha512)
-      chk=$(cat "$1" | sha512sum - | sed -e "s/ -//g")
-      ;;
-    sha256)
-      chk=$(cat "$1" | sha256sum - | sed -e "s/ -//g")
-      ;;
-    sha)
-      chk=$(cat "$1" | sha1sum - | sed -e "s/ -$//g")
-      ;;
-    md5)
-      chk=$(cat "$1" | md5sum - | sed -e "s/ -$//g")
-      ;;
-    *)
-     return 0
-     ;;
-  esac
-
-  if [ $chk != "$2" ]; then
-    return 0
-  fi
-  return 1
-}
-
 task_id_to_idx(){
   local _task_id
   local i=1

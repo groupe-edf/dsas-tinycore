@@ -12,8 +12,23 @@ fi
 
 # Setup permissions so that the user haut can access files created by tc by default
 as_haut="sudo sudo -E -u haut"
-chroot_lftp="sudo chroot --userspec=haut /opt/lftp /usr/local/bin/lftp"
+chroot_lftp="sudo /usr/local/sbin/chroot --userspec=haut:haut /opt/lftp /usr/local/bin/lftp"
 umask 022
+
+# Usage : check_checksum <file> <chksum> <type>
+check_checksum() {
+  local chk
+
+  case $3 in
+    sha512) chk=$($as_haut cat "$1" | sha512sum - | sed -e "s/ -//g") ;;
+    sha256) chk=$($as_haut cat "$1" | sha256sum - | sed -e "s/ -//g") ;;
+    sha) chk=$($as_haut cat "$1" | sha1sum - | sed -e "s/ -$//g") ;;
+    md5) chk=$($as_haut cat "$1" | md5sum - | sed -e "s/ -$//g") ;;
+    *) return 0 ;;
+  esac
+  [ $chk != "$2" ] && return 0
+  return 1
+}
 
 get_uri(){
   if [ "$TYP" == "haut" ]; then
@@ -34,7 +49,7 @@ lftp_ca_options() {
   opt="lcd $DSAS_HAUT;"
 
   if [ "$TYP" == "haut" ]; then
-    opt="$opt set sftp:auto-confirm true;" 
+    opt="$opt set sftp:auto-confirm true; set net:timeout 30; set net:max-retries 3;" 
     if [ "$clamav" == "1" ]; then
       # Set ClamAV User-Agent including our ClamAV client UUID to get around anti DDOS protections
       uuid=$(xmllint --xpath "string(dsas/config/antivirus/uuid)" "$CONF")
@@ -47,14 +62,13 @@ lftp_ca_options() {
     [ "$clamav" == "1" ] || ca_finger=$(xmllint --xpath "string(dsas/tasks/task[$id]/ca/fingerprint)" $CONF)
 
     case $ca_finger in
-      "")  opt="$opt set net:timeout 3; set net:max-retries 3; " ;;
-      "self") opt="$opt set net:timeout 3; set net:max-retries 3; set ssl:verify-certificate false; " ;;
+      "")  : ;;
+      "self") opt="$opt set ssl:verify-certificate false;" ;;
       *)
         idx=$(get_certificate $ca_finger)
         cp /tmp/cert.$$ /opt/lftp/tmp/cert.$$
         chmod 644 /opt/lftp/tmp/cert.$$
-        [ -z "$idx" ] || opt="$opt set net:timeout 3; set net:max-retries 3; set ssl:ca-file /tmp/cert.$$; "
-        [ -z "$idx" ] && opt="$opt set net:timeout 3; set net:max-retries 3; "
+        [ -z "$idx" ] || opt="$opt set ssl:ca-file /tmp/cert.$$; "
         ;;
     esac
   fi
@@ -125,8 +139,8 @@ getdirectory() {
   if [ -z "$isdir" ]; then
     myecho "Downloading file : $(basename "$uri")"
     # FIXME shouldn't always download here !!!
-    [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e -O '${DSAS_HAUT}/${dir}' '$uri'" >& /dev/null
-    [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e -O '${DSAS_HAUT}/${dir}' '$uri'"
+    [ "$verbose" -eq 0 ] && ($chroot_lftp -c "$opt get -e -O '${DSAS_HAUT}/${dir}' '$uri'" >& /dev/null)
+    [ "$verbose" -eq 0 ] || ($chroot_lftp -c "$opt get -e -O '${DSAS_HAUT}/${dir}' '$uri'")
   else
     myecho "Mirroring site : $uri"
     [ "$verbose" -eq 0 ] && ($chroot_lftp -c "$opt open '$uri'; mirror --delete-first -e -O '$DSAS_HAUT/$dir'" >& /dev/null)
@@ -142,8 +156,8 @@ getdirectory() {
   # There might be empty directories lying about. Remove them
   OLD_IFS=$IFS
   IFS=$'\3'
-  for _dir in $($as_haut find "$DSAS_HAUT/$dir" -mindepth 1 -type d -exec echo -n -e "{}\x03" \; ); do
-    [ "$($as_haut ls -A "$_dir")" ] || $as_haut rmdir "$_dir"
+  for _dir in $as_haut find "$DSAS_HAUT/$dir" -mindepth 1 -type d -exec echo -n -e "{}\x03" \; ; do
+    [ "$as_haut ls -A '$_dir'" ] || $as_haut rmdir "$_dir"
   done
   IFS=$OLD_IFS
 
@@ -167,20 +181,22 @@ get_packages() {
      chksum=$2
     fi
     if $as_haut [ -f "$dest/$file" ]; then
-      if $as_haut check_checksum "$dest/$file" $chksum $chktype; then
+      if check_checksum "$dest/$file" $chksum $chktype; then
         # Checksum of file is different redownload the file
         myecho "Downloading file $file [Checksum different!!]"
-        [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && $as_haut mkdir -p $(dirname "$dest/$file"))
-        [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" >& /dev/null
-        [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'"
-      else
-        myecho "Skipping file $file"
+        if [ "$dryrun" == "0" ]; then
+          [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && $as_haut mkdir -p $(dirname "$dest/$file"))
+          [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" >& /dev/null
+          [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'"
+        fi
       fi
     else
       myecho "Downloading file $file"
-      [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && $as_haut mkdir -p $(dirname "$dest/$file"))
-      [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" >& /dev/null
-      [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'"
+      if [ "$dryrun" == "0" ]; then
+        [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && $as_haut mkdir -p $(dirname "$dest/$file"))
+        [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" >& /dev/null
+        [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'"
+      fi
     fi
     shift 3
   done
@@ -216,19 +232,24 @@ getrepo() {
              sed -e "s:repomd xmlns:repomd ignore:g" | \
              xmllint --xpath "string(//repomd/data[$i]/location/@href)" -)
          [ -z "$f" ] && break
-         myecho "Downloading file $f listed in repomd.xml for $name"
-         [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$f' -o '$DSAS_HAUT/$dir/$f'" >& /dev/null
-         [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$f' -o '$DSAS_HAUT/$dir/$f'"
-
-         # Verify its checksum
          chksum=$($as_haut cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
              sed -e "s:repomd xmlns:repomd ignore:g" | \
              xmllint --xpath "string(//repomd/data[$i]/checksum)" - )
          chktype=$($as_haut cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
              sed -e "s:repomd xmlns:repomd ignore:g" | \
              xmllint --xpath "string(//repomd/data[$i]/checksum/@type)" - )
-         if  $as_haut check_checksum "$DSAS_HAUT/$dir/$f" $chksum $chktype; then
-             1>&2 echo "Error verifiying checksum of $f"
+
+         # Download if checksum different
+         if $as_haut [ ! -f "$DSAS_HAUT/$dir/$f" ] ||
+             check_checksum "$DSAS_HAUT/$dir/$f" $chksum $chktype; then
+           myecho "Downloading file $f listed in repomd.xml for $name"
+           [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$f' -o '$DSAS_HAUT/$dir/$f'" >& /dev/null
+           [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$f' -o '$DSAS_HAUT/$dir/$f'"
+
+           # Verify its checksum
+           if check_checksum "$DSAS_HAUT/$dir/$f" $chksum $chktype; then
+               1>&2 echo "Error verifiying checksum of $f"
+           fi
          fi
          i=$(($i + 1))
        done
@@ -256,9 +277,8 @@ getrepo() {
 
        # Remove the files in our tree not listed in primary.xml
        _str="$DSAS_HAUT/$dir"
-       _len=$((${#_len} + 1))
-       [ "${_str: -1}" == "/" ] && $(($_len + 1))
-       for _file in $($as_haut find "$DSAS_HAUT/$dir" -path ./repodata -prune -type f -o -type f); do
+       _len=$((${#_str} + 1))
+       for _file in $as_haut find "$DSAS_HAUT/$dir" -path "$DSAS_HAUT/$dir/repodata" -prune -type f -o -type f ; do
          if [[ "$filetable" != *"${_file:$_len}"* ]]; then
            myecho "Removing stale file ${_file:$_len}"
            $as_haut rm -f "$_file"
@@ -315,11 +335,11 @@ getdeb() {
        pool_local=$(dirname "$dir")
        have_pool="0"
        while [ -n "$pool" ] && [ "${pool: -3}" != "://" ]; do
-         $($chroot_lftp -c "$opt open '$pool/pool'" >& /dev/null) && have_pool="1" && break
+         $chroot_lftp -c "$opt open '$pool/pool'" >& /dev/null && have_pool="1" && break
          pool=$(dirname "$pool")
          pool_local=$(dirname "$pool_local")
        done
-       [ "$have_pool" == "0" ] && $(1>&2 echo "Debian pool directory not found"; exit 1)
+       [ "$have_pool" == "0" ] && { 1>&2 echo "Debian pool directory not found"; exit 1; }
 
        # Identify if the Release file has SHA256 et/ou MD5 hashes
        $as_haut grep -qx "MD5Sum:" "$DSAS_HAUT/$dir/Release" && hashtyp="MD5Sum:" && chktyp="md5"
@@ -339,12 +359,10 @@ getdeb() {
 $line
 EOF
          if $as_haut [ -f "$DSAS_HAUT/$dir/$_file" ]; then
-           if $as_haut check_checksum "$DSAS_HAUT/$dir/$_file" $_hash $chktyp; then
+           if check_checksum "$DSAS_HAUT/$dir/$_file" $_hash $chktyp; then
              myecho "Downloading file $_file [Checksum different!!]"
              [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
              [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
-           else
-             myecho "Skipping file $_file"
            fi
          else
            myecho "Downloading file $_file"
@@ -355,7 +373,7 @@ EOF
        done
 
        # For each file Packages.gz download the listed files into the pool directory
-       for packages in $($as_haut find "$DSAS_HAUT/$dir" -name "Packages.gz"); do
+       for packages in $as_haut find "$DSAS_HAUT/$dir" -name "Packages.gz" ; do
          inpackage=0
          _file=""
          _hash_md5=""
@@ -368,15 +386,13 @@ EOF
            [[ "$line" =~ "SHA256:" ]] && _hash_sha256="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
            if [ -z "$(echo $line | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" ]; then
              if $as_haut [ -f "$DSAS_HAUT/$pool_local/$_file" ]; then
-               [ -n "$hash_md5" ] && $as_haut check_checksum "$DSAS_HUAT/$pool_local/$_file" $_hash_md5 md5
-               [ "$?" -eq 0 ] && [ -n "$hash_sha256"  ] && $as_haut check_checksum "$DSAS_HUAT/$pool_local/$_file" $_hash_sha256 sha256
+               [ -n "$hash_md5" ] && check_checksum "$DSAS_HUAT/$pool_local/$_file" $_hash_md5 md5
+               [ "$?" -eq 0 ] && [ -n "$hash_sha256"  ] && check_checksum "$DSAS_HUAT/$pool_local/$_file" $_hash_sha256 sha256
                
                if [ "$?" -eq 0 ]; then
                  myecho "Downloading file $_file [Checksum different!!]"
                  [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'" >& /dev/null
                  [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'"
-               else
-                 myecho "Skipping file $_file"
                fi
              elif [ -n "$_file" ]; then
                myecho "Downloading file $_file"
@@ -408,7 +424,7 @@ help() {
   echo "Get files given by the task ID"
   echo "     -v|--verbose    Log all files verified"
   echo "     -q|--quiet      Log only files failing to verify"
-  echo "     -n|--dryrun     Perform no actions"
+  echo "     -n|--dryrun     Perform minimum actions"
   echo "     -c|--clamav     Get ClamAv signature files"
   echo "     -?|-h|--help    Print this help"
 }
@@ -446,9 +462,15 @@ $as_haut [ -d "$DSAS_HAUT" ] || { echo "DSAS haut directory missing"; exit 1; }
 # Check that all ids are valid before doing anything
 idx=""
 for _id in $ids; do
-  _idx=$(task_id_to_idx $_id)
-  [ $? -ne 0 ] && { 1>&2 echo "Task id ($_id) does not exist"; exit 1; }
-  idx="$idx $_idx"
+  if [ ${#_id} -lt 5 ] && [[ $_id =~ ^[0-9]+$ ]]; then
+    _idx=$(xmllint --xpath "string(dsas/tasks/task[$_id]/id)" $CONF)
+    [ -z "$_idx" ] && { 1>&2 echo "Task id ($_id) does not exist"; exit 1; }
+    idx="$idx $_id"
+  else
+    _idx=$(task_id_to_idx $_id)
+    [ $? -ne 0 ] && { 1>&2 echo "Task id ($_id) does not exist"; exit 1; }
+    idx="$idx $_idx"
+  fi
 done
 
 for _idx in $idx; do

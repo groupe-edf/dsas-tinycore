@@ -109,6 +109,7 @@ else
   for _id in $ids; do
     if [ ${#_id} -lt 5 ] && [[ $_id =~ ^[0-9]+$ ]]; then
       _idx=$(xmllint --xpath "string(dsas/tasks/task[$_id]/id)" $CONF)
+      i=$_id
     else
       i=1
       while :; do

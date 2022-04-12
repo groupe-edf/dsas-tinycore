@@ -65,6 +65,21 @@ msgline() {
   esac
 }
 
+# Usage : check_checksum <file> <chksum> <type>
+check_checksum() {
+  local chk
+
+  case $3 in
+    sha512) chk=$(cat "$1" | sha512sum - | sed -e "s/ -//g") ;;
+    sha256) chk=$(cat "$1" | sha256sum - | sed -e "s/ -//g") ;;
+    sha) chk=$(cat "$1" | sha1sum - | sed -e "s/ -$//g") ;;
+    md5) chk=$(cat "$1" | md5sum - | sed -e "s/ -$//g") ;;
+    *) return 0 ;;
+  esac
+  [ $chk != "$2" ] && return 0
+  return 1
+}
+
 ln() {
   if [ "$dryrun" == "0" ]; then
     [ -d "$(dirname "$2")" ] || ( mkdir -m 770 -p "$(dirname "$2")"; chgrp -R $grp "$(dirname "$2")")
@@ -929,9 +944,15 @@ antivirus="$(xmllint --xpath "string(dsas/config/antivirus/active)" "$CONF")"
 # Check that all ids are valid before doing anything
 idx=""
 for _id in $ids; do
-  _idx=$(task_id_to_idx $_id)
-  [ $? -ne 0 ] && { 1>&2 echo "Task id\($_id\) does not exist"; exit 1; }
-  idx="$idx $_idx"
+  if [ ${#_id} -lt 5 ] && [[ $_id =~ ^[0-9]+$ ]]; then
+    _idx=$(xmllint --xpath "string(dsas/tasks/task[$_id]/id)" $CONF)
+    [ -z "$_idx" ] && { 1>&2 echo "Task id ($_id) does not exist"; exit 1; }
+    idx="$idx $_id"
+  else
+    _idx=$(task_id_to_idx $_id)
+    [ $? -ne 0 ] && { 1>&2 echo "Task id\($_id\) does not exist"; exit 1; }
+    idx="$idx $_idx"
+  fi
 done
 
 for _id in $idx; do
