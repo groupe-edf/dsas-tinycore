@@ -35,17 +35,6 @@ mount_dsas(){
       mount -o remount,noexec ${DSAS:0:-5}
       mount --noexec --nobind $DSAS /home/dsas
     fi
-    if [ ! $(mounted /opt/lftp/home/dsas/haut) ]; then
-      # Create chroot jail for lftp as user haut 
-      mkdir -p  /opt/lftp/home/dsas/haut
-      chown root.haut /opt/lftp/home/dsas/haut
-      chmod 750 /opt/lftp/home/dsas/haut
-      mount --noexec --nobind /home/dsas/haut /opt/lftp/home/dsas/haut
-    fi
-    mkdir -p /opt/lftp/tmp
-    chown root.staff /opt/lftp/tmp
-    chmod 775 /opt/lftp/tmp
-
     # For persistent /var/log. Do this before launching syslog
     [ -d ${DSAS:0:-5}/log ] && [ ! $(mounted /var/log) ] && mount ${DSAS:0:-5}/log /var/log
   else
@@ -851,6 +840,48 @@ stop_snmp(){
   pkill snmpd
 }
 
+start_chroot(){
+ if [ -z "$ISDOCKER" ]; then
+   echo "Setting up ${GREEN}lftp chroot jail${NORMAL}"
+   if [ ! $(mounted /opt/lftp/home/dsas/haut) ]; then
+     # Create chroot jail for lftp as user haut
+     mkdir -p  /opt/lftp/home/dsas/haut
+     chown root.haut /opt/lftp/home/dsas/haut
+     chmod 750 /opt/lftp/home/dsas/haut
+     mount --noexec --nobind /home/dsas/haut /opt/lftp/home/dsas/haut
+   fi
+   # At this point the ssh hosts and keys are setup. Link them to the chroot jail,
+   # in a manner that they can't be abused to create an executable.
+   # Don't mount /home/haut as this will give the user the capacity to create an executable
+   [ -d "/opt/lftp/home/haut/.ssh" ] || mkdir -p /opt/lftp/home/haut/.ssh
+   chmod 0550 /opt/lftp/home/haut /opt/lftp/home/haut/.ssh
+   if [ "$TYP" == "bas" ]; then
+     if [ "$1" == "--force" ]; then
+       (umask 227; cp /home/haut/.ssh/ /opt/lftp/home/haut/.ssh)
+     else
+       for _f in $(ls -1 /home/haut/.ssh); do
+         [ -f "/opt/lftp/home/haut/.ssh/$_f" ] || cp home/haut/.ssh/$_f /opt/lftp/home/haut/.ssh/$_f
+       done
+     fi
+   else
+     [ -f "/opt/lftp/home/haut/.ssh/known_hosts" ] || (umask 117; touch /opt/lftp/home/haut/.ssh/known_hosts)
+   fi
+   chown -R root.haut /opt/lftp/home/haut
+   chmod 0440 /opt/lftp/home/haut/.ssh/id*
+   chmod 0660 /opt/lftp/home/haut/.ssh/known_hosts
+   if [ ! $(mounted /opt/lftp/dev/pts) ]; then
+     # Create pty for chroot jail
+     (umask 00022; mkdir -p  /opt/lftp/dev/pts)
+     mount -t devpts devpts /opt/lftp/dev/pts -o ptmxmode=0666,newinstance
+   fi
+ fi
+}
+
+stop_chroot(){
+  mounted /opt/lftp/home/dsas/haut && umount /opt/lftp/home/dsas/haut
+  mounted /opt/lftp/dev && umount /opt/lftp/dev
+}
+
 reboot_required(){
   echo -n "${YELLOW}Rebooting .${NORMAL}"
   for i in $(seq 1 1 5); do
@@ -989,6 +1020,7 @@ case "${1}" in
       /bin/cp $VAR/crontab.dsas /var/spool/cron/crontabs/root
     fi
 
+    start_chroot
     save_config
     ;;
 
@@ -998,6 +1030,7 @@ case "${1}" in
     else
       TYP="haut"
     fi
+    stop_chroot
     if [ "$TYP" == "bas" ]; then
       stop_snmp
       stop_antivirus
@@ -1024,6 +1057,7 @@ case "${1}" in
     setup_interco
     [ "$TYP" == "bas" ] && config_network
     config_sshd
+    start_chroot --force
     $0 restart
     ;;
 
@@ -1033,7 +1067,7 @@ case "${1}" in
     else
       TYP="haut"
     fi
-    # Only restart network et ssh if changed to avoid interuptting transfers
+    # Only restart network if changed to avoid interupting transfers
     OLD=$(xmllint --xpath "dsas/config/network" $VAR/dsas_conf.xml.active)
     NEW=$(xmllint --xpath "dsas/config/network" $VAR/dsas_conf.xml)
     if [ "$OLD" != "$NEW" ]; then
@@ -1060,6 +1094,8 @@ case "${1}" in
       start_repo
     fi
 
+    stop_chroot
+    start_chroot
     save_config
     ;;
 

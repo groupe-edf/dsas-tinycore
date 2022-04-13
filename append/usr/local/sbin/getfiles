@@ -10,9 +10,19 @@ else
   exit -1
 fi
 
-# Setup permissions so that the user haut can access files created by tc by default
 as_haut="sudo sudo -E -u haut"
-chroot_lftp="sudo /usr/local/sbin/chroot --userspec=haut:haut /opt/lftp /usr/local/bin/lftp"
+_ldir="/opt/lftp"
+if [ -L "$DSAS_HOME" ]; then
+  # This is an indication we are running in a docker instance. Can't chroot
+  chroot_lftp="/usr/local/bin/lftp"
+else
+  chroot_lftp="sudo /usr/local/sbin/chroot --userspec=haut:haut $_ldir env LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib /usr/local/bin/lftp"
+  # Update resolv.conf and hosts in the chroot as networking might have changed
+  for _f in /etc/hosts /etc/resolv.conf; do
+    [ -f "$_ldir/$_f" ] || sudo /bin/cp -p $_f $_ldir$_f
+    diff -q $_f $_ldir$_f >& /dev/null || sudo /bin/cp -p $_f $_ldir$_f
+  done
+fi
 umask 022
 
 # Usage : check_checksum <file> <chksum> <type>
@@ -66,8 +76,8 @@ lftp_ca_options() {
       "self") opt="$opt set ssl:verify-certificate false;" ;;
       *)
         idx=$(get_certificate $ca_finger)
-        cp /tmp/cert.$$ /opt/lftp/tmp/cert.$$
-        chmod 644 /opt/lftp/tmp/cert.$$
+        cp /tmp/cert.$$ $_ldir/tmp/cert.$$
+        chmod 644 $_ldir/tmp/cert.$$
         [ -z "$idx" ] || opt="$opt set ssl:ca-file /tmp/cert.$$; "
         ;;
     esac
@@ -110,7 +120,7 @@ getclamav() {
   $as_haut find "$DSAS_HAUT/$dir" -type d -exec chmod 770 {} \;
 
   [ -f "/tmp/cert.$$" ] && rm /tmp/cert.$$
-  [ -f "/opt/lftp/tmp/cert.$$" ] &&  rm /opt/lftp/tmp/cert.$$
+  [ -f "$_ldir/tmp/cert.$$" ] &&  rm $_ldir/tmp/cert.$$
 
   exit 0
 }
@@ -151,7 +161,7 @@ getdirectory() {
   fi
 
   [ -f "/tmp/cert.$$" ] && rm /tmp/cert.$$
-  [ -f "/opt/lftp/tmp/cert.$$" ] &&  rm /opt/lftp/tmp/cert.$$
+  [ -f "$_ldir/tmp/cert.$$" ] &&  rm $_ldir/tmp/cert.$$
 
   # There might be empty directories lying about. Remove them
   OLD_IFS=$IFS
@@ -292,7 +302,7 @@ getrepo() {
   esac
 
   [ -f "/tmp/cert.$$" ] && rm /tmp/cert.$$
-  [ -f "/opt/lftp/tmp/cert.$$" ] &&  rm /opt/lftp/tmp/cert.$$
+  [ -f "$_ldir/tmp/cert.$$" ] &&  rm $_ldir/tmp/cert.$$
 
   exit 0
 }
@@ -413,11 +423,10 @@ EOF
   esac
 
   [ -f "/tmp/cert.$$" ] && rm /tmp/cert.$$
-  [ -f "/opt/lftp/tmp/cert.$$" ] &&  rm /opt/lftp/tmp/cert.$$
+  [ -f "$_ldir/tmp/cert.$$" ] &&  rm $_ldir/tmp/cert.$$
 
   exit 0
 }
-
 
 help() {
   echo "Usage: $(basename $0)  [Options] ID"

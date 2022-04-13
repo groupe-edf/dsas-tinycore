@@ -1,0 +1,85 @@
+_pkg=ash
+_version=1.35.0
+_uri="https://busybox.net/downloads/busybox-1.35.0.tar.bz2"
+_dep=""
+_build_dep="compiletc sstrip curl"
+_pkg_path="busybox-1.35.0"
+_pre_config=""
+_conf_cmd=\
+"# Setup a config with nothing built
+setarch linux$arch make allnoconfig
+
+# Add the configuration on an ASH shell
+cat << EOF | patch .config
+--- .config.old	2022-04-13 04:25:20.285201152 +0000
++++ .config	2022-04-13 05:02:44.421823940 +0000
+@@ -238,7 +238,7 @@
+ # CONFIG_FEATURE_DU_DEFAULT_BLOCKSIZE_1K is not set
+ # CONFIG_ECHO is not set
+ # CONFIG_FEATURE_FANCY_ECHO is not set
+-# CONFIG_ENV is not set
++CONFIG_ENV=y
+ # CONFIG_EXPAND is not set
+ # CONFIG_UNEXPAND is not set
+ # CONFIG_EXPR is not set
+@@ -1098,24 +1098,24 @@
+ # CONFIG_BASH_IS_HUSH is not set
+ CONFIG_BASH_IS_NONE=y
+ CONFIG_SHELL_ASH=y
+-# CONFIG_ASH is not set
+-# CONFIG_ASH_OPTIMIZE_FOR_SIZE is not set
+-# CONFIG_ASH_INTERNAL_GLOB is not set
+-# CONFIG_ASH_BASH_COMPAT is not set
++CONFIG_ASH=y
++CONFIG_ASH_OPTIMIZE_FOR_SIZE=y
++CONFIG_ASH_INTERNAL_GLOB=y
++CONFIG_ASH_BASH_COMPAT=y
+ # CONFIG_ASH_BASH_SOURCE_CURDIR is not set
+ # CONFIG_ASH_BASH_NOT_FOUND_HOOK is not set
+-# CONFIG_ASH_JOB_CONTROL is not set
+-# CONFIG_ASH_ALIAS is not set
+-# CONFIG_ASH_RANDOM_SUPPORT is not set
+-# CONFIG_ASH_EXPAND_PRMT is not set
+-# CONFIG_ASH_IDLE_TIMEOUT is not set
++CONFIG_ASH_JOB_CONTROL=y
++CONFIG_ASH_ALIAS=y
++CONFIG_ASH_RANDOM_SUPPORT=y
++CONFIG_ASH_EXPAND_PRMT=y
++CONFIG_ASH_IDLE_TIMEOUT=y
+ # CONFIG_ASH_MAIL is not set
+-# CONFIG_ASH_ECHO is not set
+-# CONFIG_ASH_PRINTF is not set
+-# CONFIG_ASH_TEST is not set
+-# CONFIG_ASH_HELP is not set
+-# CONFIG_ASH_GETOPTS is not set
+-# CONFIG_ASH_CMDCMD is not set
++CONFIG_ASH_ECHO=y
++CONFIG_ASH_PRINTF=y
++CONFIG_ASH_TEST=y
++CONFIG_ASH_HELP=y
++CONFIG_ASH_GETOPTS=y
++CONFIG_ASH_CMDCMD=y
+ # CONFIG_CTTYHACK is not set
+ # CONFIG_HUSH is not set
+ # CONFIG_SHELL_HUSH is not set
+EOF
+
+cat << EOF | patch include/libbb.h
+--- include/libbb.h.old	2022-04-13 04:52:33.455169183 +0000
++++ include/libbb.h	2022-04-13 04:53:04.341835232 +0000
+@@ -2261,7 +2261,7 @@
+ extern const char bb_busybox_exec_path[] ALIGN1;
+ /* allow default system PATH to be extended via CFLAGS */
+ #ifndef BB_ADDITIONAL_PATH
+-#define BB_ADDITIONAL_PATH \"\"
++#define BB_ADDITIONAL_PATH \":/usr/local/bin\"
+ #endif
+ #define BB_PATH_ROOT_PATH \"PATH=/sbin:/usr/sbin:/bin:/usr/bin\" BB_ADDITIONAL_PATH
+ extern const char bb_PATH_root_path[] ALIGN1; /* BB_PATH_ROOT_PATH */
+EOF"
+_make_cmd="make CC='gcc -flto -Os -pipe' CXX='g++ -flto -Os -pipe -fno-exceptions -fno-rtti'"
+_install_cmd="make install CC='gcc -flto -Os -pipe' CXX='g++ -flto -Os -pipe -fno-exceptions -fno-rtti' CONFIG_PREFIX="
+_post_build=""
+_pkgs="main{bin,sbin,usr}"
+_post_install=""
+
