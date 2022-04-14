@@ -522,38 +522,7 @@ docker)
   install_tcz clamav
   install_tcz Linux-PAM
   install_tcz net-snmp
-
-  # Install lftp and dependencies in /opt so that they can be available in chroot jail
-  # Install missing libraries, etc as hard links 
-  _old=$extract
-  extract=$extract/opt/lftp
   install_tcz lftp
-  msg "Fixing lftp chroot libraries"
-  mkdir -p $extract/lib $extract/usr/lib $extract/etc
-  chown root.staff $extract/lib $extract/usr/lib $extract/etc
-  chmod 755 $extract/lib $extract/usr/lib $extract/etc
-  for _lib in $(ldd $extract/usr/local/bin/lftp | cut -d= -f1 | cut -d\( -f1); do
-    [[ "$_lib" =~ "linux-gate" ]] && continue
-    [[ "$_lib" =~ "ld-linux.so" ]] && ln $_old/$_lib $extract/$_lib && continue
-    [ -n "$(find $extract -name $_lib)" ] && continue
-    _link=""
-    [ -e "$_old/usr/lib/$_lib" ] && _link="usr/lib/$_lib"
-    [ -e "$_old/lib/$_lib" ] && _link="lib/$_lib"
-    [ -z "$_link" ] && error "library $_lib not found"
-    ln $_old/$_link $extract/$_link
-    while [ -L "$_old/$_link" ]; do
-      _newlink=$(readlink $_old/$_link)
-      if [ "$(dirname $_newlink)" == "." ]; then
-        ln "$_old/$(dirname $_link)/$_newlink" "$extract/$(dirname $_link)/$_newlink"
-      else
-        ln "$_old/$_newlink" "$extract/$_newlink"
-      fi
-      _link=$_newlink
-    done
-  done
-  ln $_old/etc/resolv.conf $extract/etc/resolv.conf
-  extract=$_old
- 
   # Copy the pre-extracted packages to work dir. This must be after packages
   # are installed to allow for files to be overwritten. Run as root 
   # and correct the ownership of files 
@@ -583,7 +552,6 @@ mkdir /home/tc/.ssh
 chmod 700 /home/tc/.ssh
 chown tc.staff /home/tc/.ssh
 EOF
-
 
   msg adding user 'verif'
   pwgen $service_pass_len
@@ -656,6 +624,74 @@ EOF
   chmod 755 $create_users
   chroot $extract /tmp/create_users.sh
   rm $create_users
+
+  # Special case, very limited busybox for chroot with only /bin/ash and /usr/bin/env installed
+  _old=$extract
+  extract=$extract/opt/lftp
+  install_tcz ash
+  extract=$_old
+
+  # Install lftp and dependencies in /opt so that they can be available in chroot jail
+  # Install missing libraries. Don't use harlink to avoid possible chroot breakout
+  cat << EOF > $extract/tmp/script
+#! /bin/sh
+  export LD_LIBRARY_PATH=/usr/lib:/lib:/usr/local/lib
+  _ldir=/opt/lftp
+  (umask 022; mkdir -p \$_ldir/lib \$_ldir/dev \$_ldir/etc \$_ldir/tmp \$_ldir/home)
+  chmod 775 \$_ldir/tmp
+  chown root.staff \$_ldir/tmp
+  (umask 027; mkdir -p \$_ldir/home/haut)
+  chown haut.haut \$_ldir/home/haut
+  cp -p /lib/ld-linux* \$_ldir/lib
+  grep ^haut /etc/passwd > \$_ldir/etc/passwd
+  cp -p /etc/host.conf /etc/nsswitch.conf \$_ldir/etc
+  for _file in /usr/local/bin/lftp /usr/local/etc/lftp.conf /usr/local/bin/ssh; do
+    while [ -L "\$_file" ]; do
+      _link=\$(readlink "\$_file")
+      _d=\$(dirname "\$_ldir/\$_file")
+      [ -d "\$_d" ] || (umask 022; mkdir -p \$_d)
+      1>&2 echo "  [-] Linking \$_ldir/\$_file to \$_link"
+      ln -s "\$_link" "\$_ldir/\$_file"
+      if [ "\$(dirname \$_link)" == "." ]; then
+        _file="\$(dirname \$_file)/\$_link"
+      else
+        _file=\$_link
+      fi
+    done
+    1>&2 echo "  [-] Copying \$_file to \$_ldir/\$_file"
+    [ -d "\$(dirname "\$_ldir/\$_file")" ] || (umask 022; mkdir -p "\$(dirname "\$_ldir/\$_file")")
+    cp -p "\$_file" "\$_ldir/\$_file"
+    ldd \$_file 2> /dev/null | while read -r _line; do
+      _l2=\$(echo \$_line | cut -d\\> -f2)
+      [ "\$_line" == "\$_l2" ] && continue
+      _lib=\$(echo \$_l2 | cut -d\\( -f1 | xargs)
+      [ -e "\$_ldir/\$_lib" ] && continue
+      [ -e "\$_lib" ] || { 1>&2 echo "    [E] library XX\${_lib}XX not found"; exit 1; }
+      _lfile=\$_lib
+      while [ -L "\$_lfile" ]; do
+        _link=\$(readlink "\$_lfile")
+        _d=\$(dirname \$_ldir/\$_lfile)
+        [ -d "\$_d" ] || (umask 022; mkdir -p \$_d)
+        1>&2 echo "    [-] Linking \$_ldir/\$_lfile to \$_link"
+        ln -s "\$_link" "\$_ldir/\$_lfile"
+        if [ "\$(dirname \$_link)" == "." ]; then
+          _lfile="\$(dirname \$_lfile)/\$_link"
+        else
+          _lfile=\$_link
+        fi
+      done
+      1>&2 echo "    [-] Copying \$_lfile to \$_ldir/\$_lfile"
+      [ -d "\$(dirname "\$_ldir/\$_lfile")" ] || (umask 022; mkdir -p "\$(dirname "\$_ldir/\$_lfile")")
+      cp -p "\$_lfile"  "\$_ldir/\$_lfile"
+    done
+  done
+  exit \$?
+EOF
+  chmod a+x $extract/tmp/script
+  { msg "Setting up lftp chroot jail"; chroot $extract /tmp/script; } || { error "Unexpected error ($?) in lftp chroot creation"; exit 1; }
+  /bin/rm -f $extract/tmp/script
+  mknod -m=666 $extract/opt/lftp/dev/null c 1 3
+  (cd $extract/opt/lftp/dev/; ln -s pts/ptmx)
 
   # Add console timeout to all .profile files
   for file in $(find $extract -name ".profile"); do
