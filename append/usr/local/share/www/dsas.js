@@ -1173,7 +1173,7 @@ function dsas_change_service(what) {
            } catch (e) {
              // Its text => here always just "Ok"
              clear_feedback();
-             dsas_display_service(what);
+             modal_message(_("Changes successfully saved"));
            }
          }).catch(error => {
            modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
