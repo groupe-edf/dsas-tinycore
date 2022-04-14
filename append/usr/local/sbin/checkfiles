@@ -67,7 +67,18 @@ msgline() {
 
 ln() {
   if [ "$dryrun" == "0" ]; then
-    [ -d "$(dirname "$2")" ] || ( mkdir -m 770 -p "$(dirname "$2")"; chgrp -R $grp "$(dirname "$2")")
+    if [ ! -d "$(dirname "$2")" ]; then
+      # Careful with the directory creation to ensure correct permissions and ownership
+      local _d=$2
+      local _d2=$(dirname "$_d")
+      while [ ! -d "$_d2" ]; do
+        _d="$_d2"
+        _d2=$(dirname "$_d2")
+      done
+      mkdir -m 770 -p "$(dirname "$2")"
+      chgrp -R $grp "$_d"
+      chmod -R 770 "$_d"
+    fi
     # This script is not running as root so can't change the owner. We
     # first have to copy the file.
     # FIXME : Hardcode path to gnu version of cp for the "--preserve" flag
@@ -245,7 +256,7 @@ verifliveupdate(){
     # Special case v1.sig that is an alternative signature for v.sig
     [ "$(basename "$s")" == "v1.sig" ] && continue
     t=$(echo $s | sed -e 's/.sig$/.grd/g')
-    echo $grd | grep -q $t || { 2>&1 myecho "Checksum file $t not found in the archive $(basename $file)"; return 1; }
+    echo $grd | grep -q $t || { 1>&2 myecho "Checksum file $t not found in the archive $(basename $file)"; return 1; }
     openssl cms -verify -inform DER -in "$s" -content "$t" $args > /dev/null 2>&1 || \
         { 1>&2 myecho "Verification failure of the file $t from the archive $(basename $file) "; return 1; }
   done
@@ -373,7 +384,7 @@ verifdirectory() {
       if [ "$type" == "liveupdate" ]; then
         cat /tmp/cert.$$ >> $tempdir/cert.0
       else
-        [ -f "$tempdir/cert.0" ] && myecho "Multiple authority certificates defined" 
+        [ -f "$tempdir/cert.0" ] && 1>&2 myecho "Multiple authority certificates defined" 
         /bin/mv "/tmp/cert.$$" "$tempdir/cert.0"
       fi
     else
@@ -382,7 +393,7 @@ verifdirectory() {
         if [ "$type" == "liveupdate" ]; then
           cat "/tmp/cert.$$" >> "$tempdir/cert.0"
         else
-          [ -f "$tempdir/cert.0" ] && myecho "Multiple authority certificates defined"
+          [ -f "$tempdir/cert.0" ] && 1>&2 myecho "Multiple authority certificates defined"
           /bin/mv "/tmp/cert.$$" "$tempdir/cert.0"
         fi
       else
@@ -411,7 +422,7 @@ verifdirectory() {
   filetable=$(cd "$DSAS_HAUT/$dir"; find . -type f)
   for file in $(cd "$DSAS_BAS/$dir"; find . -type f -exec echo -n -e "{}\x03" \; ); do
     if [[ "$filetable" != "*${file:2}*" ]]; then
-      myecho "Removing stale file ${file:2}"
+      1>&2 myecho "Removing stale file ${file:2}"
       rm -f "$DSAS_BAS/$dir/${file:2}"
     fi
   done
@@ -489,8 +500,9 @@ verifdirectory() {
   /bin/rm -fr "$tempdir"
 
   # There might be empty directories lying about. Remove them
+  IFS=$'\3'
   for _dir in $(find "$DSAS_BAS/$dir" -mindepth 1 -type d -exec echo -n -e "{}\x03" \; ); do
-    [ "$(ls -A "$_dir")" ] || rmdir "$_dir"
+    [ "$(ls -A "$_dir")" ] || { 1>&2 echo "Removing empty directory $_dir"; rmdir "$_dir"; }
   done
   IFS=$OLD_IFS
 }
@@ -626,7 +638,7 @@ verifrepo() {
   # Remove the files in $DSAS_BAS and not listed in primary.xml
   for _file in $(cd "$DSAS_BAS/$dir"; find . -path ./repodata -prune -type f -o -type f); do
     if [[ "$filetable" != *"${_file:2}"* ]]; then
-      myecho "Removing stale file ${_file:2}"
+      1>&2 myecho "Removing stale file ${_file:2}"
       rm -f "$DSAS_BAS/$dir/${_file:2}"
     fi
   done
@@ -810,7 +822,7 @@ passdirectory(){
   filetable=$(cd "$DSAS_HAUT/$dir"; find . -type f)
   for file in $(cd "$DSAS_BAS/$dir"; find . -type f -exec echo -n -e "{}\x03" \; ); do
     if [[ "$filetable" != *"${file:2}"* ]]; then
-      myecho "Removing stale file ${file:2}"
+      1>&2 myecho "Removing stale file ${file:2}"
       rm -f "$DSAS_BAS/$dir/${file:2}"
     fi
   done
@@ -821,7 +833,7 @@ passdirectory(){
 
     # Don't log the transfers with msgline for the machine haut as
     # the logs aren't yet used
-    myecho "ln '$DSAS_HAUT/$file' '$DSAS_BAS/$file'"
+    1>&2 myecho "ln '$DSAS_HAUT/$file' '$DSAS_BAS/$file'"
     ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
   done
 
@@ -835,7 +847,7 @@ passdirectory(){
     filetable=$(cd "$DSAS_HAUT/$pool/pool"; find . -type f)
     for file in $(cd "$DSAS_BAS/$pool/pool"; find . -type f -exec echo -n -e "{}\x03" \; ); do
       if [[ "$filetable" != *"${file:2}"* ]]; then
-        myecho "Removing stale file ${file:2}"
+        1>&2 myecho "Removing stale file ${file:2}"
         rm -f "$DSAS_BAS/$pool/pool/${file:2}"
       fi
     done
@@ -846,14 +858,15 @@ passdirectory(){
 
       # Don't log the transfers with msgline for the machine haut as
       # the logs aren't yet used
-      myecho "ln '$DSAS_HAUT/$file' '$DSAS_BAS/$file'"
+      1>&2 myecho "ln '$DSAS_HAUT/$file' '$DSAS_BAS/$file'"
       ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
     done
   fi
 
   # There might be empty directories lying about. Remove them
+  IFS=$'\3'
   for _dir in $(find "$DSAS_BAS/$dir" -mindepth 1 -type d -exec echo -n -e "{}\x03" \; ); do
-    [ "$(ls -A "$_dir")" ] || rmdir "$_dir"
+    [ "$(ls -A "$_dir")" ] || { 1>&2 echo "Removing empty directory $_dir"; rmdir "$_dir"; }
   done
   IFS=$OLD_IFS
 }
