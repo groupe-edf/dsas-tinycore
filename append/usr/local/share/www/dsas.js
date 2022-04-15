@@ -6,7 +6,7 @@ function modal_message(text, action = null, hide = false){
   modalDSAS.removeAttribute("disable");
   modalDSAS.removeAttribute("body");
   modalDSAS.removeAttribute("size");
-
+  modalDSAS.removeAttribute("static");
   if (hide)
     modalDSAS.setAttribute("hideonclick", true);
   else
@@ -24,6 +24,7 @@ function modal_message(text, action = null, hide = false){
 function modal_info(name, text){
   var modalDSAS = document.getElementById("modalDSAS");
   modalDSAS.removeAttribute("disable");
+  modalDSAS.setAttribute("static", false);
   modalDSAS.setAttribute("hideonclick", true);
   modalDSAS.setAttribute("action", "");
   modalDSAS.setAttribute("title", _("Info : {0}", name));
@@ -39,6 +40,7 @@ function modal_action(text, action = null, hide = false){
   modalDSAS.removeAttribute("body");
   modalDSAS.removeAttribute("type");
   modalDSAS.removeAttribute("size");
+  modalDSAS.removeAttribute("static");
   if (hide)
     modalDSAS.setAttribute("hideonclick", true);
   else
@@ -56,6 +58,7 @@ function modal_task(action = "dsas_add_task();", ca = ""){
   var modalDSAS = document.getElementById("modalDSAS");
   modalDSAS.removeAttribute("disable");
   modalDSAS.removeAttribute("type");
+  modalDSAS.removeAttribute("static");
   if (action) 
     modalDSAS.setAttribute("action", action);
   else
@@ -2578,8 +2581,9 @@ class DSASModal extends HTMLElement {
     var type = this.getAttribute("type");
     var hideonclick = this.getAttribute("hideonclick");
     var size = this.getAttribute("size");
+    var is_static = this.getAttribute("static");
 
-    this.innerHTML = '        <div class="modal fade" id="static' + tag + '" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="static' + tag + 'Label" aria-hidden="true">\n' +
+    this.innerHTML = '        <div class="modal fade" id="static' + tag + '" ' + (is_static === null || is_static === true ? 'data-bs-backdrop="static" data-bs-keyboard="false" ' : '') + 'aria-labelledby="static' + tag + 'Label" aria-hidden="true">\n' +
        '          <div class="modal-dialog' + (size === null || size == '' ? '' : ' modal-' + size) + '">\n' +
        '            <div class="modal-content">\n' +
        '              <div class="modal-header">\n' +
@@ -2599,14 +2603,14 @@ class DSASModal extends HTMLElement {
    }
 
   static get observedAttributes() {
-    return ["tag", "title", "body", "action", "disable", "type", "hideonclick", "size"];
+    return ["tag", "title", "body", "action", "disable", "type", "hideonclick", "size", "static"];
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
     var tag = this.getAttribute("tag");
 
     //if ((name !== "body") && (name !== "disable") && (oldValue === null))
-    if ((name === "tag") || (name === "type") || (name === "action") || (name === "hideonclick") || (name === "size"))
+    if ((name === "tag") || (name === "type") || (name === "action") || (name === "hideonclick") || (name === "size") || (name === "static"))
       this.render();
     else {
       switch (name) {
