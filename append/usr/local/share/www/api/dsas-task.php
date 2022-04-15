@@ -190,14 +190,11 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           foreach ($dsas->tasks->task as $task) {
             if ($task->name == $name) {
               $newtask = $task;
-               $d = dsas_dir() . ;
-              if (($directory != $newtask->directory) {
-                dsas_exec(["mv", "-n", (_DSAS_HAUT . "/" . $directory, _DSAS_HAUT . "/" . $newtask->directory]);
-                dsas_exec(["mv", "-n", (_DSAS_BAS . "/" . $directory, _DSAS_BAS . "/" . $newtask->directory]);
-                if (! is_dir(_DSAS_HAUT . "/" . $newtask->directory))
-                   rename(_DSAS_HAUT . "/" . $directory, _DSAS_HAUT . "/" . $newtask->directory);
-                if (! is_dir(_DSAS_BAS . "/" . $newtask->directory))
-                   rename(_DSAS_BAS . "/" . $directory, _DSAS_BAS . "/" . $newtask->directory);
+              if ($directory != $newtask->directory) {
+                dsas_exec(["ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "haut", "mv", "-n", _DSAS_HAUT . "/" . $newtask->directory, _DSAS_HAUT . "/" . $directory]);
+                dsas_exec(["ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "verif", "mv", "-n", _DSAS_BAS . "/" . $newtask->directory, _DSAS_BAS . "/" . $directory]);
+                dsas_exec(["sudo", "sudo", "-u", "haut", "mv", "-n", _DSAS_HAUT . "/" . $newtask->directory, _DSAS_HAUT . "/" . $directory]);
+                dsas_exec(["sudo", "sudo", "-u", "verif", "mv", "-n", _DSAS_BAS . "/" . $newtask->directory, _DSAS_BAS . "/" . $directory]);
               }
               while ($newtask->cert[0])
                 unset($newtask->cert[0]);
@@ -289,10 +286,11 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
 
       case "name" :
-        $old = $_POST["old"];
+        $data = json_decode($_POST["data"], true);
+        $old = $data["old"];
         foreach ($dsas->tasks->task as $task) {
           if ($task->name == $old) {
-            $task->name = $_POST["new"];
+            $task->name = $data["new"];
             break;
           }
         }

@@ -1758,12 +1758,12 @@ function dsas_modify_task(oldname = "", oldid="") {
     formData.append("data", JSON.stringify({
              old: oldname,
              new: name}));
-    fetch("api/dsas-task.php", {method: "POST", body: formData 
+    fetch("api/dsas-task.php", {method: "POST", body: formData
       }).then( response => {
-        if (response.ok) 
+        if (response.ok)
           dsas_add_task();
         else
-          return Promise.reject({status: response.status, 
+          return Promise.reject({status: response.status,
               statusText: response.statusText});
       }).catch(error => {
         if (! fail_loggedin(error.statusText))
