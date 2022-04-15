@@ -103,7 +103,7 @@ ln() {
     chgrp $grp "$1"
     /bin/ln -f "$1" "$2" 
   else
-    [ -d $(dirname $2) ] || echo "[DryRun] mkdir -p $(dirname $2)"
+    [ -d $(dirname $2) ] || echo "[DryRun] mkdir -m 770 -p $(dirname $2)"
     echo "[DryRun] ln $*"
   fi
 }
@@ -427,7 +427,7 @@ verifdirectory() {
   fi
 
   # Create directory if needed
-  [ -d "$DSAS_BAS/$dir" ] || $(umask 007; mkdir -p "$DSAS_BAS/$dir"; chgrp -R $grp "$DSAS_BAS/$(echo $dir | cut -d/ -f1)")
+  [ -d "$DSAS_BAS/$dir" ] || (mkdir -m 770 -p "$DSAS_BAS/$dir"; chgrp -R $grp "$DSAS_BAS/$(echo $dir | cut -d/ -f1)")
 
   # Set IFS to '\3', so the loop over the files and directories work with spaces in the file names
   OLD_IFS=$IFS
@@ -588,7 +588,7 @@ verifrepo() {
   fi 
 
   # Create the destination directory if needed
-  [ -d "$DSAS_BAS/$dir" ] || $(umask 007; mkdir -p "$DSAS_BAS/$dir"; chgrp $grp -R "$DSAS_BAS/$(echo $dir | cut -d/ -f1)")
+  [ -d "$DSAS_BAS/$dir" ] || mkdir -m 770 -p "$DSAS_BAS/$dir"; chgrp $grp -R "$DSAS_BAS/$(echo $dir | cut -d/ -f1)"
 
   # Test antivirus 
   if [ "$antivirus" == "true" ]; then
@@ -652,7 +652,7 @@ verifrepo() {
 
   # Remove the files in $DSAS_BAS and not listed in primary.xml
   for _file in $(cd "$DSAS_BAS/$dir"; find . -path ./repodata -prune -type f -o -type f); do
-    if [[ "$filetable" != *"${_file:2}"* ]]; then
+    if [[ "$filetable" != "*${_file:2}*" ]]; then
       1>&2 myecho "Removing stale file ${_file:2}"
       rm -f "$DSAS_BAS/$dir/${_file:2}"
     fi
@@ -714,7 +714,7 @@ verifdeb(){
   fi
 
   # Create the destination directory if needed
-  [ -d "$DSAS_BAS/$dir" ] || $(umask 007; mkdir -p $DSAS_BAS/$dir; chgrp $grp -R $DSAS_BAS/$dir)
+  [ -d "$DSAS_BAS/$dir" ] || (mkdir -m 770 -p $DSAS_BAS/$dir; chgrp $grp -R $DSAS_BAS/$dir)
 
   # Copy *Release* to $bas
   for _file in "Release Release.gpg InRelease"; do
@@ -745,7 +745,7 @@ EOF
       if  check_checksum "$DSAS_HAUT/$dir/$_file" $_hash $chktyp; then
         msgline "$DSAS_HAUT/$dir/$_file" 1  
       else
-        [ -d "$(dirname "$DSAS_BAS/$dir/$_file")" ] || $(umask 007; mkdir -p "$(dirname "$DSAS_BAS/$dir/$_file")"; chgrp $grp -R "$(dirname "$DSAS_BAS/$dir/$_file")")
+        [ -d "$(dirname "$DSAS_BAS/$dir/$_file")" ] || (mkdir -m 770 -p "$(dirname "$DSAS_BAS/$dir/$_file")"; chgrp $grp -R "$(dirname "$DSAS_BAS/$dir/$_file")")
         if [ "$antivirus" == "true" ]; then
           if clamdscan "$DSAS_HAUT/$dir/$_file" >& /dev/null; then
             msgline "$DSAS_HAUT/$dir/$_file" 0
@@ -784,7 +784,7 @@ EOF
           elif [ -n "$hash_md5" ] && check_checksum "$DSAS_HUAT/$pool/$_file" $_hash_md5 md5; then
             msgline "$DSAS_HAUT/$pool/$_file" 1
           else
-            [ -d "$(dirname i"$DSAS_BAS/$pool/$_file")" ] || $(umask 007; mkdir -p "$(dirname "$DSAS_BAS/$pool/$_file")"; chgrp $grp -R "$(dirname "$DSAS_BAS/$pool/$_file")")
+            [ -d "$(dirname i"$DSAS_BAS/$pool/$_file")" ] || (mkdir -m 770 -p "$(dirname "$DSAS_BAS/$pool/$_file")"; chgrp $grp -R "$(dirname "$DSAS_BAS/$pool/$_file")")
 
             if [ "$antivirus" == "true" ]; then
               if ar p "$DSAS_HAUT/$pool/$_file" | clamdscan - >& /dev/null; then
@@ -830,13 +830,13 @@ passdirectory(){
 
   # Create directory if needed
   for _d in $(cd "$DSAS_HAUT"; find "$dir" -type d -exec echo -n -e "{}\x03" \; ); do
-    [ -d "$DSAS_BAS/$_d" ] || $(umask 007; mkdir -p "$DSAS_BAS/$_d"; chgrp -R $grp "$DSAS_BAS/$(echo $_d | cut -d/ -f1)")
+    [ -d "$DSAS_BAS/$_d" ] || (mkdir -m 770 -p "$DSAS_BAS/$_d"; chgrp -R $grp "$DSAS_BAS/$(echo $_d | cut -d/ -f1)")
   done
 
   # Remove the files in our tree bas and not in haut.
   filetable=$(cd "$DSAS_HAUT/$dir"; find . -type f)
   for file in $(cd "$DSAS_BAS/$dir"; find . -type f -exec echo -n -e "{}\x03" \; ); do
-    if [[ "$filetable" != *"${file:2}"* ]]; then
+    if [[ "$filetable" != "*${file:2}*" ]]; then
       1>&2 myecho "Removing stale file ${file:2}"
       rm -f "$DSAS_BAS/$dir/${file:2}"
     fi
@@ -855,13 +855,13 @@ passdirectory(){
   if [ "$2" == "deb" ]; then
     # Create directories if needed
     for _d in $(cd "$DSAS_HAUT"; find "$pool/pool" -type d -exec echo -n -e "{}\x03" \; ); do
-      [ -d "$DSAS_BAS/$_d" ] || $(umask 007; mkdir -p "$DSAS_BAS/$_d"; chgrp $grp -R "$DSAS_BAS/$_d")
+      [ -d "$DSAS_BAS/$_d" ] || (mkdir -m 770 -p "$DSAS_BAS/$_d"; chgrp $grp -R "$DSAS_BAS/$_d")
     done
 
     # Remove the files in our tree bas and not in haut.
     filetable=$(cd "$DSAS_HAUT/$pool/pool"; find . -type f)
     for file in $(cd "$DSAS_BAS/$pool/pool"; find . -type f -exec echo -n -e "{}\x03" \; ); do
-      if [[ "$filetable" != *"${file:2}"* ]]; then
+      if [[ "$filetable" != "*${file:2}*" ]]; then
         1>&2 myecho "Removing stale file ${file:2}"
         rm -f "$DSAS_BAS/$pool/pool/${file:2}"
       fi
@@ -893,7 +893,7 @@ verifclamav(){
   [ "$antivirus" == "true" ] || return
 
   # Create directory if needed
-  [ -d "$DSAS_BAS/$dir" ] || $(umask 007; mkdir -p "$DSAS_BAS/$dir"; chgrp $grp -R "$DSAS_BAS/$dir")
+  [ -d "$DSAS_BAS/$dir" ] || (mkdir -m 770  -p "$DSAS_BAS/$dir"; chgrp $grp -R "$DSAS_BAS/$dir")
   
   if [ "$TYP" == "haut" ]; then
     for file in main.cvd daily.cvd bytecode.cvd; do

@@ -215,8 +215,11 @@ audit_perms(){
   for _user in bas haut; do
     chown root.$_user "$DSAS/$_user"
     chmod 750 "$DSAS/$_user"
-    for _d in $(find "$DSAS/$_user/share" -type d -exec echo -n -e "{}\x03" \; ); do
-      chown $_user.$_user "$_d"
+    chown $_user.$_user "$DSAS/$_user/share"
+    chmod 770 "$DSAS/$_user/share"
+    for _d in $(find "$DSAS/$_user/share" -mindepth 1 -type d -exec echo -n -e "{}\x03" \; ); do
+      [ "$_user" == "bas" ] || chown haut.haut "$_d"
+      [ "$_user" == "bas" ] && chown verif.share "$_d"
       chmod 770 "$_d"
     done
   done
@@ -611,9 +614,9 @@ start_sshd(){
     sed -i -e "s/\(share:.*\):verif,bas,haut\(.*\)$/\1:verif,bas,haut,$UID_TYP/" /etc/group
   fi
 
-  [ -z $USER_TC ] && [ -z $USER ] && return 0
+  [ -z "$USER_TC" ] && [ -z "$USER" ] && return 0
   cp -f /usr/local/etc/ssh/sshd_config.dsas /usr/local/etc/ssh/sshd_config
-  if [ ! -z $USER_TC ] && [ ! -z "$UID_TC" ]; then
+  if [ ! -z "$USER_TC" ] && [ ! -z "$UID_TC" ]; then
     cat << EOF >> /usr/local/etc/ssh/sshd_config
 
 ListenAddress $LISTEN
@@ -625,7 +628,7 @@ Match User $UID_TC Address $USER_TC
 EOF
   fi
 
-  if [ ! -z $USER ] && [ ! -z "$UID_TYP" ]; then
+  if [ ! -z "$USER" ] && [ ! -z "$UID_TYP" ]; then
     cat << EOF >> /usr/local/etc/ssh/sshd_config
 Match User $UID_TYP Address $USER
 	PasswordAuthentication yes
@@ -653,7 +656,7 @@ Match User bas Address $INTERCO_BAS
 EOF
   fi
 
-  if [ -n "$SSHD_SIGHUP" ] && [ -f /var/run/sshd.pid]; then
+  if [ -n "$SSHD_SIGHUP" ] && [ -f /var/run/sshd.pid ]; then
     PID=$(cat /var/run/sshd.pid)
     if [ -d "/proc/$PID" ]; then
       echo "Sending ${GREEN}SIGHUP${NORMAL} to the ${GREEN}openssh${NORMAL} server"
@@ -805,7 +808,9 @@ start_antivirus(){
       mkdir -p $ClamAVDir
       chown verif.share $ClamAVDir
     fi
-    sudo -u verif /usr/local/sbin/clamd &
+    # Start up is slow. So need to background. Also send output to /dev/null so that
+    # web UI doesn't block waiting for clamd to fork after the initialisation
+    sudo -u verif /usr/local/sbin/clamd >& /dev/null &
   fi
 }
 
@@ -879,7 +884,7 @@ start_chroot(){
 
 stop_chroot(){
   mounted /opt/lftp/home/dsas/haut && umount /opt/lftp/home/dsas/haut
-  mounted /opt/lftp/dev && umount /opt/lftp/dev
+  mounted /opt/lftp/dev && umount /opt/lftp/dev/pts
 }
 
 reboot_required(){
@@ -1062,7 +1067,7 @@ case "${1}" in
     ;;
 
   apply)
-    if [ -f $VAR/dsas_typ ]; then
+    if [ -f "$VAR/dsas_typ" ]; then
       TYP="$(cat $VAR/dsas_typ)"
     else
       TYP="haut"

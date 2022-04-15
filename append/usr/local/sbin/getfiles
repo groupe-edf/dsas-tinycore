@@ -108,7 +108,7 @@ getclamav() {
   fi
 
   # Create directory if needed
-  [ -d "${DSAS_HAUT}/$dir" ] || $(umask 007 && $as_haut mkdir -p "${DSAS_HAUT}/$dir")
+  [ -d "${DSAS_HAUT}/$dir" ] || $as_haut mkdir -m 770  -p "${DSAS_HAUT}/$dir"
 
   # Download the CVD files. Can't mirror as can't do ls on directory database.clamav.net 
   for _file in main.cvd daily.cvd bytecode.cvd; do
@@ -140,7 +140,7 @@ getdirectory() {
   fi
 
   # Create directory if needed
-  [ -d "${DSAS_HAUT}/$dir" ] || $(umask 007 && $as_haut mkdir -p "${DSAS_HAUT}/$dir")
+  [ -d "${DSAS_HAUT}/$dir" ] || $as_haut mkdir -m 770 -p "${DSAS_HAUT}/$dir"
 
   # Test whether we have a file or a directory, and fail if server not found 
   _stderr=$(2>&1 $chroot_lftp -c "$opt open '$uri'") && isdir="1"
@@ -166,7 +166,7 @@ getdirectory() {
   # There might be empty directories lying about. Remove them
   OLD_IFS=$IFS
   IFS=$'\3'
-  for _dir in $as_haut find "$DSAS_HAUT/$dir" -mindepth 1 -type d -exec echo -n -e "{}\x03" \; ; do
+  for _dir in $($as_haut find "$DSAS_HAUT/$dir" -mindepth 1 -type d -exec echo -n -e "{}\x03" \; ); do
     [ "$as_haut ls -A '$_dir'" ] || $as_haut rmdir "$_dir"
   done
   IFS=$OLD_IFS
@@ -195,7 +195,7 @@ get_packages() {
         # Checksum of file is different redownload the file
         myecho "Downloading file $file [Checksum different!!]"
         if [ "$dryrun" == "0" ]; then
-          [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && $as_haut mkdir -p $(dirname "$dest/$file"))
+          [ -d "$(dirname "$dest/$file")" ] || $as_haut mkdir -m 770 -p $(dirname "$dest/$file")
           [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" >& /dev/null
           [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'"
         fi
@@ -203,7 +203,7 @@ get_packages() {
     else
       myecho "Downloading file $file"
       if [ "$dryrun" == "0" ]; then
-        [ -d "$(dirname "$dest/$file")" ] || $(umask 007 && $as_haut mkdir -p $(dirname "$dest/$file"))
+        [ -d "$(dirname "$dest/$file")" ] || $as_haut mkdir -m 770  -p $(dirname "$dest/$file")
         [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" >& /dev/null
         [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'"
       fi
@@ -224,10 +224,10 @@ getrepo() {
   case $type in
     repomd|rpm)
        # Create the destination directory if needed
-       $as_haut [ -d "$DSAS_HAUT/$dir" ] || $(umask 007 && $as_haut mkdir -p "$DSAS_HAUT/$dir")
+       $as_haut [ -d "$DSAS_HAUT/$dir" ] || $as_haut mkdir -m 770  -p "$DSAS_HAUT/$dir"
 
        myecho "Downloading repodata/repomd.xml from $name"
-       $as_haut [ -d "$DSAS_HAUT/$dir/repodata" ] || $(umask 007 && $as_haut mkdir -p "$DSAS_HAUT/$dir/repodata")
+       $as_haut [ -d "$DSAS_HAUT/$dir/repodata" ] || $as_haut mkdir -m 770 -p "$DSAS_HAUT/$dir/repodata"
 
        _stderr=$(2>&1 $chroot_lftp -c "$opt get -e '$uri/repodata/repomd.xml' -o '$DSAS_HAUT/$dir/repodata/repomd.xml'")
        echo $_stderr | grep -q "Fatal" && (1>&2 echo "Fatal: Server '$uri' not found"; exit 1)
@@ -288,8 +288,8 @@ getrepo() {
        # Remove the files in our tree not listed in primary.xml
        _str="$DSAS_HAUT/$dir"
        _len=$((${#_str} + 1))
-       for _file in $as_haut find "$DSAS_HAUT/$dir" -path "$DSAS_HAUT/$dir/repodata" -prune -type f -o -type f ; do
-         if [[ "$filetable" != *"${_file:$_len}"* ]]; then
+       for _file in $($as_haut find "$DSAS_HAUT/$dir" -path "$DSAS_HAUT/$dir/repodata" -prune -type f -o -type f) ; do
+         if [[ "$filetable" != "*${_file:$_len}*" ]]; then
            myecho "Removing stale file ${_file:$_len}"
            $as_haut rm -f "$_file"
          fi
@@ -320,7 +320,7 @@ getdeb() {
   case $type in
     deb)
        # Create the destination directory if needed
-       $as_haut [ -d "$DSAS_HAUT/$dir" ] || $(umask 007 && $as_haut mkdir -p $DSAS_HAUT/$dir)
+       $as_haut [ -d "$DSAS_HAUT/$dir" ] || $as_haut mkdir -m 770 -p $DSAS_HAUT/$dir
 
        # Test server ok before continuing
        _stderr=$(2>&1 $chroot_lftp -c "$opt open '$uri/'")
@@ -376,14 +376,14 @@ EOF
            fi
          else
            myecho "Downloading file $_file"
-           [ -d "$(dirname "$DSAS_HAUT/$dir/$_file")" ] || $(umask 007; $as_haut mkdir -p "$(dirname "$DSAS_HAUT/$dir/$_file")")
+           [ -d "$(dirname "$DSAS_HAUT/$dir/$_file")" ] || $as_haut mkdir -m 770 -p "$(dirname "$DSAS_HAUT/$dir/$_file")"
            [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
            [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
          fi
        done
 
        # For each file Packages.gz download the listed files into the pool directory
-       for packages in $as_haut find "$DSAS_HAUT/$dir" -name "Packages.gz" ; do
+       for packages in $($as_haut find "$DSAS_HAUT/$dir" -name "Packages.gz") ; do
          inpackage=0
          _file=""
          _hash_md5=""
@@ -406,7 +406,7 @@ EOF
                fi
              elif [ -n "$_file" ]; then
                myecho "Downloading file $_file"
-               [ -d "$(dirname "$DSAS_HAUT/$pool_local/$_file")" ] || $(umask 007 && $as_haut mkdir -p "$(dirname "$DSAS_HAUT/$pool_local/$_file")")
+               [ -d "$(dirname "$DSAS_HAUT/$pool_local/$_file")" ] || $as_haut mkdir -m 770 -p "$(dirname "$DSAS_HAUT/$pool_local/$_file")"
                [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'" >& /dev/null
                [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'"
              fi
