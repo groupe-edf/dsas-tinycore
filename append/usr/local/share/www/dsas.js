@@ -1613,7 +1613,7 @@ function dsas_task_modify(id) {
     if (tasks.task) {
       for (task of (tasks.task.constructor === Object ? [tasks.task] : tasks.task)) {
         if (id === task.id) {
-          modal_task("dsas_add_task(task.name, task.id);", task.ca.fingerprint);
+          modal_task("dsas_modify_task(task.name, task.id);", task.ca.fingerprint);
           document.getElementById('TaskName').value = print_obj(task.name);
           document.getElementById('TaskDirectory').value = print_obj(task.directory);
           document.getElementById('TaskURI').value = print_obj(task.uri);
@@ -1747,7 +1747,33 @@ function dsas_task_cert_delete(fingerprint){
   document.getElementById("TaskCert").innerHTML = body;
 }
 
-function dsas_add_task(oldname = "", oldid="") {
+function dsas_modify_task(oldname = "", oldid="") {
+  var name = document.getElementById("TaskName").value;
+
+  // If the old name is not empty and different than the new name, then we're
+  // modifying a task and we've changed the name.
+  if (oldname && oldname != name) {
+    var formData = new FormData;
+    formData.append("op", "name");
+    formData.append("data", JSON.stringify({
+             old: oldname,
+             new: name}));
+    fetch("api/dsas-task.php", {method: "POST", body: formData 
+      }).then( response => {
+        if (response.ok) 
+          dsas_add_task();
+        else
+          return Promise.reject({status: response.status, 
+              statusText: response.statusText});
+      }).catch(error => {
+        if (! fail_loggedin(error.statusText))
+          modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
+      });
+  } else
+    dsas_add_task();
+}
+
+function dsas_add_task() {
   var name = document.getElementById("TaskName").value;
   var directory = document.getElementById("TaskDirectory").value;
   var uri = document.getElementById("TaskURI").value;
@@ -1755,12 +1781,6 @@ function dsas_add_task(oldname = "", oldid="") {
   var run = "";
   var ca = {};
   var certs= [];
-
-  // If the old name is not empty and different than the new name, then we're
-  // modifying a task and we've changed the name. Delete the original task
-  // before adding the new one
-  if (oldname && oldname != name)
-    dsas_task_real_delete(oldid); 
 
   for (opt of document.getElementsByTagName("option"))
     if (opt.id.substr(0,8) === "TaskType" && opt.selected)

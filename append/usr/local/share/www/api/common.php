@@ -1,7 +1,10 @@
 <?php
 
+define("_DSAS_HOME", "/home/dsas");
+define("_DSAS_HAUT", _DSAS_HOME . "/haut/share");
+define("_DSAS_BAS", _DSAS_HOME . "/bas/share");
 define("_DSAS_VAR", "/var/dsas");
-define("_DSAS_LOG", "/home/dsas/log");
+define("_DSAS_LOG", _DSAS_HOME . "/log");
 define("_DSAS_XML", _DSAS_VAR . "/dsas_conf.xml");
 
 function dsas_ca_file() {
@@ -65,15 +68,6 @@ function dsas_user_active($user) {
     }
   }
   return false;
-}
-
-function dsas_dir() {
-  return "/home/dsas";
-}
-
-function dsas_has_dir(){
-  $d = dsas_dir();
-  return ((!isempty($d)) && is_dir($d));
 }
 
 function dsas_exec($args, $cwd = null, $stdin = []){

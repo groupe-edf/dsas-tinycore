@@ -186,17 +186,29 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
 
         if ($errors == []) {
-          $i = 0;
+          $newtask = 0;
           foreach ($dsas->tasks->task as $task) {
             if ($task->name == $name) {
-              unset($dsas->tasks->task[$i]);
+              $newtask = $task;
+               $d = dsas_dir() . ;
+              if (($directory != $newtask->directory) {
+                dsas_exec(["mv", "-n", (_DSAS_HAUT . "/" . $directory, _DSAS_HAUT . "/" . $newtask->directory]);
+                dsas_exec(["mv", "-n", (_DSAS_BAS . "/" . $directory, _DSAS_BAS . "/" . $newtask->directory]);
+                if (! is_dir(_DSAS_HAUT . "/" . $newtask->directory))
+                   rename(_DSAS_HAUT . "/" . $directory, _DSAS_HAUT . "/" . $newtask->directory);
+                if (! is_dir(_DSAS_BAS . "/" . $newtask->directory))
+                   rename(_DSAS_BAS . "/" . $directory, _DSAS_BAS . "/" . $newtask->directory);
+              }
+              while ($newtask->cert[0])
+                unset($newtask->cert[0]);
               break;
             }
-            $i++;
           }
-          $newtask = $dsas->tasks->addChild("task");
+          if ($newtask === 0) {
+            $newtask = $dsas->tasks->addChild("task");
+            $newtask->id = dsasid();
+          }
           $newtask->name = $name;
-          $newtask->id = dsasid();
           $newtask->directory = $directory;
           $newtask->uri = $uri;
           $newtask->type = $type;
@@ -232,7 +244,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
 
      case "run" :
-        $id = $_POST["id"];;
+        $id = $_POST["id"];
         if (! ctype_xdigit($id)) {
           $errors[] = ["error" => "The task ID is invalid"];
         } else {
@@ -256,7 +268,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
 
       case "info" :
-        $id = $_POST["id"];;
+        $id = $_POST["id"];
         if (! ctype_xdigit($id)) {
           $errors[] = ["error" => "The task ID is invalid"];
         } else {
@@ -272,6 +284,16 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $errors[] = ["error" => ["The task '{0}' is not active. Try applying before use",  $id]];
           } else {
             $info[] = ["info" => file_get_contents(_DSAS_LOG . "/" . $id . ".log")];
+          }
+        }
+        break;
+
+      case "name" :
+        $old = $_POST["old"];
+        foreach ($dsas->tasks->task as $task) {
+          if ($task->name == $old) {
+            $task->name = $_POST["new"];
+            break;
           }
         }
         break;

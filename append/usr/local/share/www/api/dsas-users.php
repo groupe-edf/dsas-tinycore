@@ -28,7 +28,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $newuser->description = "";
             $newuser->type = "admin";
             $newuser->active = "false";
-            $output = dsas_exec(["sudo", "adduser", "-G", "users", "-h", dsas_dir() . "/" . $duser, "-s", "/bin/sh", "-D", $duser]);
+            $output = dsas_exec(["sudo", "adduser", "-G", "users", "-h", _DSAS_HOME . "/" . $duser, "-s", "/bin/sh", "-D", $duser]);
             if ($output["retval"] != 0)
               $errors[] = ["error" => ["Error during user addition '{0}'", (string)$output["stderr"]]];
           }

@@ -17,7 +17,7 @@ else {
   $cores = trim($matches[1]);
   $output = dsas_exec(["cat", "/proc/loadavg"]);
   $loadavg = explode(" ", $output["stdout"])[0];
-  $d = dsas_dir();
+  $d = _DSAS_HOME;
   $bas = ["disk" =>  $d,
           "disk_free" => disk_free_space($d),
           "disk_total" => disk_total_space($d),
