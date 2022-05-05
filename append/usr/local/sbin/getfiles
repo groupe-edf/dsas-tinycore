@@ -163,10 +163,12 @@ getdirectory() {
   [ -f "/tmp/cert.$$" ] && rm /tmp/cert.$$
   [ -f "$_ldir/tmp/cert.$$" ] &&  rm $_ldir/tmp/cert.$$
 
-  # There might be empty directories lying about. Remove them
+  # There might be empty directories lying about. Remove them. Don't include include in the "for" loop
+  # As there is a problem with IFS and potential directories with spaces.
+  _dirs=$($as_haut find "$DSAS_HAUT/$dir" -mindepth 1 -type d -exec echo -n -e "{}\x03" \; )
   OLD_IFS=$IFS
   IFS=$'\3'
-  for _dir in $($as_haut find "$DSAS_HAUT/$dir" -mindepth 1 -type d -exec echo -n -e "{}\x03" \; ); do
+  for _dir in $_dirs;  do
     [ "$as_haut ls -A '$_dir'" ] || $as_haut rmdir "$_dir"
   done
   IFS=$OLD_IFS
