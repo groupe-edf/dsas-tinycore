@@ -7,7 +7,7 @@ NORMAL="$(echo -e '\033[1;39m')"
 MNT=/mnt
 
 # The version of the DSAS xml file supported by this version
-DSAS_XML_VERSION="0.12"
+DSAS_XML_VERSION="0.13"
 
 VAR=/var/dsas
 
@@ -723,6 +723,7 @@ config_sshd(){
     rm /tmp/authorized_keys
     $as_tc ssh tc@$INTERCO_HAUT << EOF
 sudo mkdir -p /home/bas/.ssh
+cat /tmp/authorized_keys >> /home/tc/.ssh/authorized_keys
 sudo mv -f /tmp/authorized_keys /home/bas/.ssh/authorized_keys
 sudo chown -R bas.bas /home/bas/.ssh
 sudo chmod -R 700 /home/bas/.ssh
@@ -970,6 +971,16 @@ check_xml_version(){
     _passpriv=$(xmllint --xpath 'string(dsas/config/snmp/password)' $VAR/dsas_conf.xml)
     sed -i -e "s:</snmp>:  <encrypt>SHA</encrypt>\n        <passpriv>${_passpriv}</passpriv>\n        <privencrypt>AES</privencrypt>      </snmp>:" $VAR/dsas_conf.xml
   fi
+
+
+  if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "13" ]; then
+   # The version 0.13 of the DSAS needs the authorized_keys of "bas" copied to "tc"
+    $as_tc ssh tc@$INTERCO_HAUT << EOF
+cat /home/bas/.ssh/authorized_keys >> /home/tc/.ssh/authorized_keys
+sudo chown -R tc/staff /home/tc/.ssh
+sudo chmod -R 700 /home/tc/.ssh
+EOF
+   fi
 
   # Now that the XML is upgraded, save the new version number
   if [ "$_ver" != "$DSAS_XML_VERSION" ]; then

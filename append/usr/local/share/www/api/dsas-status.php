@@ -31,19 +31,19 @@ else {
   $hautip = interco_haut();
   $output = dsas_exec(["ping", "-q", "-c", "1", "-W", "1", $hautip]);
   if ($output["retval"] == 0) {
-    $output = dsas_exec(["ssh", "tc@" . $hautip, "free", "-b"]);
+    $output = dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . $hautip, "free", "-b"]);
     $free = $output["stdout"];
     $free = (string)trim($free);
     $free_arr = explode("\n", $free);
     $mem = explode(" ", $free_arr[1]);
     $mem = array_filter($mem);
     $mem = array_merge($mem);
-    $output = dsas_exec(["ssh", "tc@" . $hautip, "cat", "/proc/loadavg", "/proc/cpuinfo"]);
+    $output = dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . $hautip, "cat", "/proc/loadavg", "/proc/cpuinfo"]);
     $loadavg = explode(" ", $output["stdout"])[0];
     $cpuinfo = $output["stdout"];
     preg_match("/^cpu cores.*:(.*)$/m", $cpuinfo, $matches);
     $cores = trim($matches[1]);
-    $output = dsas_exec(["ssh", "tc@" . $hautip, "stat", "-f", "-c", "'%S %a %b'", $d]);
+    $output = dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . $hautip, "stat", "-f", "-c", "'%S %a %b'", $d]);
     $output_arr = explode(" ", (string)trim($output["stdout"]));
     $blksz = (int)$output_arr[0];
     $free = (int)$output_arr[1] * $blksz;

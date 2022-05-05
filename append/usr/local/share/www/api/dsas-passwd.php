@@ -34,7 +34,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
               // untar the existing backup in tgz format, replace /etc/shadow and 
               // rearchive it. This is going to be ugly !! Package the ugliness in a 
               // script
-              $output = dsas_exec(["ssh", "tc@haut", "/usr/local/sbin/dsaspasswd"]);
+              $output = dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@haut", "/usr/local/sbin/dsaspasswd"]);
               if ($output["retval"] != 0)
                 $errors[] = ["error" => ["Error during user addition '{0}'", (string)$output["stderr"]]];
               else {

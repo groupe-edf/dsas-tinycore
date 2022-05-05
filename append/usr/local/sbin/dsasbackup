@@ -71,7 +71,7 @@ EOD
 
 if [ "$RESTORE" -eq 0 ]; then
   # Create the backup on the machine haut
-  (umask 077; ssh tc@$INTERCO_HAUT sudo tar -C / -c -z -f - $FILES > /tmp/haut.tgz)
+  (umask 077; sudo sudo -u haut ssh tc@$INTERCO_HAUT sudo tar -C / -c -z -f - $FILES > /tmp/haut.tgz)
   [ -n "$PASSWD" ] && (umask 077; cd /tmp; blowfish_encrypt haut.tgz $PASSWD)
   
   # Get the backup for the machine bas
@@ -128,7 +128,7 @@ else
   first=$(xmllint --xpath 'string(dsas/config/users/first)' $VAR/dsas_conf.xml)
 
   # Unpack the files on machine haut
-  cat /tmp/haut.tgz | (ssh tc@$INTERCO_HAUT sudo tar -C / -x -z -f -)
+  cat /tmp/haut.tgz | (sudo sudo -u haut ssh tc@$INTERCO_HAUT sudo tar -C / -x -z -f -)
   [ $? -eq 0 ] || { 1>&2 echo "Can not transfer the backup to the machine haut"; exit 1; }
 
   # Unpack the files on machine bas

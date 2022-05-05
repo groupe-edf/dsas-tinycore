@@ -40,13 +40,13 @@ fi
 
 # Get /var/log/messages from the machine haut
 tempdir=$(mktemp -d)
-scp tc@$INTERCO_HAUT:$HLOG $tempdir/$(basename $HLOG)
+sudo sudo -u haut scp tc@$INTERCO_HAUT:$HLOG $tempdir/$(basename $HLOG)
 
 # Is it different ? 
 if [ "$(sha256sum $tempdir/$(basename $HLOG) | cut -d' ' -f1)" != "$HLOGH" ]; then
   # Fetch $HLOG0 as well
   
-  if scp tc@$INTERCO_HAUT:$HLOG0 $tempdir/$(basename $HLOG0) && \
+  if sudo sudo -u haut scp tc@$INTERCO_HAUT:$HLOG0 $tempdir/$(basename $HLOG0) && \
       [ "$(sha256sum $tempdir/$(basename $HLOG0) | cut -d' ' -f1)" != "$HLOGH0" ]; then
     # The machine haut has rotated its logs
     if [ "$(sha256sum $tempdir/$(basename $HLOG0) | cut -d' ' -f1)" != "$HLOGH" ]; then

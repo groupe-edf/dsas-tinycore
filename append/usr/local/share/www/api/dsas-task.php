@@ -191,8 +191,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             if ($task->name == $name) {
               $newtask = $task;
               if ($directory != $newtask->directory) {
-                dsas_exec(["ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "haut", "mv", "-n", _DSAS_HAUT . "/" . $newtask->directory, _DSAS_HAUT . "/" . $directory]);
-                dsas_exec(["ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "verif", "mv", "-n", _DSAS_BAS . "/" . $newtask->directory, _DSAS_BAS . "/" . $directory]);
+                dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "haut", "mv", "-n", _DSAS_HAUT . "/" . $newtask->directory, _DSAS_HAUT . "/" . $directory]);
+                dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "verif", "mv", "-n", _DSAS_BAS . "/" . $newtask->directory, _DSAS_BAS . "/" . $directory]);
                 dsas_exec(["sudo", "sudo", "-u", "haut", "mv", "-n", _DSAS_HAUT . "/" . $newtask->directory, _DSAS_HAUT . "/" . $directory]);
                 dsas_exec(["sudo", "sudo", "-u", "verif", "mv", "-n", _DSAS_BAS . "/" . $newtask->directory, _DSAS_BAS . "/" . $directory]);
               }
