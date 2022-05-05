@@ -869,11 +869,11 @@ start_chroot(){
          [ -f "/opt/lftp/home/haut/.ssh/$_f" ] || cp home/haut/.ssh/$_f /opt/lftp/home/haut/.ssh/$_f
        done
      fi
+     chmod 0440 /opt/lftp/home/haut/.ssh/id*
    else
      [ -f "/opt/lftp/home/haut/.ssh/known_hosts" ] || (umask 117; touch /opt/lftp/home/haut/.ssh/known_hosts)
    fi
    chown -R root.haut /opt/lftp/home/haut
-   chmod 0440 /opt/lftp/home/haut/.ssh/id*
    chmod 0660 /opt/lftp/home/haut/.ssh/known_hosts
    if [ ! $(mounted /opt/lftp/dev/pts) ]; then
      # Create pty for chroot jail
@@ -972,15 +972,14 @@ check_xml_version(){
     sed -i -e "s:</snmp>:  <encrypt>SHA</encrypt>\n        <passpriv>${_passpriv}</passpriv>\n        <privencrypt>AES</privencrypt>      </snmp>:" $VAR/dsas_conf.xml
   fi
 
-
   if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "13" ]; then
-   # The version 0.13 of the DSAS needs the authorized_keys of "bas" copied to "tc"
-    $as_tc ssh tc@$INTERCO_HAUT << EOF
-cat /home/bas/.ssh/authorized_keys >> /home/tc/.ssh/authorized_keys
-sudo chown -R tc/staff /home/tc/.ssh
-sudo chmod -R 700 /home/tc/.ssh
-EOF
-   fi
+    # The version 0.13 of the DSAS needs the authorized_keys of "bas" copied to "tc"
+    if [ -f "$VAR/dsas_typ" ] && [ "$(cat $VAR/dsas_typ)" == "haut" ]; then
+      sudo cat /home/bas/.ssh/authorized_keys >> /home/tc/.ssh/authorized_keys
+      sudo chown -R tc.staff /home/tc/.ssh
+      sudo chmod -R 700 /home/tc/.ssh
+    fi
+  fi
 
   # Now that the XML is upgraded, save the new version number
   if [ "$_ver" != "$DSAS_XML_VERSION" ]; then
