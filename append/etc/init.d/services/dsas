@@ -1082,6 +1082,7 @@ case "${1}" in
     else
       TYP="haut"
     fi
+    setup_interco
     # Only restart network if changed to avoid interupting transfers
     OLD=$(xmllint --xpath "dsas/config/network" $VAR/dsas_conf.xml.active)
     NEW=$(xmllint --xpath "dsas/config/network" $VAR/dsas_conf.xml)
