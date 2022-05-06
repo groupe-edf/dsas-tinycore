@@ -1558,14 +1558,19 @@ function task_body(task) {
 }
 
 function dsas_task_delete(id, name){
-  modal_action(_("Delete the task ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, id),
-     "dsas_task_real_delete('" + id + "');", true);
+  var body = _("Delete the task ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, id) +
+    '<br><input class="form-check-iput" type="checkbox" id="TaskDeleteFiles" checked>' +
+    '<label class="form-check-label" for="TaskDeleteFiles">' + _("Delete task files")  + '</label>';
+  modal_action(body, "dsas_task_real_delete('" + id + "');", true);
 }
 
 function dsas_task_real_delete(id) {
   var formData = new FormData;
+  var deleteFiles = document.getElementById("TaskDeleteFiles").checked;
+  document.getElementById("TaskDeleteFiles")
   formData.append("op", "delete");
   formData.append("id", id);
+  formData.append("delete", deleteFiles);
   fetch("api/dsas-task.php", {method: "POST", body: formData 
     }).then( response => {
       if (response.ok) 

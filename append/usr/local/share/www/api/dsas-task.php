@@ -222,6 +222,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
  
      case "delete":   
         $id =  $_POST["id"];
+        $del = $_POST["delete"];
         if (! ctype_xdigit($id)) {
           $errors[] = ["error" => "The task ID is invalid"];
         } else {
@@ -229,6 +230,12 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $i = 0;
           foreach ($dsas->tasks->task as $task) {
             if ($task->id == $id) {
+              if ($del == "true") {
+                dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "haut", "rm", "-fr", _DSAS_HAUT . "/" . $task->directory]);
+                dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "verif", "rm", "-fr", _DSAS_BAS . "/" . $task->directory]);
+                dsas_exec(["sudo", "sudo", "-u", "haut", "rm", "-fr", _DSAS_HAUT . "/" . $task->directory]);
+                dsas_exec(["sudo", "sudo", "-u", "verif", "rm", "-fr", _DSAS_BAS . "/" . $task->directory]);
+              }
               $deltask = true;
               unset($dsas->tasks->task[$i]);
               break;
