@@ -263,9 +263,14 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           if ( ! $runtask) {
             $errors[] = ["error" => ["The task '{0}' is not active. Try applying before use",  $id]];
           } else {
+            // Create task log directory if needed
+            if (! is_dir(_DSAS_LOG . "/tasks")) {
+              mkdir(_DSAS_LOG . "/tasks", 0775);
+              chgrp(_DSAS_LOG . "/tasks", "verif");
+            }
             // Force the execution of the task with the "-f" flag.
             // FIXME : seems that we can't use dsas_exec ad it hands
-            exec("runtask -v -f " . $id . " >& " . _DSAS_LOG . "/" . $id . ".log &");
+            exec("runtask -v -f " . $id . " >& " . _DSAS_LOG . "/tasks/" . $id . ".log &");
           }
         }
 
@@ -287,7 +292,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           if ( ! $infotask) {
             $errors[] = ["error" => ["The task '{0}' is not active. Try applying before use",  $id]];
           } else {
-            $info[] = ["info" => file_get_contents(_DSAS_LOG . "/" . $id . ".log")];
+            $info[] = ["info" => file_get_contents(_DSAS_LOG . "/tasks/" . $id . ".log")];
           }
         }
         break;
