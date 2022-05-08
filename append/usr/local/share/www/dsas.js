@@ -1482,6 +1482,7 @@ function dsas_display_tasks(what = "all") {
         }
       }
       document.getElementById("Tasks").innerHTML = body;
+      timeout_status = setTimeout(dsas_display_tasks, 10000, "tasks");
     }).catch(error => {
       fail_loggedin(error.statusText);
     });
