@@ -284,7 +284,7 @@ configuration supplied to the DSAS.
 The Makefile assumes that the principal interface of the DSAS will always be configured
 in `bridge` mode. This means that if the administration interface must be accessed from
 a remote machine, the host must correctly route this network as well. If a different type
-of network is needed, the users is responsable for the creation of an appropriate Docker
+of network is needed, the user is responsable for the creation of an appropriate Docker
 image and can not use the supplied Makefile.
 
 Three variables are used to configure the principal network interface 
@@ -646,7 +646,7 @@ password. The limitations on passwords are
 - They contain at least 3 types of characters (upper case, lower case, number, special character)
 
 Enter your new passwords and click on `Update`. You can now click on `Logout` and after
-logging in again with the user `tc` you will have accès to the adminsitration interface. 
+logging in again with the user `tc` you will have access to the adminsitration interface. 
 
 
 
@@ -659,7 +659,7 @@ configuration screen is as follows
 
 At the first connection only the default user `tc` is configured. It is recommanded create 
 nominative users account for each user and to deactivate the account `tc`. The user `tc` is
-the only one with the rights to become `root` on the DSAS. Even though the account is déactivate
+the only one with the rights to become `root` on the DSAS. Even though the account is deactivate
 it remains usable from the console of the DSAS and other adminsitrative users, knowong the 
 password for the account `tc` can use this knowledge to become `root`.
 
@@ -1919,7 +1919,7 @@ $ cat cert.pem cert1.pem > certs.pem
 $ openssl cms -verify -CAfile SymantecRoot2005CA.pem -certfile certs.pem -nointern -inform der -in v.sig -content v.grd
 ```
 
-### Vérification - debian
+### Verification - debian
 
 At the base of the verification of a debian repository is the file file `Release` and its 
 signature `Release.gpg`. Recnetly, the file `InRelease`, which is identical to `Release` but
