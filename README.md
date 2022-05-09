@@ -77,3 +77,40 @@ sont détruit. Afin de completement nettoyer le build utiliser le commande
 ```
 ./make.sh realclean
 ```
+## Utilisation de git
+
+Selection branch pour le travail ou création de nouvelle branch 
+
+```
+git branch master
+git branch v1.0
+git checkout -a v1.1 master
+``` 
+
+Commit des modifications
+
+```
+git add append make.sh
+git commit -m "feat: add something"
+```
+
+Tag une release 
+
+``` 
+git tag -a v1.0.1
+```
+
+Push des modifications
+
+```
+git push
+git push origin
+git push --tags
+```
+
+Modifications des derniers modifications
+
+```
+git commit --amend
+git rebase HEAD~5
+```
