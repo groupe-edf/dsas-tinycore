@@ -406,7 +406,7 @@ In this case stop the machine and add a network card in the hypervisor.
 
 The configuration of the interconnection network should only be changed rarely, and
 its configuration is only available in this initial phase of configuration. The 
-confuration of the interconnexion network depends on the environment in which the 
+configuration of the interconnexion network depends on the environment in which the 
 DSAS is installed. There are 2 typical means of configuring the interconnection 
 network of the DSAS.
 
@@ -443,7 +443,7 @@ The lower network is configured in an identical manner
 
 Here, both machines are on the same network with the lower machine taking the address
 "192.168.192.1/24". It should be noted that the addresses used for the interconnection
-network must not used reused elsewhere so as to ensure the correct.
+network must not reused elsewhere.
 
 ### Initial network configuration
 
@@ -648,8 +648,6 @@ password. The limitations on passwords are
 Enter your new passwords and click on `Update`. You can now click on `Logout` and after
 logging in again with the user `tc` you will have access to the adminsitration interface. 
 
-
-
 ### User Configuration
 
 The user configuratuion screen is found under the tab `System` and the option `Users`. The 
@@ -657,10 +655,10 @@ configuration screen is as follows
 
 ![DSAS user configuration menu](en/DSAS34.png)
 
-At the first connection only the default user `tc` is configured. It is recommanded create 
+At the first connection only the default user `tc` is configured. It is recommanded to create 
 nominative users account for each user and to deactivate the account `tc`. The user `tc` is
 the only one with the rights to become `root` on the DSAS. Even though the account is deactivate
-it remains usable from the console of the DSAS and other adminsitrative users, knowong the 
+it remains usable from the console of the DSAS and other adminsitrative users, knowing the 
 password for the account `tc` can use this knowledge to become `root`.
 
 A new account is created by clicking on the button  ![](en/DSAS23.png) to the right of the
@@ -691,7 +689,7 @@ from the non-sensitive area to allow files to be uploaded directly to the DSAS. 
 also isolated with chroot and can only see the zone where files should be deposited. The
 use of this feature is strongly discouraged as it opens up the possibility of attacks 
 against the DSAS
-- __Active__ - An account can be deactivate without deleting it. This allows for an account to be
+- __Active__ - An account can be deactivated without deleting it. This allows for an account to be
 temporarily suspended without deleting it.
 - ![](en/DSAS39.png) - By clicking on this icon, it is possible to change the password of the user.
 - ![](en/DSAS40.png) - By clicking on this icon, it is possible to permenantly delete the user.
@@ -714,7 +712,7 @@ option `Network`. Selecting this option, the following screen will be presented
 
 The DSAS network configuration is separated into two parts. The network connected to 
 the sensitive network called __lower__ and to the non-sensitive network called __upper__. Each
-of these two configurations could be accessed by clicking on the arrow next to the type
+of these two configurations can be accessed by clicking on the arrow next to the type of
 network, like
 
 ![DSAS network configuration screen revealed](en/DSAS7.png)
@@ -769,7 +767,7 @@ be downloaded by clicking on the button ![](en/DSAS11.png).
 
 ## Service Configuration
 
-Other than the administration and repository web services, there are 3 other services
+Other than the administration and repository web services, there are 6 other services
 which could be started on the DSAS;
 
 - An OpenSSH server for connections to the DSAS,

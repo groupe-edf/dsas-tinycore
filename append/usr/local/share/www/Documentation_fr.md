@@ -787,7 +787,7 @@ vous avez cliqué sur `Appliquer`. Le certificat publique et Requête de signatu
 
 ## Configuration des services
 
-Autre que le service web d'administration et service web de repositoire, il y a 3 services
+Autre que le service web d'administration et service web de repositoire, il y a 6 services
 qui pourrait être démarrer sur les machines du DSAS;
 
 - Un serveur OpenSSH pour les connexions depuis l'extérieur,
