@@ -1,3 +1,5 @@
+const dsas_version = "1.1"
+
 var timeout_login = 0;
 var timeout_status = 0;
 
@@ -1978,6 +1980,10 @@ function dsas_headings(){
     }
   }); 
   return ph;
+}
+
+function dsas_display_version(){
+  document.getElementById("Version").innerHTML = '<p><span data-i18n>DSAS Version</span> : ' + dsas_version + '</p>';
 }
 
 function dsas_help_toc(){
