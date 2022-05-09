@@ -41,16 +41,16 @@ It is therefore an illusion to consider that a human control of these files is
 possible before their transmission
 
 The DSAS takes another approach, by assigning confidence to the existing signatures
-of certain software editors, thus allowing their transfer. However, their exists
+of certain software editors, thus allowing their transfer. However, there exists
 a multitude of means used by these editors to sign their softwarre, and the DSAS 
-must have the means to verifier each type of signature used by the desired editors.
+must have the means to verify each type of signature used by the desired editors.
 
 ### The chain of confidence
 
 The problem with a verification by signature is to know to whom we must give confidence.
 To this ends it is important to understand the chain of trust of the signature. This
 chain can be rooted in a "Certification Authority" (or CA) in this case of X509 certifcates,
-or a distributed confid with the certificates themselves signed amongst themselves in
+or a distributed confidence with the certificates themselves signed amongst themselves in
 the case of PGP certificates. For PGP certificates, the "web of trust" is implcit and passes
 by certificate signing ceremonies in the phase before the inclusion of the certiciate in the
 DSAS. For X509 certiciates, the chain of trust is explicitly included in every signed file.
@@ -59,7 +59,7 @@ certificate which is signed by a certification authority. The DSAS allows verifi
 to be defined limiting the files allowed to pass to have a particular chain of trust and to
 not just verify the file is signed by a valid certification authority. Unfortunately, 
 [malicious actors can also buy signing certiciates](https://duo.com/decipher/attackers-are-signing-malware-with-valid-certificates)
-et a verification solely based on the certification authority is not a strict guarantee 
+and a verification solely based on the certification authority is not a strict guarantee 
 that a file is not malicious. The DSAS, if correctly configured, allows the transfers to be
 strictly limited to a single software editor, or even a particular division of this editor,
 so that the risks are minimised.
@@ -93,11 +93,11 @@ These constraints push us towards an architecture with
 
 - seperation of sensitive and non sensitive treatments of the two zones on to two
 distinct machines
-- To use of a minimaliste linux system with the absolute minimum of software pre-installé.
+- To use of a minimalist linux system with the absolute minimum of software pre-installed.
 We have chosen to use the [Tiny Core Linux](http://tinycorelinux.net/) operating system
 because it is regularly updated with a minimal installation (12 megabytes) including only
 the linux kernel, busybox and a few boot scripts. No service is started by default
-- Additional dependances are avoid wherever possible. For example perl, python, ... are not
+- Additional dependances are avoided wherever possible. For example perl, python, ... are not
 installed as the scripting language "ash" is already available.
 - Each of the machines of the DSAS has two network interfaces, with one serving only for the
 interconnexion between the two machines. One of the machines is interconnected via the additional
@@ -112,7 +112,7 @@ from the non sensitive zone.
 the only one with the rights to download from a less sensitive zone, the account "verif" being
 the only one with the rights to transfer files between zones on each machine and the account
 "bas"  being the only one with exposed towards the more sensitive zone. The account "verif" is
-only accessible outside the machine.
+not accessible outside the machine.
 
 A simplified architecture of the DSAS is then
 
@@ -148,7 +148,7 @@ The DSAS needs independant disks for each of the machines used in its implementa
 So the DSAS needs two times more disk space than the maximum used for the transfers.
 Inside each machine, the DSAS "mirrors" the files between each zone, and the old files
 are removed when they are not longer available on the site they were downloaded from.
-So the only the addition of space used by the download sites is needed, with a little
+So the only the sum of space used by the download sites is needed, with a little
 extra margin.
 
 The formula for the disk space needed for each of the DSAS machines is
