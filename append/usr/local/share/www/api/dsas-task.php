@@ -1,9 +1,10 @@
 <?php
 require_once "common.php";
 
-if (! dsas_loggedin())
+if (! dsas_loggedin(false))
   die(header("HTTP/1.0 403 Forbidden"));
 else if($_SERVER["REQUEST_METHOD"] == "POST"){
+  dsas_loggedin(true); // Second call to dsas_loggedin to force timer reset
   $dsas = simplexml_load_file(_DSAS_XML);
   $errors = array();
   $info = array();
