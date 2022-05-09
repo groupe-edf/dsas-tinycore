@@ -1450,7 +1450,7 @@ function dsas_upload_cert(type = "x509", name ="") {
 }
 
 function dsas_display_tasks(what = "all") {
-  if (what === "all" || what === "tasks") {
+  if (what === "all" || what === "tasks" || what == "status") {
     fetch("api/dsas-task.php").then(response => {
       if (response.ok) 
         return response.json();
@@ -1463,27 +1463,30 @@ function dsas_display_tasks(what = "all") {
       if (tasks.task) {
         for (task of (tasks.task.constructor === Object ? [tasks.task] : tasks.task)) { 
           cls = (task.last == "never" ? "text-info" : (task.status == "Running" ? "text-info" : (task.status == "Failed" ? "text-danger" : "text-success")));
-          body = body + 
-              '<p class="my-0 ' + cls + '"><a class="text-toggle" data-bs-toggle="collapse" href="#task' + i + '" role="button"' + 
-              'aria-controls="task' + i + '" aria-expanded="false">' +
+          body = body +
+              '<p class="my-0 ' + cls + '"><a class="text-toggle" data-bs-toggle="collapse" href="#task' + i + '" role="button"' +
+              'aria-controls="task' + i + '" aria-expanded="' + (what === "status" ? (document.getElementById("task" + i).className.includes("show") ? "true" : "false" ) : "false") +'">' +
               '<i class="text-collapsed"><img src="caret-right.svg"/></i>' +
               '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + task.name +
-              '&nbsp;<a data-toggle="tooltip" title="' + _("Edit") +'" onclick="dsas_task_modify(\'' + task.id + '\');">' + 
+              '&nbsp;<a data-toggle="tooltip" title="' + _("Edit") +'" onclick="dsas_task_modify(\'' + task.id + '\');">' +
               '<img src="pencil-square.svg"></a>';
-          body = body + '&nbsp;<a data-toggle="tooltip" title="' + _("Delete") + '" onclick="dsas_task_delete(\'' + task.id + 
+          body = body + '&nbsp;<a data-toggle="tooltip" title="' + _("Delete") + '" onclick="dsas_task_delete(\'' + task.id +
               '\', \'' + task.name + '\');"><img src="x-lg.svg"></a>';
-          body = body + '&nbsp;<a data-toogle="tooltip" title="' + _("Run") + '" onclick="dsas_task_run(\'' + task.id + 
+          body = body + '&nbsp;<a data-toogle="tooltip" title="' + _("Run") + '" onclick="dsas_task_run(\'' + task.id +
               '\', \'' + task.name + '\');"><img src="play.svg" width="20" height="20"></a>';
           body = body + '&nbsp;<a data-toogle="tooltip" title="' + _("Info") + '" onclick="dsas_task_info(\'' + task.id +
               '\', \'' + task.name + '\');"><img src="info.svg"></a>';
-          body = body + 
-              '</p><div class="collapse" id="task' + i + '"><div class="card card-body">' +
+          // Keep the tab open if only updating the status
+          body = body +
+              '</p><div class="' + ( what === "status" ? document.getElementById("task" + i).className : "collapse") + '" id="task' + i + '"><div class="card card-body">' +
               '<pre>' + task_body(task) + '</pre></div></div>\n';
+          if (status === "what")
+            console.log(document.getElementById("task" + i).class);
           i++;
         }
       }
       document.getElementById("Tasks").innerHTML = body;
-      timeout_status = setTimeout(dsas_display_tasks, 10000, "tasks");
+      timeout_status = setTimeout(dsas_display_tasks, 10000, "status");
     }).catch(error => {
       fail_loggedin(error.statusText);
     });
@@ -1688,7 +1691,7 @@ function dsas_task_real_run(id) {
       } catch (e) {
         // Its text => here always just "Ok"
         clear_feedback();
-        dsas_display_tasks("tasks");
+        dsas_display_tasks("status");
       }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
