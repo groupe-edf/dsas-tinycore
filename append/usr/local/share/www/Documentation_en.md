@@ -810,7 +810,7 @@ and can connect with ssh, scp and sftp
 - __lower__ - The users of type __lower__ can only connect with sftp from the sensitive zone. This
 sftp functionality could be used to replace http server repository (or in addition). It only has 
 access to the DSAS area with the verified files and can not access files elsewhere.
-- __upper__ - `Use users of type __upper__ in SSH and strongly discouraged`. The reason it is
+- __upper__ - `Use of users of type __upper__ in SSH and strongly discouraged`. The reason it is
 not recommended is that it does not respect the direction of the initiation of network flows, from
 the more sensitive zone to the less ensitive zone. But in the absence of other means of downloading,
 this account opens the possibility from the non-sensitive zone to deposit files on the upper
@@ -822,7 +822,7 @@ concerned.
 
 ### HTTPS Repository
 
-The DSAS can publish all of the verified files en readonly with a repository HTTPS. If the IP address
+The DSAS can publish all of the verified files readonly with a repository HTTPS. If the IP address
 of the DSAS on the lower network is `10.0.2.15` for example, the repositoty will be available at
 `https://10.0.2.15`.
 
