@@ -1,7 +1,8 @@
 Log of the principal changes to the DSAS
 
-Version 1.1
-- Use only the user "haut" for the ssh between lower and upper machine
+Version 1.1 (XXXX)
+- also allow checkfiles and getfiles to use index rather than ID
+- Use only the user "haut" for the ssh between lower and upper machines to limit attack surface
 - Use lftp in a chroot minimalist for the mirroring of files to limit attack surface
 - Allow task files to be deleted when deleting a task
 - Changing task name no longer changes its ID
@@ -9,7 +10,11 @@ Version 1.1
 - Additional SNMPv3 configuration options
 - Allow quarter hourly task run times
 - Explicitly track DSAS version number in dsas.js (const dsas_version) and in help.html
-Version 1.0.1
-- Add log files of taks to web UI
-Version 1.0 
+
+Version 1.0.1 (13 April 2022)
+- allow runtask to be called with index as weel as the ID
+- Fix for SSH rights checking bypass caused by PAM
+- Add log files of tasks to web UI
+
+Version 1.0 (24 March 2022)
 - Release initial
