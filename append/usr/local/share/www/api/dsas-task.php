@@ -25,7 +25,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $type !== "openssl" && $type !== "gpg" && $type !== "liveupdate" && $type !== "cyberwatch")
           $errors[] = ["error" => "The task type is illegal"];
         $run = $data["run"];
-        if ($run !== "never" && $run !== "hourly" && $run !== "daily" && $run !== "weekly" && $run !== "monthly")
+        if ($run !== "never" && $run !== "quarterhourly" && $run !== "hourly" && $run !== "daily" && $run !== "weekly" && $run !== "monthly")
           $errors[] = ["error" => "The period between execution of the task is illegal"];
         $ca = $data["ca"];
         $ca_finger = strtolower(trim($ca["fingerprint"]));

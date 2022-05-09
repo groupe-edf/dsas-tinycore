@@ -34,6 +34,7 @@ should_run(){
  _dif=$(($(date -d "$(fixdate $(utc_date) )" '+%s') - $(date -d "$(fixdate $1)" '+%s') ))
   case "$2" in
     never) return 1; ;;
+    quarterhourly)  [ $_dif -lt 900 ] && return 1;  ;;
     hourly) [ $_dif -lt 3600 ] && return 1;  ;;
     daily) [ $_dif -lt 86400 ] && return 1; ;;
     weekly) [ $_dif -gt 604800 ] && return 1; ;;

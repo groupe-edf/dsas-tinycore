@@ -152,6 +152,7 @@ function modal_task(action = "dsas_add_task();", ca = ""){
 '      <select class="form-select" name="TaskRun" id="TaskRun">\n' +
 '        <option id="TaskRunNull" value="">' + _("Select a period") + '</option>\n' +
 '        <option id="TaskRunNever" value="never">' + _("never") + '</option>\n' +
+'        <option id="TaskRunQuarterHourly" value="quarterhourly">' + _("quarter hourly") + '</option>\n' +
 '        <option id="TaskRunHourly" value="hourly">' + _("hourly") + '</option>\n' +
 '        <option id="TaskRunDaily" value="daily">' + _("daily") + '</option>\n' +
 '        <option id="TaskRunWeekly" value="weekly">' + _("weekly") + '</option>\n' +
