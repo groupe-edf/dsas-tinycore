@@ -1,0 +1,15 @@
+Log of the principal changes to the DSAS
+
+Version 1.1
+- Use only the user "haut" for the ssh between lower and upper machine
+- Use lftp in a chroot minimalist for the mirroring of files to limit attack surface
+- Allow task files to be deleted when deleting a task
+- Changing task name no longer changes its ID
+- Changing task directory now moves its files to avoid additional downloads
+- Additional SNMPv3 configuration options
+- Allow quarter hourly task run times
+- Explicitly track DSAS version number in dsas.js (const dsas_version) and in help.html
+Version 1.0.1
+- Add log files of taks to web UI
+Version 1.0 
+- Release initial
