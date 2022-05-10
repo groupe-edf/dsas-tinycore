@@ -1,6 +1,7 @@
 Log of the principal changes to the DSAS
 
 Version 1.1 (XXXX)
+- Support all posix usernames for DSAS users (ie '[a-z_][a-Z0-9_-]*[$]?' and not longer than 32 characters
 - also allow checkfiles and getfiles to use index rather than ID
 - Use only the user "haut" for the ssh between lower and upper machines to limit attack surface
 - Use lftp in a chroot minimalist for the mirroring of files to limit attack surface
