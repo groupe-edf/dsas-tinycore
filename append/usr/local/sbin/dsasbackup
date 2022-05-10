@@ -158,7 +158,7 @@ else
     [ "$user" == "bas" ] && continue
     [ "$user" == "haut" ] && continue
     [ "$user" == "verif" ] && continue
-    [ "$user" == "$nobody" ] && continue
+    [ "$user" == "nobody" ] && continue
     # Have an added user
     id=1
     while :; do
