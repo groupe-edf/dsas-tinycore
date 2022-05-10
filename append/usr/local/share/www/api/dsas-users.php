@@ -10,7 +10,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
     switch ($_POST["op"]){
       case "add":
         $duser = $data["username"];
-        if (! preg_match('/^[a-z0-9_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$/', $duser)) {
+        if (! preg_match('/^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$/', $duser)) {
           $errors[] = ["error" => ["Username '{0}' is illegal", $duser]];
         } else {
           $found = false;
