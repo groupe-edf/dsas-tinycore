@@ -90,7 +90,7 @@ get_certificate(){
   while IFS= read -r line; do
     if [ "$line" == "-----BEGIN CERTIFICATE-----" ]; then
       if "$incert" == "true" ]; then
-        echo "error parsing ca-bundle.crt"
+        echo "error parsing $ca_bundle"
       else
         incert="true"
         cert="$line"
