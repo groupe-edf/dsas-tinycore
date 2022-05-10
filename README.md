@@ -82,9 +82,10 @@ sont détruit. Afin de completement nettoyer le build utiliser le commande
 Selection branch pour le travail ou création de nouvelle branch 
 
 ```
-git branch master
-git branch v1.0
-git checkout -a v1.1 master
+git branch
+git branch v1.1
+git checkout master
+git checkout v1.0
 ``` 
 
 Commit des modifications
@@ -113,4 +114,18 @@ Modifications des derniers modifications
 ```
 git commit --amend
 git rebase HEAD~5
+```
+
+Merge branch to master
+
+```
+git checkout master
+git merge radius
+```
+
+Import a modification from one branch to another
+
+```
+git checkout v1.0
+git cherry-pick deadbeef
 ```
