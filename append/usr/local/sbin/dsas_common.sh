@@ -58,6 +58,7 @@ get_certificate(){
   local cert type
   local i=1
   local incert="false"
+  local ca_bundle=$(dsas_ca_file)
   while :; do
     cert=$(xmllint --xpath "string(dsas/certificates/certificate[$i]/pem)" "$CONF")
     [ -z "$cert" ] && break
@@ -96,7 +97,7 @@ get_certificate(){
       fi
     elif [ "$line" == "-----END CERTIFICATE-----" ]; then
       if [ "$incert" == "false" ]; then
-        echo "error parsing ca-bundle.crt"
+        echo "error parsing $ca_bundle"
       else
         cert="$cert\n$line"
         incert="false"
@@ -108,7 +109,7 @@ get_certificate(){
     else
       cert="$cert\n$line"
     fi
-  done < "$(dsas_ca_file)"
+  done < "$ca_bundle"
 
 }
 
