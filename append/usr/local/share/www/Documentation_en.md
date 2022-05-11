@@ -1314,7 +1314,8 @@ and proposed fixes will be applied.
 You will need a build machine. The easiest way is to use the same operating system
 to build as is used by the DSAS itself. For example the system
 [CorePlus v13.x](http://tinycorelinux.net/13.x/x86/release/CorePlus-current.iso)
-is currently used for the build of DSAS. After as you have set up
+is currently used for the build of DSAS. The build of the DSAS needs at least 5GBytes 
+of memory (for the clamav build especially). After as you have set up
 this machine, you would need a number of tools in order to do the build.
 
 At this point, if you are behind a proxy for internet access, you must configure
@@ -1336,7 +1337,7 @@ will install all the tools necessary for the build
 
 #### French keyboard
 
-If you have a French keyboard, the easier is to add
+If you have a French keyboard, the easiest is to add
 
 ```shell
 /usr/local/bin/setxkmap fr

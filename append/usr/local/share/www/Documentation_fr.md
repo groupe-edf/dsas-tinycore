@@ -1354,7 +1354,8 @@ cours et des correctifs proposé sera appliqué.
 Vous auriez besoin une machine de build. Le plus simple est d'utiliser la même souche
 de build que utilisé par le DSAS lui-même. Par exemple la souche 
 [CorePlus v13.x](http://tinycorelinux.net/13.x/x86/release/CorePlus-current.iso)
-est utilisé actuellement pour la build du DSAS. Tant que vous avez mise en place
+est utilisé actuellement pour la build du DSAS. Le DSAS a besoin au moins 4 Go de
+émoire (notamment pour le build de clamav). Tant que vous avez mise en place
 cette machine, vous auriez besoin un certain nombre d'outils afin de faire le build.
 
 A ce point si vous êtes derrière un proxy pour l'accès à l'internet, il faut configurer
