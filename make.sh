@@ -264,11 +264,13 @@ build_pkg() {
           [ $? -eq 0 ] || exit -1
         done
         msg "Creating build image"
-        if [ -d $extract ]; then
-          rm -fr $extract
-        fi
+        #if [ -d $extract ]; then
+        #  umount $extract/proc
+        #  rm -fr $extract
+        #fi
         mkdir -p $extract
         zcat $squashfs | { cd $extract; cpio -i -H newc -d; }
+        mount -t proc /proc $extract/proc
 
         # FIXME : Fix missing links
         # It appears that certain links are missings with the base intsall
@@ -301,7 +303,7 @@ $_pre_config
 exit \$?
 EOF
         chmod a+x $extract/tmp/script
-        [ -z "$_pre_config" ] || chroot $extract /tmp/script || { error "Unexpected error ($?) in configuration"; exit 1; }
+        [ -z "$_pre_config" ] || chroot $extract /tmp/script || { umount $extract/proc; error "Unexpected error ($?) in configuration"; }
 
 
         msg "Configuring $_pkg"
@@ -312,7 +314,7 @@ $_conf_cmd
 exit \$?
 EOF
         chmod a+x $extract/tmp/script
-        [ -z "$_conf_cmd" ] || chroot --userspec=tc $extract /tmp/script || { error "Unexpected error ($?) in configuration"; exit 1; }
+        [ -z "$_conf_cmd" ] || chroot --userspec=tc $extract /tmp/script || { umount $extract/proc; error "Unexpected error ($?) in configuration"; }
         msg "Building $_pkg"
         cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
@@ -321,7 +323,7 @@ $_make_cmd
 exit \$?
 EOF
         chmod a+x $extract/tmp/script
-        [ -z "$_make_cmd" ] || chroot --userspec=tc $extract /tmp/script $_make_cmd || { error "Unexpected error ($?) in build"; exit 1; }
+        [ -z "$_make_cmd" ] || chroot --userspec=tc $extract /tmp/script $_make_cmd || { umount $extract/proc; error "Unexpected error ($?) in build"; }
         msg "Installing $_pkg"
         cat << EOF > $extract/tmp/script
 export DESTDIR=$destdir
@@ -331,7 +333,7 @@ $_install_cmd$destdir
 exit \$?
 EOF
         chmod a+x $extract/tmp/script
-        [  -z "$_install_cmd" ] || chroot $extract /tmp/script || { error "Unexpected error ($?) in install"; exit 1; }
+        [  -z "$_install_cmd" ] || chroot $extract /tmp/script || { umount $extract/proc; error "Unexpected error ($?) in install"; }
         cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 destdir=$destdir
@@ -342,7 +344,7 @@ $_post_build
 exit \$?
 EOF
         chmod a+x $extract/tmp/script
-        [ -z "$_post_build" ] || { msg "Post build script"; chroot $extract /tmp/script; } || { error "Unexpected error ($?) in post build"; exit 1; }
+        [ -z "$_post_build" ] || { msg "Post build script"; chroot $extract /tmp/script; } || { umount $extract/proc; error "Unexpected error ($?) in post build"; }
         # Create post-install script if needed
         if [ -n "$_post_install" ]; then 
           msg "Creating post install script"
@@ -390,12 +392,14 @@ EOF
           IFS=";"
         done
         IFS=$OIFS
+        umount $extract/proc
         if [ "$keep" == "0" ]; then
           msg "Removing build image"
           if [ -d $extract ]; then 
             rm -fr $extract
           fi
         fi
+
       else
         # Can't rebuild package try getting the tcz
         _old="$extract"
@@ -443,7 +447,6 @@ build)
 
   [ -d $extract ] || mkdir -p $extract
   [ -d $build_dir ] || mkdir -p $build_dir
-  [ -d $destdir ] || mkdir -p $destdir
   [ -z $pkgs ] && error "No package to build given"
   build_pkg $pkgs
   exit 0
