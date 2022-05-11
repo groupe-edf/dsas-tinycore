@@ -1,68 +1,11 @@
 _pkg=clamav
-_version=0.104.2
-_uri="https://www.clamav.net/downloads/production/clamav-0.104.2.tar.gz"
+_version=0.105.0
+_uri="https://www.clamav.net/downloads/production/clamav-0.105.0.tar.gz"
 _dep="bzip2-lib json-c curl libxml2 ncursesw check openssl-1.1.1 libssh2 pcre2 libzip"
-_build_dep="cmake bzip2-dev json-c-dev libxml2-dev ncursesw-dev check-dev curl-dev openssl-1.1.1-dev libssh2-dev pcre2-dev libzip-dev compiletc"
-_pkg_path="clamav-0.104.2"
+_build_dep="cmake rust bzip2-dev json-c-dev libxml2-dev ncursesw-dev check-dev curl-dev openssl-1.1.1-dev libssh2-dev pcre2-dev libzip-dev compiletc"
+_pkg_path="clamav-0.105.0"
 _pre_config=""
-_conf_cmd="cat << EOF | patch cmake/FindCURSES.cmake
---- cmake/FindCURSES.cmake.old	2021-12-07 03:35:40.902075699 +0000
-+++ cmake/FindCURSES.cmake	2021-12-07 03:43:38.172042783 +0000
-@@ -134,7 +134,52 @@
-         )
-       endif()
-   else()
--      message(FATAL_ERROR \"Unable to find ncurses or pdcurses\")
-+    # Try for NCursesw
-+    pkg_check_modules(PC_NCursesw QUIET ncursesw)
-+
-+    find_path(NCURSESW_INCLUDE_DIR
-+      NAMES ncurses.h
-+      PATHS \\\${PC_NCursesw_INCLUDE_DIRS} \\\${CURSES_INCLUDE_DIR}
-+    )
-+
-+    string(FIND \\\${NCURSESW_INCLUDE_DIR} \"-NOTFOUND\" NCURSESW_NOT_FOUND)
-+    if(NCURSESW_NOT_FOUND EQUAL -1)
-+      #
-+      # ncursesw WAS found!
-+      #
-+      set(HAVE_LIBNCURSESW 1)
-+      set(CURSES_INCLUDE \"<ncurses.h>\")
-+
-+      set(CURSES_LIBRARY \\\${PC_NCursesw_LINK_LIBRARIES})
-+      set(CURSES_VERSION \\\${PC_NCursesw_VERSION})
-+
-+      include(FindPackageHandleStandardArgs)
-+      find_package_handle_standard_args(CURSES
-+        FOUND_VAR CURSES_FOUND
-+        REQUIRED_VARS
-+          CURSES_LIBRARY
-+          NCURSESW_INCLUDE_DIR
-+        VERSION_VAR CURSES_VERSION
-+      )
-+
-+      set(HAVE_LIBNCURSESW 1)
-+      set(CURSES_INCLUDE \"<ncurses.h>\")
-+
-+      set(CURSES_LIBRARIES \\\${CURSES_LIBRARY})
-+      set(CURSES_INCLUDE_DIRS \\\${NCURSESW_INCLUDE_DIR})
-+      set(CURSES_DEFINITIONS \\\${PC_NCursesw_CFLAGS_OTHER})
-+
-+      if (NOT TARGET Curses::curses)
-+        add_library(Curses::curses INTERFACE IMPORTED)
-+        set_target_properties(Curses::curses PROPERTIES
-+          INTERFACE_COMPILE_OPTIONS \"\\\${PC_NCursesw_CFLAGS_OTHER}\"
-+          INTERFACE_INCLUDE_DIRECTORIES \"\\\${CURSES_INCLUDE_DIRS}\"
-+          INTERFACE_LINK_LIBRARIES \"\\\${CURSES_LIBRARY}\"
-+        )
-+      endif()
-+    else()
-+        message(FATAL_ERROR \"Unable to find ncurses, ncursesw or pdcurses\")
-+    endif()
-   endif()
- endif()
-EOF
-setarch linux$arch cmake . -D ENABLE_MILTER=Off -D CMAKE_INSTALL_PREFIX=/usr/local -D CMAKE_INSTALL_LIBDIR=/usr/local/lib"
+_conf_cmd="setarch linux$arch cmake . -D ENABLE_MILTER=Off -D CMAKE_INSTALL_PREFIX=/usr/local -D CMAKE_INSTALL_LIBDIR=/usr/local/lib"
 _make_cmd="cmake --build ."
 _install_cmd="cmake --build . --target install #"
 _post_build=""
