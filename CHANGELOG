@@ -1,7 +1,11 @@
 Log of the principal changes to the DSAS
 
 Version 1.1 (XXXX)
-- Support all posix usernames for DSAS users (ie '[a-z_][a-Z0-9_-]*[$]?' and not longer than 32 characters
+- Update openssl (1.1.1n -> 1.1.1o)
+- Update openssh (8.8p1 -> 9.0p1)
+- Update clamav (0.104.2 -> 0.105.0)
+- Update libgcrypt (1.9.3 -> 1.10.1)
+- Support all posix usernames for DSAS users (ie '[a-z_][a-z0-9_-]*[$]?' and not longer than 32 characters
 - also allow checkfiles and getfiles to use index rather than ID
 - Use only the user "haut" for the ssh between lower and upper machines to limit attack surface
 - Use lftp in a chroot minimalist for the mirroring of files to limit attack surface
