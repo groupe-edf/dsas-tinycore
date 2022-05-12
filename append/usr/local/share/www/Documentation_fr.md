@@ -759,6 +759,11 @@ représenté en format CIDR par "/24" et le netmask "255.255.255.128" par "/25".
 - Plusieurs adresses IP séparées par des retours chariot peuvent être rentrées, donnant une liste de 
 serveurs de noms en ordre de leur préférence d'usage.
 
+Afin d'éviter que le réseau d'interconnexion entre les machines haute et basse sera 
+interompu, sa configuration n'est pas disponible via la page web d'administration. Si le 
+réseau d'interconnexion doit-être modifier, il faut suivre la section [En cas d'erreur 
+d'initialisation du DSAS](#en-cas-derreur-dinitialisation-du-dsas).
+
 ### Renouvellement du certificat web
 
 Comme [discuté ci-dessus](#première-connexion-à-linterface-dadministration), le certificat SSL

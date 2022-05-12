@@ -739,6 +739,11 @@ netmask "255.255.255.128" by "/25".
 - Several IP addresses separated by carriage returns can be entered, giving a list of
 name servers in order of their preference.
 
+In order to avoid the interconnection between the upper and lower machines being broken, the
+configuration of the interconnection network is not available via the UI. If it needs to be 
+changed you should refer the the section [In the event of an initialization error of the 
+DSAS](#in-the-event-of-a-dsas-initialization-error).
+
 ### Renewal of the web certificate
 
 As [discussed above](#first-login-to-the-administration-interface), the SSL certificate
