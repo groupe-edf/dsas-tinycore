@@ -17,7 +17,7 @@ Version 1.1.0 (XXXX)
 - Explicitly track DSAS version number in dsas.js (const dsas_version) and in help.html
 
 Version 1.0.1 (13 April 2022)
-- allow runtask to be called with index as weel as the ID
+- allow runtask to be called with index as well as the ID
 - Fix for SSH rights checking bypass caused by PAM
 - Add log files of tasks to web UI
 
