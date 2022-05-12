@@ -1,6 +1,6 @@
 Log of the principal changes to the DSAS
 
-Version 1.1 (XXXX)
+Version 1.1.0 (XXXX)
 - Update openssl (1.1.1n -> 1.1.1o)
 - Update openssh (8.8p1 -> 9.0p1)
 - Update clamav (0.104.2 -> 0.105.0)
@@ -21,5 +21,5 @@ Version 1.0.1 (13 April 2022)
 - Fix for SSH rights checking bypass caused by PAM
 - Add log files of tasks to web UI
 
-Version 1.0 (24 March 2022)
+Version 1.0.0 (24 March 2022)
 - Release initial

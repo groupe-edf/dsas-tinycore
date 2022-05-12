@@ -685,8 +685,14 @@ Vous seriez demandé de rentrer le nom de l'utilisateur comme
 
 ![Ecran d'ajout de nouveau utilisateur](fr/DSAS35.png)
 
-Les noms d'utilisateurs de devraientt contenir que des miniscules et de des chiffres. Ici
-nous avons ajouté l'utilisateur `ua12345`
+Les noms d'utilisateurs de devraient être des noms valable POSIX.  Ceci veut dire que
+
+- Ils doivent commencer avec un miniscule or sousligne
+- Ils doivent inclure que des miniscule, chiffre, sousligne ou moin
+- Ils peuvent terminer avec un dollar
+- Ne doivent pas être plus longue que 32 characters
+
+Ici nous avons ajouté l'utilisateur `ua12345`
 
 ![Menu de configuration des utilisateurs du DSAS](fr/DSAS37.png)
 

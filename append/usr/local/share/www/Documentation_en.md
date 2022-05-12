@@ -666,8 +666,14 @@ screen. You will be asked to enter a new user name like
 
 ![Add new user screen](en/DSAS35.png)
 
-New user names can only include lower case characters and numbers. Here we have added the 
-user `ua12345`.
+New user names must be valid POSIX usernames. That is they must
+
+- Start with a lower case letter or an underscore
+- Include only lower case letters, numbers, underscores or minuses
+- Can terminate in a dollar character
+- Be no longer than 32 characters
+
+Here we have added the user `ua12345`.
 
 ![DSAS user configuration menu]](en/DSAS37.png)
 
