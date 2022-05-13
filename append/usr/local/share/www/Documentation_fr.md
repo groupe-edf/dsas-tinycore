@@ -2271,4 +2271,7 @@ permettre le DSAS a acceder les sites protegés
 
 An exemple est les bases de données de ` ClamAV` trouvé sur la site `https://database.clamav.net` 
 protegé par CloudFlare. Le DSAS ne peut pas acceder à ce site. Donc les bases de données
-ClamAV ne peut pas être telechargé directement sdepuis ce site par le DSAS.
+ClamAV ne peut pas être telechargé directement depuis ce site par le DSAS. Heureusement, ClamAV
+a fournit un moyen d'aceder de manière automatique via un `User-Agent` avec un UUID. Le DSAS a
+implementé cette manière de changer specifique à ClamAV et `https://database.clamav.net`  ne peut
+que être utilisé via cet interface specifique dans l'onglet `Service` du DSAS.
