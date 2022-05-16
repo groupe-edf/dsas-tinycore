@@ -363,7 +363,7 @@ getdeb() {
        i=0
        while :; do
          _arch=$(xmllint --xpath "string(dsas/tasks/task[$id]/archs/arch[$i])" $CONF)
-         [ -z "$_acrh" ] && break;
+         [ -z "$_arch" ] && break;
          archs="$archs $_arch"
        done 
        
@@ -400,13 +400,16 @@ EOF
          fi
        done
 
-       # For each file Packages.gz download the listed files into the pool directory
-       for packages in $($as_haut find "$DSAS_HAUT/$dir" -name "Packages.gz") ; do
+       # For each file Packages.gz, and maybe Sources.gz, download the listed files 
+       # into the pool directory
+       packages=$($as_haut find "$DSAS_HAUT/$dir" -name "Packages.gz")
+       [[ "$archs" =~ "source" ]] && packages="$packages $($as_haut find "$DSAS_HAUT/$dir" -name "Sources.gz")
+       for package in $packages ; do
          inpackage=0
          _file=""
          _hash_md5=""
          _hash_sha256=""
-         $as_haut zcat "$packages" | while read -r line; do
+         $as_haut zcat "$package" | while read -r line; do
            # Use sed to strip leading and trailing space, as can't used xargs due to possible
            # illegal characters like single quotes in strings. 
            [[ "$line" =~ "Filename:" ]] && _file="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
