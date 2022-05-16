@@ -46,6 +46,31 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $errors[] = ["error" => "Certificate authority not found"];
         }
 
+        if ($type === "deb") {
+          foreach ($data["archs"] as $arch) {
+            switch ($arch["arch"]){
+              case "source":
+              case "all":
+              case "amd64":
+              case "arm64":
+              case "armel":
+              case "armhf":
+              case "i386":
+              case "mips64el":
+              case "mipsel":
+              case "ppc64el":
+              case "s390x":
+                // Architecture ok
+                if (!isset($arch["active"]))
+                  $errors[] = ["error" => "Invalid debian architecture"];
+                break;
+              default:
+                $errors[] = ["error" => "Invalid debian architecture"];
+                break;
+            }
+          }
+        }
+
         $certs = array();
         $have_ca = false;
         $have_pubkey = false;
@@ -199,6 +224,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
               }
               while ($newtask->cert[0])
                 unset($newtask->cert[0]);
+              unset($newtask->archs);
               break;
             }
           }
@@ -217,6 +243,28 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $newcert = $newtask->addChild("cert");
             $newcert->name = $cert["name"];
             $newcert->fingerprint = $cert["fingerprint"];
+          }
+          if ($type === "deb") {
+            $newarch = $newtask->addChild("archs");
+            foreach ($data["archs"] as $arch) {
+              switch ($arch["arch"]){
+                case "source":
+                case "all":
+                case "amd64":
+                case "arm64":
+                case "armel":
+                case "armhf":
+                case "i386":
+                case "mips64el":
+                case "mipsel":
+                case "ppc64el":
+                case "s390x":
+                // Architecture ok
+                  if ($arch["active"])
+                    $newarch->addChild("arch", $arch["arch"]);
+                break;
+              }
+            }
           }
         }
         break;

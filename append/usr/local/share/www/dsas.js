@@ -136,20 +136,6 @@ function modal_task(action = "dsas_add_task();", ca = ""){
 '      <select class="form-select" name="TaskCA" id="TaskCA"></select>\n' +
 '    </div>\n' +
 '    <div class="col-6">\n' +
-'      <label for="TaskType">' + _("Task type :") + '</label>\n' +
-'      <select class="form-select" name="TaskType" id="TaskType">\n' +
-'        <option id="TaskTypeNull" value="">' + _("Select a type") + '</option>\n' +
-'        <option id="TaskTypeRPM" value="rpm">rpm</option>\n' +
-'        <option id="TaskTypeRepomd" value="repomd">repomd</option>\n' +
-'        <option id="TaskTypeDeb" value="deb">deb</option>\n' +
-'        <option id="TaskTypeAuth" value="authenticode">authenticode</option>\n' +
-'        <option id="TaskTypeLive" value="liveupdate">liveupdate</option>\n' +
-'        <option id="TaskTypeCyber" value="cyberwatch">cyberwatch</option>\n' +
-'        <option id="TaskTypeSsl" value="openssl">openssl</option>\n' +
-'        <option id="TaskTypeGpg" value="gpg">gpg</option>\n' +
-'      </select>\n' +
-'    </div>\n' +
-'    <div class="col-6">\n' +
 '      <label for="TaskRun">' + _("Periodicity of the task :") + '</label>\n' +
 '      <select class="form-select" name="TaskRun" id="TaskRun">\n' +
 '        <option id="TaskRunNull" value="">' + _("Select a period") + '</option>\n' +
@@ -162,10 +148,70 @@ function modal_task(action = "dsas_add_task();", ca = ""){
 '      </select>\n' +
 '    </div>\n' +
 '    <div class="col-6">\n' +
+'      <label for="TaskType">' + _("Task type :") + '</label>\n' +
+'      <select class="form-select" name="TaskType" id="TaskType" onchange="dsas_add_task_arch();">\n' +
+'        <option id="TaskTypeNull" value="">' + _("Select a type") + '</option>\n' +
+'        <option id="TaskTypeRPM" value="rpm">rpm</option>\n' +
+'        <option id="TaskTypeRepomd" value="repomd">repomd</option>\n' +
+'        <option id="TaskTypeDeb" value="deb">deb</option>\n' +
+'        <option id="TaskTypeAuth" value="authenticode">authenticode</option>\n' +
+'        <option id="TaskTypeLive" value="liveupdate">liveupdate</option>\n' +
+'        <option id="TaskTypeCyber" value="cyberwatch">cyberwatch</option>\n' +
+'        <option id="TaskTypeSsl" value="openssl">openssl</option>\n' +
+'        <option id="TaskTypeGpg" value="gpg">gpg</option>\n' +
+'      </select>\n' +
+'    </div>\n' +
+'    <div class="col-6">\n' +
 '      <label for="TaskAddCert">' + _("Add a certificate :") + '</label>\n' +
 '      <select class="form-select" name="TaskAddCert" id="TaskAddCert" onchange="dsas_add_task_cert();">\n' +
 '              </select>\n' +
-'    </div>\n' + 
+'    </div>\n' +
+'    <div class="col-6">\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchSource" type="checkbox" value="source" disabled>\n' +
+'        <label class="form-check-label" for="TaskArchSource">' + _("Source") + '</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchAll" type="checkbox" value="all" disabled checked>\n' +
+'        <label class="form-check-label" for="TaskArchAll">all</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchAmd64" type="checkbox" value="amd64" disabled checked>\n' +
+'        <label class="form-check-label" for="TaskArchAmd64">amd64</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchArm64" type="checkbox" value="arm64" disabled>\n' +
+'        <label class="form-check-label" for="TaskArchArm64">arm64</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchArmEL" type="checkbox" value="armel" disabled>\n' +
+'        <label class="form-check-label" for="TaskArchArmEL">armel</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchArmHF" type="checkbox" value="armhf" disabled>\n' +
+'        <label class="form-check-label" for="TaskArchArmHF">armhf</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchI386" type="checkbox" value="i386" disabled>\n' +
+'        <label class="form-check-label" for="TaskArchI386">i386</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchMips64EL" type="checkbox" value="mips64el" disabled>\n' +
+'        <label class="form-check-label" for="TaskArchMips64EL">mips64el</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchMipsEL" type="checkbox" value="mipsel" disabled>\n' +
+'        <label class="form-check-label" for="TaskArchMipsEL">mipsel</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchPpc64EL" type="checkbox" value="ppc64el" disabled>\n' +
+'        <label class="form-check-label" for="TaskArchPpc64EL">ppc64el</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchS390x" type="checkbox" value="s390x" disabled>\n' +
+'        <label class="form-check-label" for="TaskArchS390x">s390x</label>\n' +
+'      </div>\n' +
+'    </div>\n' +
 '  </div>\n' +
 '  <div class="row">\n' +
 '    <div class="col-12">\n' +
@@ -1661,6 +1707,17 @@ function dsas_task_modify(id) {
                 '" fingerprint="' + cert.fingerprint + '"></dsas-task-cert>';
             }
           }
+          for (inp of document.getElementsByTagName("input")) {
+            if (inp.id.substr(0,8) === "TaskArch") {
+              inp.disabled = (task.type !== "deb");
+              inp.checked = false;
+              if (! empty_obj(task.archs)) {
+                for (arch of task.archs.arch)
+                  if (inp.value === arch)
+                    inp.checked = true;
+              }
+            }
+          }
           break;
         }
       }
@@ -1719,6 +1776,22 @@ function dsas_task_info(id, name) {
       if (! fail_loggedin(error.statusText))
         modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
     });
+}
+
+function dsas_add_task_arch() {
+  var type = "";
+  for (opt of document.getElementsByTagName("option"))
+    if (opt.id.substr(0,8) === "TaskType" && opt.selected)
+      type = opt.value;
+
+  for (inp of document.getElementsByTagName("input")){
+    if (inp.substr(0,8) === "TaskArch") {
+      if (type === "deb")
+        inp.disabled = false;
+      else
+        inp.disabled = true;
+    }
+  }
 }
 
 function dsas_add_task_cert() {
@@ -1793,6 +1866,7 @@ function dsas_add_task() {
   var run = "";
   var ca = {};
   var certs= [];
+  var archs = [];
 
   for (opt of document.getElementsByTagName("option"))
     if (opt.id.substr(0,8) === "TaskType" && opt.selected)
@@ -1809,7 +1883,13 @@ function dsas_add_task() {
       else
         ca = {fingerprint : opt.value, name : opt.innerHTML};
     }
-
+  if (type === "deb") {
+    for (inp of document.getElementsByTagName("input")) {
+      if (inp.id.substr(0,8) === "TaskArch") {
+        archs.push({arch : inp.value, active : inp.checked});
+      }
+    }
+  }
   for (cert of document.getElementsByTagName("dsas-task-cert"))
     certs.push({name : cert.getAttribute("name"), fingerprint: cert.getAttribute("fingerprint")});
 
@@ -1822,7 +1902,8 @@ function dsas_add_task() {
              type: type,
              run: run,
              ca: ca,
-             certs: certs}));
+             certs: certs,
+             archs : archs}));
   fetch("api/dsas-task.php", {method: "POST", body: formData 
     }).then( response => {
       if (response.ok) 

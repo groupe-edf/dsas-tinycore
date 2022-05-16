@@ -311,7 +311,7 @@ getrepo() {
 
 getdeb() {
   local chktyp inhash hashtyp _hash _hash_md5 _hash_sha256 _size _file
-  local pool pool_local have_pool packages inpackage
+  local pool pool_local have_pool packages inpackage archs i _arch _f
   local id=$1
   local uri=$(get_uri $id)
   local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
@@ -358,6 +358,15 @@ getdeb() {
        $as_haut grep -qx "SHA1:" "$DSAS_HAUT/$dir/Release" && hashtyp="SHA1:" && chktyp="sha"
        $as_haut grep -qx "SHA256:" "$DSAS_HAUT/$dir/Release" && hashtyp="SHA256:" && chktyp="sha256"
 
+       # Get the desired archiectures to download
+       archs=""
+       i=0
+       while :; do
+         _arch=$(xmllint --xpath "string(dsas/tasks/task[$id]/archs/arch[$i])" $CONF)
+         [ -z "$_acrh" ] && break;
+         archs="$archs $_arch"
+       done 
+       
        # Identify all files listed in Release and download them
        inhash=0
        $as_haut cat $DSAS_HAUT/$dir/Release | while read -r line; do
@@ -370,6 +379,13 @@ getdeb() {
          IFS=' ' read _hash _size _file << EOF
 $line
 EOF
+         # Only download Package, Package.gz and Package.xz files if desired architecture 
+         _f=$(basename $_file)
+         if [ "$_f" == "Packages" ] || [ "$_f" == "Packages.gz" ] || [ "$_f" == "Packages.xz" ]; then
+           _f=$(dirname $_file)
+           [[ "$archs" =~ "${_f##*-}" ]] || continue
+         fi 
+
          if $as_haut [ -f "$DSAS_HAUT/$dir/$_file" ]; then
            if check_checksum "$DSAS_HAUT/$dir/$_file" $_hash $chktyp; then
              myecho "Downloading file $_file [Checksum different!!]"

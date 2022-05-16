@@ -7,7 +7,7 @@ NORMAL="$(echo -e '\033[1;39m')"
 MNT=/mnt
 
 # The version of the DSAS xml file supported by this version
-DSAS_XML_VERSION="0.13"
+DSAS_XML_VERSION="0.14"
 
 VAR=/var/dsas
 
@@ -979,6 +979,11 @@ check_xml_version(){
       sudo chown -R tc.staff /home/tc/.ssh
       sudo chmod -R 700 /home/tc/.ssh
     fi
+  fi
+
+  if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "14" ]; then
+    # The version 0.14 of the DSAS debian tasks with architectures defines
+    sed -i -e "s:deb</type>:deb</type><archs><arch>all</arch><arch>amd64</arch></archs>:g"  $VAR/dsas_conf.xml
   fi
 
   # Now that the XML is upgraded, save the new version number

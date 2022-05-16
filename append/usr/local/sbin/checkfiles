@@ -670,7 +670,7 @@ verifrepo() {
 
 verifdeb(){
   local chktyp inhash hashtyp _hash _hash_md5 _hash_sha256 _size _file 
-  local j pool have_pool packages inpackage tempdir
+  local j pool have_pool packages inpackage tempdir archs _arch i _f package
   local id=$1
   local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
   local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" $CONF)
@@ -726,6 +726,16 @@ verifdeb(){
   grep -qx "SHA1:" "$DSAS_HAUT/$dir/Release" && hashtyp="SHA1:" && chktyp="sha"
   grep -qx "SHA256:" "$DSAS_HAUT/$dir/Release" && hashtyp="SHA256:" && chktyp="sha256"
 
+
+  # Get the desired archiectures to download
+  archs=""
+  i=0
+  while :; do
+    _arch=$(xmllint --xpath "string(dsas/tasks/task[$id]/archs/arch[$i])" $CONF)
+    [ -z "$_arch" ] && break;
+    archs="$archs $_arch"
+  done 
+
   # Identify all files listed in Release and download them
   inhash=0
   while read -r line; do
@@ -741,6 +751,13 @@ EOF
     if [ -f "$DSAS_HAUT/$dir/$_file" ]; then
       # If file exists in bas skip. Hardlinked, so test is fast
       [ "$DSAS_HAUT/$dir/$_file" -ef "$DSAS_BAS/$dir/$_file" ] && continue
+
+      # Only check Package, Package.gz and Package.xz files if desired architecture 
+      _f=$(basename $_file)
+      if [ "$_f" == "Packages" ] || [ "$_f" == "Packages.gz" ] || [ "$_f" == "Packages.xz" ]; then
+        _f=$(dirname $_file)
+        [[ "$archs" =~ "${_f##*-}" ]] || continue
+      fi
 
       if  check_checksum "$DSAS_HAUT/$dir/$_file" $_hash $chktyp; then
         msgline "$DSAS_HAUT/$dir/$_file" 1  
@@ -762,13 +779,16 @@ EOF
     fi
   done < $DSAS_HAUT/$dir/Release
 
-  # For each file Packages.gz check the listed files into the pool directory
-  for packages in $(find "$DSAS_BAS/$dir" -name "Packages.gz"); do
+  # For each file Packages.gz, and maybe Sources.gz, download the listed files 
+  # into the pool directory
+  packages=$(find "$DSAS_BAS/$dir" -name "Packages.gz")
+  [[ "$archs" =~ "source" ]] && packages="$packages $(find "$DSAS_BAS/$dir" -name "Sources.gz")
+  for package in $packages; do
     inpackage=0
     _file=""
     _hash_md5=""
     _hash_sha256=""
-    zcat "$packages" | while read -r line; do
+    zcat "$package" | while read -r line; do
       # Use sed rather than xargs to strip leading/trailing whitespace as strings might
       # contain quotes and other special characters
       [[ "$line" =~ "Filename:" ]] && _file="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
