@@ -376,7 +376,7 @@ verifliveupdate(){
 }
 
 verifdirectory() {
-  local filetable file status i j fprint tempdir idx auth
+  local file status i j fprint tempdir idx auth
   local id=$1
   local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
   local type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
@@ -434,14 +434,12 @@ verifdirectory() {
   IFS=$'\3'
 
   # Remove the files in our tree bas and not in haut.
-  filetable=$(cd "$DSAS_HAUT/$dir"; find . -type f)
   for file in $(cd "$DSAS_BAS/$dir"; find . -type f -exec echo -n -e "{}\x03" \; ); do
-    if [[ "$filetable" != "*${file:2}*" ]]; then
+    if [ "$(stat --printf "%h\n"  "$DSAS_BAS/$dir/${file:2}")" == "1" ]; then
       1>&2 myecho "Removing stale file ${file:2}"
       rm -f "$DSAS_BAS/$dir/${file:2}"
     fi
   done
-
 
   # If LiveUpdate, test files *livetri.zip first as they can sign other files
   if [ "$type" == "liveupdate" ]; then
@@ -652,7 +650,7 @@ verifrepo() {
 
   # Remove the files in $DSAS_BAS and not listed in primary.xml
   for _file in $(cd "$DSAS_BAS/$dir"; find . -path ./repodata -prune -type f -o -type f); do
-    if [[ "$filetable" != "*${_file:2}*" ]]; then
+    if [ "$(stat --printf "%h\n"  "$DSAS_BAS/$dir/${file:2}")" == "1" ]; then
       1>&2 myecho "Removing stale file ${_file:2}"
       rm -f "$DSAS_BAS/$dir/${_file:2}"
     fi
@@ -729,11 +727,12 @@ verifdeb(){
 
   # Get the desired archiectures to download
   archs=""
-  i=0
+  i=1
   while :; do
     _arch=$(xmllint --xpath "string(dsas/tasks/task[$id]/archs/arch[$i])" $CONF)
     [ -z "$_arch" ] && break;
     archs="$archs $_arch"
+    i=$((i + 1))
   done 
 
   # Identify all files listed in Release and download them
@@ -782,7 +781,7 @@ EOF
   # For each file Packages.gz, and maybe Sources.gz, download the listed files 
   # into the pool directory
   packages=$(find "$DSAS_BAS/$dir" -name "Packages.gz")
-  [[ "$archs" =~ "source" ]] && packages="$packages $(find "$DSAS_BAS/$dir" -name "Sources.gz")
+  [[ "$archs" =~ "source" ]] && packages="$packages $(find "$DSAS_BAS/$dir" -name "Sources.gz")"
   for package in $packages; do
     inpackage=0
     _file=""
@@ -799,11 +798,18 @@ EOF
           # If file exists in bas skip. Hardlinked, so test is fast
           [ "$DSAS_HAUT/$pool/$_file" -ef "$DSAS_BAS/$pool/$_file" ] && continue
 
-          if [ -n "$hash_sha256"  ] && check_checksum "$DSAS_HUAT/$pool_local/$_file" $_hash_dha256 sha256; then
-            msgline "$DSAS_HAUT/$pool/$_file" 1
-          elif [ -n "$hash_md5" ] && check_checksum "$DSAS_HUAT/$pool/$_file" $_hash_md5 md5; then
+          # Only test hash with one of the two hashes
+          if [ -n "$_hash_sha256"  ]; then
+            if check_checksum "$DSAS_HUAT/$pool_local/$_file" $_hash_sha256 sha256; then
+              msgline "$DSAS_HAUT/$pool/$_file" 1
+            fi
+          elif check_checksum "$DSAS_HUAT/$pool/$_file" $_hash_md5 md5; then
             msgline "$DSAS_HAUT/$pool/$_file" 1
           else
+            :;  # Set status to true with a noop 
+          fi
+
+          if [ "$?" -eq 0 ]; then
             [ -d "$(dirname i"$DSAS_BAS/$pool/$_file")" ] || (mkdir -m 770 -p "$(dirname "$DSAS_BAS/$pool/$_file")"; chgrp $grp -R "$(dirname "$DSAS_BAS/$pool/$_file")")
 
             if [ "$antivirus" == "true" ]; then
@@ -830,7 +836,7 @@ EOF
 }
 
 passdirectory(){
-  local filetable file status i j fprint tempdir idx auth pool have_pool
+  local file status i j fprint tempdir idx auth pool have_pool
   local id=$1
   local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
 
@@ -854,9 +860,8 @@ passdirectory(){
   done
 
   # Remove the files in our tree bas and not in haut.
-  filetable=$(cd "$DSAS_HAUT/$dir"; find . -type f)
   for file in $(cd "$DSAS_BAS/$dir"; find . -type f -exec echo -n -e "{}\x03" \; ); do
-    if [[ "$filetable" != "*${file:2}*" ]]; then
+    if [ "$(stat --printf "%h\n"  "$DSAS_BAS/$dir/${file:2}")" == "1" ]; then
       1>&2 myecho "Removing stale file ${file:2}"
       rm -f "$DSAS_BAS/$dir/${file:2}"
     fi
@@ -879,9 +884,8 @@ passdirectory(){
     done
 
     # Remove the files in our tree bas and not in haut.
-    filetable=$(cd "$DSAS_HAUT/$pool/pool"; find . -type f)
     for file in $(cd "$DSAS_BAS/$pool/pool"; find . -type f -exec echo -n -e "{}\x03" \; ); do
-      if [[ "$filetable" != "*${file:2}*" ]]; then
+      if [ "$(stat --printf "%h\n"  "$DSAS_BAS/$pool/pool/${file:2}")" == "1" ]; then
         1>&2 myecho "Removing stale file ${file:2}"
         rm -f "$DSAS_BAS/$pool/pool/${file:2}"
       fi

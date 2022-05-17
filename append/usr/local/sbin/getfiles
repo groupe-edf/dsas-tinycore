@@ -360,11 +360,12 @@ getdeb() {
 
        # Get the desired archiectures to download
        archs=""
-       i=0
+       i=1
        while :; do
          _arch=$(xmllint --xpath "string(dsas/tasks/task[$id]/archs/arch[$i])" $CONF)
          [ -z "$_arch" ] && break;
          archs="$archs $_arch"
+         i=$((i + 1))
        done 
        
        # Identify all files listed in Release and download them
@@ -403,8 +404,9 @@ EOF
        # For each file Packages.gz, and maybe Sources.gz, download the listed files 
        # into the pool directory
        packages=$($as_haut find "$DSAS_HAUT/$dir" -name "Packages.gz")
-       [[ "$archs" =~ "source" ]] && packages="$packages $($as_haut find "$DSAS_HAUT/$dir" -name "Sources.gz")
+       [[ "$archs" =~ "source" ]] && packages="$packages $($as_haut find "$DSAS_HAUT/$dir" -name "Sources.gz")"
        for package in $packages ; do
+         myecho "Downloading files from $package"
          inpackage=0
          _file=""
          _hash_md5=""
@@ -417,8 +419,11 @@ EOF
            [[ "$line" =~ "SHA256:" ]] && _hash_sha256="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
            if [ -z "$(echo $line | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" ]; then
              if $as_haut [ -f "$DSAS_HAUT/$pool_local/$_file" ]; then
-               [ -n "$hash_md5" ] && check_checksum "$DSAS_HUAT/$pool_local/$_file" $_hash_md5 md5
-               [ "$?" -eq 0 ] && [ -n "$hash_sha256"  ] && check_checksum "$DSAS_HUAT/$pool_local/$_file" $_hash_sha256 sha256
+               if [ -n "$_hash_sha256" ]; then
+                 check_checksum "$DSAS_HAUT/$pool_local/$_file" $_hash_sha256 sha256
+               else 
+                 check_checksum "$DSAS_HAUT/$pool_local/$_file" $_hash_md5 md5
+               fi
                
                if [ "$?" -eq 0 ]; then
                  myecho "Downloading file $_file [Checksum different!!]"
