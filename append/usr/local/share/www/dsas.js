@@ -56,7 +56,8 @@ function modal_action(text, action = null, hide = false){
   modalDSAS.show();
 }
 
-function modal_task(action = "dsas_add_task();", ca = ""){
+
+function modal_task(action = "dsas_add_task();", ca = "", taskchange = "dsas_add_task_arch();"){
   var modalDSAS = document.getElementById("modalDSAS");
   modalDSAS.removeAttribute("disable");
   modalDSAS.removeAttribute("type");
@@ -149,7 +150,7 @@ function modal_task(action = "dsas_add_task();", ca = ""){
 '    </div>\n' +
 '    <div class="col-6">\n' +
 '      <label for="TaskType">' + _("Task type :") + '</label>\n' +
-'      <select class="form-select" name="TaskType" id="TaskType" onchange="dsas_add_task_arch();">\n' +
+'      <select class="form-select" name="TaskType" id="TaskType" onchange="' + taskchange + '">\n' +
 '        <option id="TaskTypeNull" value="">' + _("Select a type") + '</option>\n' +
 '        <option id="TaskTypeRPM" value="rpm">rpm</option>\n' +
 '        <option id="TaskTypeRepomd" value="repomd">repomd</option>\n' +
@@ -166,52 +167,7 @@ function modal_task(action = "dsas_add_task();", ca = ""){
 '      <select class="form-select" name="TaskAddCert" id="TaskAddCert" onchange="dsas_add_task_cert();">\n' +
 '              </select>\n' +
 '    </div>\n' +
-'    <div class="col-6">\n' +
-'      <div class="form-check form-check-inline">\n' +
-'        <input class="form-check-input" id="TaskArchSource" type="checkbox" value="source" disabled>\n' +
-'        <label class="form-check-label" for="TaskArchSource">' + _("Source") + '</label>\n' +
-'      </div>\n' +
-'      <div class="form-check form-check-inline">\n' +
-'        <input class="form-check-input" id="TaskArchAll" type="checkbox" value="all" disabled checked>\n' +
-'        <label class="form-check-label" for="TaskArchAll">all</label>\n' +
-'      </div>\n' +
-'      <div class="form-check form-check-inline">\n' +
-'        <input class="form-check-input" id="TaskArchAmd64" type="checkbox" value="amd64" disabled checked>\n' +
-'        <label class="form-check-label" for="TaskArchAmd64">amd64</label>\n' +
-'      </div>\n' +
-'      <div class="form-check form-check-inline">\n' +
-'        <input class="form-check-input" id="TaskArchArm64" type="checkbox" value="arm64" disabled>\n' +
-'        <label class="form-check-label" for="TaskArchArm64">arm64</label>\n' +
-'      </div>\n' +
-'      <div class="form-check form-check-inline">\n' +
-'        <input class="form-check-input" id="TaskArchArmEL" type="checkbox" value="armel" disabled>\n' +
-'        <label class="form-check-label" for="TaskArchArmEL">armel</label>\n' +
-'      </div>\n' +
-'      <div class="form-check form-check-inline">\n' +
-'        <input class="form-check-input" id="TaskArchArmHF" type="checkbox" value="armhf" disabled>\n' +
-'        <label class="form-check-label" for="TaskArchArmHF">armhf</label>\n' +
-'      </div>\n' +
-'      <div class="form-check form-check-inline">\n' +
-'        <input class="form-check-input" id="TaskArchI386" type="checkbox" value="i386" disabled>\n' +
-'        <label class="form-check-label" for="TaskArchI386">i386</label>\n' +
-'      </div>\n' +
-'      <div class="form-check form-check-inline">\n' +
-'        <input class="form-check-input" id="TaskArchMips64EL" type="checkbox" value="mips64el" disabled>\n' +
-'        <label class="form-check-label" for="TaskArchMips64EL">mips64el</label>\n' +
-'      </div>\n' +
-'      <div class="form-check form-check-inline">\n' +
-'        <input class="form-check-input" id="TaskArchMipsEL" type="checkbox" value="mipsel" disabled>\n' +
-'        <label class="form-check-label" for="TaskArchMipsEL">mipsel</label>\n' +
-'      </div>\n' +
-'      <div class="form-check form-check-inline">\n' +
-'        <input class="form-check-input" id="TaskArchPpc64EL" type="checkbox" value="ppc64el" disabled>\n' +
-'        <label class="form-check-label" for="TaskArchPpc64EL">ppc64el</label>\n' +
-'      </div>\n' +
-'      <div class="form-check form-check-inline">\n' +
-'        <input class="form-check-input" id="TaskArchS390x" type="checkbox" value="s390x" disabled>\n' +
-'        <label class="form-check-label" for="TaskArchS390x">s390x</label>\n' +
-'      </div>\n' +
-'    </div>\n' +
+'    <div class="col-6" id="TaskHasArch"></div>\n' +
 '  </div>\n' +
 '  <div class="row">\n' +
 '    <div class="col-12">\n' +
@@ -1671,7 +1627,21 @@ function dsas_task_modify(id) {
     if (tasks.task) {
       for (task of (tasks.task.constructor === Object ? [tasks.task] : tasks.task)) {
         if (id === task.id) {
-          modal_task("dsas_modify_task(task.name, task.id);", task.ca.fingerprint);
+          var body = "dsas_add_task_arch(";
+          if (task.type === "deb") {
+            body = body + "[";
+            var first = true
+            for (_arch of (task.archs.arch.constructor === Object ? [task.archs.arch] : task.archs.arch))
+              if (first) {
+                first = false;
+                body = body  + "'" + _arch + "'";
+              } else
+                body = body + ", '" + _arch + "'";
+            body = body + "]);";
+          } else
+            body = body + ");";
+
+          modal_task("dsas_modify_task(task.name, task.id);", task.ca.fingerprint, body);
           document.getElementById('TaskName').value = print_obj(task.name);
           document.getElementById('TaskDirectory').value = print_obj(task.directory);
           document.getElementById('TaskURI').value = print_obj(task.uri);
@@ -1707,17 +1677,7 @@ function dsas_task_modify(id) {
                 '" fingerprint="' + cert.fingerprint + '"></dsas-task-cert>';
             }
           }
-          for (inp of document.getElementsByTagName("input")) {
-            if (inp.id.substr(0,8) === "TaskArch") {
-              inp.disabled = (task.type !== "deb");
-              inp.checked = false;
-              if (! empty_obj(task.archs)) {
-                for (arch of task.archs.arch)
-                  if (inp.value === arch)
-                    inp.checked = true;
-              }
-            }
-          }
+          document.getElementById("TaskHasArch").innerHTML = task_arch_body(task.type, task.archs.arch);
           break;
         }
       }
@@ -1725,6 +1685,12 @@ function dsas_task_modify(id) {
   }).catch(error => {
     fail_loggedin(error.statusText);
   });
+}
+
+function has_arch(archs, arch){
+  for (_arch of (archs.constructor === Object ? [archs] : archs))
+    if (_arch === arch) return true;
+  return false;
 }
 
 function dsas_task_run(id, name){
@@ -1778,20 +1744,66 @@ function dsas_task_info(id, name) {
     });
 }
 
-function dsas_add_task_arch() {
+function dsas_add_task_arch(archs = []) {
   var type = "";
   for (opt of document.getElementsByTagName("option"))
     if (opt.id.substr(0,8) === "TaskType" && opt.selected)
       type = opt.value;
+ 
+  document.getElementById("TaskHasArch").innerHTML = task_arch_body(type, archs);
+}
 
-  for (inp of document.getElementsByTagName("input")){
-    if (inp.substr(0,8) === "TaskArch") {
-      if (type === "deb")
-        inp.disabled = false;
-      else
-        inp.disabled = true;
-    }
+function task_arch_body(type, archs) {
+  var body = "";
+ 
+  if (type === "deb") {
+    body = '      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchSource" type="checkbox" value="source"' + (has_arch(archs, "source") ? " checked" : "") + '>\n' +
+'        <label class="form-check-label" for="TaskArchSource">' + _("Source") + '</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchAll" type="checkbox" value="all"' + (has_arch(archs, "all") ? " checked" : "") + '>\n' +
+'        <label class="form-check-label" for="TaskArchAll">all</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchAmd64" type="checkbox" value="amd64"' + (has_arch(archs, "amd64") ? " checked" : "") + '>\n' +
+'        <label class="form-check-label" for="TaskArchAmd64">amd64</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchArm64" type="checkbox" value="arm64"' + (has_arch(archs, "arm64") ? " checked" : "") + '>\n' +
+'        <label class="form-check-label" for="TaskArchArm64">arm64</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchArmEL" type="checkbox" value="armel"' + (has_arch(archs, "armel") ? " checked" : "") + '>\n' +
+'        <label class="form-check-label" for="TaskArchArmEL">armel</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchArmHF" type="checkbox" value="armhf"' + (has_arch(archs, "armhf") ? " checked" : "") + '>\n' +
+'        <label class="form-check-label" for="TaskArchArmHF">armhf</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchI386" type="checkbox" value="i386"' + (has_arch(archs, "i386") ? " checked" : "") + '>\n' +
+'        <label class="form-check-label" for="TaskArchI386">i386</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchMips64EL" type="checkbox" value="mips64el"' + (has_arch(archs, "mips64el") ? " checked" : "") + '>\n' +
+'        <label class="form-check-label" for="TaskArchMips64EL">mips64el</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchMipsEL" type="checkbox" value="mipsel"' + (has_arch(archs, "mipsel") ? " checked" : "") + '>\n' +
+'        <label class="form-check-label" for="TaskArchMipsEL">mipsel</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchPpc64EL" type="checkbox" value="ppc64el"' + (has_arch(archs, "ppc64el") ? " checked" : "") + '>\n' +
+'        <label class="form-check-label" for="TaskArchPpc64EL">ppc64el</label>\n' +
+'      </div>\n' +
+'      <div class="form-check form-check-inline">\n' +
+'        <input class="form-check-input" id="TaskArchS390x" type="checkbox" value="s390x"' + (has_arch(archs, "s390x") ? " checked" : "") + '>\n' +
+'        <label class="form-check-label" for="TaskArchS390x">s390x</label>\n' +
+'      </div>\n';
   }
+
+  return body;
 }
 
 function dsas_add_task_cert() {
