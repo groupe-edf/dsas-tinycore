@@ -689,18 +689,17 @@ verifdeb(){
     [ -z "$fprint" ] && break;
     idx=$(get_certificate $fprint)
     [ -z "$idx" ] && { 1>&2 echo "Certificate used by task($id) not found !!"; cleanup_and_exit 1 "$tempdir"; }
-    cat /tmp/cert.$$ >> $tempdir/cert.0
+    gpg --no-default-keyring --keyring "$tempdir/keyring.gpg" --import /tmp/cert.$$ >& /dev/null
     j=$((j + 1))
   done
-  gpg --dearmor "$tempdir/cert.0" >& /dev/null
 
-  if ! gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg"  \
+  if ! gpg --no-default-keyring --keyring "$tempdir/keyring.gpg"  \
         --verify "$DSAS_HAUT/$dir/Release.gpg" \
         "$DSAS_HAUT/$dir/Release" >& /dev/null; then
     1>&2 echo "Failed to verify Release signature"
     cleanup_and_exit 1 "$tempdir"
   fi
-  if ! gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg"  \
+  if ! gpg --no-default-keyring --keyring "$tempdir/keyring.gpg"  \
         --verify "$DSAS_HAUT/$dir/InRelease" >& /dev/null; then
     1>&2 echo "Failed to verify InRelease signature"
     cleanup_and_exit 1 "$tempdir"
@@ -800,7 +799,7 @@ EOF
 
           # Only test hash with one of the two hashes
           if [ -n "$_hash_sha256"  ]; then
-            if check_checksum "$DSAS_HAUT/$pool_local/$_file" $_hash_sha256 sha256; then
+            if check_checksum "$DSAS_HAUT/$pool/$_file" $_hash_sha256 sha256; then
               msgline "$DSAS_HAUT/$pool/$_file" 1
             fi
           elif check_checksum "$DSAS_HAUT/$pool/$_file" $_hash_md5 md5; then
