@@ -800,10 +800,10 @@ EOF
 
           # Only test hash with one of the two hashes
           if [ -n "$_hash_sha256"  ]; then
-            if check_checksum "$DSAS_HUAT/$pool_local/$_file" $_hash_sha256 sha256; then
+            if check_checksum "$DSAS_HAUT/$pool_local/$_file" $_hash_sha256 sha256; then
               msgline "$DSAS_HAUT/$pool/$_file" 1
             fi
-          elif check_checksum "$DSAS_HUAT/$pool/$_file" $_hash_md5 md5; then
+          elif check_checksum "$DSAS_HAUT/$pool/$_file" $_hash_md5 md5; then
             msgline "$DSAS_HAUT/$pool/$_file" 1
           else
             :;  # Set status to true with a noop 
