@@ -2250,9 +2250,9 @@ CDN see the DSAS as a ` bot` and will not allow it access to websites protected 
 
 As an example the `ClamAV` databases can be found at the website `https://database.clamav.net` 
 which is protected by CloudFlare. The DSAS can not access this site. So the ClamAV 
-databases can not be direcrtly downlaoded by the DSAS from this site. Happily, ClamAV supplies
-a means of bypassing automatically this controles via a `User-Agent` and UUID. The DSAS implements
-this bypass specific to ClamAC et the site `https://database.clamav.net` can only be used via
-this specific interface in th e`Service` menu of the DSAS.
+databases can not be direcrtly downloaded by the DSAS from this site. Happily, ClamAV supplies
+a means of bypassing automatically this control via a `User-Agent` and UUID. The DSAS implements
+this bypass specific to ClamAV et the site `https://database.clamav.net` can only be used via
+this specific interface in the `Service` menu of the DSAS.
 
 
