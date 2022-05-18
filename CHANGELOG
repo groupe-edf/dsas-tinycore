@@ -6,6 +6,7 @@ Version 1.1.0 (XXXX)
 - Update clamav (0.104.2 -> 0.105.0)
 - Update libgcrypt (1.9.3 -> 1.10.1)
 - Limit debian downloads by architecture (allow souce package downloads)
+- Automatically update verification logs every 60 seconds, don't do it faster as logs can be very large.
 - Faster removal of stale files, and slightly faster hash checking
 - Support all posix usernames for DSAS users (ie '[a-z_][a-z0-9_-]*[$]?' and not longer than 32 characters
 - also allow checkfiles and getfiles to use index rather than ID

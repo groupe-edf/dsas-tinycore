@@ -2,6 +2,7 @@ const dsas_version = "1.1.0"
 
 var timeout_login = 0;
 var timeout_status = 0;
+var timeout_logs = 0;
 
 function modal_message(text, action = null, hide = false){
   var modalDSAS = document.getElementById("modalDSAS");
@@ -470,12 +471,16 @@ function dsas_check_warnings(disablenav = false, redirect = true){
 
 function dsas_togglelogs(all = false){
    var btn = document.getElementById("loghide");
+   if (timeout_logs !== 0)
+      clearTimeout(timeout_logs);
    if (btn.value === _("All logs")) {
      btn.value = _("Errors only");
      DSASLogs.changeAll(false);
+     timeout_logs = setTimeout(dsas_refresh_logs, 10000, false);
    } else {
      btn.value = _("All logs");
      DSASLogs.changeAll(true);
+     timeout_logs = setTimeout(dsas_refresh_logs, 10000, true);
    }
 }
 
@@ -494,7 +499,6 @@ function dsas_display_logs(all = false){
                  '     <h5>' + _("Filtered file logs :") + '</h5></div>\n' +
                  '      <div class="col-md-8 text-end">\n' +
                  '        <input type="button" class="btn btn-primary btn-sm" id="loghide" value="' + (all ? _("All logs") : _("Errors only")) + '" onclick="dsas_togglelogs(\'all\');">\n' +
-                 '        <input type="button" class="btn btn-primary btn-sm" id="refresh" value="' + _("Refresh") + '" onclick="dsas_display_logs(' + all + ');">\n' +
                  '        <input type="search" class="input-lg rounded"  id="logsearch" placeholder="' +  _("Search") + '" onkeypress="if (event.key === \'Enter\'){ DSASLogs.search(document.getElementById(\'logsearch\').value);}">\n' +
                  '   </div></div>\n';
 
@@ -508,7 +512,39 @@ function dsas_display_logs(all = false){
           body = body + '</ul>\n<div class="tab-content" id="logpane"  style="height: 500px; position: relative; overflow-x: hidden; overflow-y: auto;"></div>';
         }
         preLog.innerHTML = body;
-        DSASLogs = new DSASDisplayLogs("logpane", logs);
+        DSASLogs = new DSASDisplayLogs("logpane", logs, all);
+
+        // Automatically refresh the logs every 60 seconds
+        if (timeout_logs !== 0)
+          clearTimeout(timeout_logs);
+        timeout_logs = setTimeout(dsas_refresh_logs, 60000);
+      } else
+        modal_message(_("No logs returned by the DSAS"));
+    }).catch(error => {
+      if (! fail_loggedin(error.statusText))
+        if (error.statusText)
+          modal_message(_("Error ({0}) during the download of the logs : {1}", error.status, error.statusText));
+        else
+          modal_message(_("Error ({0}) during the download of the logs : {1}", 0, error));
+    });
+}
+
+function dsas_refresh_logs(all = false){
+  fetch("api/dsas-verif-logs.php").then(response => {
+      if (response.ok) 
+        return response.json();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(logs => {
+       if (logs) {
+         DSASLogs.logs = logs;        
+         DSASLogs.refreshWindow();
+
+        // Automatically refresh the logs every 60 seconds
+        if (timeout_logs !== 0)
+          clearTimeout(timeout_logs);
+        timeout_logs = setTimeout(dsas_refresh_logs, 60000, all);
       } else
         modal_message(_("No logs returned by the DSAS"));
     }).catch(error => {
@@ -2514,10 +2550,6 @@ class DSASDisplayLogs {
         div = div + '<div id="log' + i + '" class="container tab-pane ' + (i === 0 ? 'active' : 'fade') + '"></div>';
     this.holder.innerHTML = div;
     this.refreshWindow();
-    document.getElementById("heightForcer").style.height = (this.numberOfItems() * this.height) + "px";
-    if (hidescrollbar)
-      // work around for non chrome browsers, hides the scrollbar
-      this.holder.style.width = (this.holder.offsetWidth * 2 - this.view.offsetWidth) + 'px';
 
     if (this.holder.addEventListener) {
       this.holder.addEventListener("scroll", this.delayingHandler.bind(this), false);
@@ -2544,19 +2576,11 @@ class DSASDisplayLogs {
       tab = 0;
     this.tab = tab
     this.refreshWindow();
-    document.getElementById("heightForcer").style.height = (this.numberOfItems() * this.height) + "px";
-    if (this.hidescrollbar)
-      // work around for non chrome browsers, hides the scrollbar
-      this.holder.style.width = (this.holder.offsetWidth * 2 - this.view.offsetWidth) + 'px';
   }
 
   changeAll(all) {
     this.all = all;
     this.refreshWindow();
-    document.getElementById("heightForcer").style.height = (this.numberOfItems() * this.height) + "px";
-    if (this.hidescrollbar)
-      // work around for non chrome browsers, hides the scrollbar
-      this.holder.style.width = (this.holder.offsetWidth * 2 - this.view.offsetWidth) + 'px';
   }
 
   itemHeight () {
@@ -2630,10 +2654,6 @@ class DSASDisplayLogs {
           bootstrap.Tab.getOrCreateInstance(document.querySelector('#navlog' + this.tab)).show();
         this.holder.scrollTop = Math.floor(matches[found]["line"] * this.height);
         this.refreshWindow();
-        document.getElementById("heightForcer").style.height = (this.numberOfItems() * this.height) + "px";
-        if (this.hidescrollbar)
-          // work around for non chrome browsers, hides the scrollbar
-          this.holder.style.width = (this.holder.offsetWidth * 2 - this.view.offsetWidth) + 'px';
       }
     }
   }
@@ -2686,6 +2706,10 @@ class DSASDisplayLogs {
         }
       }
     }
+    document.getElementById("heightForcer").style.height = (this.numberOfItems() * this.height) + "px";
+    if (this.hidescrollbar)
+      // work around for non chrome browsers, hides the scrollbar
+      this.holder.style.width = (this.holder.offsetWidth * 2 - this.view.offsetWidth) + 'px';
   }
 }
 
