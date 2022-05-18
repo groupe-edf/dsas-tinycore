@@ -1227,6 +1227,40 @@ execution of the task is visible by opening the task as
 
 ![Example of successful task execution](en/DSAS32.png) 
 
+### Debian and Redhat architecture selection
+
+The Debian and Redhat style repositories can be very large. One means of reducing their size is 
+to only download the files for archiectures that you will really be using. For instance if you 
+don't have `arm64` debian machines in your infrastructure their is no point is downloading the
+files for this architecture.
+
+Both Debian and Redhat permit the files to be downloaded to be restricted, but the manner in which
+this is achieved with the DSAS if different because Debian has one single monolithic repository
+whereas Redhat seperates the repositories by both function (for example main, extras and updates 
+for Centos) and by architecture.
+
+To limit the files downloaded for Debian is therefore directly controlled in the task creation
+or modification as can be seen in the figure below
+
+![Example of Debian architecture selection](en/DSAS43.png)
+
+Where the special architectures
+
+- source : The source packages permitting the binary packages to be rebuilt
+- all : The architecture independant files needed by all architectures
+
+are also supplied.
+
+As Redhat supplies individual repositories by archiecture and function, the DSAS must be 
+configured with multiple tasks for each architecture and/or functions. For example to
+download a mirror or RHEL v8 for both Intel/AMD 64bit and Arm 64 bit archiectures, two
+DSAS tasks usings the URIs below might be needed
+
+```
+https://mirror.example.com/rhel/8Server/x86_64
+https://mirror.example.com/rhel/8Server/arm64
+```
+
 # Security Maintenance
 
 ## Analysis of the main risks of the DSAS

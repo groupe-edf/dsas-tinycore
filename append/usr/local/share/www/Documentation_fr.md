@@ -1267,6 +1267,40 @@ tâche est visible en ouvrant la tâche comme
 
 ![Exemple d'éxecution de tache réussi](fr/DSAS32.png)
 
+### Selection d'architecture pour Debian et Redhat
+
+Les dépôt de style Debian et Redhat pourraient être très large. Un moyen de reduire leurs
+taille est de seulement télécharger les fichiers pour les architectures que vous utilisez
+vraiment. Par exemple, si vous n'avez aucun machine Debian avec un architecture `arm64` dans
+votre installation, il n'y a aucun raison de télécharger des fichiers pour cet architecture.
+
+Debian et Radhat permet des fichiers à télécharger à être restrient, mais la manière d'y 
+arriver avec le DSAS est differente, parce que Debian utilisé un seul dépôt monolithique
+et Redhat utilisé des dépôt differents pour chaque architecture et même peut-être par 
+fonctions (main, extras et updates pour Centos par exemple). 
+
+Afin de limiter les fichiers à télécharger pour Debian, le tâche DSAS est directement créé
+ou modifié avec les architecture voulu comme ci-dessous 
+
+![Exemple de selection d'architecture Debian](fr/DSAS43.png)
+
+Ou les architectures speciaux 
+
+- source : Les packages de code source permettant de reconstruire des binaires
+- all : Les packages independant d'un architecture necessaire pour tout architecture
+
+sont egalement fournit.
+
+Parce que Redhat forunit des dépôt par architecture et/ou fonction, le DSAS doit-être
+configuré avec plusieurs tâches pour chaque architecture et/ou fonction voulu. Par 
+exemple, afin de télécharger des mirroir de RHEL v8 pour 64bit pour Intel/Amd et Arm,
+deux tâches DSAS sont a configurer avec des URI comme ci-dessous
+
+```
+https://mirror.example.com/rhel/8Server/x86_64
+https://mirror.example.com/rhel/8Server/arm64
+```
+
 # Maintien en condition de sécurité
 
 ## Analyse des risques principales du DSAS
