@@ -1890,7 +1890,7 @@ function dsas_task_cert_delete(fingerprint){
   document.getElementById("TaskCert").innerHTML = body;
 }
 
-function dsas_modify_task(oldname = "", oldid="") {
+function dsas_modify_task(oldname = "", oldid = "") {
   var name = document.getElementById("TaskName").value;
 
   // If the old name is not empty and different than the new name, then we're
@@ -1900,11 +1900,12 @@ function dsas_modify_task(oldname = "", oldid="") {
     formData.append("op", "name");
     formData.append("data", JSON.stringify({
              old: oldname,
-             new: name}));
+             new: name,
+             id: oldid}));
     fetch("api/dsas-task.php", {method: "POST", body: formData
       }).then( response => {
         if (response.ok)
-          dsas_add_task();
+          dsas_add_task(oldid);
         else
           return Promise.reject({status: response.status,
               statusText: response.statusText});
@@ -1913,10 +1914,10 @@ function dsas_modify_task(oldname = "", oldid="") {
           modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
       });
   } else
-    dsas_add_task();
+    dsas_add_task(oldid);
 }
 
-function dsas_add_task() {
+function dsas_add_task(oldid = "") {
   var name = document.getElementById("TaskName").value;
   var directory = document.getElementById("TaskDirectory").value;
   var uri = document.getElementById("TaskURI").value;
@@ -1955,6 +1956,7 @@ function dsas_add_task() {
   formData.append("op", "add");
   formData.append("data", JSON.stringify({
              name: name,
+             id: oldid,
              directory: directory,
              uri: uri,
              type: type,

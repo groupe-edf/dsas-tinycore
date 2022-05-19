@@ -16,6 +16,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         $name = htmlspecialchars($data["name"]);
         if (trim($name) == "")
           $errors[] = ["error" => "The name can not be empty"];
+        $id = $data["id"];
         $directory = htmlspecialchars($data["directory"]);
         if (trim($directory) == "")
           $errors[] = ["error" => "The directory name can not be empty"];
@@ -214,7 +215,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         if ($errors == []) {
           $newtask = 0;
           foreach ($dsas->tasks->task as $task) {
-            if ($task->name == $name) {
+            if ($task->name == $name && $task->id == $id) {
               $newtask = $task;
               if ($directory != $newtask->directory) {
                 dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "haut", "mv", "-n", _DSAS_HAUT . "/" . $newtask->directory, _DSAS_HAUT . "/" . $directory]);
@@ -349,8 +350,9 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
       case "name" :
         $data = json_decode($_POST["data"], true);
         $old = $data["old"];
+        $id = $data["id"];
         foreach ($dsas->tasks->task as $task) {
-          if ($task->name == $old) {
+          if ($task->name == $old && $task->id == $id) {
             $task->name = $data["new"];
             break;
           }
