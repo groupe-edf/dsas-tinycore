@@ -1510,12 +1510,14 @@ function dsas_display_tasks(what = "all") {
     }).then(tasks => {
       var i = 0;
       var body = '';
+      clearTimeout(timeout_status);
       if (tasks.task) {
         for (task of (tasks.task.constructor === Object ? [tasks.task] : tasks.task)) { 
+          tid = document.getElementById("task" + i);
           cls = (task.last == "never" ? "text-info" : (task.status == "Running" ? "text-info" : (task.status == "Failed" ? "text-danger" : "text-success")));
           body = body +
               '<p class="my-0 ' + cls + '"><a class="text-toggle" data-bs-toggle="collapse" href="#task' + i + '" role="button"' +
-              'aria-controls="task' + i + '" aria-expanded="' + (what === "status" ? (document.getElementById("task" + i).className.includes("show") ? "true" : "false" ) : "false") +'">' +
+              'aria-controls="task' + i + '" aria-expanded="' + (tid && what === "status" ? (tid.className.includes("show") ? "true" : "false" ) : "false") +'">' +
               '<i class="text-collapsed"><img src="caret-right.svg"/></i>' +
               '<i class="text-expanded"><img src="caret-down.svg"/></i></a>' + task.name +
               '&nbsp;<a data-toggle="tooltip" title="' + _("Edit") +'" onclick="dsas_task_modify(\'' + task.id + '\');">' +
@@ -1528,10 +1530,8 @@ function dsas_display_tasks(what = "all") {
               '\', \'' + task.name + '\');"><img src="info.svg"></a>';
           // Keep the tab open if only updating the status
           body = body +
-              '</p><div class="' + ( what === "status" ? document.getElementById("task" + i).className : "collapse") + '" id="task' + i + '"><div class="card card-body">' +
+              '</p><div class="' + ( tid && what === "status" ? tid.className : "collapse") + '" id="task' + i + '"><div class="card card-body">' +
               '<pre>' + task_body(task) + '</pre></div></div>\n';
-          if (status === "what")
-            console.log(document.getElementById("task" + i).class);
           i++;
         }
       }
@@ -1976,7 +1976,7 @@ function dsas_add_task() {
       } catch (e) {
         // Its text => here always just "Ok"
         clear_feedback();
-        dsas_display_tasks("tasks");
+        dsas_display_tasks("status");
       }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
