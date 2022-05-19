@@ -117,9 +117,9 @@ verifauthenticode(){
   if [ -f "$tempdir/cert.0" ]; then
     osslsigncode verify -CAfile "$tempdir/cert.0" "$file" 2>&1 > /dev/null || \
         osslsigncode verify -CAfile "$tempdir/cert.0" -TSA-CAfile "$tempdir/cert.0" "$file" 2>&1 > /dev/null || \
-        return $?
+        return 1
   else
-    osslsigncode verify "$file" 2>&1 > /dev/null || return $?
+    osslsigncode verify "$file" 2>&1 > /dev/null || return 1
   fi
 
   if [ -f "$tempdir/cert.1" ]; then
@@ -178,7 +178,7 @@ verifgpg(){
     # gpg --detach-sig --sign
     gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file.sig" "$file" >& /dev/null
   fi
-  return $?
+  return 1
 }
 
 verifopenssl(){
@@ -211,7 +211,7 @@ verifopenssl(){
     # Verify with the public key
     openssl dgst -verify "$tempdir/pubkey" -signature "$file.sig" -binary "$file"
   fi
-  return $?
+  return 1
 }
 
 verifcyberwatch(){
@@ -225,10 +225,10 @@ verifcyberwatch(){
   unzip -q -d "$zipdir" "$file"
 
   # Check the signature
+  status=0
   head -c -1 "$zipdir/cyberwatch.sig" > "$tempdir/signature"
   head -c -1 "$zipdir/cyberwatch.db" | sha256sum | cut -f1 -d' ' | tr -d '\n' > "$tempdir/cyberwatch.db.sha256"
-  openssl dgst -sha256 -verify "$tempdir/cert.0" -signature "$tempdir/signature" "$tempdir/cyberwatch.db.sha256" > /dev/null
-  status=$?
+  openssl dgst -sha256 -verify "$tempdir/cert.0" -signature "$tempdir/signature" "$tempdir/cyberwatch.db.sha256" > /dev/null || status = 1
 
   # Repack the zipfile so as to avoid potentially hidden files
   if [ "$status" == "0" ]; then
@@ -542,7 +542,7 @@ verify_packages() {
 
     if [ -f "$DSAS_HAUT/$dir/$file" ]; then
       if  check_checksum "$DSAS_HAUT/$dir/$file" $chksum $chktype; then
-        msgline "$DSAS_HAUT/$dir/$file" 1
+        msgline "$DSAS_HAUT/$dir/$file" 2
       elif [ "$rpm_k" == "1" ] && ! rpm -K "$DSAS_HAUT/$dir/$file" 2>&1 1> /dev/null; then
         msgline "$DSAS_HAUT/$dir/$file" 5      
       elif [ "$antivirus" == "true" ]; then
@@ -758,7 +758,7 @@ EOF
       fi
 
       if  check_checksum "$DSAS_HAUT/$dir/$_file" $_hash $chktyp; then
-        msgline "$DSAS_HAUT/$dir/$_file" 1  
+        msgline "$DSAS_HAUT/$dir/$_file" 2  
       else
         [ -d "$(dirname "$DSAS_BAS/$dir/$_file")" ] || (mkdir -m 770 -p "$(dirname "$DSAS_BAS/$dir/$_file")"; chgrp $grp -R "$(dirname "$DSAS_BAS/$dir/$_file")")
         if [ "$antivirus" == "true" ]; then
@@ -802,11 +802,11 @@ EOF
           if [ -n "$_hash_sha256"  ]; then
             if check_checksum "$DSAS_HAUT/$pool/$_file" $_hash_sha256 sha256; then
               status = $?
-              msgline "$DSAS_HAUT/$pool/$_file" 1
+              msgline "$DSAS_HAUT/$pool/$_file" 2
             fi
           elif check_checksum "$DSAS_HAUT/$pool/$_file" $_hash_md5 md5; then
             status = $?
-            msgline "$DSAS_HAUT/$pool/$_file" 1
+            msgline "$DSAS_HAUT/$pool/$_file" 2
           fi
 
           if [ "$status" -eq 0 ]; then
