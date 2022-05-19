@@ -321,8 +321,8 @@ function uri_valid($uri){
 function dsas_get_logs() {
   $logs = array();
   foreach (["", ".0", ".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9"] as $ext) {
-    if (is_file(_DSAS_LOG . "/dsas_verif.log")) {
-      if ($fp = fopen(_DSAS_LOG . "/dsas_verif.log", "r")) {
+    if (is_file(_DSAS_LOG . "/dsas_verif.log") . $ext  ) {
+      if ($fp = fopen(_DSAS_LOG . "/dsas_verif.log", "r") . $ext) {
         $log = array();
         while (($line = fgets($fp)) !== false){
           if (substr($line,0,2) === "  ")
@@ -342,8 +342,8 @@ function dsas_get_log($len = 0) {
   $logs = array();
   $i = 0;
 
-  if (is_file(_DSAS_LOG . "/dsas_verif.log" . $ext)) {
-    if ($fp = fopen(_DSAS_LOG . "/dsas_verif.log" .$ext, "r")) {
+  if (is_file(_DSAS_LOG . "/dsas_verif.log")) {
+    if ($fp = fopen(_DSAS_LOG . "/dsas_verif.log", "r")) {
       $log = array();
       while (($line = fgets($fp)) !== false){
         if ($i >= $len) {
