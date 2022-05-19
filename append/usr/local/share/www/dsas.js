@@ -476,11 +476,11 @@ function dsas_togglelogs(all = false){
    if (btn.value === _("All logs")) {
      btn.value = _("Errors only");
      DSASLogs.changeAll(false);
-     timeout_logs = setTimeout(dsas_refresh_logs, 10000, false);
+     timeout_logs = setTimeout(dsas_refresh_logs, 5000, false);
    } else {
      btn.value = _("All logs");
      DSASLogs.changeAll(true);
-     timeout_logs = setTimeout(dsas_refresh_logs, 10000, true);
+     timeout_logs = setTimeout(dsas_refresh_logs, 5000, true);
    }
 }
 
@@ -514,10 +514,10 @@ function dsas_display_logs(all = false){
         preLog.innerHTML = body;
         DSASLogs = new DSASDisplayLogs("logpane", logs, all);
 
-        // Automatically refresh the logs every 60 seconds
+        // Automatically refresh the logs every 5 seconds
         if (timeout_logs !== 0)
           clearTimeout(timeout_logs);
-        timeout_logs = setTimeout(dsas_refresh_logs, 60000);
+        timeout_logs = setTimeout(dsas_refresh_logs, 5000);
       } else
         modal_message(_("No logs returned by the DSAS"));
     }).catch(error => {
@@ -530,7 +530,11 @@ function dsas_display_logs(all = false){
 }
 
 function dsas_refresh_logs(all = false){
-  fetch("api/dsas-verif-logs.php").then(response => {
+  // Only get the lines that have changed in the most recent log"
+  var uri = new URL("api/dsas-verif-logs.php", window.location.origin);
+  uri.search = new URLSearchParams({REFRESH_LEN : DSASLogs.logs[0].length});
+
+  fetch(uri).then(response => {
       if (response.ok) 
         return response.json();
       else
@@ -538,13 +542,19 @@ function dsas_refresh_logs(all = false){
             statusText: response.statusText});
     }).then(logs => {
        if (logs) {
-         DSASLogs.logs = logs;        
+         if (DSASLogs.tab === 0 && (DSASLogs.curItem + Math.ceil(DSASLogs.holder.offsetHeight / DSASLogs.height) >= DSASLogs.numberOfItems()))  {
+           // We are at the end of the log file in the display windows. Automatically scroll to 
+           // stay at the end. Yes scrollEnd must be wrapped in a function so that `this` is the
+           // DSASDisplayLogs class points to the right place.
+           setTimeout(function () { DSASLogs.scrollEnd(); }, 20);
+         }
+         DSASLogs.logs[0] = DSASLogs.logs[0].concat(logs[0]);
          DSASLogs.refreshWindow();
 
-        // Automatically refresh the logs every 60 seconds
+        // Automatically refresh the logs every 5 seconds
         if (timeout_logs !== 0)
           clearTimeout(timeout_logs);
-        timeout_logs = setTimeout(dsas_refresh_logs, 60000, all);
+        timeout_logs = setTimeout(dsas_refresh_logs, 5000, all);
       } else
         modal_message(_("No logs returned by the DSAS"));
     }).catch(error => {
@@ -2608,6 +2618,11 @@ class DSASDisplayLogs {
       }
     }
     return output;
+  }
+
+  scrollEnd() {
+    this.holder.scrollTop = this.holder.scrollHeight - this.holder.offsetHeight;
+    this.refreshWindow();
   }
 
   search(str="") {

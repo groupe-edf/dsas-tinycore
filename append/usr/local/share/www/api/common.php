@@ -338,6 +338,29 @@ function dsas_get_logs() {
   return $logs;
 }
 
+function dsas_get_log($len = 0) {
+  $logs = array();
+  $i = 0;
+
+  if (is_file(_DSAS_LOG . "/dsas_verif.log" . $ext)) {
+    if ($fp = fopen(_DSAS_LOG . "/dsas_verif.log" .$ext, "r")) {
+      $log = array();
+      while (($line = fgets($fp)) !== false){
+        if ($i >= $len) {
+          if (substr($line,0,2) === "  ")
+            $log[] = ["type" => "normal", "line" => substr($line,0,-1)];
+          else
+            $log[] = ["type" => "error", "line" => substr($line,0,-1)];
+        }
+        $i = $i + 1;
+      }
+      fclose($fp);
+      $logs[] = $log;
+    }
+  }
+  return $logs;
+}
+
 function renew_web_cert($options, $days){
   foreach (array('countryName', 'stateOrProvinceName', 'localityName',
                  'organizationName', 'organizationalUnitName', 'commonName',
