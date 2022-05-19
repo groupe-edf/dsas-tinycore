@@ -84,6 +84,18 @@ if [ "$clamav" == "1" ]; then
   exit $?
 fi
 
+# Cleanup the runlog file, removing non existant/deleted tasks
+/bin/mv $RUNLOG $RUNLOG.old
+cat $RUNLOG.old  | while read -r line; do
+  i=1
+  while :; do
+    _idx=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" $CONF)
+    [ -z "$_idx" ] && break
+    [[ "$line" =~ "$_idx" ]] && echo $line >> $RUNLOG && break
+    i=$((i + 1))
+  done
+done
+
 if [ -z $ids ]; then
   # No tasks specified. Get a list of all tasks
   i=1
