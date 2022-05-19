@@ -798,6 +798,7 @@ EOF
           [ "$DSAS_HAUT/$pool/$_file" -ef "$DSAS_BAS/$pool/$_file" ] && continue
 
           # Only test hash with one of the two hashes
+          status = 0
           if [ -n "$_hash_sha256"  ]; then
             if check_checksum "$DSAS_HAUT/$pool/$_file" $_hash_sha256 sha256; then
               status = $?
@@ -806,8 +807,6 @@ EOF
           elif check_checksum "$DSAS_HAUT/$pool/$_file" $_hash_md5 md5; then
             status = $?
             msgline "$DSAS_HAUT/$pool/$_file" 1
-          else
-            status = 0;  # Set status to true with a noop 
           fi
 
           if [ "$status" -eq 0 ]; then
