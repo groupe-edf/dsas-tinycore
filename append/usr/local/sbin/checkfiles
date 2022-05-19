@@ -800,15 +800,17 @@ EOF
           # Only test hash with one of the two hashes
           if [ -n "$_hash_sha256"  ]; then
             if check_checksum "$DSAS_HAUT/$pool/$_file" $_hash_sha256 sha256; then
+              status = $?
               msgline "$DSAS_HAUT/$pool/$_file" 1
             fi
           elif check_checksum "$DSAS_HAUT/$pool/$_file" $_hash_md5 md5; then
+            status = $?
             msgline "$DSAS_HAUT/$pool/$_file" 1
           else
-            :;  # Set status to true with a noop 
+            status = 0;  # Set status to true with a noop 
           fi
 
-          if [ "$?" -eq 0 ]; then
+          if [ "$status" -eq 0 ]; then
             [ -d "$(dirname i"$DSAS_BAS/$pool/$_file")" ] || (mkdir -m 770 -p "$(dirname "$DSAS_BAS/$pool/$_file")"; chgrp $grp -R "$(dirname "$DSAS_BAS/$pool/$_file")")
 
             if [ "$antivirus" == "true" ]; then
