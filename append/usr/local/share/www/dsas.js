@@ -1,8 +1,16 @@
+// DSAS version variable
 const dsas_version = "1.1.0"
 
+// Timeout variable
 var timeout_login = 0;
 var timeout_status = 0;
 var timeout_logs = 0;
+
+// Global ml variable for the translation.
+var ml
+
+// Global variable for the DSASDisplayLog instance storing the log files
+var DSASLogs;
 
 function modal_message(text, action = null, hide = false){
   var modalDSAS = document.getElementById("modalDSAS");
@@ -469,25 +477,44 @@ function dsas_check_warnings(disablenav = false, redirect = true){
     });
 }
 
+function log_filter(line) {
+  return (line.substr(0,2) !== "  ");
+}
+
+function log_highlight(line) {
+  return (line.substr(0,2) === "  " ? 0 : 7);
+}
+
+
+function log_render(line) {
+  try {
+    var res = _(line.substr(4,15).trim()).padEnd(15);
+    var sa = line.substr(20).split(/(\s+)/);
+    var hash = sa[0];
+    var date = date_to_locale(sa[2]).padEnd(25);
+    var path = line.substr(19+sa[0].length+sa[1].length+sa[2].length+sa[3].length);
+    return res + ' ' + hash + ' ' + date + ' ' + path;
+  } catch (e) { 
+    return line;
+  }
+}
+
 function dsas_togglelogs(all = false){
    var btn = document.getElementById("loghide");
    if (timeout_logs !== 0)
       clearTimeout(timeout_logs);
    if (btn.value === _("All logs")) {
      btn.value = _("Errors only");
-     DSASLogs.changeAll(false);
+     DSASLogs.updatefilter(log_filter);
      timeout_logs = setTimeout(dsas_refresh_logs, 5000, false);
    } else {
      btn.value = _("All logs");
-     DSASLogs.changeAll(true);
+     DSASLogs.updatefilter("");
      timeout_logs = setTimeout(dsas_refresh_logs, 5000, true);
    }
 }
 
-var DSASLogs;
-
 function dsas_display_logs(all = false){
-  var preLog = document.getElementById("VerifLogs");
   fetch("api/dsas-verif-logs.php").then(response => {
       if (response.ok) 
         return response.json();
@@ -495,24 +522,16 @@ function dsas_display_logs(all = false){
         return Promise.reject({status: response.status, 
             statusText: response.statusText});
     }).then(logs => {
-      var body = '   <div class="row"><div class="col-md-4">\n' +
-                 '     <h5>' + _("Filtered file logs :") + '</h5></div>\n' +
-                 '      <div class="col-md-8 text-end">\n' +
-                 '        <input type="button" class="btn btn-primary btn-sm" id="loghide" value="' + (all ? _("All logs") : _("Errors only")) + '" onclick="dsas_togglelogs(\'all\');">\n' +
-                 '        <input type="search" class="input-lg rounded"  id="logsearch" placeholder="' +  _("Search") + '" onkeypress="if (event.key === \'Enter\'){ DSASLogs.search(document.getElementById(\'logsearch\').value);}">\n' +
-                 '   </div></div>\n';
+      document.getElementById("VerifLogs").innerHTML = 
+             '   <div class="row"><div class="col-md-4">\n' +
+             '     <h5>' + _("Filtered file logs :") + '</h5></div>\n' +
+             '      <div class="col-md-8 text-end">\n' +
+             '        <input type="button" class="btn btn-primary btn-sm" id="loghide" value="' + (all ? _("All logs") : _("Errors only")) + '" onclick="dsas_togglelogs(\'all\');">\n' +
+             '        <input type="search" class="input-lg rounded"  id="logsearch" placeholder="' +  _("Search") + '" onkeypress="if (event.key === \'Enter\'){ DSASLogs.search(document.getElementById(\'logsearch\').value);};">\n' +
+             '   </div></div><span id="logwind"></span>\n';
 
       if (logs) {
-        if (logs.length == 1) {
-          body = body + '<div id="logpane"  style="height: 500px; position: relative; overflow-x: hidden; overflow-y: auto;"></div>'; 
-        } else {
-          body = body + '<ul class="nav nav-tabs" id="logs" role="tablist">\n';
-          for (let i = 0; i < logs.length; i++) 
-            body = body + '  <li class="nav-item"><a class="nav-link' + (i === 0 ? ' active' : '') + '" id="navlog' + i + '" data-bs-toggle="tab" href="#log' + i + '">' + i + '</a></li>\n';
-          body = body + '</ul>\n<div class="tab-content" id="logpane"  style="height: 500px; position: relative; overflow-x: hidden; overflow-y: auto;"></div>';
-        }
-        preLog.innerHTML = body;
-        DSASLogs = new DSASDisplayLogs("logpane", logs, all);
+        DSASLogs = new DSASDisplayLogs("logwind", logs, false, log_highlight, "", log_render);
 
         // Automatically refresh the logs every 5 seconds
         if (timeout_logs !== 0)
@@ -541,22 +560,13 @@ function dsas_refresh_logs(all = false){
         return Promise.reject({status: response.status, 
             statusText: response.statusText});
     }).then(logs => {
-       if (logs) {
-         if (DSASLogs.tab === 0 && (DSASLogs.curItem + Math.ceil(DSASLogs.holder.offsetHeight / DSASLogs.height) >= DSASLogs.numberOfItems()))  {
-           // We are at the end of the log file in the display windows. Automatically scroll to 
-           // stay at the end. Yes scrollEnd must be wrapped in a function so that `this` is the
-           // DSASDisplayLogs class points to the right place.
-           setTimeout(function () { DSASLogs.scrollEnd(); }, 20);
-         }
-         DSASLogs.logs[0] = DSASLogs.logs[0].concat(logs[0]);
-         DSASLogs.refreshWindow();
+      if (logs)
+        DSASLogs.appendlog(logs);
 
-        // Automatically refresh the logs every 5 seconds
-        if (timeout_logs !== 0)
-          clearTimeout(timeout_logs);
-        timeout_logs = setTimeout(dsas_refresh_logs, 5000, all);
-      } else
-        modal_message(_("No logs returned by the DSAS"));
+      // Automatically refresh the logs every 5 seconds
+      if (timeout_logs !== 0)
+        clearTimeout(timeout_logs);
+      timeout_logs = setTimeout(dsas_refresh_logs, 5000, all);
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
         if (error.statusText)
@@ -564,19 +574,6 @@ function dsas_refresh_logs(all = false){
         else
           modal_message(_("Error ({0}) during the download of the logs : {1}", 0, error));
     });
-}
-
-function dsas_verify_line(str){
-  var ret = str;
-  try {
-    var res = _(str.substr(4,15).trim()).padEnd(15);
-    var sa = str.substr(20).split(/(\s+)/);
-    var hash = sa[0];
-    var date = date_to_locale(sa[2]).padEnd(25);
-    var path = str.substr(19+sa[0].length+sa[1].length+sa[2].length+sa[3].length);
-    ret = res + ' ' + hash + ' ' + date + ' ' + path;
-  } catch (e) { }
-  return ret;
 }
 
 function dsas_display_users(){
@@ -2392,7 +2389,6 @@ function dsas_logout(){
   }).catch(error => { location.href = "login.html"; });
 }
 
-
 class multiLang {
 
   constructor(url, onLoad="", language=""){
@@ -2443,10 +2439,6 @@ class multiLang {
       if (_lang !== this.currentLanguage)
         document.cookie = "Language=" + this.currentLanguage + "; expires=Fri 31 Dec 9999 23:59:59;SameSite=Lax";
 
-      // Force reload of heaeder as it might have already been rendered
-      for (let _head of document.getElementsByTagName("dsas-header")) 
-        _head.render();    
-
       // Callback after JSON loading
       if (this.onLoad)
         this.onLoad();
@@ -2484,6 +2476,32 @@ class multiLang {
 
     return (str || key)
   }
+
+  translateHTML() {
+    for (let el of document.querySelectorAll("[data-i18n]")) 
+     if (el.innerHTML)
+       el.innerHTML = _(el.innerHTML);
+    for (let el of document.querySelectorAll("[data-i18n-value]")) 
+     if (el.value)
+       el.value = _(el.value);
+    for (let el of document.querySelectorAll("[data-i18n-title]")) 
+       if (el.title)
+         el.title = _(el.title);
+
+    // Insert language navbar dropdown
+    for (let el of  document.querySelectorAll("[data-i18n-navbar-lang]")) {
+      var langs = "";
+
+      for (let lang of Object.keys(ml.phrases))
+        langs = langs + '          <a class="dropdown-item" onclick="ml.setLanguage(\'' + 
+              lang + '\');">' + lang + '</a>\n';
+
+      el.innerHTML = '      <li class="nav-item dropdown">\n' +
+                     '        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">' + ml.currentLanguage + '</a>\n' +
+                     '        <div class="dropdown-menu">\n' + langs + '        </div>\n' +
+                     '      </li>\n';
+    }
+  }
 }
 
 // Modify the prototype of String to allow formatting
@@ -2496,10 +2514,15 @@ if (!String.format) {
   };
 }
 
-// Global ml variable for the translation. Use "translate" callback to force
-// translation of the page with the "translate" function below. Only elements
+// Use "translateHTML" to force translation of the page. Only elements
 // with the "data-i18n" property are translated.
-var ml = new multiLang("languages.json", translate);
+ml = new multiLang("languages.json", 
+      function () {
+        // Force reload of header as it might have already been rendered
+        for (let _head of document.getElementsByTagName("dsas-header")) 
+          _head.render();
+        ml.translateHTML();
+      });
 
 // Use "_" as the function name here to be like in python i8n
 function _ (key, ...args) {
@@ -2519,61 +2542,57 @@ function _ (key, ...args) {
   }
 }
 
-function translate(){
-  for (let el of document.querySelectorAll("[data-i18n]")) 
-     if (el.innerHTML)
-       el.innerHTML = _(el.innerHTML);
-  for (let el of document.querySelectorAll("[data-i18n-value]")) 
-     if (el.value)
-       el.value = _(el.value);
-  for (let el of document.querySelectorAll("[data-i18n-title]")) 
-     if (el.title)
-       el.title = _(el.title);
-
-  // Insert language navbar dropdown
-  for (let el of  document.querySelectorAll("[data-i18n-navbar-lang]")) {
-    var langs = "";
-
-    for (let lang of Object.keys(ml.phrases))
-      langs = langs + '          <a class="dropdown-item" onclick="ml.setLanguage(\'' + 
-              lang + '\');">' + lang + '</a>\n';
-
-    el.innerHTML = '      <li class="nav-item dropdown">\n' +
-                   '        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">' + ml.currentLanguage + '</a>\n' +
-                   '        <div class="dropdown-menu">\n' + langs + '        </div>\n' +
-                   '      </li>\n';
-  }
-}
-
 class DSASDisplayLogs {
-  constructor(id, logs, all = true, hidescrollbar = false){
-    this.holder = document.getElementById(id);
+  constructor(id, logs, hidescrollbar = false, emphasis = "", filter = "", render = ""){
     this.view = null;
-    this.logs = logs;
-    this.all = all;
+    this.logs = (typeof(logs) == "string" ? [logs] : logs);
+    this.emphasis = emphasis;
+    this.filter = filter;
+    this.render = render;
     this.tab = 0;
-    this.height = this.itemHeight();
     this.hidescrollbar = hidescrollbar;
     this.highlight = {tab: -1, line: -1};
+    this.nitems = this.numberOfItems();
 
-    var div = '<div id="heightForcer"></div>';
-    if (this.logs.length)
-      for (let i = 0; i < logs.length; i++)
-        div = div + '<div id="log' + i + '" class="container tab-pane ' + (i === 0 ? 'active' : 'fade') + '"></div>';
-    this.holder.innerHTML = div;
-    this.refreshWindow();
-
-    if (this.holder.addEventListener) {
-      this.holder.addEventListener("scroll", this.delayingHandler.bind(this), false);
-      if (this.logs.length > 1) 
-        for (var i = 0; i < logs.length; i++)
-          document.getElementById("navlog" + i).addEventListener("click", this.changeTab.bind(this), false);
+    var body = "";
+    if (logs.length == 1) {
+      body = body + '<div id="logpane"  style="height: 500px; position: relative; overflow-x: hidden; overflow-y: auto;">\n' +
+          '  <div id="heightForcer"></div>\n' +
+          '  <div id="log0" class="container tab-pane active"></div>'
+          '</div>'; 
     } else {
-      this.holder.attachEvent("onscroll", this.delayingHandler.bind(this));
-      if (this.logs.length > 1) 
-        for (var i = 0; i < logs.length; i++)
-          document.getElementById("navlog" + i).attachEvent("click", this.changeTab.bind(this));
+      body = body + '<ul class="nav nav-tabs" id="logs" role="tablist">\n';
+      for (let i = 0; i < logs.length; i++)
+        body = body + '  <li class="nav-item"><a class="nav-link' + (i === 0 ? ' active' : '') + '" id="navlog' + i + '" data-bs-toggle="tab" href="#log' + i + '">' + i + '</a></li>\n';
+      body = body + '</ul>\n<div class="tab-content" id="logpane"  style="height: 500px; position: relative; overflow-x: hidden; overflow-y: auto;">\n' +
+          '  <div id="heightForcer"></div>\n';
+      for (let i = 0; i < logs.length; i++)
+        body = body + '<div id="log' + i + '" class="container tab-pane ' + (i === 0 ? 'active' : 'fade') + '"></div>';
+      body = body + '</div>';
     }
+    document.getElementById(id).innerHTML = body;
+    this.init_holder();
+  }
+
+ init_holder() {
+    this.holder = document.getElementById("logpane");
+
+    if (this.holder) {
+      this.height = this.itemHeight();
+      this.refreshWindow();
+      if (this.holder.addEventListener) {
+        this.holder.addEventListener("scroll", this.delayingHandler.bind(this), false);
+        if (this.logs.length > 1) 
+          for (var i = 0; i < this.logs.length; i++)
+            document.getElementById("navlog" + i).addEventListener("click", this.changeTab.bind(this), false);
+      } else {
+        this.holder.attachEvent("onscroll", this.delayingHandler.bind(this));
+        if (this.logs.length > 1) 
+          for (var i = 0; i < this.logs.length; i++)
+            document.getElementById("navlog" + i).attachEvent("click", this.changeTab.bind(this));
+      }
+    } else
+      window.requestAnimationFrame(this.init_holder);
   }
 
   delayingHandler() {
@@ -2587,11 +2606,7 @@ class DSASDisplayLogs {
     if (tab < 0)
       tab = 0;
     this.tab = tab
-    this.refreshWindow();
-  }
-
-  changeAll(all) {
-    this.all = all;
+    this.nitems = this.numberOfItems();
     this.refreshWindow();
   }
 
@@ -2610,16 +2625,29 @@ class DSASDisplayLogs {
     if (this.logs.length === 0)
       output = 0;
     else {
-      if (this.all)
-        output = this.logs[this.tab].length
-      else {
-        for (var index = 0; index < this.logs[this.tab].length; ++index) {
-          if (this.logs[this.tab][index]["type"] !== "normal")
+      var lines = this.logs[this.tab].split("\n");
+      if (this.filter) {
+        for (let line of this.logs[this.tab].split("\n") ) {
+          if (line.trim() && this.filter(line))
             output++;
         }
-      }
+      } else if (lines[lines.length - 1].trim())
+        output = lines.length
+      else
+        output = lines.length - 1;
     }
     return output;
+  }
+
+  appendlog(logs, tab = 0) {
+    if (this.tab === tab && (this.curItem + Math.ceil(this.holder.offsetHeight / this.height) >= this.nitems))  {
+      // We are at the end of the log file in the display windows. Automatically scroll to 
+      // stay at the end. Yes scrollEnd must be wrapped in a function so that `this` is the
+      // DSASDisplayLogs class points to the right place.
+      setTimeout(function () { this.scrollEnd(); }, 20);
+    }
+    this.logs[tab] = this.logs[tab]  + logs;
+    this.nitems = this.numberOfItems();
   }
 
   scrollEnd() {
@@ -2631,48 +2659,50 @@ class DSASDisplayLogs {
     if (str !== "") {
       var curIndex = (this.highlight["line"] < 0 ? this.curItem : this.highlight["line"]);
       var curTab = (this.highlight["tab"] < 0 ? this.tab : this.highlight["tab"]);
-      if ((! this.all) && (this.highlight["tab"] < 0)) {
-        var line = 0;
-        for (var index = 0; index < this.logs[this.tab].length; ++index) {
-         if (line === curIndex) {
-             curIndex = index;
-            break;
-          }
-          if (this.logs[this.tab][index]["type"] !== "normal")
-            line++;
-        }
-      }
       var matches = [];
       var nmatches = 0;
       var found = -1;
       for (var i = 0; i < this.logs.length; i++) {
-        for (var j = 0; j < this.logs[i].length; j++) {
-           if (this.logs[i][j]["line"].includes(str)) {
+        var j = 0;
+        for (let line of this.logs[i].split("\n")) {
+           if (this.filter && ! this.filter(line))
+             continue;
+           if (line.includes(str)) {
              matches.push({tab : i, line: j});
              if ((found < 0) && ((i > curTab) || ((i === curTab) && (j > curIndex))))
                found = nmatches;
              nmatches++;
            }
+           j++;
         }
       }
       if (found < 0)
         found = 0;
       if (nmatches > 0) {
-        // Force all logs to be displayed, as the value we're looking for
-        // might be hidden.
-        // FIXME : This button text change should not be in this class, 
-        // but difficult to put it elsewhere
-        this.all = true;
-        document.getElementById("loghide").value = _("All logs")
-
         this.tab = matches[found]["tab"];
         this.highlight = {tab: this.tab, line: matches[found]["line"]};
-        if (this.tab !== curTab)
+        if (this.tab !== curTab) {
           bootstrap.Tab.getOrCreateInstance(document.querySelector('#navlog' + this.tab)).show();
-        this.holder.scrollTop = Math.floor(matches[found]["line"] * this.height);
+          this.nitems = this.numberOfItems();
+        }
         this.refreshWindow();
+        this.holder.scrollTop = Math.floor(matches[found]["line"] * this.height);
       }
     }
+  }
+
+  updatefilter(filter="") {
+    this.filter = filter;
+    this.nitems = this.numberOfItems();
+    this.hightlight = {tab: -1, line: -1};  // FIXME : Rather than reset, try to keep same line
+    this.refreshWindow();
+  }
+
+  color(line) {
+     const colors = ["text-muted", "text-dark", "text-info", "text-primary",
+               "text-success", "text-warning", "text-danger"];
+     var index = (this.emphasis ? this.emphasis(line) : 0)
+     return colors[(index < 0 ? 0 : ( index >= colors.length ? colors.length - 1 : index))];
   }
 
   refreshWindow () {
@@ -2686,34 +2716,26 @@ class DSASDisplayLogs {
     if (this.logs.length > 0) {
       var firstItem = Math.floor(this.holder.scrollTop / this.height);
       var lastItem = firstItem + Math.ceil(this.holder.offsetHeight / this.height)
-      if (lastItem + 1 >= this.logs[this.tab].length)
-        lastItem = this.logs[this.tab].length - 1;
+      if (lastItem + 1 >= this.nitems)
+        lastItem = this.nitems - 1;
       this.view.id = "view";
       this.view.style.top = (firstItem * this.height) + 'px';
       this.view.style.position = "absolute";
       this.curItem = firstItem;
 
       var pre;
-      if (this.all) {
-        for (var index = firstItem; index <= lastItem; ++index) {
-          pre = document.createElement('pre');
-          if ((this.tab == this.highlight["tab"]) && (index === this.highlight["line"])) 
-            pre.className = "my-0 bg-info overflow-hidden";
-          else if (this.logs[this.tab][index]["type"] === "normal")
-            pre.className = "my-0 text-muted overflow-hidden";
-          else
-            pre.className = "my-0 text-danger overflow-hidden";       
-          pre.innerHTML = dsas_verify_line(this.logs[this.tab][index]["line"]); 
-          this.view.appendChild(pre);
-        }
-      } else {
+      if (this.filter) {
         var line = 0;
-        for (var index = 0; index < this.logs[this.tab].length; ++index) {
-          if (this.logs[this.tab][index]["type"] !== "normal") {
+        var lines = this.logs[this.tab].split("\n");
+        for (var index = 0; index < lines.length; ++index) {
+          if (this.filter(lines[index])) {
             if (line >= firstItem) {
               pre = document.createElement('pre');
-              pre.className = "my-0 text-danger overflow-hidden";       
-              pre.innerHTML = dsas_verify_line(this.logs[this.tab][index]["line"]); 
+              if ((this.tab == this.highlight["tab"]) && (line === this.highlight["line"])) 
+                pre.className = "my-0 bg-info overflow-hidden";
+              else
+                pre.className = "my-0 " + this.color(lines[index]) + " overflow-hidden";      
+              pre.innerHTML = (this.render ? this.render(lines[index]) : lines[index]);
               view.appendChild(pre);
             }
             line++;
@@ -2721,9 +2743,20 @@ class DSASDisplayLogs {
               break;
           }
         }
+      } else {
+        var lines = this.logs[this.tab].split("\n");
+        for (var index = firstItem; index <= lastItem; ++index) {
+          pre = document.createElement('pre');
+          if ((this.tab == this.highlight["tab"]) && (index === this.highlight["line"])) 
+            pre.className = "my-0 bg-info overflow-hidden";
+          else
+            pre.className = "my-0 " + this.color(lines[index]) + " overflow-hidden";
+          pre.innerHTML = (this.render ? this.render(lines[index]) : lines[index]);
+          this.view.appendChild(pre);
+        }
       }
     }
-    document.getElementById("heightForcer").style.height = (this.numberOfItems() * this.height) + "px";
+    document.getElementById("heightForcer").style.height = (this.nitems * this.height) + "px";
     if (this.hidescrollbar)
       // work around for non chrome browsers, hides the scrollbar
       this.holder.style.width = (this.holder.offsetWidth * 2 - this.view.offsetWidth) + 'px';
@@ -2902,43 +2935,6 @@ class DSASHeader extends HTMLElement {
 
 customElements.define("dsas-header", DSASHeader);
 
-class DSASUser extends HTMLElement {
-  constructor(){
-    super();
-  }
-
-  connectedCallback(){
-    if (!this.rendered) {
-      this.render();
-      this.rendered = true;
-    }
-  }
-
-  render(){
-    var user = this.getAttribute("user");
-    var label = this.getAttribute("label");
-    var feedback = this.getAttribute("feedback");
-    var old = this.getAttribute("old");
-    var key = (old === null ? user : old)
-    this.innerHTML = '<div class="form-group">\n' +
-           '  <label>' + (label ? label : user) + ' :</label>\n' +
-           '  <input type="password" id="inp_' + key + '" class="form-control' + 
-           (feedback ? ' is-invalid' : '') + '">\n' +
-           '  <div id="feed_' + key + '" class="invalid-feedback">' + feedback + '</div>\n' +
-           '</div>';
-  }
-
-  static get observedAttributes() {
-    return ["user", "feedback", "label", "old"];
-  }
-
-  attributeChangedCallback(name, oldValue, newValue) {
-    this.render();
-  }
-}
-
-customElements.define("dsas-user", DSASUser);
-
 class DSASTaskCert extends HTMLElement {
   constructor(){
     super();
@@ -2954,7 +2950,7 @@ class DSASTaskCert extends HTMLElement {
   render(){
     var name = this.getAttribute("name");
     var fingerprint = this.getAttribute("fingerprint");
-    this.innerHTML = '<p class="my-0">' + name + '<a  data-toggle="tooltip" title="Supprimer" onclick="dsas_task_cert_delete(\'' + fingerprint + '\',\'' + 
+    this.innerHTML = '<p class="my-0">' + name + '<a  data-toggle="tooltip" title="' + _("Delete") + '" onclick="dsas_task_cert_delete(\'' + fingerprint + '\',\'' + 
            fingerprint + '\');"><img src="x-lg.svg"></a></p>';
   }
 
@@ -2967,6 +2963,5 @@ class DSASTaskCert extends HTMLElement {
   }
 
 }
-
 
 customElements.define("dsas-task-cert", DSASTaskCert);

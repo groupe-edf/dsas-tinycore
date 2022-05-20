@@ -276,7 +276,7 @@
     "Disk : {0}" : "Disque : {0}",
     "Memory :" : "Mémoire :",
     "Load average :" : "Charge moyenne :",
-    "Filtered file logs :" : "Journaux des fichiers filtré",
+    "Filtered file logs :" : "Journaux des fichiers filtré :",
     "All logs" : "Tous les journaux",
     "Errors only" : "Que des erreurs",
     "Refresh" : "Rafraîchir",

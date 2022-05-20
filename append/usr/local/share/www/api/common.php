@@ -322,40 +322,19 @@ function dsas_get_logs() {
   $logs = array();
   foreach (["", ".0", ".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9"] as $ext) {
     if (is_file(_DSAS_LOG . "/dsas_verif.log" . $ext)) {
-      if ($fp = fopen(_DSAS_LOG . "/dsas_verif.log" . $ext, "r")) {
-        $log = array();
-        while (($line = fgets($fp)) !== false){
-          if (substr($line,0,2) === "  ")
-            $log[] = ["type" => "normal", "line" => substr($line,0,-1)];
-          else
-            $log[] = ["type" => "error", "line" => substr($line,0,-1)];
-        }
-        fclose($fp);
-        $logs[] = $log;
-      }
+      $logs[] = file_get_contents(_DSAS_LOG . "/dsas_verif.log" . $ext);
     }
   }
   return $logs;
 }
 
 function dsas_get_log($len = 0) {
-  $logs = array();
-  $i = 0;
-
+  $logs = "";
   if (is_file(_DSAS_LOG . "/dsas_verif.log")) {
     if ($fp = fopen(_DSAS_LOG . "/dsas_verif.log", "r")) {
-      $log = array();
-      while (($line = fgets($fp)) !== false){
-        if ($i >= $len) {
-          if (substr($line,0,2) === "  ")
-            $log[] = ["type" => "normal", "line" => substr($line,0,-1)];
-          else
-            $log[] = ["type" => "error", "line" => substr($line,0,-1)];
-        }
-        $i = $i + 1;
-      }
+      fseek($fp, $len);
+      $logs = fread($fp , filesize(_DSAS_LOG . "/dsas_verif.log"));
       fclose($fp);
-      $logs[] = $log;
     }
   }
   return $logs;
