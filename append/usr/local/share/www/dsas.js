@@ -2640,19 +2640,13 @@ class DSASDisplayLogs {
   }
 
   appendlog(logs, tab = 0) {
-    if (this.tab === tab && (this.curItem + Math.ceil(this.holder.offsetHeight / this.height) >= this.nitems))  {
-      // We are at the end of the log file in the display windows. Automatically scroll to 
-      // stay at the end. Yes scrollEnd must be wrapped in a function so that `this` is the
-      // DSASDisplayLogs class points to the right place.
-      setTimeout(function () { this.scrollEnd(); }, 20);
-    }
     this.logs[tab] = this.logs[tab]  + logs;
-    this.nitems = this.numberOfItems();
-  }
-
-  scrollEnd() {
-    this.holder.scrollTop = this.holder.scrollHeight - this.holder.offsetHeight;
-    this.refreshWindow();
+    if (this.tab === tab && (this.curItem + Math.ceil(this.holder.offsetHeight / this.height) >= this.nitems))  {
+      this.nitems = this.numberOfItems();
+      this.refreshWindow();
+      this.holder.scrollTop = this.holder.scrollHeight - this.holder.offsetHeight;
+    } else if (this.tab == tab)
+      this.nitems = this.numberOfItems();
   }
 
   search(str="") {
