@@ -391,10 +391,28 @@ $line
 EOF
          # Only download Package, Package.gz and Package.xz files if desired architecture 
          _f=$(basename $_file)
-         if [ "$_f" == "Packages" ] || [ "$_f" == "Packages.gz" ] || [ "$_f" == "Packages.xz" ]; then
+         if [ "$_f" == "Release" ] || [ "$_f" == "Packages" ] || [ "$_f" == "Packages.gz" ] || [ "$_f" == "Packages.xz" ]; then
            _f=$(dirname $_file)
            [[ "$archs" =~ "${_f##*-}" ]] || continue
-         fi 
+         fi
+
+         # Only download Contents* files if desired architecture
+         _f=$(basename $_file)
+         if [ "${_f:0:8}" == "Contents" ]; then
+           _arch=${_f:9}
+           _arch=${_arch#*udeb-}
+           _arch=${_arch%%.gz}
+           _arch=${_arch%%.xz}
+           [[ "$archs" =~ "$_arch" ]] || continue
+         fi
+
+         # Only download installers if desired architecture
+         _f=${_file##/}
+         _f=$(echo $_f | cut -d/ -f2)
+         if [ "${_f:0:9}" == "installer" ]; then
+           _arch=${_f:10}
+           [[ "$archs" =~ "$_arch" ]] || continue
+         fi
 
          if $as_haut [ -f "$DSAS_HAUT/$dir/$_file" ]; then
            if check_checksum "$DSAS_HAUT/$dir/$_file" $_hash $chktyp; then
@@ -406,7 +424,17 @@ EOF
            myecho "Downloading file $_file"
            [ -d "$(dirname "$DSAS_HAUT/$dir/$_file")" ] || $as_haut mkdir -m 770 -p "$(dirname "$DSAS_HAUT/$dir/$_file")"
            [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
-           [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
+           if [ "$verbose" -ne 0 ]; then
+             # Only print verbose for uncompressed files without compressed versions. Debian
+             # doesn't always have uncompressed versions if compressed versions exist
+             if [[ "$_file" == "*.gz" ]] ||  [[ "$_file" == "*.xz" ]] ||  [[ "$_file" == "*.bz2" ]]; then
+               $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
+             elif $as_haut grep $_file $DSAS_HAUT/$dir/Release | grep -o "...$" | grep -q ".gz\|.xz\|bz2"; then
+               $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
+             else
+               $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
+             fi
+           fi
          fi
        done
 
