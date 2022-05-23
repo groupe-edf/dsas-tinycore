@@ -149,8 +149,8 @@ getdirectory() {
   if [ -z "$isdir" ]; then
     myecho "Downloading file : $(basename "$uri")"
     # FIXME shouldn't always download here !!!
-    [ "$verbose" -eq 0 ] && ($chroot_lftp -c "$opt get -e -O '${DSAS_HAUT}/${dir}' '$uri'" >& /dev/null)
-    [ "$verbose" -eq 0 ] || ($chroot_lftp -c "$opt get -e -O '${DSAS_HAUT}/${dir}' '$uri'")
+    [ "$verbose" -eq 0 ] && ($chroot_lftp -c "$opt mget -e -O '${DSAS_HAUT}/${dir}' '$uri'" >& /dev/null)
+    [ "$verbose" -eq 0 ] || ($chroot_lftp -c "$opt mget -e -O '${DSAS_HAUT}/${dir}' '$uri'")
   else
     myecho "Mirroring site : $uri"
     [ "$verbose" -eq 0 ] && ($chroot_lftp -c "$opt open '$uri'; mirror --delete-first -e -O '$DSAS_HAUT/$dir'" >& /dev/null)
