@@ -240,6 +240,7 @@ getrepo() {
        for _file in $($as_haut find "$DSAS_HAUT/$dir/repodata" -type f) ; do
          _f=$(basename $_file)
          [[ "$_f" =~ "repomd.xml" ]] && continue
+         grep "$_f" "$DSAS_HAUT/$dir/repodata/repomd.xml" && continue
          myecho "Removing stale file repodata/${_f}"
          $as_haut rm -f "$_file"
        done

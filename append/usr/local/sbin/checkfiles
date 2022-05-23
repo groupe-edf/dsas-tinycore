@@ -597,6 +597,15 @@ verifrepo() {
   ln "$DSAS_HAUT/$dir/repodata/repomd.xml" "$DSAS_BAS/$dir/repodata/repomd.xml"
   [ -f "$DSAS_HAUT/$dir/repodata/repomd.xml.asc" ] && ln "$DSAS_HAUT/$dir/repodata/repomd.xml.asc" "$DSAS_BAS/$dir/repodata/repomd.xml.asc"
 
+  # Remove files in repodata not listed in repomd.xml
+  for _file in $(find "$DSAS_BAS/$dir/repodata" -type f) ; do
+    _f=$(basename $_file)
+    [[ "$_f" =~ "repomd.xml" ]] && continue
+    grep "$_f" "$DSAS_BAS/$dir/repodata/repomd.xml" && continue
+    myecho "Removing stale file repodata/${_f}"
+    rm -f "$_file"
+  done
+
   # Verify the checksum of all files referenced in repomd.xml and copy to $bas
   i=1
   while :; do
