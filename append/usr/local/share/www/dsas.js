@@ -1,5 +1,5 @@
 // DSAS version variable
-const dsas_version = "1.1.0"
+const dsas_version = "1.1.1"
 
 // Timeout variable
 var timeout_login = 0;
@@ -37,11 +37,11 @@ function modal_info(name, text){
   modalDSAS.removeAttribute("disable");
   modalDSAS.setAttribute("static", false);
   modalDSAS.setAttribute("hideonclick", true);
-  modalDSAS.setAttribute("action", "");
+  modalDSAS.setAttribute("action", "clearTimeout(timeout_logs)");
   modalDSAS.setAttribute("title", _("Info : {0}", name));
   modalDSAS.setAttribute("type", "Ok");
   modalDSAS.setAttribute("size", "xl");
-  modalDSAS.setAttribute("body", "<pre>" + print_obj(text) + "</pre>");
+  modalDSAS.setAttribute("body", text);
   modalDSAS.show();
 }
 
@@ -1768,10 +1768,11 @@ function dsas_task_real_run(id) {
     });
 }
 
-function dsas_task_info(id, name) {
+function dsas_task_info(id, name, len = 0) {
   var formData = new FormData;
   formData.append("op", "info");
   formData.append("id", id);
+  formData.append("len", len);
   fetch("api/dsas-task.php", {method: "POST", body: formData 
     }).then( response => {
       if (response.ok) 
@@ -1781,7 +1782,16 @@ function dsas_task_info(id, name) {
             statusText: response.statusText});
     }).then(text => {
       info = JSON.parse(text);
-      modal_info(name, info[0]["info"]);
+      if (len === 0) {
+        modal_info(name, '<span id="logwind"></span>');
+        DSASLogs = new DisplayLogs("logwind", info);
+      } else
+        DSASLogs.appendlog(info);
+      
+      // Automatically refresh the logs every 5 seconds
+      if (timeout_logs !== 0)
+        clearTimeout(timeout_logs);
+      timeout_logs = setTimeout(dsas_task_info, 5000, id, name, DSASLogs.logs[0].length);
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
         modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
@@ -2557,18 +2567,18 @@ class DisplayLogs {
     this.nitems = this.numberOfItems();
 
     var body = "";
-    if (logs.length == 1) {
+    if (this.logs.length == 1) {
       body = body + '<div id="logpane"  style="height: 500px; position: relative; overflow-x: auto; overflow-y: auto;">\n' +
           '  <div id="heightForcer"></div>\n' +
           '  <div id="log0" class="container tab-pane active"></div>'
           '</div>'; 
     } else {
       body = body + '<ul class="nav nav-tabs" id="logs" role="tablist">\n';
-      for (let i = 0; i < logs.length; i++)
+      for (let i = 0; i < this.logs.length; i++)
         body = body + '  <li class="nav-item"><a class="nav-link' + (i === 0 ? ' active' : '') + '" id="navlog' + i + '" data-bs-toggle="tab" href="#log' + i + '">' + i + '</a></li>\n';
       body = body + '</ul>\n<div class="tab-content" id="logpane"  style="height: 500px; position: relative; overflow-x: auto; overflow-y: auto;">\n' +
           '  <div id="heightForcer"></div>\n';
-      for (let i = 0; i < logs.length; i++)
+      for (let i = 0; i < this.logs.length; i++)
         body = body + '<div id="log' + i + '" class="container tab-pane ' + (i === 0 ? 'active' : 'fade') + '"></div>';
       body = body + '</div>';
     }
@@ -2578,9 +2588,8 @@ class DisplayLogs {
 
  init_holder() {
     this.holder = document.getElementById("logpane");
-
-    if (this.holder) {
-      this.height = this.itemHeight();
+    this.height = this.itemHeight();
+    if (this.holder && this.height !== 0) {
       this.refreshWindow();
       if (this.holder.addEventListener) {
         this.holder.addEventListener("scroll", this.delayingHandler.bind(this), false);
@@ -2594,7 +2603,7 @@ class DisplayLogs {
             document.getElementById("navlog" + i).attachEvent("click", this.changeTab.bind(this));
       }
     } else
-      window.requestAnimationFrame(this.init_holder);
+      window.requestAnimationFrame(this.init_holder.bind(this));
   }
 
   delayingHandler() {

@@ -318,22 +318,22 @@ function uri_valid($uri){
   return inet_valid(preg_split(':/:', $tmp[1])[0]);
 }
 
-function dsas_get_logs() {
+function dsas_get_logs($_file = _DSAS_LOG . "/dsas_verif.log") {
   $logs = array();
   foreach (["", ".0", ".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9"] as $ext) {
-    if (is_file(_DSAS_LOG . "/dsas_verif.log" . $ext)) {
-      $logs[] = file_get_contents(_DSAS_LOG . "/dsas_verif.log" . $ext);
+    if (is_file($_file . $ext)) {
+      $logs[] = file_get_contents($_file . $ext);
     }
   }
   return $logs;
 }
 
-function dsas_get_log($len = 0) {
+function dsas_get_log($len = 0, $_file = _DSAS_LOG . "/dsas_verif.log") {
   $logs = "";
-  if (is_file(_DSAS_LOG . "/dsas_verif.log")) {
-    if ($fp = fopen(_DSAS_LOG . "/dsas_verif.log", "r")) {
+  if (is_file($_file)) {
+    if ($fp = fopen($_file, "r")) {
       fseek($fp, $len);
-      $logs = fread($fp , filesize(_DSAS_LOG . "/dsas_verif.log"));
+      $logs = fread($fp , filesize($_file));
       fclose($fp);
     }
   }

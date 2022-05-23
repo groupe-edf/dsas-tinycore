@@ -4,10 +4,13 @@ require_once "common.php";
 if (! dsas_loggedin(false))
   die(header("HTTP/1.0 403 Forbidden"));
 else if($_SERVER["REQUEST_METHOD"] == "POST"){
-  dsas_loggedin(true); // Second call to dsas_loggedin to force timer reset
+  // Manually update for autologout after 600 seconds
+  if ($_POST["op"] != "info")
+    $_SESSION["timestamp"] = time();
+ 
   $dsas = simplexml_load_file(_DSAS_XML);
   $errors = array();
-  $info = array();
+  $info = "";
 
   try {
     switch ($_POST["op"]){
@@ -328,6 +331,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
 
       case "info" :
         $id = $_POST["id"];
+        $len = $_POST["len"];
         if (! ctype_xdigit($id)) {
           $errors[] = ["error" => "The task ID is invalid"];
         } else {
@@ -342,7 +346,10 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           if ( ! $infotask) {
             $errors[] = ["error" => ["The task '{0}' is not active. Try applying before use",  $id]];
           } else {
-            $info[] = ["info" => file_get_contents(_DSAS_LOG . "/tasks/" . $id . ".log")];
+
+           if (empty($len))
+             $len = 0;
+           $info = dsas_get_log($len, _DSAS_LOG . "/tasks/" . $id . ".log");
           }
         }
         break;
