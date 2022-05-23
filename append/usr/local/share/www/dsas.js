@@ -9,7 +9,7 @@ var timeout_logs = 0;
 // Global ml variable for the translation.
 var ml
 
-// Global variable for the DSASDisplayLog instance storing the log files
+// Global variable for the DisplayLog instance storing the log files
 var DSASLogs;
 
 function modal_message(text, action = null, hide = false){
@@ -531,7 +531,7 @@ function dsas_display_logs(all = false){
              '   </div></div><span id="logwind"></span>\n';
 
       if (logs) {
-        DSASLogs = new DSASDisplayLogs("logwind", logs, false, log_highlight, "", log_render);
+        DSASLogs = new DisplayLogs("logwind", logs, false, log_highlight, "", log_render);
 
         // Automatically refresh the logs every 5 seconds
         if (timeout_logs !== 0)
@@ -2542,7 +2542,7 @@ function _ (key, ...args) {
   }
 }
 
-class DSASDisplayLogs {
+class DisplayLogs {
   constructor(id, logs, hidescrollbar = false, emphasis = "", filter = "", render = ""){
     this.view = null;
     this.logs = (typeof(logs) == "string" ? [logs] : logs);
@@ -2550,13 +2550,14 @@ class DSASDisplayLogs {
     this.filter = filter;
     this.render = render;
     this.tab = 0;
+    this.lastScrollTop = 0;
     this.hidescrollbar = hidescrollbar;
     this.highlight = {tab: -1, line: -1};
     this.nitems = this.numberOfItems();
 
     var body = "";
     if (logs.length == 1) {
-      body = body + '<div id="logpane"  style="height: 500px; position: relative; overflow-x: hidden; overflow-y: auto;">\n' +
+      body = body + '<div id="logpane"  style="height: 500px; position: relative; overflow-x: auto; overflow-y: auto;">\n' +
           '  <div id="heightForcer"></div>\n' +
           '  <div id="log0" class="container tab-pane active"></div>'
           '</div>'; 
@@ -2564,7 +2565,7 @@ class DSASDisplayLogs {
       body = body + '<ul class="nav nav-tabs" id="logs" role="tablist">\n';
       for (let i = 0; i < logs.length; i++)
         body = body + '  <li class="nav-item"><a class="nav-link' + (i === 0 ? ' active' : '') + '" id="navlog' + i + '" data-bs-toggle="tab" href="#log' + i + '">' + i + '</a></li>\n';
-      body = body + '</ul>\n<div class="tab-content" id="logpane"  style="height: 500px; position: relative; overflow-x: hidden; overflow-y: auto;">\n' +
+      body = body + '</ul>\n<div class="tab-content" id="logpane"  style="height: 500px; position: relative; overflow-x: auto; overflow-y: auto;">\n' +
           '  <div id="heightForcer"></div>\n';
       for (let i = 0; i < logs.length; i++)
         body = body + '<div id="log' + i + '" class="container tab-pane ' + (i === 0 ? 'active' : 'fade') + '"></div>';
@@ -2596,6 +2597,12 @@ class DSASDisplayLogs {
   }
 
   delayingHandler() {
+    if (this.holder) {
+      // Don't force refresh if scrolling in the X
+        if (this.holder.scrollTop == this.lastScrollTop)
+          return;
+      this.lastScrollTop = this.holder.scrollTop;
+    }
     setTimeout(this.refreshWindow.bind(this), 10);
   }
 
