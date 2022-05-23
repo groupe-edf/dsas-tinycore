@@ -1,12 +1,12 @@
 Log of the principal changes to the DSAS
 
-Version 1.1.0 (XXXX)
+Version 1.1.0 (23 May 2022)
 - Update openssl (1.1.1n -> 1.1.1o)
 - Update openssh (8.8p1 -> 9.0p1)
 - Update clamav (0.104.2 -> 0.105.0)
 - Update libgcrypt (1.9.3 -> 1.10.1)
 - Limit debian downloads by architecture (allow souce package downloads)
-- Automatically update verification logs every 5 seconds, keep scroll of logs at the end.
+- Automatically update verification logs every 5 seconds, keep scroll of logs at the end, allow scroll in X.
 - Faster removal of stale files, and slightly faster hash checking
 - Support all posix usernames for DSAS users (ie '[a-z_][a-z0-9_-]*[$]?' and not longer than 32 characters
 - also allow checkfiles and getfiles to use index rather than ID
