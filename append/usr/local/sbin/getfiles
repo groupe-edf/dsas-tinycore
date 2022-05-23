@@ -236,6 +236,14 @@ getrepo() {
 
        [ "$type" == "rpm" ] || $chroot_lftp -c "$opt get -e '$uri/repodata/repomd.xml.asc' -o '$DSAS_HAUT/$dir/repodata/repomd.xml.asc'" >& /dev/null
 
+       # Remove files in repodata not listed in repomd.xml
+       for _file in $($as_haut find "$DSAS_HAUT/$dir/repodata" -type f) ; do
+         _f=$(basename $_file)
+         [[ "$_f" =~ "repomd.xml" ]] && continue
+         myecho "Removing stale file repodata/${_f}"
+         $as_haut rm -f "$_file"
+       done
+
        # Identify all files listed in repomd.xml and download them
        i=1
        while :; do
