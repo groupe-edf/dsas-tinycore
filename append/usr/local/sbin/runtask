@@ -159,10 +159,11 @@ for _id in $ids; do
   _pid=$(pgrep $_id)
   [ -n "$_pid" ] && { 1>&2 myecho "$0 task $_id is running"; continue; }
 
-  1>&2 myecho "$0: #### Tasks on machine HAUT ####"
+  1>&2 myecho "$0 : #### Tasks started - $(date --utc) ####"
+  1>&2 myecho "$0 : #### Tasks on machine HAUT ####"
   sudo sudo -u haut ssh tc@$INTERCO_HAUT $(dirname $0)/getfiles $opts $_id
   [ $? -eq 0 ] && sudo sudo -u haut ssh tc@$INTERCO_HAUT sudo sudo -u verif $(dirname $0)/checkfiles $opts $_id
-  [ $? -eq 0 ] && 1>&2 myecho "$0: #### Tasks on machine BAS ####"
+  [ $? -eq 0 ] && 1>&2 myecho "$0 : #### Tasks on machine BAS ####"
   [ $? -eq 0 ] && $(dirname $0)/getfiles $opts $_id
   [ $? -eq 0 ] && sudo sudo -u verif $(dirname $0)/checkfiles $opts -o $logfile $_id
 
