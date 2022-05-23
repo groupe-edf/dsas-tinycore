@@ -1759,7 +1759,8 @@ function dsas_task_real_run(id) {
       } catch (e) {
         // Its text => here always just "Ok"
         clear_feedback();
-        dsas_display_tasks("status");
+        // Delay update of task status 0,5 seconds to allow runlog file to be updated first
+        timeout_status = setTimeout(dsas_display_tasks, 500, "status");
       }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
