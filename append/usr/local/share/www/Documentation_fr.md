@@ -680,7 +680,7 @@ Si le compte `tc` est désactivé les autres utilisateurs pourrait quand devenir
 la conaissance de la mot de passe de l'utilisateur `tc`. Un utilsiateur désactivé ne pourrait
 que connecté depuis la console du DSAS.
 
-Un noveau compte est créer en cliquant sur la bouton ![](fr/DSAS23.png) à droit de l'écran. 
+Un noveau compte est créer en cliquant sur la bouton ![](plus-lg.svg) à droit de l'écran. 
 Vous seriez demandé de rentrer le nom de l'utilisateur comme
 
 ![Ecran d'ajout de nouveau utilisateur](fr/DSAS35.png)
@@ -715,9 +715,9 @@ depuis la zone non sensible afin de permettre la dépôt de fichiers directement
 fonctionnalité est fortement déconseillés__ car elle ouvre la possibilité d'attaques contre le DSAS
 - __Active__ - Un compte pourrait existe mais ne pas être fonctionel. Ceci pemettre de temporairement
 désactivé un compte sans le supprimer
-- ![](fr/DSAS39.png) - En cliquant sur cette icone nous pourrions modifier le mot de passe de 
+- ![](lock.svg) - En cliquant sur cette icone nous pourrions modifier le mot de passe de 
 l'utilisateur
-- ![](fr/DSAS40.png) - En cliquant sur cette icone, l'utilisateur pourrait être supprimé définitivement.
+- ![](x-lg.svg) - En cliquant sur cette icone, l'utilisateur pourrait être supprimé définitivement.
 
 Les modifications fait ne sera pas prise en compte tant que l'utilisateur n'a pas appuyé sur
 la bouton `Sauvegarder les changements`. Un exemple de configuration des utilisateur pourrait
@@ -794,7 +794,7 @@ signés en France doit inclure les KBIS, par exemple ici '0002 552081317' est un
 Vous pouvez maintenant cliquer sur le bouton `Renouvellement certificat` et un certificat
 sera généré. En revanche il ne sera pas utilisé par le serveur jusqu'au prochaine fois que 
 vous avez cliqué sur `Appliquer`. Le certificat publique et Requête de signature (CSR) pourrait
-être téléchargé en cliquant sur le bouton ![](fr/DSAS11.png).
+être téléchargé en cliquant sur le bouton ![](save.svg).
 
 ## Configuration des services
 
@@ -1031,7 +1031,7 @@ comme
 ![Page de configuration des certificats](fr/DSAS19.png)
 
 Chaque certificat pourrait être téléchargé sur la poste d'administration en cliquant 
-sur le bouton ![](fr/DSAS11.png). 
+sur le bouton ![](save.svg). 
 
 Les certificats sont soulignés de 4 façon différentes dépendant sur les caractéristiques
 du certificat. 
@@ -1185,7 +1185,7 @@ notamment le certicat de [Debian Bullseye](https://ftp-master.debian.org/keys/ar
 ### Importation d'un certificat dans le DSAS
 
 Des certificats X509 et GPG pourraient être ajoutés au DSAS en cliquant sur le
-![](fr/DSAS23.png) a droit de chaque catégorie de certificat. Un navigateur 
+![](plus-lg.svg) a droit de chaque catégorie de certificat. Un navigateur 
 du poste de travail est ouvert afin de sélectionner le fichier à télécharger sur
 le DSAS. Et une importation réussie est signalé par
 
@@ -1198,7 +1198,7 @@ recommander de regarder les détails du certificat importé, comme par exemple
 
 ## Configuration des taches
 
-Une nouvelle tâche pourrait être ajouter en cliquant sur le ![](fr/DSAS23.png) 
+Une nouvelle tâche pourrait être ajouter en cliquant sur le ![](plus-lg.svg) 
 a droit de la page des taches. 
 
 ![Menu d'ajout des taches](fr/DSAS26.png)
@@ -1252,15 +1252,16 @@ Symantec LiveUpdate.
 par l'utilisateur sont disponible pour l'ajout à la vérification par le tache. Le type
 de certificat doit être adapté à la type de tache. Chaque certificat sélectionné est
 ajouté à la liste des certificats pour le tache, et pourrait être supprimé en 
-cliquant sur le [](fr/DSAS40.png) à côté du certificat.
+cliquant sur le [](x-lg.svg) à côté du certificat.
 
 Un exemple de tache après ajout est 
 
 ![Exemple de tache ajouté](fr/DSAS31.png)
 
-A côté de chaque tache, l'icone ![](fr/DSAS36.png) permets de modifier le tache, 
-![](fr/DSAS40.png) permet de supprimer le tache, ![](fr/DSAS41.png) permets 
-à l'exécuter immédiatement et ![](fr/DSAS42.png) permets les logs du tâche à être examiner. Le statut 
+A côté de chaque tache, l'icone ![](pencil-square.svg) permets de modifier le tache, 
+![](x-lg.svg) permet de supprimer le tache, ![](play.svg) permets à l'exécuter immédiatement et 
+![](info.svg) permets les logs du tâche à être examiner. Si la tâche est en cours d'éxécution, 
+une icone ![](kill.svg) va apparaitre à côté la tâche, permets l'arrêt de la tâche. Le statut 
 de la tâche et fournit via la couleur du titre de la tâche. En bleu, la tâche n'a pas été exécuté, en 
 vert l'exécution de la tâche a réussi, et en rouge l'exécution a échoué. La dernière exécution de la
 tâche est visible en ouvrant la tâche comme

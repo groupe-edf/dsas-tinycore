@@ -661,7 +661,7 @@ the only one with the rights to become `root` on the DSAS. Even though the accou
 it remains usable from the console of the DSAS and other adminsitrative users, knowing the 
 password for the account `tc` can use this knowledge to become `root`.
 
-A new account is created by clicking on the button  ![](en/DSAS23.png) to the right of the
+A new account is created by clicking on the button  ![](plus-lg.svg) to the right of the
 screen. You will be asked to enter a new user name like
 
 ![Add new user screen](en/DSAS35.png)
@@ -697,13 +697,13 @@ use of this feature is strongly discouraged as it opens up the possibility of at
 against the DSAS
 - __Active__ - An account can be deactivated without deleting it. This allows for an account to be
 temporarily suspended without deleting it.
-- ![](en/DSAS39.png) - By clicking on this icon, it is possible to change the password of the user.
-- ![](en/DSAS40.png) - By clicking on this icon, it is possible to permenantly delete the user.
+- ![](lock.svg) - By clicking on this icon, it is possible to change the password of the user.
+- ![](x-lg.svg) - By clicking on this icon, it is possible to permenantly delete the user.
  
 The modifications will not be taken into account unless the `Save Changes` button has been pressed.
 An example of the user configuration might be 
 
-![DSAS user configuration menu]](en/DSAS38.png)
+![DSAS user configuration menu](en/DSAS38.png)
 
 At this point it is recommended to press the `Apply` button in order to make these
 permanent changes. Otherwise on the next restart the old passwords will be
@@ -774,7 +774,7 @@ signed in France must include a KBIS, for example here '0002 552081317', is the 
 You can now click on the button `Renew certificate` and a certificate
 will be generated. However, it will not be used by the server until the next time
 you click on Apply. The public certificate and Signing Request (CSR) could
-be downloaded by clicking on the button ![](en/DSAS11.png). 
+be downloaded by clicking on the button ![](save.svg). 
 
 ## Service Configuration
 
@@ -1000,7 +1000,7 @@ like
 
 ![Certificate configuration page](en/DSAS19.png)
 
-Each certificate can be downloaded by clicking on the button ![](en/DSAS11.png).
+Each certificate can be downloaded by clicking on the button ![](save.svg).
 
 Certificates are highlighted in 4 different ways depending on the characteristics
 of the certificate.
@@ -1145,7 +1145,7 @@ in particular the certificate of [Debian Bullseye](https://ftp-master.debian.org
 ### Importing a certificate into the DSAS
 
 Public keys, X509 and GPG certificates can be added to DSAS by clicking on
-![](en/DSAS23.png) next to each category of certificate. A file browser
+![](plus-lg.svg) next to each category of certificate. A file browser
 of the computer is opened in order to select the file to download to the
 the DSAS. And a successful importation is signaled by
 
@@ -1158,7 +1158,7 @@ recommend to examine the details of the imported certificate, like for example
 
 ## Task configuration
 
-A new task can be added by clicking on ![](en/DSAS23.png) to the right of 
+A new task can be added by clicking on ![](plus-lg.svg) to the right of 
 the tasks page.
 
 ![Add tasks menu](en/DSAS26.png)
@@ -1212,15 +1212,16 @@ Symantec LiveUpdate.
 by user are available for addition to verification tasks. The certicate type
 must be appropriate for the type of task. Each selected certificate is
 added to the list of certificates for the task, and can be removed by
-clicking on the ![](en/DSAS40.png) next to the certificate.
+clicking on the ![](x-lg.svg) next to the certificate.
 
 An example of an added task is
 
 ![Example task added](en/DSAS31.png)
 
-Next to each task, the icon ![](en/DSAS36.png) allows the task to be modified,
-![](en/DSAS40.png) allows the task to be removed, ![](en/DSAS41.png) allows
-the task to be executed immediately and ![](en/DSAS42.png) allows the logs of the task to be examined. 
+Next to each task, the icon ![](pencil-square.svg) allows the task to be modified, ![](x-lg.svg) 
+allows the task to be removed, ![](play.svg) allows the task to be executed immediately and 
+![](info.svg) allows the logs of the task to be examined. If the task is running an icon 
+![](kill.svg) will appear next to the task, allowing the running task to be terminated. 
 The status of the task is provided via the color of the task title. In blue, the task was not executed,
 in green, the execution of the task was successful, and in red the execution has failed. The last
 execution of the task is visible by opening the task as

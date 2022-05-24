@@ -1,6 +1,8 @@
 Log of the principal changes to the DSAS
 
 Version 1.1.1 (XXXXXXX)
+- Checking if task is running before deleting or running it
+- Allow tasks to be killed 
 - Use DisplayLog in task logs to allow auto log update
 - Ignore undesired debian archiecture files for fewer unwanted download errors
 
