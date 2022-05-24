@@ -319,6 +319,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           }
           if ( ! $runtask) {
             $errors[] = ["error" => ["The task '{0}' is not active. Try applying before use",  $id]];
+          } else if (dsas_task_running($id)) {
+            $errors[] = ["error" => ["The task '{0}' is already running",  $id]];
           } else {
             // Create task log directory if needed
             if (! is_dir(_DSAS_LOG . "/tasks")) {
