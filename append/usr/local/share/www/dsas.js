@@ -1525,6 +1525,9 @@ function dsas_display_tasks(what = "all") {
               '\', \'' + task.name + '\');"><img src="play.svg" width="20" height="20"></a>';
           body = body + '&nbsp;<a data-toogle="tooltip" title="' + _("Info") + '" onclick="dsas_task_info(\'' + task.id +
               '\', \'' + task.name + '\');"><img src="info.svg"></a>';
+          if (task.status === "Running")
+            body = body + '&nbsp;<a data-toogle="tooltip" title="' + _("Kill process") + '" onclick="dsas_task_kill(\'' + task.id +
+                '\', \'' + task.name + '\');"><img src="kill.svg"></a>';
           // Keep the tab open if only updating the status
           body = body +
               '</p><div class="' + ( tid && what === "status" ? tid.className : "collapse") + '" id="task' + i + '"><div class="card card-body">' +
@@ -1619,10 +1622,40 @@ function dsas_task_delete(id, name){
 function dsas_task_real_delete(id) {
   var formData = new FormData;
   var deleteFiles = document.getElementById("TaskDeleteFiles").checked;
-  document.getElementById("TaskDeleteFiles")
   formData.append("op", "delete");
   formData.append("id", id);
   formData.append("delete", deleteFiles);
+  fetch("api/dsas-task.php", {method: "POST", body: formData 
+    }).then( response => {
+      if (response.ok) 
+        return response.text();
+      else
+        return Promise.reject({status: response.status, 
+            statusText: response.statusText});
+    }).then(text => {
+      try {
+        const errors = JSON.parse(text);
+        modal_errors(errors);
+      } catch (e) {
+        // Its text => here always just "Ok"
+        clear_feedback();
+        dsas_display_tasks("tasks");
+      }
+    }).catch(error => {
+      if (! fail_loggedin(error.statusText))
+        modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
+    });
+}
+
+function dsas_task_kill(id, name){
+  var body = _("Kill the task ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, id);
+  modal_action(body, "dsas_task_real_kill('" + id + "');", true);
+}
+
+function dsas_task_real_kill(id) {
+  var formData = new FormData;
+  formData.append("op", "kill");
+  formData.append("id", id);
   fetch("api/dsas-task.php", {method: "POST", body: formData 
     }).then( response => {
       if (response.ok) 

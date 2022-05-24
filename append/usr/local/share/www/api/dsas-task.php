@@ -335,6 +335,33 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
 
         break;
 
+     case "kill" :
+        $id = $_POST["id"];
+        if (! ctype_xdigit($id)) {
+          $errors[] = ["error" => "The task ID is invalid"];
+        } else {
+          $dsas_active = simplexml_load_file(_DSAS_XML . ".active");
+          $killtask = false;
+          foreach ($dsas_active->tasks->task as $task) {
+            if ($task->id == $id) {
+              $killtask = true;
+              break;
+            }
+          }
+          if ( ! $killtask) {
+            $errors[] = ["error" => ["The task '{0}' is not active. Try applying before use",  $id]];
+          } else if (! dsas_task_running($id)) {
+            $errors[] = ["error" => ["The task '{0}' is not running",  $id]];
+          } else {
+             dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "pkill", "-f", "'getfiles.*" . $id . "'"]);
+             dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "pkill", "-f", "'checkfiles.*" . $id . "'"]);
+             dsas_exec(["pkill", "-f", "'getfiles.*" . $id . "'"]);
+             dsas_exec(["sudo", "pkill", "-f", "'checkfiles.*" . $id . "'"]);
+          }
+        }
+
+        break;
+
       case "info" :
         $id = $_POST["id"];
         $len = $_POST["len"];
