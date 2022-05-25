@@ -1670,7 +1670,7 @@ function dsas_task_real_kill(id) {
       } catch (e) {
         // Its text => here always just "Ok"
         clear_feedback();
-        dsas_display_tasks("tasks");
+        dsas_display_tasks("status");
       }
     }).catch(error => {
       if (! fail_loggedin(error.statusText))
