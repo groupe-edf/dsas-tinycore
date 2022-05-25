@@ -1522,7 +1522,7 @@ function dsas_display_tasks(what = "all") {
           body = body + '&nbsp;<a data-toggle="tooltip" title="' + _("Delete") + '" onclick="dsas_task_delete(\'' + task.id +
               '\', \'' + task.name + '\');"><img src="x-lg.svg"></a>';
           body = body + '&nbsp;<a data-toogle="tooltip" title="' + _("Run") + '" onclick="dsas_task_run(\'' + task.id +
-              '\', \'' + task.name + '\');"><img src="play.svg" width="20" height="20"></a>';
+              '\', \'' + task.name + '\');"><img src="play.svg"></a>';
           body = body + '&nbsp;<a data-toogle="tooltip" title="' + _("Info") + '" onclick="dsas_task_info(\'' + task.id +
               '\', \'' + task.name + '\');"><img src="info.svg"></a>';
           if (task.status === "Running")
