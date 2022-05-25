@@ -353,10 +353,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           } else if (! dsas_task_running($id)) {
             $errors[] = ["error" => ["The task '{0}' is not running",  $id]];
           } else {
-             dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "pkill", "-f", "'getfiles.*" . $id . "'"]);
-             dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "pkill", "-f", "'checkfiles.*" . $id . "'"]);
-             dsas_exec(["pkill", "-f", "'getfiles.*" . $id . "'"]);
-             dsas_exec(["sudo", "pkill", "-f", "'checkfiles.*" . $id . "'"]);
+             dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "/usr/local/sbin/killtask", $id]);
+             dsas_exec(["sudo", "/usr/local/sbin/killtask", $id]);
           }
         }
 
@@ -408,7 +406,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
   }
  
   if ($errors == []) {
-    if ($info == [])
+    if ($info == "")
       echo "Ok";
     else {
       header("Content-Type: application/json");

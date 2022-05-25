@@ -1,0 +1,70 @@
+#! /bin/sh
+
+# Only need $CONF from common functions
+if [ -f "$(dirname $0)/dsas_common.sh" ]; then
+  . $(dirname $0)/dsas_common.sh
+else
+  1>&2 echo "Common functions not found !!"
+  exit -1
+fi
+
+help() {
+  echo "Usage: $(basename $0) ID [ID ...]"
+  echo "Kills the tasks given the list of IDs"
+  echo "     -v|--verbose    Log all files verified"
+  echo "     -q|--quiet      Log only files failing to verify"
+  echo "     -n|--dryrun     Perform minimum actions"
+  echo "     -?|-h|--help    Print this help"
+}
+
+# Parse options
+ids=""
+while [ "$#" -gt 0 ]; do
+  case $1 in
+    -n|--dryrun) dryrun=1 ;;
+    -?|-h|--help) help; exit 0 ;;
+    -*) 1>&2 echo "Unrecognized option : $1"; help; exit 1 ;;
+     *)
+       ids="$ids $1" ;;
+  esac
+  shift 1
+done
+[ -z "$ids" ] && { help; exit 1; }
+
+# if not user root, quit
+[ "$(id -u)" != "0" ] && { 1>&2 echo "$0: Must be run as root"; exit 1; }
+
+# Check that all ids are valid before doing anything
+idx=""
+for _id in $ids; do
+  if [ ${#_id} -lt 5 ] && [[ $_id =~ ^[0-9]+$ ]]; then
+    _idx=$(xmllint --xpath "string(dsas/tasks/task[$_id]/id)" $CONF)
+    [ -z "$_idx" ] && { 1>&2 echo "Task id ($_id) does not exist"; exit 1; }
+    idx="$idx $_idx"
+  else
+    i=1
+    _idx=""
+    while :; do
+      _task_id=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" "$CONF")
+      [ -z "$_task_id" ] && break
+      [ "$_id" == "$_task_id" ] && _idx=$_task_id && break
+      i=$(($i + 1))
+    done
+    [ -z "$_idx" ] && { 1>&2 echo "Task id ($_id) does not exist"; exit 1; }
+    idx="$idx $_idx"
+  fi
+done
+
+for _id in $idx; do
+  # Don't kill runtask to allow for runtask run from cron
+  for p in getfiles checkfile; do
+    for pid in $(pgrep -f "$p.*$_id"); do
+      [ "$dryrun" == "1" ] && { 1>&2 echo "$0 : pkill -P $pid"; }
+      [ "$dryrun" == "1" ] || sudo pkill -P $pid >& /dev/null
+    done
+    # Need to pkill again to ensure a subshell hasn't been respawned
+    # This should be sufficient as lftp will be killed above
+    [ "$dryrun" == "1" ] && { 1>&2 echo "$0 : pkill -f $p.*$_id"; }
+    [ "$dryrun" == "1" ] || sudo pkill -f "$p.*$_id" >& /dev/null
+  done
+done
