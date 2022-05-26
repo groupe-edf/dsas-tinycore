@@ -216,40 +216,41 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
 
         if ($errors == []) {
-          $newtask = 0;
+          $addtask = true;
           foreach ($dsas->tasks->task as $task) {
             if ($task->name == $name && $task->id == $id) {
-              $newtask = $task;
-              if ($directory != $newtask->directory) {
-                dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "haut", "mv", "-n", _DSAS_HAUT . "/" . $newtask->directory, _DSAS_HAUT . "/" . $directory]);
-                dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "verif", "mv", "-n", _DSAS_BAS . "/" . $newtask->directory, _DSAS_BAS . "/" . $directory]);
-                dsas_exec(["sudo", "sudo", "-u", "haut", "mv", "-n", _DSAS_HAUT . "/" . $newtask->directory, _DSAS_HAUT . "/" . $directory]);
-                dsas_exec(["sudo", "sudo", "-u", "verif", "mv", "-n", _DSAS_BAS . "/" . $newtask->directory, _DSAS_BAS . "/" . $directory]);
+              $addtask = false;
+              if ($directory != $task->directory) {
+                dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "haut", "mv", "-n", _DSAS_HAUT . "/" . $task->directory, _DSAS_HAUT . "/" . $directory]);
+                dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "verif", "mv", "-n", _DSAS_BAS . "/" . $task->directory, _DSAS_BAS . "/" . $directory]);
+                dsas_exec(["sudo", "sudo", "-u", "haut", "mv", "-n", _DSAS_HAUT . "/" . $task->directory, _DSAS_HAUT . "/" . $directory]);
+                dsas_exec(["sudo", "sudo", "-u", "verif", "mv", "-n", _DSAS_BAS . "/" . $task->directory, _DSAS_BAS . "/" . $directory]);
               }
-              while ($newtask->cert[0])
-                unset($newtask->cert[0]);
-              unset($newtask->archs);
+              while ($task->cert[0])
+                unset($task->cert[0]);
+              unset($task->arch);
               break;
             }
           }
-          if ($newtask === 0) {
-            $newtask = $dsas->tasks->addChild("task");
-            $newtask->id = dsasid();
+
+          if ($addtask) {
+            $task = $dsas->tasks->addChild("task");
+            $task->id = dsasid();
+            $task->name = $name;
           }
-          $newtask->name = $name;
-          $newtask->directory = $directory;
-          $newtask->uri = $uri;
-          $newtask->type = $type;
-          $newtask->run = $run;
-          $newtask->ca->fingerprint = $ca_finger;
-          $newtask->ca->name = $ca_name;
+          $task->directory = $directory;
+          $task->uri =  $uri;
+          $task->type = $type;
+          $task->run = $run;
+          $task->ca->fingerprint = $ca_finger;
+          $task->ca->name = $ca_name;
           foreach ($certs as $cert) {
-            $newcert = $newtask->addChild("cert");
+            $newcert = $task->addChild("cert");
             $newcert->name = $cert["name"];
             $newcert->fingerprint = $cert["fingerprint"];
           }
           if ($type === "deb") {
-            $newarch = $newtask->addChild("archs");
+            $newarch = $task->addChild("archs");
             foreach ($data["archs"] as $arch) {
               switch ($arch["arch"]){
                 case "source":
@@ -406,13 +407,14 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
   }
  
   if ($errors == []) {
-    if ($info == "")
+    if ($_POST["op"] !== "info")
       echo "Ok";
     else {
       header("Content-Type: application/json");
       echo json_encode($info);
     }
-    $dsas->asXml(_DSAS_XML);    
+    if ($_POST["op"] === "add" || $_POST["op"] === "delete" ||$_POST["op"] === "name")
+      $dsas->asXml(_DSAS_XML);
   } else {
     header("Content-Type: application/json");
     echo json_encode($errors);
