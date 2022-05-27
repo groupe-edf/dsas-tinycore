@@ -2893,7 +2893,13 @@ class DSASModal extends HTMLElement {
 
   show() {
     var tag = this.getAttribute("tag");
+    var type = this.getAttribute("type");
     var myModal = new bootstrap.Modal(document.getElementById("static" + tag));
+    // Focus on "Ok" button, to allow "Enter" to close the modal
+    if (type === "Ok")
+      document.getElementById("static" + tag).addEventListener("shown.bs.modal", event => {
+          document.getElementById("ok" + tag).focus();
+        });
     myModal.show();
   }
 
