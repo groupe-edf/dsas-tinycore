@@ -311,16 +311,20 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         } else {
           $dsas_active = simplexml_load_file(_DSAS_XML . ".active");
           $runtask = false;
+          $i = 0;
           foreach ($dsas_active->tasks->task as $task) {
             if ($task->id == $id) {
               $runtask = true;
               break;
             }
+            $i++;
           }
           if ( ! $runtask) {
             $errors[] = ["error" => ["The task '{0}' is not active. Try applying before use",  $id]];
           } else if (dsas_task_running($id)) {
             $errors[] = ["error" => ["The task '{0}' is already running",  $id]];
+          } else if ($dsas->tasks->task[$i]->asXml() !== $dsas_active->tasks->task[$i]->asXml()) {
+            $errors[] = ["error" => ["The task '{0}' is modified. Try applying before use",  $id]];
           } else {
             // Create task log directory if needed
             if (! is_dir(_DSAS_LOG . "/tasks")) {
