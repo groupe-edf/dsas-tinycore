@@ -144,7 +144,7 @@ getdirectory() {
 
   # Test whether we have a file or a directory, and fail if server not found 
   _stderr=$(2>&1 $chroot_lftp -c "$opt open '$uri'") && isdir="1"
-  echo $_stderr | grep -q "Fatal" && (1>&2 echo "Fatal: Server '$uri' not found"; exit 1)
+  echo $_stderr | grep -q "Fatal" && { 1>&2 echo "Fatal: Server '$uri' not found"; exit 1 }
 
   if [ -z "$isdir" ]; then
     myecho "Downloading file : $(basename "$uri")"
@@ -232,7 +232,8 @@ getrepo() {
        $as_haut [ -d "$DSAS_HAUT/$dir/repodata" ] || $as_haut mkdir -m 770 -p "$DSAS_HAUT/$dir/repodata"
 
        _stderr=$(2>&1 $chroot_lftp -c "$opt get -e '$uri/repodata/repomd.xml' -o '$DSAS_HAUT/$dir/repodata/repomd.xml'")
-       echo $_stderr | grep -q "Fatal" && (1>&2 echo "Fatal: Server '$uri' not found"; exit 1)
+       echo $_stderr | grep -q "Fatal" && { 1>&2 echo "Fatal: Server '$uri' not found"; exit 1; }
+       echo $_stderr | grep -q "failed" && { 1>&2 echo "Fatal: file '$uri/repodata/repomd.xml' not found"; exit 1; }
 
        [ "$type" == "rpm" ] || $chroot_lftp -c "$opt get -e '$uri/repodata/repomd.xml.asc' -o '$DSAS_HAUT/$dir/repodata/repomd.xml.asc'" >& /dev/null
 
