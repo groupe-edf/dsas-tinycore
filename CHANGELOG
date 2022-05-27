@@ -5,6 +5,7 @@ Version 1.1.1 (XXXXXXX)
 - Allow tasks to be killed 
 - Use DisplayLog in task logs to allow auto log update
 - Ignore undesired debian architecture files for fewer unwanted download errors
+- Fix inability to modify a task introduced in 1.1.0
 
 Version 1.1.0 (23 May 2022)
 - Update openssl (1.1.1n -> 1.1.1o)
