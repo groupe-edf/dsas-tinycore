@@ -144,7 +144,7 @@ getdirectory() {
 
   # Test whether we have a file or a directory, and fail if server not found 
   _stderr=$(2>&1 $chroot_lftp -c "$opt open '$uri'") && isdir="1"
-  echo $_stderr | grep -q "Fatal" && { 1>&2 echo "Fatal: Server '$uri' not found"; exit 1 }
+  echo $_stderr | grep -q "Fatal" && { 1>&2 echo "Fatal: Server '$uri' not found"; exit 1; }
 
   if [ -z "$isdir" ]; then
     myecho "Downloading file : $(basename "$uri")"
