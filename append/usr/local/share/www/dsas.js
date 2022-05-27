@@ -2690,13 +2690,15 @@ class DisplayLogs {
   }
 
   appendlog(logs, tab = 0) {
-    this.logs[tab] = this.logs[tab]  + logs;
-    if (this.tab === tab && (this.curItem + Math.ceil(this.holder.offsetHeight / this.height) >= this.nitems))  {
-      this.nitems = this.numberOfItems();
-      this.refreshWindow();
-      this.holder.scrollTop = this.holder.scrollHeight - this.holder.offsetHeight;
-    } else if (this.tab == tab)
-      this.nitems = this.numberOfItems();
+    if (logs) {
+      this.logs[tab] = this.logs[tab]  + logs;
+      if (this.tab === tab && (this.curItem + Math.ceil(this.holder.offsetHeight / this.height) >= this.nitems))  {
+        this.nitems = this.numberOfItems();
+        this.refreshWindow();
+        this.holder.scrollTop = this.holder.scrollHeight - this.holder.offsetHeight;
+      } else if (this.tab == tab)
+        this.nitems = this.numberOfItems();
+    }
   }
 
   search(str="") {
