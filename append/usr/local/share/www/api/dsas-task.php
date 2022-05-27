@@ -216,41 +216,40 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
 
         if ($errors == []) {
-          $addtask = true;
+          $nt = 0;
           foreach ($dsas->tasks->task as $task) {
-            if ($task->name == $name && $task->id == $id) {
-              $addtask = false;
+            if ($task->id == $id) {
               if ($directory != $task->directory) {
                 dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "haut", "mv", "-n", _DSAS_HAUT . "/" . $task->directory, _DSAS_HAUT . "/" . $directory]);
                 dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "verif", "mv", "-n", _DSAS_BAS . "/" . $task->directory, _DSAS_BAS . "/" . $directory]);
                 dsas_exec(["sudo", "sudo", "-u", "haut", "mv", "-n", _DSAS_HAUT . "/" . $task->directory, _DSAS_HAUT . "/" . $directory]);
                 dsas_exec(["sudo", "sudo", "-u", "verif", "mv", "-n", _DSAS_BAS . "/" . $task->directory, _DSAS_BAS . "/" . $directory]);
               }
-              while ($task->cert[0])
-                unset($task->cert[0]);
-              unset($task->arch);
+              while ($dsas->tasks[0]->task[$nt]->cert[0])
+                unset($dsas->tasks[0]->task[$nt]->cert[0]);
+              unset($dsas->tasks[0]->task[$nt]->archs[0]);
               break;
             }
+            $nt++;
           }
-
-          if ($addtask) {
-            $task = $dsas->tasks->addChild("task");
-            $task->id = dsasid();
-            $task->name = $name;
+          if ($nt === $dsas->tasks->task->count()) {
+            $task = $dsas->tasks[0]->addChild("task");
+            $task->id[0] = dsasid();
+            $task->name[0] = $name;
           }
-          $task->directory = $directory;
-          $task->uri =  $uri;
-          $task->type = $type;
-          $task->run = $run;
-          $task->ca->fingerprint = $ca_finger;
-          $task->ca->name = $ca_name;
+          $dsas->tasks[0]->task[$nt]->directory[0] = $directory;
+          $dsas->tasks[0]->task[$nt]->uri[0] =  $uri;
+          $dsas->tasks[0]->task[$nt]->type[0] = $type;
+          $dsas->tasks[0]->task[$nt]->run[0] = $run;
+          $dsas->tasks[0]->task[$nt]->ca[0]->fingerprint[0] = $ca_finger;
+          $dsas->tasks[0]->task[$nt]->ca[0]->name[0] = $ca_name;
           foreach ($certs as $cert) {
-            $newcert = $task->addChild("cert");
-            $newcert->name = $cert["name"];
-            $newcert->fingerprint = $cert["fingerprint"];
+            $newcert = $dsas->tasks[0]->task[$nt]->addChild("cert");
+            $newcert->name[0] = $cert["name"];
+            $newcert->fingerprint[0] = $cert["fingerprint"];
           }
           if ($type === "deb") {
-            $newarch = $task->addChild("archs");
+            $newarch = $dsas->tasks[0]->task[$nt]->addChild("archs");
             foreach ($data["archs"] as $arch) {
               switch ($arch["arch"]){
                 case "source":

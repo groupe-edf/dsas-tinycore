@@ -1717,7 +1717,7 @@ function dsas_task_modify(id) {
           } else
             body = body + ");";
 
-          modal_task("dsas_modify_task(task.name, task.id);", task.ca.fingerprint, body);
+          modal_task("dsas_modify_task('" + task.name + "','" + task.id + "');", task.ca.fingerprint, body);
           document.getElementById('TaskName').value = print_obj(task.name);
           document.getElementById('TaskDirectory').value = print_obj(task.directory);
           document.getElementById('TaskURI').value = print_obj(task.uri);
