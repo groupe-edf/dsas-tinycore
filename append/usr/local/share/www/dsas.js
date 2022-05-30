@@ -1093,6 +1093,20 @@ function dsas_display_service(what = "all"){
        document.getElementById("user_haut").value = print_obj(serv.ssh.user_haut);
        document.getElementById("user_haut").disabled = (serv.ssh.active !== "true");
      }
+     if (what === "radius" || what === "all") {
+       if (empty_obj(serv.radius)) {
+         // This allow me to not have to artificially upgrade the XML file version
+         document.getElementById("radius").checked = false;
+         document.getElementById("radius_server").disabled = true;
+         document.getElementById("radius_secret").disabled = true;
+       } else {
+         document.getElementById("radius").checked = (serv.radius.active === "true");
+         document.getElementById("radius_server").value = print_obj(serv.radius.server);
+         document.getElementById("radius_server").disabled = (serv.radius.active !== "true");
+         document.getElementById("radius_secret").value = print_obj(serv.radius.secret);
+         document.getElementById("radius_secret").disabled = (serv.radius.active !== "true");
+       }
+     }
      if (what === "syslog" || what === "all") {
        document.getElementById("syslog").checked = (serv.syslog.active === "true");
        document.getElementById("syslog_server").value = print_obj(serv.syslog.server);
@@ -1140,6 +1154,9 @@ function dsas_change_service(what) {
      document.getElementById("user_tc").disabled = 
        document.getElementById("user_bas").disabled = 
        document.getElementById("user_haut").disabled =  ! document.getElementById("ssh").checked;
+  } else if (what === "radius") {
+     document.getElementById("radius_server").disabled = 
+       document.getElementById("radius_secret").disabled =  ! document.getElementById("radius").checked;
   } else if (what === "syslog") {
     document.getElementById("syslog_server").disabled = ! document.getElementById("syslog").checked;
   } else if (what === "ntp") {
@@ -1162,6 +1179,11 @@ function dsas_change_service(what) {
        serv.ssh.user_tc = document.getElementById("user_tc").value;
        serv.ssh.user_bas = document.getElementById("user_bas").value;
        serv.ssh.user_haut = document.getElementById("user_haut").value;
+       if (! serv.radius)
+         serv.radius = {};
+       serv.radius.active = (document.getElementById("radius").checked ? "true" : "false");
+       serv.radius.server = document.getElementById("radius_server").value;
+       serv.radius.secret = document.getElementById("radius_secret").value;
        serv.syslog.active = (document.getElementById("syslog").checked ? "true" : "false");
        serv.syslog.server = document.getElementById("syslog_server").value;
        serv.ntp.active = (document.getElementById("ntp").checked ? "true" : "false");

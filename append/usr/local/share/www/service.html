@@ -45,6 +45,7 @@
             <input type="text" id="user_haut" value="" class="form-control">
             <div class="invalid-feedback" id="feed_user_haut"></div>
           </div>
+          <div class="col-12"><hr /></div>
           <div class="col-12">
             <input class="form-check-input" type="checkbox" value="" id="snmp" onchange="dsas_change_service('snmp');">
             <label class="form-check-label" for="snmp" data-i18n>SNMPv3</label>
@@ -100,6 +101,7 @@
             <input type="text" id="syslog_server" value="" class="form-control">
             <div class="invalid-feedback" id="feed_syslog_server"></div>
           </div>
+          <div class="col-12"><hr /></div>
           <div class="col-12">
             <input class="form-check-input" type="checkbox" value="" id="ntp" onchange="dsas_change_service('ntp');">
             <label class="form-check-label" for="ntp" data-i18n>NTP service for the host on 'bas' interface</label>
@@ -109,6 +111,7 @@
             <textarea name="ntp_pool" rows="3" id="ntp_pool" value="" class="form-control"></textarea>
             <div class="invalid-feedback" id="feed_ntp_pool"></div>
           </div>
+          <div class="col-12"><hr /></div>
           <div class="col-12">
             <input class="form-check-input" type="checkbox" value="" id="antivirus" onchange="dsas_change_service('antivirus');">
             <label class="form-check-label" for="antivirus" data-i18n>Antivirus</label>
@@ -118,9 +121,25 @@
             <input type="text" id="antivirus_uri" value="" class="form-control">
             <div class="invalid-feedback" id="feed_antivirus_uri"></div>
           </div>
+          <div class="col-12"><hr /></div>
           <div class="col-12">
             <input class="form-check-input" type="checkbox" value="" id="repo" onchange="dsas_change_service('repo');">
             <label class="form-check-label" for="syslog" data-i18n>HTTPS repository</label>
+          </div>
+          <div class="col-12"><hr /></div>
+          <div class="col-12">
+            <input class="form-check-input" type="checkbox" value="" id="radius" onchange="dsas_change_service('radius');">
+            <label class="form-check-label" for="radius" data-i18n>Radius client active</label>
+          </div>
+          <div class="col-12">
+            <label for="radius_server" data-i18n>Radius server</label>
+            <input type="text" id="radius_server" value="" class="form-control">
+            <div class="invalid-feedback" id="feed_radius_server"></div>
+          </div>
+          <div class="col-12">
+            <label for="radius_secret" data-i18n>Radius shared secret</label>
+            <input type="text" id="radius_secret" value="" class="form-control">
+            <div class="invalid-feedback" id="feed_radius_secret"></div>
           </div>
         </div>
       </div>

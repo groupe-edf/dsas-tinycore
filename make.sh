@@ -22,6 +22,7 @@ arch="32"
 rebuild=0
 forcedownload=0
 keep=0
+testcode=0
 cmd=""
 pkgs=""
 while [ "$#" -gt 0 ]; do
@@ -30,6 +31,7 @@ while [ "$#" -gt 0 ]; do
     -r|--rebuild) rebuild=1;  ;;
     -f|--download) forcedownload=1; ;;
     -k|--keep) keep=1; ;;
+    -t|--test) testcode=1; ;;
     -32) arch="32"; ;;
     -64) arch="64"; ;;
     -?|-h|--help)
@@ -40,10 +42,12 @@ while [ "$#" -gt 0 ]; do
       echo "     docker          Build a docker distribution package"
       echo "     clean           Remove the distribution files"
       echo "     realclean       Remove all files, leaving a clean build tree"
+      echo "     check           Run test code to test correct function of checkfiles" 
       echo "     iso             Build the DSAS ISO file. This the default command"
       echo "Valid options are"
       echo "     -r|--rebuild    Force the rebuild of source packages"
       echo "     -f|--download   Force the source packages to be re-downloaded"
+      echo "     -t|--test       Include test code in DSAS build"
       echo "     -k|--keep       Keep intermediate build files for debugging"
       echo "     -32             Force the build for 32 bit architectures"
       echo "     -64             Force the build for 64 bit architectures"
@@ -439,6 +443,10 @@ realclean)
   rm -fr $work
   exit 0
   ;;
+check)
+  error "Self test are not written yet"
+  exit 1
+  ;;
 build)
   shift
   extract=$build
@@ -526,10 +534,16 @@ docker)
   install_tcz Linux-PAM
   install_tcz net-snmp
   install_tcz lftp
+  install_tcz libpam-radius-auth
+
+  if [ "$testcode" == "1" ]; then
+    install_tcz freeradius
+    install_tcz rsyslog
+  fi
+
   # Copy the pre-extracted packages to work dir. This must be after packages
   # are installed to allow for files to be overwritten. Run as root 
   # and correct the ownership of files 
-
   msg append dsas files
   rsync -rlptv $append/ $extract/
   mkdir -p $extract/home/tc

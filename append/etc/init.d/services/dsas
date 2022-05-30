@@ -7,9 +7,10 @@ NORMAL="$(echo -e '\033[1;39m')"
 MNT=/mnt
 
 # The version of the DSAS xml file supported by this version
-DSAS_XML_VERSION="0.14"
+DSAS_XML_VERSION="0.15"
 
 VAR=/var/dsas
+RADIUS_SERVER="/etc/raddb/server"
 
 as_tc="sudo -E -u tc"
 as_bas="sudo -E -u bas"
@@ -801,6 +802,23 @@ stop_ntp(){
   pkill ntpd
 }
 
+start_radius(){
+  mkdir -p "$(dirname "$RADIUS_SERVER")"
+  radius=$(xmllint --xpath "string(dsas/config/radius/active)" $VAR/dsas_conf.xml)
+  server=$(xmllint --xpath "string(dsas/config/radius/server)" $VAR/dsas_conf.xml)
+  secret=$(xmllint --xpath "string(dsas/config/radius/secret)" $VAR/dsas_conf.xml)
+
+  [ "$radius" != "true" ] && return
+  [ -z "$server" ] && return
+  [ -z "$secret" ] && return
+  echo "# server[:port]                   shared_secret                 timeout(s)    source_ip      vrf" > $RADIUS_SERVER
+  printf "%-32s %-32s %-4s" "$server" "$secret" "3" >> $RADIUS_SERVER
+}
+
+stop_radius(){
+  /bin/rm -f "$RADIUS_SERVER"
+}
+
 start_antivirus(){
   antivirus=$(xmllint --xpath "string(dsas/config/antivirus/active)" $VAR/dsas_conf.xml)
   if [ "$antivirus" == "true" ]; then
@@ -986,6 +1004,10 @@ check_xml_version(){
     sed -i -e "s:deb</type>:deb</type><archs><arch>all</arch><arch>amd64</arch></archs>:g"  $VAR/dsas_conf.xml
   fi
 
+  if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "15" ]; then
+    sed -i -e "s:</snmp>:</snmp>\n    <radius>\n      <active>false</active>\n      <server></server>\n      <secret></secret>\n    </radius>:g" $VAR/dsas_conf.xml
+  fi
+
   # Now that the XML is upgraded, save the new version number
   if [ "$_ver" != "$DSAS_XML_VERSION" ]; then
     echo "XML version updated"
@@ -1034,6 +1056,7 @@ case "${1}" in
       start_web_admin
       start_repo
       start_ntp
+      start_radius
       start_antivirus
       start_snmp
       # Put root crontab file in place so it only runs on the machine bas
@@ -1054,6 +1077,7 @@ case "${1}" in
     if [ "$TYP" == "bas" ]; then
       stop_snmp
       stop_antivirus
+      stop_radius
       stop_ntp
       stop_repo
       stop_web_admin
@@ -1109,6 +1133,8 @@ case "${1}" in
       start_snmp
       stop_antivirus
       start_antivirus
+      stop_radius
+      start_radius
       stop_ntp
       start_ntp
       stop_repo

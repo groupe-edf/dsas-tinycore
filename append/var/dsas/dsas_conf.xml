@@ -1,5 +1,5 @@
 <dsas>
-  <version>0.14</version>
+  <version>0.15</version>
   <config>
     <users>
       <hash>sha512</hash>
@@ -81,6 +81,11 @@
       <passpriv></passpriv>
       <privencrypt>AES</privencrypt>
     </snmp>
+    <radius>
+      <active>false</active>
+      <server></server>
+      <secret></secret>
+    </radius>
   </config>
   <tasks>
   </tasks>
