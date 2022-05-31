@@ -1,14 +1,5 @@
 #!/bin/sh
 
-# if root rerun as user tc
-if [ $(id -u) == 0 ]; then
-  sudo -E -u tc $0 $*
-  exit $?
-fi
-
-# if not user tc, quit
-[ "$(whoami)" != "tc" ] && { 1>&2 echo "$0: Must be run as user 'tc'"; exit 1; }
-
 if [ -f "$(dirname $0)/dsas_common.sh" ]; then
   . $(dirname $0)/dsas_common.sh
 else
@@ -16,60 +7,87 @@ else
   exit -1
 fi
 
-VAR="/var/dsas"
-LAST=$LOG/syslog.haut
 HLOG="/var/log/messages"
 HLOG0="/var/log/messages.0"
+
+# Must be rerun as user "haut" 
+if [ "$(whoami)" != "haut" ]; then
+  [ "$#" -ne 0 ] && { 1>&2 echo "$0: No arguments permitted"; exit 1; }
+  # Get the status of the last run
+  LAST=$LOG/syslog.haut
+  HLOGSZ=0
+  HLOGH=""
+  HLOGSZ0=0
+  HLOGH0=""
+  if [ -f "$LAST" ]; then
+    HLOGSZ=$(head -1 $LAST | cut -d' ' -f2)
+    [ -z "$HLOGSZ" ] && HLOGSZ=0
+    HLOGH=$(head -1 $LAST | cut -d' ' -f3)
+    [ -z "$HLOGH" ] && HLOGH=""
+    HLOGSZ0=$(grep $HLOG0 $LAST | cut -d' ' -f2)
+    [ -z "$HLOGSZ0" ] && HLOGSZ0=0
+    HLOGH0=$(grep $HLOG0 $LAST | cut -d' ' -f3)
+    [ -z "$HLOGH0" ] && HLOGH0=""
+  fi
+  if [ $(id -u) == 0 ]; then
+    sudo -E -u haut $0 $HLOGSZ $HLOGSZ0 $HLOGH $HLOGH0 > $LAST.new
+  elif [ "$(whoami)" == "tc" ]; then
+    sudo sudo -E -u haut $0 $HLOGSZ $HLOGSZ0 $HLOGH $HLOGH0 > $LAST.new
+  else
+    1>&2 echo "$0: Must be run as user 'haut'"
+    false
+  fi
+  status=$?
+  [ "$status" == "0" ] && mv $LAST.new $LAST
+  [ "$status" == "0" ] || rm $LAST.new 
+  exit $status
+fi
+
+HLOGSZ=$1
+[ "$HLOGSZ" != "0" ] && HLOGH=$3
+HLOGSZ0=$2
+[ "$HLOGSZ0" != "0" ] && HLOGH0=$4
 
 syslog=$(xmllint --xpath "string(dsas/config/syslog/active)" $VAR/dsas_conf.xml)
 server=$(xmllint --xpath "string(dsas/config/syslog/server)" $VAR/dsas_conf.xml)
 [ "$syslog" != "true" ] && exit 0 
 [ -z "$server" ] && exit 0 
 
-# Get the status of the last run
-HLOGSZ=0
-HLOGH=""
-HLOGSZ0=0
-HLOGH0=""
-if [ -f "$LAST" ]; then
-  HLOGSZ=$(grep $HLOG $LAST | cut -d' ' -f2)
-  HLOGH=$(grep $HLOG $LAST | cut -d' ' -f3)
-  HLOGSZ0=$(grep $HLOG0 $LAST | cut -d' ' -f2)
-  HLOGH0=$(grep $HLOG0 $LAST | cut -d' ' -f3)T
-fi
-
 # Get /var/log/messages from the machine haut
 tempdir=$(mktemp -d)
-sudo sudo -u haut scp tc@$INTERCO_HAUT:$HLOG $tempdir/$(basename $HLOG)
+scp tc@$INTERCO_HAUT:$HLOG $tempdir/$(basename $HLOG)
 
-# Is it different ? 
-if [ "$(sha256sum $tempdir/$(basename $HLOG) | cut -d' ' -f1)" != "$HLOGH" ]; then
+# Is it different ?
+NHLOGH=$(sha256sum $tempdir/$(basename $HLOG) | cut -d' ' -f1) 
+if [ "$NHLOGH" != "$HLOGH" ]; then
   # Fetch $HLOG0 as well
-  
-  if sudo sudo -u haut scp tc@$INTERCO_HAUT:$HLOG0 $tempdir/$(basename $HLOG0) && \
-      [ "$(sha256sum $tempdir/$(basename $HLOG0) | cut -d' ' -f1)" != "$HLOGH0" ]; then
-    # The machine haut has rotated its logs
-    if [ "$(sha256sum $tempdir/$(basename $HLOG0) | cut -d' ' -f1)" != "$HLOGH" ]; then
-      # There are lines in $HLOG0 to treat
-      dd status=none bs=1 skip=$HLOGSZ0 if=$tempdir/$(basename $HLOG0) | while read -r line; do
-        echo $line | nc -u $server 514 
-      done
+  1>&2 echo "File $HLOG different ${NHLOGH:0:10}.. (${HLOGH:0:10}..)"
+  if scp tc@$INTERCO_HAUT:$HLOG0 $tempdir/$(basename $HLOG0); then
+    NHLOGH0=$(sha256sum $tempdir/$(basename $HLOG0) | cut -d' ' -f1) 
+    if [ "$NHLOGH0" != "$HLOGH0" ]; then
+      1>&2 echo "File $HLOG0 different ${NHLOGH0:0:10}.. (${HLOGH0:0:10}..)"
+      # The machine haut has rotated its logs
+      if [ "$(sha256sum $tempdir/$(basename $HLOG0) | cut -d' ' -f1)" != "$HLOGH" ]; then
+        # There are lines in $HLOG0 to treat
+        dd status=none bs=1 skip=$HLOGSZ0 if=$tempdir/$(basename $HLOG0) | while read -r line; do
+          echo $line
+        done | nc -w 1 -u $server 514
+      fi
+      HLOGH0=$NLOGH0
+      HLOGSZ0="$(stat -c%s $tempdir/$(basename $HLOG0))"
+      HLOGSZ=0
     fi
-    HLOGH0="$(sha256sum $tempdir/$(basename $HLOG0) | cut -d' ' -f1)"
-    HLOGSZ0="$(stat -c%s $tempdir/$(basename $HLOG0))"
-    HLOGSZ=0
-
   fi
   # Treat the lines in $HLOG
   dd status=none bs=1 skip=$HLOGSZ if=$tempdir/$(basename $HLOG) | while read -r line; do
-    echo $line | nc -u $server 514
-  done
+    echo $line 
+  done | nc -w 1 -u $server 514
 
   # Update the status file
   HLOGH="$(sha256sum $tempdir/$(basename $HLOG) | cut -d' ' -f1)"
   HLOGSZ="$(stat -c%s $tempdir/$(basename $HLOG))"
-  echo "$HLOG $HLOGSZ $HLOGH" > $LAST
-  echo "$HLOG0 $HLOGSZ0 $HLOGH0" >> $LAST
+  echo "$HLOG $HLOGSZ $HLOGH"
+  echo "$HLOG0 $HLOGSZ0 $HLOGH0"
 fi
 
 # Remove temporary files
