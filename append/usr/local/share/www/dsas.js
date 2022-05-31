@@ -1094,17 +1094,20 @@ function dsas_display_service(what = "all"){
        document.getElementById("user_haut").disabled = (serv.ssh.active !== "true");
      }
      if (what === "radius" || what === "all") {
-       if (empty_obj(serv.radius)) {
-         // This allow me to not have to artificially upgrade the XML file version
-         document.getElementById("radius").checked = false;
-         document.getElementById("radius_server").disabled = true;
-         document.getElementById("radius_secret").disabled = true;
-       } else {
-         document.getElementById("radius").checked = (serv.radius.active === "true");
-         document.getElementById("radius_server").value = print_obj(serv.radius.server);
-         document.getElementById("radius_server").disabled = (serv.radius.active !== "true");
-         document.getElementById("radius_secret").value = print_obj(serv.radius.secret);
-         document.getElementById("radius_secret").disabled = (serv.radius.active !== "true");
+       if (! empty_obj(document.getElementById("radius"))) {
+         // FIXME : The test above allows the radius code to be commented in service.htmls
+         if (empty_obj(serv.radius)) {
+           // This allow me to not have to artificially upgrade the XML file version
+           document.getElementById("radius").checked = false;
+           document.getElementById("radius_server").disabled = true;
+           document.getElementById("radius_secret").disabled = true;
+         } else {
+           document.getElementById("radius").checked = (serv.radius.active === "true");
+           document.getElementById("radius_server").value = print_obj(serv.radius.server);
+           document.getElementById("radius_server").disabled = (serv.radius.active !== "true");
+           document.getElementById("radius_secret").value = print_obj(serv.radius.secret);
+           document.getElementById("radius_secret").disabled = (serv.radius.active !== "true");
+         }
        }
      }
      if (what === "syslog" || what === "all") {
