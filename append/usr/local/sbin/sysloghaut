@@ -57,6 +57,46 @@ server=$(xmllint --xpath "string(dsas/config/syslog/server)" $VAR/dsas_conf.xml)
 tempdir=$(mktemp -d)
 scp tc@$INTERCO_HAUT:$HLOG $tempdir/$(basename $HLOG)
 
+parse_pri(){
+  # Recovers the syslog PRI field from the linux syslog and appends the
+  # RFC3164 conforming PRI field to the syslog message. The HEADER and
+  # BODY of RFC3164 are left as is
+  pri=$(echo $* | cut -d' ' -f5)
+  fac=$(echo $pri | cut -d. -f1)
+  sev=$(echo $pri | cut -d. -f2)
+  case $fac in
+    "kern") ret=0 ;;
+    "user") ret=1 ;;
+    "mail") ret=2 ;;
+    "daemon") ret=3 ;;
+    "auth") ret=4 ;;
+    "syslog") ret=5 ;;
+    "lpr") ret=6 ;;
+    "news") ret=7 ;;
+    "uucp") ret=8 ;;
+    "cron") ret=9 ;;
+    "authpriv") ret=10 ;;
+    "ftp") ret=11 ;;
+    "ntp") ret=12 ;;
+    "security") ret=13 ;;
+    "console") ret=14 ;;
+    "solaris-cron") ret=15 ;;
+    *) ret=16 ;;
+  esac
+  ret=$(($ret * 8))
+  case $sev in
+    "emerg"|"panic") : ;;
+    "alert") ret=$(($ret + 1)) ;;
+    "crit") ret=$(($ret + 2))  ;;
+    "err"|"error") ret=$(($ret + 3))  ;;
+    "warn"|"warning") ret=$(($ret + 4))  ;;
+    "notice") ret=$(($ret + 5))  ;;
+    "info") ret=$(($ret + 6)) ;;
+    *) ret=$(($ret + 7)) ;;
+  esac
+  echo "<${ret}>$*"
+}
+
 # Is it different ?
 NHLOGH=$(sha256sum $tempdir/$(basename $HLOG) | cut -d' ' -f1) 
 if [ "$NHLOGH" != "$HLOGH" ]; then
@@ -70,7 +110,7 @@ if [ "$NHLOGH" != "$HLOGH" ]; then
       if [ "$(sha256sum $tempdir/$(basename $HLOG0) | cut -d' ' -f1)" != "$HLOGH" ]; then
         # There are lines in $HLOG0 to treat
         dd status=none bs=1 skip=$HLOGSZ0 if=$tempdir/$(basename $HLOG0) | while read -r line; do
-          echo $line
+          parse_pri $line
         done | nc -w 1 -u $server 514
       fi
       HLOGH0=$NLOGH0
@@ -80,7 +120,7 @@ if [ "$NHLOGH" != "$HLOGH" ]; then
   fi
   # Treat the lines in $HLOG
   dd status=none bs=1 skip=$HLOGSZ if=$tempdir/$(basename $HLOG) | while read -r line; do
-    echo $line 
+    parse_pri $line 
   done | nc -w 1 -u $server 514
 
   # Update the status file
