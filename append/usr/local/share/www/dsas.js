@@ -256,6 +256,7 @@ function dsas_init_loggedin(){
         e.getModifierState("CapsLock") ? _("Caps Lock is on") : "");
       document.getElementById("inp_pass").setAttribute("class", (
         e.getModifierState("CapsLock") ? "form-control is-invalid" : "form-control"));
+      document.getElementById("inp_user").setAttribute("class", "form-control");
     });  
 
   uri  = new URL("api/login.php", window.location.origin);
