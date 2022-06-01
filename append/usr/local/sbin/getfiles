@@ -59,7 +59,7 @@ lftp_ca_options() {
   opt="lcd $DSAS_HAUT;"
 
   if [ "$TYP" == "haut" ]; then
-    opt="$opt set sftp:auto-confirm true; set net:timeout 30; set net:max-retries 3;" 
+    opt="$opt set sftp:auto-confirm true; set net:timeout 60; set net:max-retries 3;" 
     if [ "$clamav" == "1" ]; then
       # Set ClamAV User-Agent including our ClamAV client UUID to get around anti DDOS protections
       uuid=$(xmllint --xpath "string(dsas/config/antivirus/uuid)" "$CONF")
