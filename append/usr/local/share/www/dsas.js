@@ -250,6 +250,14 @@ function fail_loggedin(status){
 
 function dsas_init_loggedin(){
   var uri;
+
+  document.getElementById("inp_pass").addEventListener("keyup", e => {
+      document.getElementById("feed_pass").innerHTML = (
+        e.getModifierState("CapsLock") ? _("Caps Lock is on") : "");
+      document.getElementById("inp_pass").setAttribute("class", (
+        e.getModifierState("CapsLock") ? "form-control is-invalid" : "form-control"));
+    });  
+
   uri  = new URL("api/login.php", window.location.origin);
   uri.search = new URLSearchParams({admin : true });
   fetch(uri).then(response => {
