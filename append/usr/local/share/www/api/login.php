@@ -31,7 +31,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         echo "Ok";
     } else {
         // Need to delay return if inactive or unrecognised user, to simulate the delay from PAM
-        if (dsas_user_active($username))
+        if (! dsas_user_active($username))
           sleep(3);
         syslog(LOG_WARNING, "Failed DSAS login attempt from " . $cnxstr);
         die(header("HTTP/1.0 403 Forbidden"));
