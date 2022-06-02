@@ -235,7 +235,7 @@ function dsas_loggedin(update_timeout = true, is_admin = true){
             // Check if logged in once every 15 seconds, but don't update the timeout
             timeout_login = setTimeout(dsas_loggedin, 15000, false, is_admin);
         }
-    }).catch(function(){
+    }).catch(() => {
         modal_message(_("You are not connected. Click 'Ok' to reconnect."),
             "window.location='login.html'");
     });
@@ -308,7 +308,7 @@ function dsas_login(){
         } else
             return Promise.reject({status: response.status, 
                 statusText: response.statusText});
-    }).catch(function() {
+    }).catch(() => {
         document.getElementById("inp_user").setAttribute("class", "form-control is-invalid");
         document.getElementById("inp_pass").setAttribute("class", "form-control is-invalid");
         document.getElementById("feed_pass").innerHTML = _("Username or password invalid.");
@@ -864,7 +864,7 @@ function dsas_renew_cert_real(){
         else
             return Promise.reject({status: response.status, 
                 statusText: response.statusText});
-    }).then(function() {
+    }).then(() => {
         var formData = new FormData;
         formData.append("op", "renew");
         for (const fld of ["countryName", "stateOrProvinceName", "localityName", 
@@ -1541,9 +1541,9 @@ function dsas_display_tasks(what = "all") {
             var body = "";
             clearTimeout(timeout_status);
             if (tasks.task) {
-                for (task of (tasks.task.constructor === Object ? [tasks.task] : tasks.task)) { 
-                    tid = document.getElementById("task" + i);
-                    cls = (task.status == "Running" ? "text-primary" : (task.last == "never" ? "text-info" : (task.status == "Failed" ? "text-danger" : "text-success")));
+                for (const task of (tasks.task.constructor === Object ? [tasks.task] : tasks.task)) { 
+                    var tid = document.getElementById("task" + i);
+                    var cls = (task.status == "Running" ? "text-primary" : (task.last == "never" ? "text-info" : (task.status == "Failed" ? "text-danger" : "text-success")));
                     body = body +
               "<p class=\"my-0 " + cls + "\"><a class=\"text-toggle\" data-bs-toggle=\"collapse\" href=\"#task" + i + "\" role=\"button\"" +
               "aria-controls=\"task" + i + "\" aria-expanded=\"" + (tid && what === "status" ? (tid.className.includes("show") ? "true" : "false" ) : "false") +"\">" +
@@ -1589,7 +1589,7 @@ function empty_obj(obj) {
 function date_to_locale(d){
     if (d == "never")
         return _("never");
-    c = new Intl.DateTimeFormat(ml.currentLanguage, {
+    var c = new Intl.DateTimeFormat(ml.currentLanguage, {
         year : "numeric",
         month : "short",
         day : "numeric",
@@ -1601,7 +1601,7 @@ function date_to_locale(d){
            d.substr(8,2) + ":" + d.substr(10,2) + ":" + d.substr(12,2) + "Z"));
     } else {
         var _r = [];
-        for (_d of d)
+        for (var _d of d)
             _r.push(c.format(new Date(_d.substr(0,4) + "-" + _d.substr(4,2) + "-" + _d.substr(6,2) + "T" + 
            _d.substr(8,2) + ":" + _d.substr(10,2) + ":" + _d.substr(12,2) + "Z")));
         return _r;
@@ -1634,7 +1634,7 @@ function task_body(task) {
         if (task.cert.constructor === Object) {
             body = body + "<p class=\"my-0\">" + task.cert.name + "</p>";
         } else {
-            for (cert of task.cert) {
+            for (const cert of task.cert) {
                 body = body + "<p class=\"my-0\">" + cert.name + "</p>";
             }
         }
@@ -1716,7 +1716,7 @@ function dsas_task_new() {
     document.getElementById("TaskDirectory").value = "";
     document.getElementById("TaskURI").value = "";
 
-    for (opt of document.getElementsByTagName("option"))
+    for (var opt of document.getElementsByTagName("option"))
         if (opt.id === "TaskTypeNull" || opt.id === "TaskRunNull" || opt.id === "TaskAddCert0" || opt.id === "TaskCA_Base")
             opt.selected = true;
         else
@@ -1733,13 +1733,13 @@ function dsas_task_modify(id) {
                 statusText: response.statusText});
     }).then(tasks => {
         if (tasks.task) {
-            for (task of (tasks.task.constructor === Object ? [tasks.task] : tasks.task)) {
+            for (const task of (tasks.task.constructor === Object ? [tasks.task] : tasks.task)) {
                 if (id === task.id) {
                     var body = "dsas_add_task_arch(";
                     if (task.type === "deb") {
                         body = body + "[";
                         var first = true;
-                        for (_arch of (task.archs.arch.constructor === Object ? [task.archs.arch] : task.archs.arch))
+                        for (const _arch of (task.archs.arch.constructor === Object ? [task.archs.arch] : task.archs.arch))
                             if (first) {
                                 first = false;
                                 body = body  + "'" + _arch + "'";
@@ -1754,7 +1754,7 @@ function dsas_task_modify(id) {
                     document.getElementById("TaskDirectory").value = print_obj(task.directory);
                     document.getElementById("TaskURI").value = print_obj(task.uri);
 
-                    for (opt of document.getElementsByTagName("option")) {
+                    for (var opt of document.getElementsByTagName("option")) {
                         if (opt.id.substr(0,8) === "TaskType") {
                             if (opt.value === task.type)
                                 opt.selected = true;
@@ -1779,7 +1779,7 @@ function dsas_task_modify(id) {
               document.getElementById("TaskCert").innerHTML +"<dsas-task-cert name=\"" + task.cert.name +
               "\" fingerprint=\"" + task.cert.fingerprint + "\"></dsas-task-cert>";
                     } else {
-                        for (cert of task.cert) {
+                        for (const cert of task.cert) {
                             document.getElementById("TaskCert").innerHTML =  
                 document.getElementById("TaskCert").innerHTML +"<dsas-task-cert name=\"" + cert.name +
                 "\" fingerprint=\"" + cert.fingerprint + "\"></dsas-task-cert>";
@@ -1796,7 +1796,7 @@ function dsas_task_modify(id) {
 }
 
 function has_arch(archs, arch){
-    for (_arch of (archs.constructor === Object ? [archs] : archs))
+    for (const _arch of (archs.constructor === Object ? [archs] : archs))
         if (_arch === arch) return true;
     return false;
 }
@@ -1846,7 +1846,7 @@ function dsas_task_info(id, name, len = 0) {
             return Promise.reject({status: response.status, 
                 statusText: response.statusText});
     }).then(text => {
-        info = JSON.parse(text);
+        var info = JSON.parse(text);
         if (len === 0) {
             modal_info(name, "<span id=\"logwind\"></span>");
             DSASLogs = new DisplayLogs("logwind", info);
@@ -1865,7 +1865,7 @@ function dsas_task_info(id, name, len = 0) {
 
 function dsas_add_task_arch(archs = []) {
     var type = "";
-    for (opt of document.getElementsByTagName("option"))
+    for (const opt of document.getElementsByTagName("option"))
         if (opt.id.substr(0,8) === "TaskType" && opt.selected)
             type = opt.value;
  
@@ -1929,7 +1929,7 @@ function dsas_add_task_cert() {
     var taskCert = document.getElementById("TaskCert");
     var name = "";
     var finger = "";
-    for (opt of document.getElementsByTagName("option")) {
+    for (const opt of document.getElementsByTagName("option")) {
         if (opt.id.substr(0,7) === "TaskRun" || opt.id.substr(0,8) === "TaskType" || opt.id.substr(0,6) === "TaskCA")
             continue;
         if (opt.selected) {
@@ -1939,8 +1939,8 @@ function dsas_add_task_cert() {
         }
     }
     if (finger && name) {
-        add = true;
-        for (line of document.getElementsByTagName("dsas-task-cert")) {
+        var add = true;
+        for (const line of document.getElementsByTagName("dsas-task-cert")) {
             if(line.getAttribute("fingerprint") == finger) {
                 add = false;
                 break;
@@ -1954,7 +1954,7 @@ function dsas_add_task_cert() {
 
 function dsas_task_cert_delete(fingerprint){
     var body = "";
-    for (line of document.getElementsByTagName("dsas-task-cert")) {
+    for (const line of document.getElementsByTagName("dsas-task-cert")) {
         if(line.getAttribute("fingerprint") != fingerprint) {
             body = body + "<dsas-task-cert name=\"" +  line.getAttribute("name") +
       "\" fingerprint=\"" + line.getAttribute("fingerprint") + "\"></dsas-task-cert>";
@@ -1999,6 +1999,7 @@ function dsas_add_task(oldid = "") {
     var ca = {};
     var certs= [];
     var archs = [];
+    var opt;
 
     for (opt of document.getElementsByTagName("option"))
         if (opt.id.substr(0,8) === "TaskType" && opt.selected)
@@ -2016,13 +2017,13 @@ function dsas_add_task(oldid = "") {
                 ca = {fingerprint : opt.value, name : opt.innerHTML};
         }
     if (type === "deb") {
-        for (inp of document.getElementsByTagName("input")) {
+        for (const inp of document.getElementsByTagName("input")) {
             if (inp.id.substr(0,8) === "TaskArch") {
                 archs.push({arch : inp.value, active : inp.checked});
             }
         }
     }
-    for (cert of document.getElementsByTagName("dsas-task-cert"))
+    for (const cert of document.getElementsByTagName("dsas-task-cert"))
         certs.push({name : cert.getAttribute("name"), fingerprint: cert.getAttribute("fingerprint")});
 
     var formData = new FormData;
@@ -2269,7 +2270,7 @@ function dsas_apply(){
         else
             return Promise.reject({status: response.status, 
                 statusText: response.statusText});
-    }).then(data => {
+    }).then(() => {
         modalApply.setAttribute("body", "<span class='spinner-border spinner-border-sm'></span> &nbsp; Application de la configuration en cours.");
         fetch("api/apply.php").then(response => {
             if (response.ok) 
@@ -2277,12 +2278,12 @@ function dsas_apply(){
             else
                 return Promise.reject({status: response.status, 
                     statusText: response.statusText});
-        }).then(data => {
+        }).then(() => {
             modalApply.removeAttribute("disable");
             modalApply.removeAttribute("body");  
             modalApply.hide();
             modal_message(_("Configuration applied"));
-        }).catch(error => {
+        }).catch(() => {
             modalApply.removeAttribute("disable");
             modalApply.removeAttribute("body");  
             modalApply.hide();
@@ -2336,21 +2337,21 @@ function chkdown(site){
     var progress = document.getElementById("progressShutdown");
 
     return new Promise((response, reject) => {
-        (function recurse(i) {
+        (function recurse(s, i) {
             // favicon because its small and Math.random to avoid the cache
-            fetch(site + "/favicon.ico?rand=" + Math.random()).then(r => {
-                if (times === 30)
+            fetch(s + "/favicon.ico?rand=" + Math.random()).then(r => {
+                if (i === 30)
                     return reject(r);
 
-                setTimeout(() => recurse(++times), 1000);
-                var prog = ((times + 5) * 100) / 30;
+                setTimeout(() => recurse(s, ++i), 1000);
+                var prog = ((i + 5) * 100) / 30;
                 progress.setAttribute("style", "width: " + prog + "%");
                 progress.setAttribute("aria-valuenow", prog);
             }).catch(err => {
                 // Machine is down return success
                 response(err);
             });
-        })(times);
+        })(site, times);
     });
 }
 
@@ -2359,21 +2360,21 @@ function chkup(site){
     var progress = document.getElementById("progressReboot");
 
     return new Promise((response, reject) => {
-        (function recurse(i) {
+        (function recurse(s, i) {
             // favicon because its small and Math.random to avoid the cache
-            fetch(site + "/favicon.ico?rand=" + Math.random()).then(r => {
+            fetch(s + "/favicon.ico?rand=" + Math.random()).then(r => {
                 // Machine is up. Return success
                 response(r);
             }).catch(err => {
-                if (times === 30)
-                    return reject(r);
+                if (i === 30)
+                    return reject(err);
 
-                setTimeout(() => recurse(++times), 1000);
-                var prog = ((times + 5) * 100) / 30;
+                setTimeout(() => recurse(s, ++i), 1000);
+                var prog = ((i + 5) * 100) / 30;
                 progress.setAttribute("style", "width: " + prog + "%");
                 progress.setAttribute("aria-valuenow", prog);
             });
-        })(times);
+        })(site, times);
     });
 }
 
@@ -2389,9 +2390,9 @@ function waitreboot(counter = 0) {
         progress.setAttribute("aria-valuenow", prog);
         setTimeout(waitreboot, 1000, counter);
     } else {
-        chkup(location.host).then(reponse => {
+        chkup(location.host).then(() => {
             window.location = "login.html";     
-        }).catch(error => {
+        }).catch(() => {
             modalReboot.removeAttribute("disable");
             modalReboot.hide();  
             modal_message(_("Timeout during restart"));    
@@ -2446,11 +2447,11 @@ function waitshutdown(counter = 0) {
         progress.setAttribute("aria-valuenow", prog);
         setTimeout(waitshutdown, 1000, counter);
     } else {
-        chkdown(location.host).then(response => {
+        chkdown(location.host).then(() => {
             modalShutdown.removeAttribute("disable");
             modalShutdown.hide();
             modal_message(_("The DSAS has shutdown. You can close this window"));
-        }).catch(error => {
+        }).catch(() => {
             modalShutdown.removeAttribute("disable");
             modalShutdown.hide();  
             modal_message(_("Timeout during shutdown"));    
@@ -2460,9 +2461,9 @@ function waitshutdown(counter = 0) {
 
 function dsas_logout(){
     // No error checking because, only possible error is that already logged out
-    fetch("api/logout.php").then(response => {
+    fetch("api/logout.php").then(() => {
         location.href = "login.html";
-    }).catch(error => { location.href = "login.html"; });
+    }).catch(() => { location.href = "login.html"; });
 }
 
 class multiLang {
@@ -2519,7 +2520,7 @@ class multiLang {
             if (this.onLoad)
                 this.onLoad();
 
-        }).catch(error => {
+        }).catch(() => {
             this.phrases = {};
         });
     }
@@ -2652,6 +2653,7 @@ class DisplayLogs {
     }
 
     init_holder() {
+        var i;
         this.holder = document.getElementById("logpane");
         this.height = this.itemHeight();
         if (this.holder && this.height !== 0) {
@@ -2659,12 +2661,12 @@ class DisplayLogs {
             if (this.holder.addEventListener) {
                 this.holder.addEventListener("scroll", this.delayingHandler.bind(this), false);
                 if (this.logs.length > 1) 
-                    for (var i = 0; i < this.logs.length; i++)
+                    for (i = 0; i < this.logs.length; i++)
                         document.getElementById("navlog" + i).addEventListener("click", this.changeTab.bind(this), false);
             } else {
                 this.holder.attachEvent("onscroll", this.delayingHandler.bind(this));
                 if (this.logs.length > 1) 
-                    for (var i = 0; i < this.logs.length; i++)
+                    for (i = 0; i < this.logs.length; i++)
                         document.getElementById("navlog" + i).attachEvent("click", this.changeTab.bind(this));
             }
         } else
@@ -2792,6 +2794,8 @@ class DisplayLogs {
             this.view = this.holder.appendChild(document.createElement("div"));
 
         if (this.logs.length > 0) {
+            var lines;
+            var index;
             var firstItem = Math.floor(this.holder.scrollTop / this.height);
             var lastItem = firstItem + Math.ceil(this.holder.offsetHeight / this.height);
             if (lastItem + 1 >= this.nitems)
@@ -2804,8 +2808,8 @@ class DisplayLogs {
             var pre;
             if (this.filter) {
                 var line = 0;
-                var lines = this.logs[this.tab].split("\n");
-                for (var index = 0; index < lines.length; ++index) {
+                lines = this.logs[this.tab].split("\n");
+                for (index = 0; index < lines.length; ++index) {
                     if (this.filter(lines[index])) {
                         if (line >= firstItem) {
                             pre = document.createElement("pre");
@@ -2814,7 +2818,7 @@ class DisplayLogs {
                             else
                                 pre.className = "my-0 " + this.color(lines[index]) + " overflow-hidden";      
                             pre.innerHTML = (this.render ? this.render(lines[index]) : lines[index]);
-                            view.appendChild(pre);
+                            this.view.appendChild(pre);
                         }
                         line++;
                         if (line > lastItem)
@@ -2822,8 +2826,8 @@ class DisplayLogs {
                     }
                 }
             } else {
-                var lines = this.logs[this.tab].split("\n");
-                for (var index = firstItem; index <= lastItem; ++index) {
+                lines = this.logs[this.tab].split("\n");
+                for (index = firstItem; index <= lastItem; ++index) {
                     pre = document.createElement("pre");
                     if ((this.tab == this.highlight["tab"]) && (index === this.highlight["line"])) 
                         pre.className = "my-0 bg-info overflow-hidden";
@@ -2929,7 +2933,7 @@ class DSASModal extends HTMLElement {
         var myModal = new bootstrap.Modal(document.getElementById("static" + tag));
         // Focus on "Ok" button, to allow "Enter" to close the modal
         if (type === "Ok")
-            document.getElementById("static" + tag).addEventListener("shown.bs.modal", event => {
+            document.getElementById("static" + tag).addEventListener("shown.bs.modal", () => {
                 document.getElementById("ok" + tag).focus();
             });
         myModal.show();
