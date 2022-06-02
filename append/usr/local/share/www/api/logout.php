@@ -3,7 +3,7 @@ require_once "common.php";
 
 if (! dsas_loggedin(false, false))
   // No security risk here, trying to logout when not connected. Don't log it
-  die(header("HTTP/1.0 403 Forbidden"));
+  header("HTTP/1.0 403 Forbidden");
 else {
   $cnxstr = $_SERVER["REMOTE_ADDR"];
   if (!empty($_SERVER["HTTP_X_FORWARDED_FOR"]))

@@ -2,7 +2,7 @@
 require_once "common.php";
 
 if (! dsas_loggedin())
-  die(header("HTTP/1.0 403 Forbidden"));
+  header("HTTP/1.0 403 Forbidden");
 else {
   // exec here for now, use proc_open to avoid shell if user input is supplied
   $haut = interco_haut();
@@ -22,7 +22,7 @@ else {
   if ($output["retval"] == 0)
     $output = dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . $haut, "sudo", "/etc/init.d/services/dsas", "apply"]);
   if ($output["retval"] != 0)
-    die(header("HTTP/1.0 500 Internal Server Error: " . $output["stderr"]));
+    header("HTTP/1.0 500 Internal Server Error: " . $output["stderr"]);
   else
     echo "Ok";
 }

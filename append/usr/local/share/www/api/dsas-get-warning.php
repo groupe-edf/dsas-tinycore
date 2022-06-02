@@ -2,7 +2,7 @@
 require_once "common.php";
 
 if (! dsas_loggedin())
-  die(header("HTTP/1.0 403 Forbidden"));
+  header("HTTP/1.0 403 Forbidden");
 else {
   $dsas = simplexml_load_file(_DSAS_XML);
   $warn = array();

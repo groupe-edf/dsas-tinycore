@@ -2,7 +2,7 @@
 require_once "common.php";
 
 if (! dsas_loggedin(false))
-  die(header("HTTP/1.0 403 Forbidden"));
+  header("HTTP/1.0 403 Forbidden");
 else if($_SERVER["REQUEST_METHOD"] == "POST"){
   // Manually update for autologout after 600 seconds
   if ($_POST["op"] != "info")
@@ -96,7 +96,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
                   $errors[] = ["error" => ["The task type '{0}' does not support {1} certificates", $type, "X509"]];
                   break 2;
                 }
-                if ($have_pubkey && ($type === "cyberwatch" || type === "openssl")) {
+                
+                if ($have_pubkey && ($type === "cyberwatch" || $type === "openssl")) {
                   $errors[] = ["error" => ["The task type '{0}' can not include both public keys and X509 certificates", $type]];
                   break 2;
                 } 

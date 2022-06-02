@@ -2,7 +2,7 @@
 require_once "common.php";
 
 if (! dsas_loggedin(true, false))
-  die(header("HTTP/1.0 403 Forbidden"));
+  header("HTTP/1.0 403 Forbidden");
 else if($_SERVER["REQUEST_METHOD"] == "POST"){
     $dsas = simplexml_load_file(_DSAS_XML);
     $data = json_decode($_POST["data"], true);

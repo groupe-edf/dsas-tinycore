@@ -7,7 +7,7 @@ define("_DSAS_VAR", "/var/dsas");
 define("_DSAS_LOG", _DSAS_HOME . "/log");
 define("_DSAS_XML", _DSAS_VAR . "/dsas_conf.xml");
 
-function dsas_ca_file() {
+function dsas_ca_file() : string {
   foreach (["/etc/ssl/ca-bundle.crt", "/etc/ssl/ca-certificates.crt",
            "/usr/local/etc/ssl/ca-bundle.crt", "/usr/local/etc/ssl/ca-certificates.crt"] as $f) {
     if (is_file($f))
@@ -16,9 +16,9 @@ function dsas_ca_file() {
   return "";
 }
 
-function dsas_loggedin($update_timeout = true, $admin_only = true) {
+function dsas_loggedin(bool $update_timeout = true, bool $admin_only = true) : bool {
   // Initialize the session, ignoring uninitalised session ids
-  ini_set("session.use_strict_mode", 1);
+  ini_set("session.use_strict_mode", "1");
   session_start();
 
   // Check if the user is already logged in
@@ -44,8 +44,10 @@ function dsas_loggedin($update_timeout = true, $admin_only = true) {
     return true;
 }
 
-function dsas_is_admin() {
+function dsas_is_admin() : bool {
   $dsas = simplexml_load_file(_DSAS_XML);
+  if ($dsas === false)
+     return false;
   foreach ($dsas->config->users->user as $user) {
     if ($user->username == $_SESSION["username"]) {
       if ($user->type == "admin")
@@ -57,8 +59,10 @@ function dsas_is_admin() {
   return false;
 }
 
-function dsas_user_active($user) {
+function dsas_user_active(string $user) : bool {
   $dsas = simplexml_load_file(_DSAS_XML);
+  if ($dsas === false)
+    return false;
   foreach ($dsas->config->users->user as $duser) {
     if ($duser->username == $user) {
       if ($duser->active == "true")
@@ -70,7 +74,12 @@ function dsas_user_active($user) {
   return false;
 }
 
-function dsas_exec($args, $cwd = null, $stdin = []){
+/**
+ * @param array<string> $args list of arguments to pass to proc_open
+ * @param array<string> $stdin An array of strings representing line by line the input
+ * @return array{retval: int, stdout: string, stderr: string} 
+ */
+function dsas_exec(array|string $args, string $cwd = null, array $stdin = []) : array {
   # Simplify the call to proc_open with the means to avoids spawning a shell
   # and escaping the args integrated. The args MUST be passed as an array to get
   # the escaping to work properly.
@@ -86,8 +95,8 @@ function dsas_exec($args, $cwd = null, $stdin = []){
   if (is_resource($process)) {
     // Make the output pipes non-blocking so we can just read them 
     // after all of the inputs are done
-    stream_set_blocking($pipes[1], 0);
-    stream_set_blocking($pipes[2], 0);
+    stream_set_blocking($pipes[1], false);
+    stream_set_blocking($pipes[2], false);
 
     // Write all of the inputs line by line. Need to parse user
     // input before using them in this function !!!
@@ -105,11 +114,10 @@ function dsas_exec($args, $cwd = null, $stdin = []){
     $len = 0;
     while ($read_out || $read_err) {
       if ($read_out) {
-        if (feof($pipes[1])) {
+        if (! $pipes[1] || feof($pipes[1])) {
           fclose($pipes[1]);
           $read_out = false;
-        } else {
-          $str = fgets($pipes[1]);
+        } else if ($str = fgets($pipes[1])) {
           $stdout = $stdout . $str;
           $len = strlen($str);
         }
@@ -121,7 +129,7 @@ function dsas_exec($args, $cwd = null, $stdin = []){
         } else {
           $str = fgets($pipes[2]);
           $stderr = $stderr . $str;
-          if ($len == 0)
+          if ($len == 0 && $str !== false)
             $len = strlen($str);
         }
       }
@@ -133,18 +141,18 @@ function dsas_exec($args, $cwd = null, $stdin = []){
     $retval = proc_close($process);
     return ["retval" => $retval, "stdout" => $stdout, "stderr" => $stderr];
   } else {
-    return ["retval" => -1];    
+    return ["retval" => -1, "stdout" => "", "stderr" => ""];    
   }
 }
 
-function dsas_checkpass($user, $pass){
+function dsas_checkpass(string $user, string $pass) : bool {
     if (pam_auth($user, $pass, $error, false, "php"))
-      return 0;
+      return true;
     else
-      return -1;
+      return false;
 }
 
-function complexity_test($passwd) {
+function complexity_test(string $passwd) : bool {
    // Passwords must be at least 8 characters long and contain at least 3 of LUDS
    if (strlen($passwd) < 8)
       return false;
@@ -167,19 +175,27 @@ function complexity_test($passwd) {
    return true;
 }
 
-function interco_haut(){
-  // Return name listed in /etc/host
+/**
+ * Return a string that can be used as the addres of the upper machine.
+ * This should be the hostname listed in /etc/host
+ *
+ * @return string
+ */
+function interco_haut() : string {
   return "haut";
 }
 
-function force_passwd(){
+function force_passwd() : bool {
   $dsas = simplexml_load_file(_DSAS_XML);
-  if ($dsas->config->users->first == 'true')
+  if ($dsas !== false && $dsas->config->users->first == 'true')
     return true;
   return false;
 }
 
-function change_passwd($name, $passwd, $hash = "sha512"){
+/**
+ * @return array{retval: int, stdout: string, stderr: string} 
+ */
+function change_passwd(string $name, string $passwd, string $hash = "sha512") : array {
  // Remove all white space to avoid RCE. Space illegal in username and password
  $name=preg_replace("/\s+/", "", $name);
  $passwd=str_replace("/\s+/", "", $passwd);
@@ -196,6 +212,8 @@ function change_passwd($name, $passwd, $hash = "sha512"){
   // a shell that can be attacked. Set the machine "haut" first as it might not be available
   if ($name == "tc") {
     $process = proc_open(["ssh", "tc@" . interco_haut(), "sudo", "/usr/sbin/chpasswd", "-c", $hash], $descriptorspec, $pipes, $cwd);
+    if ($process === false || $pipes[0] === false)
+      return ["retval" => 1, "stdout" => "", "stderr" => "can not change password"];
 
     // password and username can't be used to attack here as
     // there is no shell to attack. At this point its also too late
@@ -204,7 +222,7 @@ function change_passwd($name, $passwd, $hash = "sha512"){
     fwrite($pipes[0], $name . ":" . $passwd . PHP_EOL);
     fclose($pipes[0]);
     fclose($pipes[1]);
-    $stderr = fgets($pipes[2]);
+    $stderr = (string)fgets($pipes[2]);
     fclose($pipes[2]);
     $retval = proc_close($process); 
     if ($retval != 0)
@@ -213,22 +231,25 @@ function change_passwd($name, $passwd, $hash = "sha512"){
 
   // Now set the password on the machine "bas"
   $process = proc_open(["sudo", "/usr/sbin/chpasswd", "-c", $hash], $descriptorspec, $pipes, $cwd);
+  if ($process === false || $pipes[0] === false)
+    return ["retval" => 1, "stdout" => "", "stderr" => "can not change password"];
+  
   fwrite($pipes[0], $name . ":" . $passwd . PHP_EOL);
   fclose($pipes[0]);
   fclose($pipes[1]);
-  $stderr = fgets($pipes[2]);
+  $stderr = (string)fgets($pipes[2]);
   fclose($pipes[2]);
   $retval = proc_close($process);
   return ["retval" => $retval, "stdout" => "", "stderr" => $stderr];
 }
 
-function mask2cidr($mask){
+function mask2cidr(string $mask) : string {
   $long = ip2long($mask);
   $base = ip2long("255.255.255.255");
-  return 32-log(($long ^$base)+1,2);
+  return (string)(32-log(($long ^$base)+1,2));
 }
 
-function ip_interface($interface){  
+function ip_interface(string $interface) : string{  
   $pattern1 = "/inet addr:(\d+\.\d+\.\d+\.\d+)/";
   $pattern2 = "/Mask:(\d+\.\d+\.\d+\.\d+)/";
   $output = dsas_exec(["/sbin/ifconfig", $interface]);      
@@ -249,27 +270,33 @@ function ip_interface($interface){
     return "";                            
 }             
 
-function get_ifaces(){                                                          
+
+/**
+ * @return array<int, array{name: string, net: string}>
+ */
+function get_ifaces() : array {                                                          
   $handle = opendir("/sys/class/net");                                          
-  $ifaces = array();                                                            
-  $count = 0;                                                                   
-  while (false !== ($entry = readdir($handle))) {                               
-    switch ($entry) {                                                           
-      case ".":                                                                 
-      case "..":                                                                
-      case "lo":                                                                
-      case (preg_match("/dummy/", $entry) ? true : false):                      
-      case (preg_match("/tunl/", $entry) ? true : false):
-        break;                                       
-      default:                                            
-        $ifaces[$count++] = array("name" => $entry, "net" => ip_interface($entry));
-    }                                                                           
-  }                                                                             
-  closedir($handle);                                                            
+  $ifaces = array();
+  if ($handle = opendir("/sys/class/net")) {
+    $count = 0;                                                                   
+    while (false !== ($entry = readdir($handle))) {                               
+      switch ($entry) {                                                           
+        case ".":                                                                 
+        case "..":                                                                
+        case "lo":                                                                
+        case (preg_match("/dummy/", $entry) ? true : false):                      
+        case (preg_match("/tunl/", $entry) ? true : false):
+          break;                                       
+        default:                                            
+          $ifaces[$count++] = array("name" => $entry, "net" => ip_interface($entry));
+      }
+    }
+    closedir($handle);
+  }
   return $ifaces;                                                               
 }                                                                               
 
-function ip_valid($addr, $nomask){
+function ip_valid(string $addr, bool $nomask) : string{
   $addr = trim($addr);
   if ($nomask || empty(strpos($addr, "/"))){
     $net = $addr;
@@ -302,7 +329,7 @@ function ip_valid($addr, $nomask){
   return "";
 }
 
-function inet_valid($addr){
+function inet_valid(string $addr) : string {
   # If it starts in a number, it's an IP address
   if (is_numeric($addr[0]))
     return ip_valid($addr, true);
@@ -310,15 +337,18 @@ function inet_valid($addr){
     return (is_valid_domain($addr) ? "" : "The address is invalid");
 }
 
-function uri_valid($uri){
+function uri_valid(string $uri) : string {
   $tmp = preg_split('!://!', $uri);
-  $proto = $tmp[0];
-  if (($proto != "ftp") && ($proto != "ftps") && ($proto != "sftp") && ($proto != "http") && ($proto != "https"))
+  if (!$tmp || ($tmp[0] != "ftp" && $tmp[0] != "ftps" && $tmp[0] != "sftp" && 
+                $tmp[0] != "http" && $tmp[0] != "https"))
     return "The protocol is invalid";
   return inet_valid(preg_split(':/:', $tmp[1])[0]);
 }
 
-function dsas_get_logs($_file = _DSAS_LOG . "/dsas_verif.log") {
+/**
+ * @return array<string> An array of log file
+ */
+function dsas_get_logs(string $_file = _DSAS_LOG . "/dsas_verif.log") : array {
   $logs = array();
   foreach (["", ".0", ".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9"] as $ext) {
     if (is_file($_file . $ext)) {
@@ -328,7 +358,7 @@ function dsas_get_logs($_file = _DSAS_LOG . "/dsas_verif.log") {
   return $logs;
 }
 
-function dsas_get_log($len = 0, $_file = _DSAS_LOG . "/dsas_verif.log") {
+function dsas_get_log(int $len = 0, string $_file = _DSAS_LOG . "/dsas_verif.log") : string {
   $logs = "";
   if (is_file($_file)) {
     if ($fp = fopen($_file, "r")) {
@@ -340,7 +370,11 @@ function dsas_get_log($len = 0, $_file = _DSAS_LOG . "/dsas_verif.log") {
   return $logs;
 }
 
-function renew_web_cert($options, $days){
+/**
+ * @param array<string, string> $options
+ * @return array{pub: string, priv: string, csr: string}
+ */
+function renew_web_cert(array $options, int $days) : array {
   foreach (array('countryName', 'stateOrProvinceName', 'localityName',
                  'organizationName', 'organizationalUnitName', 'commonName',
                  'commonName', 'emailAddress') as $key) {
@@ -365,7 +399,10 @@ function renew_web_cert($options, $days){
 
 }
 
-function parse_x509($certfile){
+/**
+ * @return array<int, array<string, mixed>>
+ */
+function parse_x509(string $certfile) : array {
   if ($fp = fopen($certfile, "r")) {
     $certs = array();
     $incert = false;
@@ -388,28 +425,46 @@ function parse_x509($certfile){
           $tmp = openssl_x509_parse($cert);
           $tmp["fingerprint"] = openssl_x509_fingerprint($cert, "sha256");
           $tmp["pem"] = $cert;
-          $certs[] = $tmp;
+          $certs[] = utf8ize($tmp);
         }
       } else if ($incert)
         $cert = $cert . $line;
     }
     fclose($fp);
-    return utf8ize($certs);
+    return $certs;
   } else
-    return false; 
+    return []; 
 }
 
-function utf8ize($d) {
+/**
+ * @param array<string, mixed> $d
+ * @return array<string, mixed>
+ */
+function utf8ize(array|string|int $d) : array|string|int {
   if (is_array($d)) {
-    foreach ($d as $k => $v)
-      $d[$k] = utf8ize($v);
+    foreach ($d as $k => $v) {
+        $d[$k] = utf8ize($v);
+    }
   } else if (is_string ($d)) {
     return utf8_encode($d);
   }
   return $d;
 }
 
-function parse_gpg($cert){ 
+/**
+ * Parse a gpg/pgp certificate and return it as a keyed array
+ *
+ * usage:
+ *  parse_gpg($cert)
+ *
+ * @param string $cert
+ *     The certificate in PEM format
+ * @return array<string,string>
+ *     The certificated returned as a keyed array. The fields are
+ *     "uid", "size", "keyid", "finggerprint", "created", "expires", "pem" 
+ *     and "authority"
+ */
+function parse_gpg(string $cert) : array { 
   $tmp = tempnam("/tmp", "dsas_");
   file_put_contents($tmp, $cert);
   $data = [];
@@ -431,35 +486,80 @@ function parse_gpg($cert){
     $data["expires"] = $matches[1];
     $retval = $data;
   } else
-    $retval = false;                          
+    $retval = [];                          
 
   unlink($tmp);
   return $retval;
 }
 
-function is_valid_domain($d){
+/**
+ * Test if a string is a valid domain name
+ *
+ * usage:
+ *   is_valid_domaine("google.com")
+ *
+ * @param string $d
+ *     The domain name to test if valid
+ * @return bool
+ *     Return true is the domain is a valid. This doesn't guarentee
+ *     the domain exists however
+ */
+function is_valid_domain(string $d) : bool {
   return (preg_match("/^([a-z\d](-*[a-z\d])*)(\.([a-z\d](-*[a-z\d])*))*$/", $d)
     && preg_match("/^.{1,253}$/", $d)
     && preg_match("/^[^\.]{1,63}(\.[^\.]{1,63})*$/", $d));
 }
 
-function dsasid($len = 24){
+/**
+ * Create a random string to be used as an ID
+ *
+ * usage:
+ *   dsas_id(32)
+ *
+ * @param int $len
+ *     The length of the ID string to create (24 by default)
+ * @return string
+ *     A random hexadecimal string of length $len
+ */
+function dsasid(int $len = 24) : string {
   if (function_exists("random_bytes")) {
-    $bytes = random_bytes(ceil($len/2));
+    $bytes = random_bytes((int)ceil($len/2));
   } elseif (function_exists("openssl_random_pseudo_bytes")) {
-    $bytes = openssl_random_pseudo_bytes(ceil($len/2));
+    $bytes = openssl_random_pseudo_bytes((int)ceil($len/2));
   } else {
     throw new Exception("no cryptographically secure random function available");
   }
   return substr(bin2hex($bytes), 0, $len);
 }
 
-function dsas_task_running($id){
+/**
+ * Test if a task given by $id is running, the ID will appear in the process table
+ *
+ * usage:
+ *    dsas_task_running($id)
+ *
+ * @param string $id
+ *    The ID string of the task to test the status of
+ * @return bool
+ *    Return true if the task is running 
+ */
+function dsas_task_running(string $id) : bool {
    $ret = dsas_exec(["pgrep", "-f", "$id"]);
    return ($ret["retval"] === 0);
 }
 
-function dsas_run_log($id){
+/**
+ * Test the status of a DSAS task
+ *
+ * usage:
+ *   dsas_run_log($id)
+ *
+ * @param string $id
+ *     The ID string of the task to test the status of
+ * @return array<string, string>
+ *     Return last run time and whether the task run successfully or not or is still running
+ */
+function dsas_run_log(string $id) : array {
  $run = dsas_task_running($id);
  if (is_file(_DSAS_LOG . "/dsas_runlog")) {
     if ($fp = fopen(_DSAS_LOG . "/dsas_runlog", "r")) {
@@ -477,9 +577,22 @@ function dsas_run_log($id){
   return array("last" => "never", "status" => ($run ? "Running" : "Ok"));
 }
 
-// Check the $_FILES variable for possible attacks
-function check_files($files, $mime_type){
-  // Protect against corrupted $_FILES array
+/**
+ * Check a file extracted from the $_FILES variable for possible attacks
+ *
+ * usage:
+ *   check_files($_FILES["file"], "text/plain")
+ *
+ * @param array{error: int, size: int, tmp_name: string} $files
+ *    A file extracted form $_FILES to be checked
+ * @param string $mime_type
+ *    The desired mime-type of the file. Really test it rather than depending
+ *    on what the user tells us it is   
+ */
+function check_files(array $files, string $mime_type) : void {
+  // Protect against corrupted $_FILES array, so yes it is normal that we're 
+  // testing that we aren't passed what we want. Tell PHPSTAN to shutup
+  // @phpstan-ignore-next-line
   if (!isset($files["error"]) || is_array($files["error"]))
     throw new RuntimeException("Invalid parameter");
 
@@ -490,7 +603,7 @@ function check_files($files, $mime_type){
       throw new RuntimeException("No file sent");
     case UPLOAD_ERR_INI_SIZE:
     case UPLOAD_ERR_FORM_SIZE:
-      throw new RunetimeException("Exceeded filesize limit");
+      throw new RuntimeException("Exceeded filesize limit");
     default:
       throw new RuntimeException("Unknown error");
   }

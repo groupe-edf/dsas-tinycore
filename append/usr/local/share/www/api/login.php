@@ -13,7 +13,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     else if (!empty($_SERVER["HTTP_CLIENT_IP"]))
        $cnxstr = $cnxstr . " [" . $_SERVER["HTTP_CLIENT_IP"] . "]";
 
-    if (dsas_user_active($username) && dsas_checkpass($username, $password) == 0) {
+    if (dsas_user_active($username) && dsas_checkpass($username, $password)) {
         if (session_status() != PHP_SESSION_ACTIVE)
             session_start();
  
@@ -25,7 +25,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         $_SESSION["username"] = $username;
         $_SESSION["timestamp"] = time();
         session_commit();
-        ini_set("session.use_strict_mode", 0);  // Allow new ID
+        ini_set("session.use_strict_mode", "0");  // Allow new ID
         session_id($newid);
         syslog(LOG_NOTICE, "Succesful DSAS login from " . $cnxstr);
         echo "Ok";
@@ -34,14 +34,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         if (! dsas_user_active($username))
           sleep(3);
         syslog(LOG_WARNING, "Failed DSAS login attempt from " . $cnxstr);
-        die(header("HTTP/1.0 403 Forbidden"));
+        header("HTTP/1.0 403 Forbidden");
     }
 } else {
    // No connection attempt so don't log anything to syslog
    $timeout =  (empty($_GET["timeout"]) || ($_GET["timeout"] === "true"));
    $admin =  (empty($_GET["admin"]) || ($_GET["admin"] === "true"));
    if (! dsas_loggedin($timeout, $admin))
-     die(header("HTTP/1.0 403 Forbidden"));
+     header("HTTP/1.0 403 Forbidden");
    else
      echo "Ok";
 }

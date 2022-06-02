@@ -4,7 +4,7 @@ require_once "common.php";
 // If the certificates are ever moved from _DSAS_VAR, this code will need to be changed
 
 if (! dsas_loggedin())
-  die(header("HTTP/1.0 403 Forbidden"));
+  header("HTTP/1.0 403 Forbidden");
 else if($_SERVER["REQUEST_METHOD"] == "POST"){
   $dsas = simplexml_load_file(_DSAS_XML);
   $errors = array();
@@ -24,7 +24,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         $validity = intval($_POST["validity"]);
         $validity = ($validity < 1 ? 1 : ($validity > 5 ? 5 : $validity)); 
         $days = $validity * 365;
-        $validity = trim($validity); // Use trim to convert to string
+        $validity = (string)$validity; // convert to string
 
         foreach (array('countryName', 'stateOrProvinceName', 'localityName',
                    'organizationName', 'organizationalUnitName', 'commonName',
@@ -89,7 +89,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
     }
   } catch (Exception $e) {
-     $errors[] = ["error" => ["Internal server error : {0}" + $e->getMessage()]];
+     $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
   }
  
   if ($errors == [])

@@ -2,7 +2,7 @@
 require_once "common.php";
 
 if (! dsas_loggedin(false))
-  die(header("HTTP/1.0 403 Forbidden"));
+  header("HTTP/1.0 403 Forbidden");
 else {
   $output = dsas_exec(["free", "-b"]);
   $free = $output["stdout"];

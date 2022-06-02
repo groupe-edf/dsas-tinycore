@@ -2,7 +2,7 @@
 require_once "common.php";
 
 if (! dsas_loggedin())
-  die(header("HTTP/1.0 403 Forbidden"));
+  header("HTTP/1.0 403 Forbidden");
 else if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
       // This will throw an error in case of a problem which is caught below 
@@ -27,13 +27,15 @@ else if ($_SERVER["REQUEST_METHOD"] == "POST") {
   else
     $ret = dsas_exec(["/usr/local/sbin/dsasbackup", $BKP, "-p", $_GET["passwd"]]);
   if ($ret["retval"] != 0)
-    die(header("HTTP/1.0 500 Internal Server Error: " . $ret["stderr"]));
+    header("HTTP/1.0 500 Internal Server Error: " . $ret["stderr"]);
   else {
-    $fp = fopen($BKP, "rb");
-    $backup = fread($fp, filesize($BKP));
-    fclose($fp);
-    header("Content-Type: application/json");
-    echo base64_encode($backup);
+    if ($fp = fopen($BKP, "rb")) {
+      $backup = fread($fp, (int)filesize($BKP));
+      fclose($fp);
+      header("Content-Type: application/json");
+      echo base64_encode((string)$backup);
+    } else
+      header("HTTP/1.0 500 Internal Server Error");
   }
 }
 
