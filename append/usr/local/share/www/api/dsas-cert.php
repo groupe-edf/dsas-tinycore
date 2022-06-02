@@ -51,14 +51,14 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $pubkeynowrap = preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pubkey);
           if (($pubkey === $pubkeynowrap) || empty($pubkeynowrap))
             throw new RuntimeException("The public key must be in PEM format");
-          $pubkeynowrap = preg_replace('/\\s+/', '', $pubkeynowrap);
+          $pubkeynowrap = (string)preg_replace('/\\s+/', '', $pubkeynowrap);
           $finger = hash("sha256", base64_decode($pubkeynowrap));
           
           foreach ($dsas->certificates->certificate as $certificate) {
             if ($certificate->type == "pubkey") {
               $pem = htmlspecialchars(trim($certificate->pem));
-              $pemnowrap = preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pem);
-              $pemnowrap = preg_replace('/\\s+/', '', $pemnowrap);
+              $pemnowrap = (string)preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pem);
+              $pemnowrap = (string)preg_replace('/\\s+/', '', $pemnowrap);
               if (hash("sha256", base64_decode($pemnowrap)) == $finger)
                 throw new RuntimeException("The public key already exists");
             }
@@ -112,8 +112,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
 
           } else if ($certificate->type == "pubkey") {
             $pem = htmlspecialchars(trim($certificate->pem));
-            $pemnowrap = preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pem);
-            $pemnowrap = preg_replace('/\\s+/', '', $pemnowrap);
+            $pemnowrap = (string)preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pem);
+            $pemnowrap = (string)preg_replace('/\\s+/', '', $pemnowrap);
             if (hash("sha256", base64_decode($pemnowrap)) == $_POST["finger"]) {
               $certok = "true";
               break;
@@ -192,8 +192,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         $cert["pem"] = trim($certificate->pem[0]);
         $cert["name"] = trim($certificate->name);
         $cert["authority"] = trim($certificate->authority);
-        $pemnowrap = preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', (string)$certificate->pem[0]);
-        $pemnowrap = preg_replace('/\\s+/', '', $pemnowrap);
+        $pemnowrap = (string)preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', (string)$certificate->pem[0]);
+        $pemnowrap = (string)preg_replace('/\\s+/', '', $pemnowrap);
         $cert["fingerprint"] = hash("sha256", base64_decode($pemnowrap));
         $dsas_pubkey[] = $cert;
       } 

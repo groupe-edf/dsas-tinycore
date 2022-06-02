@@ -143,8 +143,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
 
             if ($certificate->type == "pubkey") {
               $pem = trim($certificate->pem[0]);
-              $pemnowrap = preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pem);
-              $pemnowrap = preg_replace('/\\s+/', '', $pemnowrap);
+              $pemnowrap = (string)preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pem);
+              $pemnowrap = (string)preg_replace('/\\s+/', '', $pemnowrap);
               if (hash("sha256", base64_decode($pemnowrap)) == $cert["fingerprint"]) {
                 if ($type === "rpm" || $type === "repomd" || $type === "deb" || 
                     $type === "authenticode" || $type === "gpg" || $type === "liveupdate") {
