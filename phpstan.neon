@@ -1,6 +1,4 @@
 parameters:
-  level: 6
+  level: 7
   paths:
     - append/usr/local/share/www/api
-  scanFiles:
-    - /usr/lib/php/20190902/pam.so
