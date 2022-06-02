@@ -342,17 +342,21 @@ function uri_valid(string $uri) : string {
   if (!$tmp || ($tmp[0] != "ftp" && $tmp[0] != "ftps" && $tmp[0] != "sftp" && 
                 $tmp[0] != "http" && $tmp[0] != "https"))
     return "The protocol is invalid";
-  return inet_valid(preg_split(':/:', $tmp[1])[0]);
+  $s = preg_split(':/:', $tmp[1]);
+  if ($s !== false)
+    return inet_valid($s[0]);
+  else
+    return "The protocol is invalid";
 }
 
 /**
- * @return array<string> An array of log file
+ * @return array<int, string> An array of log file
  */
 function dsas_get_logs(string $_file = _DSAS_LOG . "/dsas_verif.log") : array {
   $logs = array();
   foreach (["", ".0", ".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9"] as $ext) {
     if (is_file($_file . $ext)) {
-      $logs[] = file_get_contents($_file . $ext);
+      $logs[] = (string)file_get_contents($_file . $ext);
     }
   }
   return $logs;
@@ -363,7 +367,7 @@ function dsas_get_log(int $len = 0, string $_file = _DSAS_LOG . "/dsas_verif.log
   if (is_file($_file)) {
     if ($fp = fopen($_file, "r")) {
       fseek($fp, $len);
-      $logs = fread($fp , filesize($_file));
+      $logs = (string)fread($fp , (int)filesize($_file));
       fclose($fp);
     }
   }
@@ -384,16 +388,21 @@ function renew_web_cert(array $options, int $days) : array {
       $options[$key] = htmlspecialchars($options[$key]);
   }
 
-  $privkey = openssl_pkey_new(array(
+  if ($privkey = openssl_pkey_new(array(
       "private_key_bits" => 2048,
-      "private_key_type" => OPENSSL_KEYTYPE_RSA,
-  ));
-
-  $csr = openssl_csr_new($options, $privkey, array("digest_alg" => "sha256"));
-  $x509 = openssl_csr_sign($csr, null, $privkey, $days, array("digest_alg" => "sha256"));
-  openssl_csr_export($csr, $csrout);
-  openssl_x509_export($x509, $certout);
-  openssl_pkey_export($privkey, $pkeyout);
+      "private_key_type" => OPENSSL_KEYTYPE_RSA))) {
+    openssl_pkey_export($privkey, $pkeyout);
+  } else
+    $pkeyout = "";
+  
+  if (($csr = openssl_csr_new($options, $privkey, array("digest_alg" => "sha256")))
+    && ($x509 = openssl_csr_sign($csr, null, $privkey, $days, array("digest_alg" => "sha256")))) {
+    openssl_csr_export($csr, $csrout);
+    openssl_x509_export($x509, $certout);
+  } else {
+    $csrout ="";
+    $certout = "";
+  }
 
   return array("pub" => $certout, "priv" => $pkeyout, "csr" => $csrout);
 
@@ -423,9 +432,11 @@ function parse_x509(string $certfile) : array {
           $cert = $cert . $line;
           $incert = false;
           $tmp = openssl_x509_parse($cert);
-          $tmp["fingerprint"] = openssl_x509_fingerprint($cert, "sha256");
-          $tmp["pem"] = $cert;
-          $certs[] = utf8ize($tmp);
+          if ($tmp && ($f = openssl_x509_fingerprint($cert, "sha256"))) {
+            $tmp["fingerprint"] = openssl_x509_fingerprint($cert, "sha256");
+            $tmp["pem"] = $cert;
+            $certs[] = utf8ize($tmp);
+          }
         }
       } else if ($incert)
         $cert = $cert . $line;
@@ -436,11 +447,22 @@ function parse_x509(string $certfile) : array {
     return []; 
 }
 
+
 /**
  * @param array<string, mixed> $d
  * @return array<string, mixed>
  */
-function utf8ize(array|string|int $d) : array|string|int {
+function utf8ize(array $d) : array {
+  foreach ($d as $k => $v)
+    $d[$k] = _utf8ize($v);
+  return $d;
+}
+
+/**
+ * @param array<string, mixed> $d
+ * @return array<string, mixed>
+ */
+function _utf8ize(array|string|int $d) : array|string|int {
   if (is_array($d)) {
     foreach ($d as $k => $v) {
         $d[$k] = utf8ize($v);
@@ -465,30 +487,31 @@ function utf8ize(array|string|int $d) : array|string|int {
  *     and "authority"
  */
 function parse_gpg(string $cert) : array { 
-  $tmp = tempnam("/tmp", "dsas_");
-  file_put_contents($tmp, $cert);
-  $data = [];
-  // This use of exec is ok as there are no user parameters, the user data is passed
-  // as a file $tmp
-  if (exec(escapeshellcmd("/usr/local/bin/gpg -no-default-keyring -vv " . $tmp) . " 2>&1", $text, $retval)) {
-    $text = implode(PHP_EOL, $text);                                                                                           
-    preg_match("/uid\s+([^\n]+)/", $text, $matches); 
-    $data["uid"] = $matches[1]; 
-    preg_match("/pub\s+([^\s]+)/", $text, $matches); 
-    $data["size"] = $matches[1];  
-    preg_match("/keyid:\s+([^\s]+)/", $text, $matches); 
-    $data["keyid"] = $matches[1];  
-    preg_match("/" . PHP_EOL . "pub.*" . PHP_EOL . "\s+([^\s]+)/", $text, $matches);   
-    $data["fingerprint"] = $matches[1];
-    preg_match("/created\s+([\d]+)/", $text, $matches); 
-    $data["created"] = $matches[1];
-    preg_match("/expires\s+([\d]+)/", $text, $matches);
-    $data["expires"] = $matches[1];
-    $retval = $data;
-  } else
-    $retval = [];                          
-
-  unlink($tmp);
+  $retval = [];
+  if ($tmp = tempnam("/tmp", "dsas_")) {
+    file_put_contents($tmp, $cert);
+    $data = [];
+    // This use of exec is ok as there are no user parameters, the user data is passed
+    // as a file $tmp
+    if (exec(escapeshellcmd("/usr/local/bin/gpg -no-default-keyring -vv " . $tmp) . " 2>&1", $text, $retval)) {
+      $text = implode(PHP_EOL, $text);                                                                                           
+      preg_match("/uid\s+([^\n]+)/", $text, $matches); 
+      $data["uid"] = $matches[1]; 
+      preg_match("/pub\s+([^\s]+)/", $text, $matches); 
+      $data["size"] = $matches[1];  
+      preg_match("/keyid:\s+([^\s]+)/", $text, $matches); 
+      $data["keyid"] = $matches[1];  
+      preg_match("/" . PHP_EOL . "pub.*" . PHP_EOL . "\s+([^\s]+)/", $text, $matches);   
+      $data["fingerprint"] = $matches[1];
+      preg_match("/created\s+([\d]+)/", $text, $matches); 
+      $data["created"] = $matches[1];
+      preg_match("/expires\s+([\d]+)/", $text, $matches);
+      $data["expires"] = $matches[1];
+      $retval = $data;
+    }
+                          
+    unlink($tmp);
+  }
   return $retval;
 }
 
@@ -522,14 +545,17 @@ function is_valid_domain(string $d) : bool {
  *     A random hexadecimal string of length $len
  */
 function dsasid(int $len = 24) : string {
+  $len = (int)ceil($len/2);
+  if ($len < 4)
+    $len = 4;
   if (function_exists("random_bytes")) {
-    $bytes = random_bytes((int)ceil($len/2));
+    $bytes = random_bytes($len);
   } elseif (function_exists("openssl_random_pseudo_bytes")) {
-    $bytes = openssl_random_pseudo_bytes((int)ceil($len/2));
+    $bytes = openssl_random_pseudo_bytes($len);
   } else {
     throw new Exception("no cryptographically secure random function available");
   }
-  return substr(bin2hex($bytes), 0, $len);
+  return substr(bin2hex((string)$bytes), 0, 2 * $len);
 }
 
 /**
@@ -566,7 +592,7 @@ function dsas_run_log(string $id) : array {
       while (($line = fgets($fp)) !== false) {
         if ($id == substr($line,0,strlen($id))) {
            $tmp = preg_split("/\s+/", $line);
-           if (count($tmp) > 2)
+           if ($tmp !== false && count($tmp) > 2)
              return array("last" => $tmp[1], "status" => ($run ? "Running" : ($tmp[2] === "0" ? "Ok" : "Failed")));
            else
              break;

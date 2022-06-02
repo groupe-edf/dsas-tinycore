@@ -4,17 +4,20 @@ require_once "common.php";
 if (! dsas_loggedin())
   header("HTTP/1.0 403 Forbidden");
 else if($_SERVER["REQUEST_METHOD"] == "POST"){
-  $dsas = simplexml_load_file(_DSAS_XML);
   $errors = array();
 
   try {
+    $dsas = simplexml_load_file(_DSAS_XML);
+    if (! $dsas)
+      throw new RuntimeException("Error loading XML file");  
+  
     switch ($_POST["op"]){
       case "x509_upload":
         try {
           // PEM files are detected as text/plain
           check_files($_FILES["file"], "text/plain");
       
-          $x509 = htmlspecialchars(file_get_contents($_FILES["file"]["tmp_name"]));
+          $x509 = htmlspecialchars((string)file_get_contents($_FILES["file"]["tmp_name"]));
           $x509 = str_replace("\r", "", $x509);   // dos2unix
           $parse = openssl_x509_parse($x509);
           $finger = openssl_x509_fingerprint(trim($x509), "sha256");
@@ -43,7 +46,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         try {
           // PEM files are detected as text/plain
           check_files($_FILES["file"], "text/plain");
-          $pubkey = htmlspecialchars(trim(file_get_contents($_FILES["file"]["tmp_name"])));
+          $pubkey = htmlspecialchars(trim((string)file_get_contents($_FILES["file"]["tmp_name"])));
           $pubkey = str_replace("\r", "", $pubkey);   // dos2unix
           $pubkeynowrap = preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pubkey);
           if (($pubkey === $pubkeynowrap) || empty($pubkeynowrap))
@@ -75,7 +78,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         try {
           check_files($_FILES["file"], "application/pgp-keys");
 
-          $gpg = htmlspecialchars(file_get_contents($_FILES["file"]["tmp_name"]));
+          $gpg = htmlspecialchars((string)file_get_contents($_FILES["file"]["tmp_name"]));
           $gpg = str_replace("\r", "", $gpg);   // dos2unix
           $parse = parse_gpg($gpg);
           if (! $parse)
@@ -149,7 +152,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
      $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
   }
  
-  if ($errors == []) {
+  if ($dsas !== false && $errors == []) {
     echo "Ok";
     $dsas->asXml(_DSAS_XML);    
   } else {
@@ -158,39 +161,46 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
   }
 } else {
   $dsas = simplexml_load_file(_DSAS_XML);
-  $cafile = dsas_ca_file();
-  if ($cafile)
-    $ca = parse_x509($cafile);
-  else
-    $ca = array();
-  $dsas_x509 = array();
-  $dsas_gpg = array();
-  $dsas_pubkey = array();
-  foreach ($dsas->certificates->certificate as $certificate) {
-    if ($certificate->type == "x509") {
-      $cert =  utf8ize(openssl_x509_parse(trim($certificate->pem)));
-      $cert["pem"] = trim($certificate->pem[0]);
-      $cert["fingerprint"] = openssl_x509_fingerprint(trim($certificate->pem[0]), "sha256");
-      $cert["authority"] = trim($certificate->authority);
-      $dsas_x509[] = $cert;
-    } else if ($certificate->type == "gpg") {
-      $cert = utf8ize(parse_gpg($certificate->pem));
-      $cert["pem"] = trim($certificate->pem[0]);
-      $cert["authority"] = trim($certificate->authority);
-      $dsas_gpg[] = $cert;
-    } else if ($certificate->type == "pubkey") {
-      $cert = array();
-      $cert["pem"] = trim($certificate->pem[0]);
-      $cert["name"] = trim($certificate->name);
-      $cert["authority"] = trim($certificate->authority);
-      $pemnowrap = preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $certificate->pem[0]);
-      $pemnowrap = preg_replace('/\\s+/', '', $pemnowrap);
-      $cert["fingerprint"] = hash("sha256", base64_decode($pemnowrap));
-      $dsas_pubkey[] = $cert;
-    } 
+  if (! $dsas)
+    header("HTTP/1.0 500 Internal Server Error");
+  else {  
+    $cafile = dsas_ca_file();
+    if ($cafile)
+      $ca = parse_x509($cafile);
+    else
+      $ca = array();
+    $dsas_x509 = array();
+    $dsas_gpg = array();
+    $dsas_pubkey = array();
+    foreach ($dsas->certificates->certificate as $certificate) {
+      if ($certificate->type == "x509") {
+        $p = openssl_x509_parse(trim($certificate->pem));
+        if ($p !== false) {
+          $cert =  utf8ize($p);
+          $cert["pem"] = trim($certificate->pem[0]);
+          $cert["fingerprint"] = openssl_x509_fingerprint(trim($certificate->pem[0]), "sha256");
+          $cert["authority"] = trim($certificate->authority);
+          $dsas_x509[] = $cert;
+        }
+      } else if ($certificate->type == "gpg") {
+        $cert = utf8ize(parse_gpg($certificate->pem));
+        $cert["pem"] = trim($certificate->pem[0]);
+        $cert["authority"] = trim($certificate->authority);
+        $dsas_gpg[] = $cert;
+      } else if ($certificate->type == "pubkey") {
+        $cert = array();
+        $cert["pem"] = trim($certificate->pem[0]);
+        $cert["name"] = trim($certificate->name);
+        $cert["authority"] = trim($certificate->authority);
+        $pemnowrap = preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', (string)$certificate->pem[0]);
+        $pemnowrap = preg_replace('/\\s+/', '', $pemnowrap);
+        $cert["fingerprint"] = hash("sha256", base64_decode($pemnowrap));
+        $dsas_pubkey[] = $cert;
+      } 
+    }
+    header("Content-Type: application/json");
+    echo json_encode([["dsas" => ["x509" => $dsas_x509, "pubkey" => $dsas_pubkey, "gpg" => $dsas_gpg], "ca" => $ca]]);
   }
-  header("Content-Type: application/json");
-  echo json_encode([["dsas" => ["x509" => $dsas_x509, "pubkey" => $dsas_pubkey, "gpg" => $dsas_gpg], "ca" => $ca]]);
 }
 
 ?>

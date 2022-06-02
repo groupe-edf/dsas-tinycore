@@ -5,6 +5,12 @@ if (! dsas_loggedin(true, false))
   header("HTTP/1.0 403 Forbidden");
 else if($_SERVER["REQUEST_METHOD"] == "POST"){
     $dsas = simplexml_load_file(_DSAS_XML);
+    if ($dsas === false) {
+      header("Content-Type: application/json");
+      echo json_encode(["error" => "Error loading XML file"]);
+      die();
+    }
+    
     $data = json_decode($_POST["data"], true);
     $errors = array();
     if ($data["username"] != $_SESSION["username"])
@@ -50,7 +56,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
       if (! $found)
         $errors[] = ["error" => ["The user '{0}' does not exist",  (string)$data["username"]]];
     }
-    if ($errors == []) {
+    if ($dsas !== false && $errors == []) {
       $dsas->asXml(_DSAS_XML);
       echo "Ok";
     } else  {
@@ -59,18 +65,22 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
     }
 } else {
   $dsas = simplexml_load_file(_DSAS_XML);
-  header("Content-Type: application/json");
-  $i = 0;
-  $found = false;
-  foreach ($dsas->config->users->user as $user) {
-    if ($user->username == $_SESSION["username"]) {
-      $found = true;
-      break;
+  if (! $dsas)
+    header("HTTP/1.0 500 Internal Server Error");
+  else {
+    header("Content-Type: application/json");
+    $i = 0;
+    $found = false;
+    foreach ($dsas->config->users->user as $user) {
+      if ($user->username == $_SESSION["username"]) {
+        $found = true;
+        break;
+      }
+      $i++;
     }
-    $i++;
+    if ($found)
+      echo json_encode($dsas->config->users->user[$i]);
   }
-  if ($found)
-    echo json_encode($dsas->config->users->user[$i]);
 }
 
 ?>

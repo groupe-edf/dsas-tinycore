@@ -17,18 +17,22 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         if (session_status() != PHP_SESSION_ACTIVE)
             session_start();
  
-        $newid = session_create_id("dsas-");
-  
-        // Store data in session variables
-        $_SESSION["loggedin"] = true;
-        $_SESSION["id"] = 0;
-        $_SESSION["username"] = $username;
-        $_SESSION["timestamp"] = time();
-        session_commit();
-        ini_set("session.use_strict_mode", "0");  // Allow new ID
-        session_id($newid);
-        syslog(LOG_NOTICE, "Succesful DSAS login from " . $cnxstr);
-        echo "Ok";
+        if ($newid = session_create_id("dsas-")) {
+          // Store data in session variables
+          $_SESSION["loggedin"] = true;
+          $_SESSION["id"] = 0;
+          $_SESSION["username"] = $username;
+          $_SESSION["timestamp"] = time();
+          session_commit();
+          ini_set("session.use_strict_mode", "0");  // Allow new ID
+          session_id($newid);
+          syslog(LOG_NOTICE, "Succesful DSAS login from " . $cnxstr);
+          echo "Ok";
+        } else {
+          // This is not a security error but a server error
+          syslog(LOG_WARNING, "Failed to create DSAS login session " . $cnxstr);
+          header("HTTP/1.0 500 Internal Server Error");
+        }
     } else {
         // Need to delay return if inactive or unrecognised user, to simulate the delay from PAM
         if (! dsas_user_active($username))

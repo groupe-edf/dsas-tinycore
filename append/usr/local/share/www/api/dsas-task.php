@@ -7,12 +7,15 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
   // Manually update for autologout after 600 seconds
   if ($_POST["op"] != "info")
     $_SESSION["timestamp"] = time();
- 
-  $dsas = simplexml_load_file(_DSAS_XML);
+
   $errors = array();
   $info = "";
 
   try {
+   $dsas = simplexml_load_file(_DSAS_XML);
+   if (! $dsas)
+     throw new RuntimeException("Error loading XML file");
+  
     switch ($_POST["op"]){
       case "add":
         $data = json_decode($_POST["data"], true);
@@ -105,7 +108,9 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
                 $certok = true;
                 $have_x509 = true;
                 $x509_cert = openssl_x509_parse(trim($certificate->pem));
-                if ($x509_cert["subject"]["CN"])
+                if ($x509_cert === false)
+                  $certname ="";
+                else if ($x509_cert["subject"]["CN"])
                   $certname = $x509_cert["subject"]["CN"];
                 else if ($x509_cert["subject"]["OU"])
                   $certname = $x509_cert["subject"]["OU"];
@@ -311,6 +316,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $errors[] = ["error" => "The task ID is invalid"];
         } else {
           $dsas_active = simplexml_load_file(_DSAS_XML . ".active");
+          if (! $dsas_active)
+            throw new RuntimeException("Error loading XML file");  
           $runtask = false;
           $i = 0;
           foreach ($dsas_active->tasks->task as $task) {
@@ -346,6 +353,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $errors[] = ["error" => "The task ID is invalid"];
         } else {
           $dsas_active = simplexml_load_file(_DSAS_XML . ".active");
+          if (! $dsas_active)
+            throw new RuntimeException("Error loading XML file"); 
           $killtask = false;
           foreach ($dsas_active->tasks->task as $task) {
             if ($task->id == $id) {
@@ -372,6 +381,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $errors[] = ["error" => "The task ID is invalid"];
         } else {
           $dsas_active = simplexml_load_file(_DSAS_XML . ".active");
+          if (! $dsas_active)
+            throw new RuntimeException("Error loading XML file"); 
           $infotask = false;
           foreach ($dsas_active->tasks->task as $task) {
             if ($task->id == $id) {
@@ -410,7 +421,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
      $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
   }
  
-  if ($errors == []) {
+  if ($dsas !== false && $errors == []) {
     if ($_POST["op"] !== "info")
       echo "Ok";
     else {
@@ -425,19 +436,23 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
   }
 } else {
   $dsas = simplexml_load_file(_DSAS_XML);
-  $i=1;
-  foreach ($dsas->tasks->task as $task) {
-    $tmp = dsas_run_log($task->id);
-    $task->last = $tmp["last"];
-    $task->status = $tmp["status"];
-    if (empty($task->ca->fingerprint)) {
-      $task->ca->name = "";
-      $task->ca->fingerprint = "";
+  if (! $dsas)
+    header("HTTP/1.0 500 Internal Server Error");
+  else {
+    $i=1;
+    foreach ($dsas->tasks->task as $task) {
+      $tmp = dsas_run_log($task->id);
+      $task->last = $tmp["last"];
+      $task->status = $tmp["status"];
+      if (empty($task->ca->fingerprint)) {
+        $task->ca->name = "";
+        $task->ca->fingerprint = "";
+      }
+      $i++;
     }
-    $i++;
+    header("Content-Type: application/json");
+    echo json_encode($dsas->tasks);
   }
-  header("Content-Type: application/json");
-  echo json_encode($dsas->tasks);
 }
 
 ?>

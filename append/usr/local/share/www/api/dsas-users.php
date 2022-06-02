@@ -6,6 +6,11 @@ if (! dsas_loggedin())
 else if($_SERVER["REQUEST_METHOD"] == "POST"){
     $dsas = simplexml_load_file(_DSAS_XML);
     $data = json_decode($_POST["data"], true);
+    if ($dsas === false) {
+      header("Content-Type: application/json");
+      echo json_encode(["error" => "Error loading XML file"]);
+      die();
+    }
     $errors = array();
     switch ($_POST["op"]){
       case "add":
@@ -129,8 +134,12 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
     }
 } else {
   $dsas = simplexml_load_file(_DSAS_XML);
-  header("Content-Type: application/json");
-  echo json_encode($dsas->config->users);
+  if (! $dsas)
+    header("HTTP/1.0 500 Internal Server Error");
+  else {
+    header("Content-Type: application/json");
+    echo json_encode($dsas->config->users);
+  }
 }
 
 ?>

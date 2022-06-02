@@ -6,10 +6,13 @@ require_once "common.php";
 if (! dsas_loggedin())
   header("HTTP/1.0 403 Forbidden");
 else if($_SERVER["REQUEST_METHOD"] == "POST"){
-  $dsas = simplexml_load_file(_DSAS_XML);
   $errors = array();
 
   try {
+   $dsas = simplexml_load_file(_DSAS_XML);
+   if (! $dsas)
+     throw new RuntimeException("Error loading XML file");
+  
     switch ($_POST["op"]){
       case "renew":
         $options = array(
@@ -65,7 +68,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         try {
           check_files($_FILES["file"], "text/plain");
 
-          $crt = htmlspecialchars(file_get_contents($_FILES["file"]["tmp_name"]));
+          $crt = htmlspecialchars((string)file_get_contents($_FILES["file"]["tmp_name"]));
           $crt = str_replace("\r", "", $crt);   // dos2unix
           if (!openssl_x509_parse($crt))
             throw new RuntimeException("The CRT file must be in PEM format");
@@ -100,11 +103,15 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
   }
 } else {
   $dsas = simplexml_load_file(_DSAS_XML);
-  $web = $dsas->config->web;
-  $web->ssl->csr = file_get_contents(_DSAS_VAR . "/dsas.csr");
-  $web->ssl->pem = file_get_contents(_DSAS_VAR . "/dsas_pub.pem");
-  header("Content-Type: application/json");
-  echo json_encode($web);
+  if (! $dsas)
+    header("HTTP/1.0 500 Internal Server Error");
+  else {
+    $web = $dsas->config->web;
+    $web->ssl->csr = file_get_contents(_DSAS_VAR . "/dsas.csr");
+    $web->ssl->pem = file_get_contents(_DSAS_VAR . "/dsas_pub.pem");
+    header("Content-Type: application/json");
+    echo json_encode($web);
+  }
 }
   
 ?>

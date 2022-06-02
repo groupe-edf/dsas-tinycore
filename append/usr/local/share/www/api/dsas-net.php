@@ -4,10 +4,13 @@ require_once "common.php";
 if (! dsas_loggedin())
   header("HTTP/1.0 403 Forbidden");
 else if($_SERVER["REQUEST_METHOD"] == "POST"){
-  $dsas = simplexml_load_file(_DSAS_XML);
   $errors = array();
 
   try {
+   $dsas = simplexml_load_file(_DSAS_XML);
+   if (! $dsas)
+     throw new RuntimeException("Error loading XML file");
+     
     switch ($_POST["op"]){
       case "all":
         $data = json_decode($_POST["data"], true);
@@ -67,7 +70,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
      $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
   }
  
-  if ($errors == []) {
+  if ($dsas !== false && $errors == []) {
     echo "Ok";
     $dsas->asXml(_DSAS_XML);    
   } else {
@@ -76,8 +79,12 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
   }
 } else {
   $dsas = simplexml_load_file(_DSAS_XML);
-  header("Content-Type: application/json");
-  echo json_encode($dsas->config->network);
+  if (! $dsas)
+    header("HTTP/1.0 500 Internal Server Error");
+  else {
+    header("Content-Type: application/json");
+    echo json_encode($dsas->config->network);
+  }
 }
 
 ?>
