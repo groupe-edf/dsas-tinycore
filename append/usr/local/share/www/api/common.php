@@ -465,7 +465,7 @@ function utf8ize(array $d) : array {
 function _utf8ize(array|string|int $d) : array|string|int {
   if (is_array($d)) {
     foreach ($d as $k => $v) {
-        $d[$k] = utf8ize($v);
+        $d[$k] = _utf8ize($v);
     }
   } else if (is_string ($d)) {
     return utf8_encode($d);
