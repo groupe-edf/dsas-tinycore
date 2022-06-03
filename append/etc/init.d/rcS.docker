@@ -1,7 +1,7 @@
 #! /bin/sh
 
 # Setup tcedir
-# FIXME : shellcheck want to replace "ls -1" by "find"
+# FIXME : shellcheck wants to replace "ls -1" by "find"
 # Need to test it on a docker
 MNT=$(ls -1 /mnt | head -1 | sed -e "s:/$::")
 ln -s "/mnt/$MNT/tce" /etc/sysconfig/tcedir

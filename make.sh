@@ -1,9 +1,6 @@
 #!/bin/sh
 #
-# shellcheck shell=sh
 # shellcheck disable=SC2039
-# global _build_dep _conf_cmd _dep _install_cmd _make_cmd _pkg _pkg_path _pkgs
-# global _post_build _post_install _pre_config _uri _version
 
 # If not running as root and/or running /bin/dash restart as root with a compatible shell
 readlink /proc/$$/exe | grep -q dash && _shell="/bin/bash"
@@ -21,7 +18,7 @@ LANG="C"
 
 # Get default architecture
 arch="32"
-[ "$(uname -m)" == "x86_64" ] && arch="64"
+[ "$(uname -m)" = "x86_64" ] && arch="64"
 
 # Parse commandline args
 rebuild=0
@@ -72,13 +69,13 @@ while [ "$#" -gt 0 ]; do
 done
 
 # local hosts package directory on Tinycore for package reuse if possible
-[ "$arch" == 64 ] && [ "$(uname -m)" == "x86_64" ] && \
+[ "$arch" = 64 ] && [ "$(uname -m)" = "x86_64" ] && \
   [ -d "/etc/sysconfig/tcedir/optional" ] && tce_dir="/etc/sysconfig/tcedir/optional"
-[ "$arch" == 32 ] && [ "$(uname -m)" == "i686" ] && \
+[ "$arch" = 32 ] && [ "$(uname -m)" = "i686" ] && \
   [ -d "/etc/sysconfig/tcedir/optional" ] && tce_dir="/etc/sysconfig/tcedir/optional"
 
 # Can't build 64-bit DSAS on 32-bit host
-[ "$arch" == 64 ] && [ "$(uname -m)" == "i686" ] && { echo "Can not build 64-bit DSAS on 32-bit host"; exit 1; }
+[ "$arch" = 64 ] && [ "$(uname -m)" = "i686" ] && { echo "Can not build 64-bit DSAS on 32-bit host"; exit 1; }
 
 # Longer curl timeout
 curl_cmd="curl --connect-timeout 300"
@@ -152,8 +149,7 @@ get_tcz() {
     dep=$target.dep
     if test ! -f "$target"; then
       if test -f "$pkg_dir/$package.pkg"; then
-        # shellcheck disable=SC2030
-        (_old="$extract"; extract="$build"; build_pkg "$package"; extract="$_old" )
+        { _old="$extract"; extract="$build"; build_pkg "$package"; extract="$_old"; }
       elif test -f "$tce_dir/$package.tcz"; then
         msg "fetching package $package ..."
         cp "$tce_dir/$package.tcz" "$target"
@@ -170,14 +166,17 @@ get_tcz() {
       if test -f "$tce_dir/$package.tcz.dep"; then
         cp "$tce_dir/$package.tcz.dep" "$dep"
       else
-         $curl_cmd -o "$dep" "$tcz_url/$package.tcz.dep" || touch $dep
+         $curl_cmd -o "$dep" "$tcz_url/$package.tcz.dep" || touch "$dep"
       fi
+      # Want word splitting on arg to get_tcz
+      # shellcheck disable=SC2046
       grep -q 404 "$dep" || get_tcz $(sed -e s/.tcz$// "$dep")
     fi
   done
 }
 
 install_tcz() {
+    # shellcheck disable=SC2068
     get_tcz $@
     exit_if_nonroot
     for package; do 
@@ -195,6 +194,8 @@ install_tcz() {
             fi
             dep=$target.dep
             if test -s "$dep"; then
+              # Want word splitting on arg to get_tcz
+              # shellcheck disable=SC2046
               install_tcz $(sed -e s/.tcz$// "$dep")
             fi
         fi  
@@ -226,21 +227,21 @@ unpack() {
     .tbz) tar xvjCf "$2" "$1"; ;;
     .tar) tar xvCf "$2" "$1"; ;;
     .gz)
-      if [ "${1: -7}" == ".tar.gz" ]; then
+      if [ "${1: -7}" = ".tar.gz" ]; then
         tar xvzCf "$2" "$1";
       else
         error "An archive can not be a gzip"
       fi
       ;;
     .bz2) 
-      if [ "${1: -8}" == ".tar.bz2" ]; then
+      if [ "${1: -8}" = ".tar.bz2" ]; then
         tar xvjCf "$2" "$1";
       else
         error "An archive can not be a bzip2"
       fi
       ;;
     .xz)
-      if [ "${1: -7}" == ".tar.xz" ]; then
+      if [ "${1: -7}" = ".tar.xz" ]; then
         tar xvJCf "$2" "$1";
       else
         error "An archive can not be a xz"
@@ -262,6 +263,8 @@ build_pkg() {
         # Unset build variables before sourcing package file
         unset _build_dep _conf_cmd _dep _install_cmd _make_cmd _pkg _pkg_path _pkgs \
           _post_build _post_install _pre_config _uri _version
+        # Use Linux-PAM.pkg as a non trivial source file to test with
+        # shellcheck source=pkg/Linux-PAM.pkg
         . "$pkg_file"
         _src=$(basename "$_uri")
         for dep in $_build_dep; do
@@ -269,77 +272,76 @@ build_pkg() {
           (build_pkg "$dep") || error "Building package $dep" 
         done
         msg "Creating build image"
-        #if [ -d $extract ]; then
-        #  umount $extract/proc
-        #  rm -fr $extract
-        #fi
-        mkdir -p $extract
-        zcat $squashfs | { cd $extract; cpio -i -H newc -d; }
-        mount -t proc /proc $extract/proc
+        if [ -d "$extract" ]; then
+          umount "$extract/proc"
+          rm -fr "$extract"
+        fi
+        mkdir -p "$extract"
+        zcat "$squashfs" | { cd "$extract" || exit 1; cpio -i -H newc -d; }
+        mount -t proc /proc "$extract/proc"
 
         # FIXME : Fix missing links
         # It appears that certain links are missings with the base intsall
         # and they need to be forced
-        ( cd $extract/usr/lib; ln -s ../../lib/libpthread.so.0 libpthread.so; )
-        ( cd $extract/usr/lib; ln -s ../../lib/libdl.so.2 libdl.so; )   
+        ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libpthread.so.0 libpthread.so; )
+        ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libdl.so.2 libdl.so; )   
 
         # Force install of coreutils as always needed for install_tcz
         install_tcz coreutils
-        for dep in $_build_dep; do
-          install_tcz $dep
-        done
+        # shellcheck disable=SC2086
+        install_tcz $_build_dep
 
         # Copy /etc/resolv.conf file 
-        mkdir -p $extract/etc
-        cp -p /etc/resolv.conf $extract/etc/resolv.conf
+        mkdir -p "$extract/etc"
+        cp -p /etc/resolv.conf "$extract/etc/resolv.conf"
 
         msg "Building $_pkg.tcz"
-        mkdir -p $src_dir
-        download $_uri $src_dir
-        mkdir -p $extract/home/tc
+        mkdir -p "$src_dir"
+        download "$_uri" "$src_dir"
+        mkdir -p "$extract/home/tc"
 
-        mkdir -p $extract/$builddir
-        mkdir -p $extract/$destdir
-        unpack $src_dir/$_src $extract/$builddir
-        chroot $extract chown -R tc.staff /home/tc
-        cat << EOF > $extract/tmp/script
+        mkdir -p "$extract/$builddir"
+        mkdir -p "$extract/$destdir"
+        unpack "$src_dir/$_src" "$extract/$builddir"
+        chroot "$extract" chown -R tc.staff /home/tc
+        cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 $_pre_config
 exit \$?
 EOF
-        chmod a+x $extract/tmp/script
-        [ -z "$_pre_config" ] || chroot $extract /tmp/script || { umount $extract/proc; error "Unexpected error ($?) in configuration"; }
+        chmod a+x "$extract/tmp/script"
+        [ -z "$_pre_config" ] || chroot "$extract" /tmp/script || { umount "$extract/proc"; error "Unexpected error ($?) in configuration"; }
 
 
         msg "Configuring $_pkg"
-        cat << EOF > $extract/tmp/script
+        cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 cd $builddir/$_pkg_path
 $_conf_cmd
 exit \$?
 EOF
-        chmod a+x $extract/tmp/script
-        [ -z "$_conf_cmd" ] || chroot --userspec=tc $extract /tmp/script || { umount $extract/proc; error "Unexpected error ($?) in configuration"; }
+        chmod a+x "$extract/tmp/script"
+        [ -z "$_conf_cmd" ] || chroot --userspec=tc "$extract" /tmp/script || { umount "$extract/proc"; error "Unexpected error ($?) in configuration"; }
         msg "Building $_pkg"
-        cat << EOF > $extract/tmp/script
+        cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 cd $builddir/$_pkg_path
 $_make_cmd
 exit \$?
 EOF
-        chmod a+x $extract/tmp/script
-        [ -z "$_make_cmd" ] || chroot --userspec=tc $extract /tmp/script $_make_cmd || { umount $extract/proc; error "Unexpected error ($?) in build"; }
+        chmod a+x "$extract/tmp/script"
+        [ -z "$_make_cmd" ] || chroot --userspec=tc "$extract" /tmp/script $_make_cmd || { umount "$extract/proc"; error "Unexpected error ($?) in build"; }
         msg "Installing $_pkg"
-        cat << EOF > $extract/tmp/script
+        cat << EOF > "$extract/tmp/script"
 export DESTDIR=$destdir
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 cd $builddir/$_pkg_path
 $_install_cmd$destdir
 exit \$?
 EOF
-        chmod a+x $extract/tmp/script
-        [  -z "$_install_cmd" ] || chroot $extract /tmp/script || { umount $extract/proc; error "Unexpected error ($?) in install"; }
-        cat << EOF > $extract/tmp/script
+        chmod a+x "$extract/tmp/script"
+        [  -z "$_install_cmd" ] || chroot "$extract" /tmp/script || { umount "$extract/proc"; error "Unexpected error ($?) in install"; }
+        cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 destdir=$destdir
 builddir=$builddir
@@ -348,14 +350,14 @@ cd $destdir
 $_post_build
 exit \$?
 EOF
-        chmod a+x $extract/tmp/script
-        [ -z "$_post_build" ] || { msg "Post build script"; chroot $extract /tmp/script; } || { umount $extract/proc; error "Unexpected error ($?) in post build"; }
+        chmod a+x "$extract/tmp/script"
+        [ -z "$_post_build" ] || { msg "Post build script"; chroot "$extract" /tmp/script; } || { umount "$extract/proc"; error "Unexpected error ($?) in post build"; }
         # Create post-install script if needed
         if [ -n "$_post_install" ]; then 
           msg "Creating post install script"
-          mkdir -p $extract$destdir/usr/local/tce.installed
-          echo "$_post_install" > $extract$destdir/usr/local/tce.installed/$_pkg
-          chmod 755 $extract$destdir/usr/local/tce.installed/$_pkg
+          mkdir -p "$extract$destdir/usr/local/tce.installed"
+          echo "$_post_install" > "$extract$destdir/usr/local/tce.installed/$_pkg"
+          chmod 755 "$extract$destdir/usr/local/tce.installed/$_pkg"
         fi
 
         # Create the pkgname and shell escaped list of directories/files and then make TCZ 
@@ -368,40 +370,40 @@ EOF
           dirs=""
           set -o noglob
           for _dir in $(echo "$arg" | sed -e 's/^.*{\(.*\)}$/\1/');  do
-            dirs="$dirs $(echo $_dir | sed -e 's:^/::')"
+            dirs="$dirs $(echo "$_dir" | sed -e 's:^/::')"
           done
           set +o noglob
           IFS=$OIFS
-          if [ "$pkg" == "main" ]; then
+          if [ "$pkg" = "main" ]; then
             tcz=$_pkg.tcz
             [ -z "$_post_install" ] || dirs="$dirs usr/local/tce.installed"
           else
             tcz=$_pkg-$pkg.tcz
           fi
           msg "Creating $tcz"
-          [ -f $tcz_dir/$tcz ] && rm $tcz_dir/$tcz
+          [ -f "$tcz_dir/$tcz" ] && rm "$tcz_dir/$tcz"
           tempdir=$(mktemp -d)
-          chmod 755 $tempdir
-          (cd $extract$destdir; tar -cf - $dirs | tar -C $tempdir -x -f -) 
-          mksquashfs $tempdir $tcz_dir/$tcz
-          rm -fr $tempdir
-          cat $tcz_dir/$tcz | md5sum | sed -e "s/ -$//g" > $tcz_dir/$tcz.md5.txt
-          if [ "$pkg" == "main" ]; then
-            echo -n "" > $tcz_dir/$tcz.dep
+          chmod 755 "$tempdir"
+          (cd "$extract$destdir" || exit 1; tar -cf - "$dirs" | tar -C "$tempdir" -x -f -) 
+          mksquashfs "$tempdir" "$tcz_dir/$tcz"
+          rm -fr "$tempdir"
+          md5sum "$tcz_dir/$tcz" | sed -e "s/  $tcz_dir/$tcz$//g" > "$tcz_dir/$tcz.md5.txt"
+          if [ "$pkg" = "main" ]; then
+            echo -n "" > "$tcz_dir/$tcz.dep"
             for dep in $_dep; do
-              echo -n -e "$dep\n" >> $tcz_dir/$tcz.dep
+              echo -n -e "$dep\n" >> "$tcz_dir/$tcz.dep"
             done
           else
-            echo "$_pkg" > $tcz_dir/$tcz.dep
+            echo "$_pkg" > "$tcz_dir/$tcz.dep"
           fi
           IFS=";"
         done
         IFS=$OIFS
-        umount $extract/proc
-        if [ "$keep" == "0" ]; then
+        umount "$extract/proc"
+        if [ "$keep" = "0" ]; then
           msg "Removing build image"
-          if [ -d $extract ]; then 
-            rm -fr $extract
+          if [ -d "$extract" ]; then 
+            rm -fr "$extract"
           fi
         fi
 
@@ -409,7 +411,7 @@ EOF
         # Can't rebuild package try getting the tcz
         _old="$extract"
         extract="$build"
-        get_tcz $pkg
+        get_tcz "$pkg"
         extract="$_old"
       fi
     fi
@@ -418,7 +420,7 @@ EOF
 
 get_unpack_livecd(){
   test -f $livecd0 || msg Downloading $livecd_url
-  test -f $livecd0 || cmd $curl_cmd -o $livecd0 $livecd_url || exit 1
+  test -f $livecd0 || cmd "$curl_cmd" -o "$livecd0" "$livecd_url" || exit 1
   mkdir -pv $mnt
   if ! ls $squashfs >/dev/null 2> /dev/null; then
     msg Unpacking the ISO $livecd_url
@@ -474,29 +476,31 @@ build)
   mkdir -p $work
   get_unpack_livecd
 
-  [ -d $extract ] || mkdir -p $extract
-  [ -d $build_dir ] || mkdir -p $build_dir
-  [ -z $pkgs ] && error "No package to build given"
+  [ -d "$extract" ] || mkdir -p "$extract"
+  [ -d "$builddir" ] || mkdir -p "$builddir"
+  [ -z "$pkgs" ] && error "No package to build given"
+  # shellcheck disable=SC2086
   build_pkg $pkgs
   exit 0
   ;;
 docker)
   # Force build of the ISO
   shift
-  [ -f "$dsascd" ] || $0 $*
+  [ -f "$dsascd" ] || $0 "$@"
   
   # Repack the disk image
-  mkdir -p $newiso
-  mount $dsascd $newiso
+  mkdir -p "$newiso"
+  mount "$dsascd" "$newiso"
   extract=$rootfs64
   msg "Extracting DSAS files"
-  rm -fr $extract
-  mkdir -p $extract
-  zcat $squashfs | { cd $extract; cpio -i -H newc -d; }
-  umount $newiso
+  rm -fr "$extract"
+  mkdir -p "$extract"
+  zcat "$squashfs" | { cd "$extract" || exit 1; cpio -i -H newc -d; }
+  umount "$newiso"
   msg "Setting up DSAS for docker"
   install_tcz squashfs-tools
-  cat docker/tce-load.patch | (cd $extract; patch usr/bin/tce-load; )
+  patch -d "$extract" -i docker/tce-load.patch usr/bin/tce-load  
+  # cat docker/tce-load.patch | (cd $extract || exit 1; patch usr/bin/tce-load; )
   echo -n tc > $extract/etc/sysconfig/tcuser
   msg "Compressing DSAS files"  
   mkdir -p $docker
@@ -504,7 +508,7 @@ docker)
   msg "Creating docker install package in $dockimage"
   cp -pr docker/Makefile docker/Dockerfile $docker
   tar -czC $docker -f $dockimage .
-  if [ "$keep" == "0" ]; then
+  if [ "$keep" = "0" ]; then
     rm -fr $newiso $extract $docker
   fi
   exit 0  
@@ -519,7 +523,7 @@ docker)
   # Unpack squashfs
   if ! ls $extract/proc > /dev/null 2> /dev/null; then
     cmd mkdir -p $extract
-    zcat $squashfs | { cd $extract; cpio -i -H newc -d; }
+    zcat "$squashfs" | { cd "$extract" || exit 1; cpio -i -H newc -d; }
   fi
 
   # FIXME
@@ -529,7 +533,7 @@ docker)
   # busybox because the toolchain is broken at that point. So we need to install libtirpc
   # first and manually created the link
   install_tcz libtirpc
-  chroot $extract /bin/ln -s /usr/local/lib/libtirpc.so.3 /lib/libtirpc.so.3
+  chroot "$extract" /bin/ln -s /usr/local/lib/libtirpc.so.3 /lib/libtirpc.so.3
   
 
   # Install the needed packages
@@ -557,7 +561,7 @@ docker)
   install_tcz lftp
   install_tcz libpam-radius-auth
 
-  if [ "$testcode" == "1" ]; then
+  if [ "$testcode" = "1" ]; then
     install_tcz freeradius
     install_tcz rsyslog
   fi
@@ -566,25 +570,25 @@ docker)
   # are installed to allow for files to be overwritten. Run as root 
   # and correct the ownership of files 
   msg append dsas files
-  rsync -rlptv $append/ $extract/
-  mkdir -p $extract/home/tc
-  chown root.root $extract
-  chmod 755 $extract/home
+  rsync -rlptv "$append/$extract/"
+  mkdir -p "$extract/home/tc"
+  chown root.root "$extract"
+  chmod 755 "$extract/home"
 
   # prevent autologin of tc user
-  ( cd $extract/etc; sed -i -r 's/(.*getty)(.*autologin)(.*)/\1\3/g'  inittab; )
+  ( cd "$extract/etc" || exit 1; sed -i -r 's/(.*getty)(.*autologin)(.*)/\1\3/g'  inittab; )
 
   # Create users
   passfile=$work/dsas_pass.txt
-  cp /dev/null $passfile
-  chmod 700 $passfile
+  cp /dev/null "$passfile"
+  chmod 700 "$passfile"
 
   create_users=$extract/tmp/create_users.sh
-  cp /dev/null $create_users
+  cp /dev/null "$create_users"
 
   msg WARNING: Change default password for 'tc' user and run 'filetool.sh -b'
-  echo tc:dSaO2021DSAS >> $passfile
-cat << EOF >> $create_users
+  echo tc:dSaO2021DSAS >> "$passfile"
+cat << EOF >> "$create_users"
 echo tc:dSaO2021DSAS | chpasswd -c sha512
 mkdir /home/tc/.ssh
 chmod 700 /home/tc/.ssh
@@ -593,16 +597,16 @@ EOF
 
   msg adding user 'verif'
   pwgen $service_pass_len
-  echo "verif:$pass" >> $passfile
-  cat << EOF >> $create_users
+  echo "verif:$pass" >> "$passfile"
+  cat << EOF >> "$create_users"
 adduser -s /bin/false -u 2000 -D -h /home/verif verif
 echo verif:$pass | chpasswd -c sha512
 EOF
 
   msg adding user 'bas'
   pwgen $service_pass_len
-  echo "bas:$pass" >> $passfile
-  cat << EOF >> $create_users
+  echo "bas:$pass" >> "$passfile"
+  cat << EOF >> "$create_users"
 adduser -s /bin/false -u 2001 -D -h /home/bas bas
 echo bas:$pass | chpasswd -c sha512
 mkdir /home/bas/.ssh
@@ -612,8 +616,8 @@ EOF
 
   msg adding user 'haut'
   pwgen $service_pass_len
-  echo "haut:$pass" >> $passfile
-  cat << EOF >> $create_users
+  echo "haut:$pass" >> "$passfile"
+  cat << EOF >> "$create_users"
 adduser -s /bin/false -u 2002 -D -h /home/haut haut
 echo bas:$pass | chpasswd -c sha512
 mkdir /home/haut/.ssh
@@ -621,7 +625,7 @@ chmod 700 /home/haut/.ssh
 chown haut.haut /home/haut/.ssh
 EOF
 
-  cat << EOF >> $create_users
+  cat << EOF >> "$create_users"
 addgroup verif bas
 addgroup verif haut
 addgroup tc verif
@@ -659,9 +663,9 @@ ulimit -c 0" >> /etc/profile
 
 EOF
 
-  chmod 755 $create_users
-  chroot $extract /tmp/create_users.sh
-  rm $create_users
+  chmod 755 "$create_users"
+  chroot "$extract" /tmp/create_users.sh
+  rm "$create_users"
 
   # Special case, very limited busybox for chroot with only /bin/ash and /usr/bin/env installed
   _old=$extract
@@ -690,7 +694,7 @@ EOF
       [ -d "\$_d" ] || (umask 022; mkdir -p \$_d)
       1>&2 echo "  [-] Linking \$_ldir/\$_file to \$_link"
       ln -s "\$_link" "\$_ldir/\$_file"
-      if [ "\$(dirname \$_link)" == "." ]; then
+      if [ "\$(dirname \$_link)" = "." ]; then
         _file="\$(dirname \$_file)/\$_link"
       else
         _file=\$_link
@@ -701,7 +705,7 @@ EOF
     cp -p "\$_file" "\$_ldir/\$_file"
     ldd \$_file 2> /dev/null | while read -r _line; do
       _l2=\$(echo \$_line | cut -d\\> -f2)
-      [ "\$_line" == "\$_l2" ] && continue
+      [ "\$_line" = "\$_l2" ] && continue
       _lib=\$(echo \$_l2 | cut -d\\( -f1 | xargs)
       [ -e "\$_ldir/\$_lib" ] && continue
       [ -e "\$_lib" ] || { 1>&2 echo "    [E] library XX\${_lib}XX not found"; exit 1; }
@@ -712,7 +716,7 @@ EOF
         [ -d "\$_d" ] || (umask 022; mkdir -p \$_d)
         1>&2 echo "    [-] Linking \$_ldir/\$_lfile to \$_link"
         ln -s "\$_link" "\$_ldir/\$_lfile"
-        if [ "\$(dirname \$_link)" == "." ]; then
+        if [ "\$(dirname \$_link)" = "." ]; then
           _lfile="\$(dirname \$_lfile)/\$_link"
         else
           _lfile=\$_link
@@ -729,32 +733,31 @@ EOF
   { msg "Setting up lftp chroot jail"; chroot $extract /tmp/script; } || { error "Unexpected error ($?) in lftp chroot creation"; exit 1; }
   /bin/rm -f $extract/tmp/script
   mknod -m=666 $extract/opt/lftp/dev/null c 1 3
-  (cd $extract/opt/lftp/dev/; ln -s pts/ptmx)
+  (cd "$extract/opt/lftp/dev/" || exit 1; ln -s pts/ptmx $extract/opt/lftp/dev/ptmx)
 
   # Add console timeout to all .profile files
-  for file in $(find $extract -name ".profile"); do
-    echo "export TMOUT=300" >> $file
-  done
+  while IFS= read -r -d '' file; do
+    echo "export TMOUT=300" >> "$file"
+  done < <(ind $extract -name ".profile" -print0)
 
   # customize boot screen
-  cp -p ./boot/isolinux/boot.msg $newiso/boot/
+  cp -p ./boot/isolinux/boot.msg "$newiso/boot/"
   if [ "$arch" != "64" ]; then
-    cp -p ./boot/isolinux/isolinux.cfg $newiso/boot/isolinux
+    cp -p ./boot/isolinux/isolinux.cfg "$newiso/boot/isolinux"
   else
-    cp -p ./boot/isolinux/isolinux64.cfg $newiso/boot/isolinux/isolinux.cfg
+    cp -p ./boot/isolinux/isolinux64.cfg "$newiso/boot/isolinux/isolinux.cfg"
   fi
 
   msg creating $dsascd
-  tmp=$work/squashfs.gz
-  ( cd $extract; find | cpio -o -H newc; ) | gzip -2 > $squashfs
+  ( cd "$extract" || exit 1; find . | cpio -o -H newc; ) | gzip -2 > "$squashfs"
   mkisofs=$(which mkisofs genisoimage | head -n 1)
-  cmd $mkisofs -l -J -R -V TC-custom -no-emul-boot -boot-load-size 4 \
+  cmd "$mkisofs" -l -J -R -V TC-custom -no-emul-boot -boot-load-size 4 \
     -boot-info-table -b boot/isolinux/isolinux.bin \
     -c boot/isolinux/boot.cat -o $dsascd $newiso
   msg creating $dsascd.md5
-  (cd $work; md5sum `basename $dsascd`; ) > $dsascd.md5
+  (cd "$work" || exit 1; md5sum "$(basename "$dsascd")"; ) > "$dsascd.md5"
 
-  if [ "$keep" == "0" ]; then
+  if [ "$keep" = "0" ]; then
     rm -fr $image $newiso $mnt
   fi
   exit 0
