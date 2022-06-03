@@ -1,13 +1,18 @@
 #!/bin/sh
+#
+# shellcheck shell=sh
+# shellcheck disable=SC2039
+# global _build_dep _conf_cmd _dep _install_cmd _make_cmd _pkg _pkg_path _pkgs
+# global _post_build _post_install _pre_config _uri _version
 
 # If not running as root and/or running /bin/dash restart as root with a compatible shell
 readlink /proc/$$/exe | grep -q dash && _shell="/bin/bash"
-[ $(id -u) -ne 0 ] && _asroot="sudo -E"
+[ "$(id -u)" -ne 0 ] && _asroot="sudo -E"
 if [ -n "$_shell" ]; then
-  $_asroot $_shell $0 $*
+  $_asroot $_shell "$0" "$@"
   exit $?
 elif [ -n "$_asroot" ]; then
-  $_asroot $0 $*
+  $_asroot "$0" "$@"
   exit $?
 fi
 
@@ -34,8 +39,8 @@ while [ "$#" -gt 0 ]; do
     -t|--test) testcode=1; ;;
     -32) arch="32"; ;;
     -64) arch="64"; ;;
-    -?|-h|--help)
-      echo "Usage: $(basename $0)  [Options] [Command]"
+    -h|--help)
+      echo "Usage: $(basename "$0")  [Options] [Command]"
       echo "Build DSAS packages and distributions. Valid commands are"
       echo "     build pkg       Build the package 'pkg' from source code"
       echo "     source          Package DSAS source code"
@@ -88,6 +93,7 @@ else
   tcz_url=http://tinycorelinux.net/13.x/x86_64/tcz
   tcz_src=http://tinycorelinux.net/13.x/x86_64/release/src
 fi
+export tcz_src
 
 # internally used dirs and paths
 work=./work
@@ -118,25 +124,25 @@ service_pass_len=24
 umask 0022
 
 msg() {
-    echo '[*]' $*
+    echo "[*]" "$@"
 }
 
 cmd() {
-    echo '[cmd]' $*
-    $*
+    echo "[cmd]" "$@"
+    "$@"
 }
 
 error() {
-    echo '[E]' $*
+    echo "[E]" "$@"
     exit 1
 }
 
 exit_if_nonroot() {
-    test $(id -u) = 0 || error this script needs to run as root
+    test "$(id -u)" = 0 || error this script needs to run as root
 }
  
 pwgen() {
-    pass=`< /dev/random tr -dc _A-Z-a-z-0-9 | head -c$1;echo;`
+    pass=$(< /dev/random tr -dc _A-Z-a-z-0-9 | head -c "$1"; echo;)
 }
 
 get_tcz() {
@@ -144,109 +150,108 @@ get_tcz() {
   for package; do
     target=$tcz_dir/$package.tcz
     dep=$target.dep
-    if test ! -f $target; then
-      if test -f $pkg_dir/$package.pkg; then
-        (_old=$extract; extract=$build; build_pkg $package; extract=$_old)
-      elif test -f $tce_dir/$package.tcz; then
-        msg fetching package $package ...
-        cp $tce_dir/$package.tcz $target
-        if ! test -f $tce_dir/$package/tcz.dep; then
-          touch $tce_dir/$package.tcz.dep
+    if test ! -f "$target"; then
+      if test -f "$pkg_dir/$package.pkg"; then
+        # shemmcheck disable=SC2030
+        (_old="$extract"; extract="$build"; build_pkg "$package"; extract=$_old )
+      elif test -f "$tce_dir/$package.tcz"; then
+        msg fetching package "$package" ...
+        cp "$tce_dir/$package.tcz" "$target"
+        if ! test -f "$tce_dir/$package/tcz.dep"; then
+          touch "$tce_dir/$package.tcz.dep"
         fi
       else
-        msg fetching package $package ...
-        $curl_cmd -o $target $tcz_url/$package.tcz || exit 1
+        msg fetching package "$package" ...
+        $curl_cmd -o "$target $tcz_url/$package.tcz" || exit 1
       fi
     fi
 
-    if test ! -f $dep; then
-      msg fetching dep list of $package ...
-      if test -f $tce_dir/$package.tcz.dep; then
-        cp $tce_dir/$package.tcz.dep $dep
+    if test ! -f "$dep"; then
+      msg "fetching dep list of $package ..."
+      if test -f "$tce_dir/$package.tcz.dep"; then
+        cp "$tce_dir/$package.tcz.dep" "$dep"
       else
-         $curl_cmd -o $dep $tcz_url/$package.tcz.dep || touch $dep
+         $curl_cmd -o "$dep" "$tcz_url/$package.tcz.dep" || touch $dep
       fi
-      grep -q 404 $dep && >$dep
-      if test -s $dep; then
-        get_tcz $(sed -e s/.tcz$// $dep)
+      grep -q 404 "$dep" && >$dep
+      if test -s "$dep"; then
+        get_tcz "$(sed -e s/.tcz$// "$dep")"
       fi
     fi
   done
 }
 
 install_tcz() {
-    get_tcz $@
+    get_tcz "$@"
     exit_if_nonroot
     for package; do 
         target=$tcz_dir/$package.tcz
         tce_marker=$extract/usr/local/tce.installed/$package
-        if ! test -f $tce_marker; then
-            msg installing package $package ...
-            unsquashfs -f -d $extract $target
-            if test -s $tce_marker; then
-                msg post-install script $package
-                chroot $extract env LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib /usr/local/tce.installed/$package
+        if ! test -f "$tce_marker"; then
+            msg "installing package $package ..."
+            unsquashfs -f -d "$extract" "$target"
+            if test -s "$tce_marker"; then
+                msg "post-install script $package"
+                chroot "$extract" env LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib "/usr/local/tce.installed/$package"
             else
-                mkdir -p $extract/usr/local/tce.installed
-                touch $tce_marker
+                mkdir -p "$extract/usr/local/tce.installed"
+                touch "$tce_marker"
             fi
             dep=$target.dep
-            if test -s $dep; then
-              install_tcz $(sed -e s/.tcz$// $dep)
+            if test -s "$dep"; then
+              install_tcz "$(sed -e s/.tcz$// "$dep")"
             fi
         fi  
     done
 }
 
 get() {
-  _src=$(basename $1)
+  _src=$(basename "$1")
   msg "Downloading $_src"
-  $curl_cmd -L -o $2/$_src $1 || exit 1
+  $curl_cmd -L -o "$2/$_src" "$1" || exit 1
 }
 
 download() {
-  if [ $forcedownload -eq 0 ]; then
-    if [ ! -f "$2/$(basename $1)" ]; then
-      case $(echo $1 | sed -e "s/.*\(\..*\)$/\1/g") in
-        .tgz|.tbz|.tar|.gz|.bz2|.xz) get $*; ;;
+  if [ "$forcedownload" -eq 0 ]; then
+    if [ ! -f "$2/$(basename "$1")" ]; then
+      case $(echo "$1" | sed -e "s/.*\(\..*\)$/\1/g") in
+        .tgz|.tbz|.tar|.gz|.bz2|.xz) get "$@"; ;;
         *) error "Unknown file extension $1"; ;;
       esac
     fi
   else
-    get $1 $2
+    get "$1" "$2"
   fi 
 }
 
 unpack() {
-  retval=0
-  case $(echo $1 | sed -e "s/.*\(\..*\)$/\1/g") in
-    .tgz) tar xvzCf $2 $1; ;;
-    .tbz) tar xvjCf $2 $1; ;;
-    .tar) tar xvCf $2 $1; ;;
+  case $(echo "$1" | sed -e "s/.*\(\..*\)$/\1/g") in
+    .tgz) tar xvzCf "$2" "$1"; ;;
+    .tbz) tar xvjCf "$2" "$1"; ;;
+    .tar) tar xvCf "$2" "$1"; ;;
     .gz)
       if [ "${1: -7}" == ".tar.gz" ]; then
-        tar xvzCf $2 $1;
+        tar xvzCf "$2" "$1";
       else
         error "An archive can not be a gzip"
       fi
       ;;
     .bz2) 
       if [ "${1: -8}" == ".tar.bz2" ]; then
-        tar xvjCf $2 $1;
+        tar xvjCf "$2" "$1";
       else
         error "An archive can not be a bzip2"
       fi
       ;;
     .xz)
       if [ "${1: -7}" == ".tar.xz" ]; then
-        tar xvJCf $2 $1;
+        tar xvJCf "$2" "$1";
       else
         error "An archive can not be a xz"
       fi
       ;;
     *)
       error "Unknown file extension $1"
-      retval=1
       ;;
   esac
 }
@@ -255,18 +260,17 @@ build_pkg() {
   for pkg in $1; do
     pkg_file=$pkg_dir/${pkg%%-dev}.pkg
     if [ ! -f "$tcz_dir/$pkg.tcz" ] || { [ $rebuild -eq "1" ]  &&  \
-        [ $startdate -gt $(date -r "$tcz_dir/$pkg.tcz" +%s) ]; } then
+        [ "$startdate" -gt "$(date -r "$tcz_dir/$pkg.tcz" +%s)" ]; } then
       if [ -f "$pkg_file" ]; then
         msg "Building $pkg_file"
         # Unset build variables before sourcing package file
         unset _build_dep _conf_cmd _dep _install_cmd _make_cmd _pkg _pkg_path _pkgs \
           _post_build _post_install _pre_config _uri _version
-        . $pkg_file
-        _src=$(basename $_uri)
+        . "$pkg_file"
+        _src=$(basename "$_uri")
         for dep in $_build_dep; do
           # () needed to create new environment 
-          (build_pkg $dep) 
-          [ $? -eq 0 ] || exit -1
+          (build_pkg "$dep") || error "Building package $dep" 
         done
         msg "Creating build image"
         #if [ -d $extract ]; then
