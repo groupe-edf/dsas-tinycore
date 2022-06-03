@@ -207,7 +207,7 @@ audit_perms(){
     done
     chgrp -R users "$_d"
     chmod go-rwx "$_d"
-  done < <(ind "$DSAS" -type d -mindepth 1 -maxdepth 1 -print)
+  done < <(find "$DSAS" -type d -mindepth 1 -maxdepth 1 -print)
   chgrp verif "$DSAS/log"
   chmod 770 "$DSAS/log"
   chmod g+s "$DSAS/log"
@@ -242,7 +242,9 @@ getnetdevices(){
   # by /proc/net/dev. I get around this by allocating an interface prefix (typically "doc")
   # that is alphabetically first to the principal interface
   _tmp="$(awk -F: 'NR>2&&!/lo:|dummy.:|tunl.:/{print $1}' /proc/net/dev 2>/dev/null)"
-  echo -e "$(echo "$_tmp" | xargs -n1 | sort -)"
+
+  # Use xargs to ensure one space between devices
+  echo -e "$(echo "$_tmp" | xargs -n1 | sort -)" | xargs
 }  
   
 valid_ip(){
@@ -344,7 +346,7 @@ setup_interco(){
 valid_domain(){
   [ ${#1} -lt 4 ] && return 1
   [ ${#1} -gt 253 ] && return 1
-  [[ $1 =~ ^([a-zA-Z0-9](([a-zA-Z0-9-]){0,61}[a-zA-Z0-9])?\.)+([a-zA-Z]{2,})$ ]] || return 1
+  echo "$1" | grep -E '^[a-z0-9][a-z0-9-]{0,63}(\.[a-z0-9][a-z0-9-]{0,63}){1,}$' || return 1
   return 0
 }
 
@@ -404,7 +406,7 @@ config_network(){
     while [ -n "$S" ]; do
       S=$(xmllint --xpath "string(dsas/config/network/bas/dns/nameserver[$i])" "$VAR/dsas_conf.xml")
       [ -n "$S" ] && NS="$NS $S"
-      ((i++))
+      i=$((i+1))
     done
     while :; do
       NAME="$(dialog --stdout --no-cancel --title 'DNS name servers' --inputbox 'Nameservers:' 0 0 "$NS")"
@@ -494,7 +496,7 @@ start_network(){
       [ -z "${NS// }" ] && break
       echo -e "nameserver $NS" >> /etc/resolv.conf
       NS=$(xmllint --xpath "string(dsas/config/network/${TYP}/dns/nameserver[$i])" "$VAR/dsas_conf.xml")
-      ((i++))
+      i=$((i+1))
     done
   fi
 }
@@ -879,8 +881,8 @@ start_chroot(){
      if [ "$1" == "--force" ]; then
        (umask 227; cp /home/haut/.ssh/ /opt/lftp/home/haut/.ssh)
      else
-       for _f in ls -1 /home/haut/.ssh; do
-         [ -f "/opt/lftp/home/haut/.ssh/$_f" ] || cp "home/haut/.ssh/$_f" "/opt/lftp/home/haut/.ssh/$_f"
+       for _f in /home/haut/.ssh/*; do
+         [ -f "/opt/lftp/$_f" ] || cp "$_f" "/opt/lftp/$_f"
        done
      fi
      chmod 0440 /opt/lftp/home/haut/.ssh/id*
