@@ -1,28 +1,33 @@
 #! /bin/sh
+# Busybox ash not supported. Use posix SH and disable a couple of
+# ash extensions I use
+#
+# shellcheck shell=sh
+# shellcheck disable=SC2039
 
 # Only need $CONF from common functions
-if [ -f "$(dirname $0)/dsas_common.sh" ]; then
-  . $(dirname $0)/dsas_common.sh
+if [ -f "$(dirname "$0")/dsas_common.sh" ]; then
+  # shellcheck source=append/usr/local/sbin/dsas_common.sh
+  . "$(dirname "$0")/dsas_common.sh"
 else
   1>&2 echo "Common functions not found !!"
-  exit -1
+  exit 1
 fi
 
 help() {
-  echo "Usage: $(basename $0) ID [ID ...]"
+  echo "Usage: $(basename "$0") ID [ID ...]"
   echo "Kills the tasks given the list of IDs"
-  echo "     -v|--verbose    Log all files verified"
-  echo "     -q|--quiet      Log only files failing to verify"
   echo "     -n|--dryrun     Perform minimum actions"
-  echo "     -?|-h|--help    Print this help"
+  echo "     -h|--help       Print this help"
 }
 
 # Parse options
 ids=""
+dryrun=0
 while [ "$#" -gt 0 ]; do
   case $1 in
     -n|--dryrun) dryrun=1 ;;
-    -?|-h|--help) help; exit 0 ;;
+    -h|--help) help; exit 0 ;;
     -*) 1>&2 echo "Unrecognized option : $1"; help; exit 1 ;;
      *)
        ids="$ids $1" ;;
@@ -38,7 +43,7 @@ done
 idx=""
 for _id in $ids; do
   if [ ${#_id} -lt 5 ] && [[ $_id =~ ^[0-9]+$ ]]; then
-    _idx=$(xmllint --xpath "string(dsas/tasks/task[$_id]/id)" $CONF)
+    _idx=$(xmllint --xpath "string(dsas/tasks/task[$_id]/id)" "$CONF")
     [ -z "$_idx" ] && { 1>&2 echo "Task id ($_id) does not exist"; exit 1; }
     idx="$idx $_idx"
   else
@@ -48,7 +53,7 @@ for _id in $ids; do
       _task_id=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" "$CONF")
       [ -z "$_task_id" ] && break
       [ "$_id" == "$_task_id" ] && _idx=$_task_id && break
-      i=$(($i + 1))
+      i=$((i + 1))
     done
     [ -z "$_idx" ] && { 1>&2 echo "Task id ($_id) does not exist"; exit 1; }
     idx="$idx $_idx"
@@ -60,11 +65,11 @@ for _id in $idx; do
   for p in getfiles checkfile; do
     for pid in $(pgrep -f "$p.*$_id"); do
       [ "$dryrun" == "1" ] && { 1>&2 echo "$0 : pkill -P $pid"; }
-      [ "$dryrun" == "1" ] || sudo pkill -P $pid >& /dev/null
+      [ "$dryrun" == "1" ] || sudo pkill -P "$pid" > /dev/null 2>&1
     done
     # Need to pkill again to ensure a subshell hasn't been respawned
     # This should be sufficient as lftp will be killed above
     [ "$dryrun" == "1" ] && { 1>&2 echo "$0 : pkill -f $p.*$_id"; }
-    [ "$dryrun" == "1" ] || sudo pkill -f "$p.*$_id" >& /dev/null
+    [ "$dryrun" == "1" ] || sudo pkill -f "$p.*$_id" > /dev/null 2>&1
   done
 done

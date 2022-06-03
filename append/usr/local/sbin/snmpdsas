@@ -1,5 +1,8 @@
 #! /bin/ash
 # ASH is used on tinycore
+#
+# shellcheck shell=sh
+# shellcheck disable=SC2039
 
 CONF=/var/dsas/dsas_conf.xml
 LOG=/home/dsas/log/dsas_runlog
@@ -12,41 +15,41 @@ REQ=$2
 OID=.1.3.6.1.4.1.16845.100.100
 
 # Setting values is forbiden
-[ "$1" == "-s" ] && exit 0
+[ "$1" = "-s" ] && exit 0
 
 # Get the list of the task indexes
 n=1
 while :; do
-  _id=$(xmllint --xpath "string(dsas/tasks/task[$n]/id)" $CONF)
+  _id=$(xmllint --xpath "string(dsas/tasks/task[$n]/id)" "$CONF")
   [ -z "$_id" ] && break
   n=$((n + 1))
 done
 n=$((n - 1))
 
-if [ "$1" == "-n" ]; then
+if [ "$1" = "-n" ]; then
   # GETNEXT
   case "$REQ" in
-    $OID|$OID.0|$OID.0.*|$OID.1) RET=$OID.1.0 ;; # StatusUpperMachine
-    $OID.1.*|$OID.2) RET=$OID.2.0 ;; # StatusTasks
-    $OID.2.*|$OID.3|$OID.3.1.0)
-      [ "$n" == "0" ] && exit 0
-      RET=$OID.3.1.1.1
+    "$OID"|"$OID.0"|"$OID.0.*"|"$OID.1") RET="$OID.1.0" ;; # StatusUpperMachine
+    "$OID.1.*"|"$OID.2") RET="$OID.2.0" ;; # StatusTasks
+    "$OID.2.*"|"$OID.3"|"$OID.3.1.0")
+      [ "$n" = "0" ] && exit 0
+      RET="$OID.3.1.1.1"
       ;;
-    $OID.3.*)
+    "$OID.3.*")
       _arg=${REQ:$((${#OID}+5))}
-      _subtask=$(echo $_arg | cut -f1 -d.)
-      _task=$(echo $_arg | cut -s -f2 -d.)
+      _subtask=$(echo "$_arg" | cut -f1 -d.)
+      _task=$(echo "$_arg" | cut -s -f2 -d.)
 
       case "$_task" in
-        '') RET=$OID.3.1.$_subtask.1 ;;
+        '') RET="$OID.3.1.$_subtask.1" ;;
         *)
-          _task=$(($_task + 1))
+          _task=$((_task + 1))
           if [ $_task -gt $n ]; then
-            _subtask=$(($_subtask + 1))
+            _subtask=$((_subtask + 1))
             [ $_subtask -gt 4 ] && exit 0
             _task=1
           fi
-          RET=$OID.3.1.$_subtask.$_task
+          RET="$OID.3.1.$_subtask.$_task"
           ;;
       esac
       ;;
@@ -55,35 +58,35 @@ if [ "$1" == "-n" ]; then
 else
   # GET
   case "$REQ" in
-    $OID.1.0|$OID.2.0) RET=$REQ ;;
-    $OID.3.1.*)
+    "$OID.1.0"|"$OID.2.0") RET=$REQ ;;
+    "$OID.3.1.*")
       _arg=${REQ:$((${#OID}+5))}
-      _subtask=$(echo $_arg | cut -f1 -d.)
-      _task=$(echo $_arg | cut -f2 -d.)
-      [ $_task -lt 0 ] && exit 0
-      [ $_task -gt $n ] && exit 0
-      [ $_subtask -lt 1 ] && exit 0
-      [ $_subtask -gt 4 ] && exit 0
+      _subtask=$(echo "$_arg" | cut -f1 -d.)
+      _task=$(echo "$_arg" | cut -f2 -d.)
+      [ "$_task" -lt 0 ] && exit 0
+      [ "$_task" -gt $n ] && exit 0
+      [ "$_subtask" -lt 1 ] && exit 0
+      [ "$_subtask" -gt 4 ] && exit 0
       RET=$REQ
       ;;
     *) exit 0 ;;
   esac
 fi
 
-echo $RET
+echo "$RET"
 case "$RET" in
-  $OID.1.0)
+  "$OID.1.0")
     echo "integer"
-    ping -q -c 1 -W 1 haut >& /dev/null
+    ping -q -c 1 -W 1 haut > /dev/null 2>&1
     echo $?
     ;;
-  $OID.2.0)
+  "$OID.2.0")
     i=1
     _status=0
     while :; do
-      _id=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" $CONF)
+      _id=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" "$CONF")
       [ -z "$_id" ] && break
-      _status=$(grep $_id $LOG | xargs | cut -f3 -d' ')
+      _status=$(grep "$_id" "$LOG" | xargs | cut -f3 -d' ')
       # Empty status for tasks that have never run are ok
       if [ -n "$_status" ] && [ "$_status" != "0" ]; then
         _status="1"
@@ -94,27 +97,27 @@ case "$RET" in
     echo "integer"
     echo $_status
     ;;
-  $OID.3.1.*)
+  "$OID.3.1.*")
     _arg=${RET:$((${#OID}+5))}
-    _subtask=$(echo $_arg | cut -f1 -d.)
-    _task=$(echo $_arg | cut -s -f2 -d.)
+    _subtask=$(echo "$_arg" | cut -f1 -d.)
+    _task=$(echo "$_arg" | cut -s -f2 -d.)
     case "$_subtask" in
       1)
         echo "integer"
-        echo $_task
+        echo "$_task"
         ;;
       2)
         echo "string"
-        echo $(xmllint --xpath "string(dsas/tasks/task[$_task]/name)" $CONF)
+        xmllint --xpath "string(dsas/tasks/task[$_task]/name)" "$CONF"
         ;; 
       3)
         echo "string"
-        echo $(xmllint --xpath "string(dsas/tasks/task[$_task]/id)" $CONF)
+        xmllint --xpath "string(dsas/tasks/task[$_task]/id)" "$CONF"
         ;;
       4)
         echo "integer"
-        _id=$(xmllint --xpath "string(dsas/tasks/task[$_task]/id)" $CONF)
-        _status="$(grep $_id $LOG | xargs | cut -f3 -d' ')" 
+        _id=$(xmllint --xpath "string(dsas/tasks/task[$_task]/id)" "$CONF")
+        _status="$(grep "$_id" "$LOG" | xargs | cut -f3 -d' ')" 
         [ -z "$_status" ] && echo "0"
         [ -n "$_status" ] && echo "$_status"
         ;;

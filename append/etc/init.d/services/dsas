@@ -1,4 +1,7 @@
 #!/bin/sh
+#
+# shellcheck shell=sh
+# shellcheck disable=SC2039
 
 RED="$(echo -e '\033[1;31m')"
 GREEN="$(echo -e '\033[1;32m')"
@@ -13,74 +16,70 @@ VAR=/var/dsas
 RADIUS_SERVER="/etc/raddb/server"
 
 as_tc="sudo -E -u tc"
-as_bas="sudo -E -u bas"
 as_haut="sudo -E -u haut"
 
 # In an unprivelged docker, /dev is not available, and so 'fdisk -l' returns nothing
 [ -z "$(fdisk -l)" ] && ISDOCKER=1
 
 mounted(){
-  grep $1 /etc/mtab > /dev/null 2>&1
-  if [ $? == 0 ]; then return 0; fi
+  grep "$1" /etc/mtab > /dev/null 2>&1 && return 0
   return 1
 }
 
 mount_dsas(){
   if [ -z "$ISDOCKER" ]; then
-    if [ ! $(mounted /home/dsas) ]; then
+    if [ ! "$(mounted /home/dsas)" ]; then
       echo "Mounting ${GREEN}$DSAS${NORMAL} on ${GREEN}/home/dsas${NORMAL}"
       mkdir -p /home/dsas
       chown root.staff /home/dsas
       chmod 755 /home/dsas
       # remount main disk as noexec. Strip trail "/dsas" from $DSAS to get the real partition
-      mount -o remount,noexec ${DSAS:0:-5}
-      mount --noexec --nobind $DSAS /home/dsas
+      mount -o remount,noexec "${DSAS:0:-5}"
+      mount --noexec --nobind "$DSAS" /home/dsas
     fi
     # For persistent /var/log. Do this before launching syslog
-    [ -d ${DSAS:0:-5}/log ] && [ ! $(mounted /var/log) ] && mount ${DSAS:0:-5}/log /var/log
+    [ -d "${DSAS:0:-5}/log" ] && [ ! "$(mounted /var/log)" ] && mount "${DSAS:0:-5}/log" /var/log
   else
     [ -L /home/dsas ] || ln -s "$DSAS" /home
     # If docker a persisent /var/log can be a symlink
     mv /var/log var/log.old
-    ln -s ${DSAS:0:-5}/log /var/log
+    ln -s "${DSAS:0:-5}/log" /var/log
   fi
 }
 
 init_disk(){
   [ -z "$ISDOCKER" ] && FDISKL=$(fdisk -l | awk '$1 ~ /dev/{printf " %s ",$1}')
-  [ -z "$ISDOCKER" ] || FDISKL=$(cat /etc/mtab | grep "^/dev/" | cut -f1 -d' ' | uniq)
+  [ -z "$ISDOCKER" ] || FDISKL=$(grep "^/dev/" /etc/mtab | cut -f1 -d' ' | uniq)
   FOUND=""
   DISK=""
   ARGS="--stdout --no-cancel --radiolist 'Select device to format for the DSAS:' 0 0 0"
   ON="on"
   # Loop through block devices
-  for i in $(find /sys/block/*/ -mindepth 1 -maxdepth 1 -name dev); do
+  while IFS= read -r -d '' i; do
     case "$i" in
       *loop*|*ram*)
         continue
         ;;
     esac
 
-    DEVNAME=$(echo "$i"| tr [!] [/] | awk 'BEGIN{FS="/"}{print $(NF-1)}')
-    DEVMAJOR="$(cat $i|cut -f1 -d:)"
+    DEVNAME=$(echo "$i" | tr "!" "/" | awk 'BEGIN{FS="/"}{print $(NF-1)}')
+    DEVMAJOR="$(cut -f1 -d: "$i")"
     [ "$DEVMAJOR" != '8' ] && continue
-    FSTYPE="none"
     for PART in $FDISKL; do
       case "$PART" in
         *"/dev/$DEVNAME"*)
           FOUND=$DEVNAME
-          FSTYPE="$(fstype $PART)"
-          MOUNTPOINT=$(echo $PART | sed -e "s:.*\($DEVNAME.*\):/mnt/\1:g")
-          [ -d $MOUNTPOINT ] || mkdir $MOUNTPOINT
-          mount | grep -q $PART || mount $PART $MOUNTPOINT
+          MOUNTPOINT=$(echo "$PART" | sed -e "s:.*\($DEVNAME.*\):/mnt/\1:g")
+          [ -d "$MOUNTPOINT" ] || mkdir "$MOUNTPOINT"
+          mount | grep -q "$PART" || mount "$PART" "$MOUNTPOINT"
           break
           ;;
       esac
     done
-    SIZE="$(($(cat /sys/block/$DEVNAME/size) / 2))"
+    SIZE="$(($(cat "/sys/block/$DEVNAME/size") / 2))"
     for SUF in MB GB TB PB; do
-      REM=$(($(($SIZE % 1000)) / 10))
-      SIZE=$(($SIZE / 1000))
+      REM=$(($((SIZE % 1000)) / 10))
+      SIZE=$((SIZE / 1000))
       [ $SIZE -lt 1000 ] && break
     done
     DISK="1"
@@ -92,18 +91,18 @@ init_disk(){
       ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE.$REM$SUF]' $ON"
     fi
     ON="off"
-  done
+  done < <(find /sys/block/*/ -mindepth 1 -maxdepth 1 -name dev -print0)
 
-  if [ -z $FOUND ]; then
+  if [ -z "$FOUND" ]; then
     if [ -z "$DISK" ]; then
       echo "${RED}No disk available for the DSAS. Aborting${NORMAL}"
       exit 1
     fi
 
     # No formatted disk found. Ask the user to format it
-    DEV="$(echo $ARGS | xargs dialog)"
+    DEV="$(echo "$ARGS" | xargs dialog)"
     echo "Creating partition table on ${GREEN}$DEV${NORMAL}"
-    /sbin/fdisk $DEV << EOF > /dev/null 2>&1
+    /sbin/fdisk "$DEV" << EOF > /dev/null 2>&1
 n
 p
 1
@@ -112,14 +111,14 @@ p
 w
 EOF
     echo "Formatting ${GREEN}${DEV}1${NORMAL} as ${GREEN}EXT4${NORMAL}"
-    /sbin/mkfs.ext4 ${DEV}1 > /dev/null 2>&1
-    MNT="$(echo $DEV | sed -e 's/dev/mnt/')"
-    mkdir -p ${MNT}1
+    /sbin/mkfs.ext4 "${DEV}1" > /dev/null 2>&1
+    MNT="$(echo "$DEV" | sed -e 's/dev/mnt/')"
+    mkdir -p "${MNT}1"
     echo "Mounting  ${GREEN}${DEV}1${NORMAL} on  ${GREEN}${MNT}1${NORMAL}"
-    mount ${DEV}1 ${MNT}1
-    mkdir -p ${MNT}1/tce
-    chmod 770 ${MNT}1/tce
-    chown root.staff ${MNT}1/tce
+    mount "${DEV}1" "${MNT}1"
+    mkdir -p "${MNT}1/tce"
+    chmod 770 "${MNT}1/tce"
+    chown root.staff "${MNT}1/tce"
  
     return 1
   else
@@ -130,34 +129,34 @@ EOF
 }
 
 get_dsas(){
-  for d in $(find $MNT -mindepth 2 -maxdepth 2 -type d -name "dsas"); do
+  while IFS= read -r -d '' d; do
     if [ -d "$d/bas" ] && [ -d "$d/haut" ]; then
       DSAS=$d
       echo "Found DSAS directories in ${GREEN}$DSAS${NORMAL}"    
       break;
     fi
-  done
+  done < <(find "$MNT" -mindepth 2 -maxdepth 2 -type d -name "dsas" -print0)
 
   # First time the DSAS is run
   if [ -z "$DSAS" ]; then
     echo "Looking for disk to use for the ${GREEN}DSAS${NORMAL}"
     DISK=""
     # Find the largest partition that is mounted
-    for d in $(find $MNT -maxdepth 1 -type d -name "sd*"); do
+    while IFS= read -r -d '' d; do
       if [ -z "$DISK" ]; then
         DISK=$d
-        PART=$(basename $DISK)
-        DEV=$(echo $PART | sed -e "s/[[:digit:].*]$//g")
-        SIZE=`cat /sys/block/$DEV/$PART/size`
+        PART=$(basename "$DISK")
+        DEV=$(echo "$PART" | sed -e "s/[[:digit:].*]$//g")
+        SIZE=$(cat "/sys/block/$DEV/$PART/size")
       else
-        PART=`basename $d`
-        DEV=$(echo $PART | sed -e "s/[[:digit:].*]$//g")
-        if [ $(cat /sys/block/$DEV/$PART/size) -gt "$SIZE" ]; then
+        PART=$(basename "$d")
+        DEV=$(echo "$PART" | sed -e "s/[[:digit:].*]$//g")
+        if [ "$(cat "/sys/block/$DEV/$PART/size")" -gt "$SIZE" ]; then
           DISK=$d
-          SIZE=`cat /sys/block/$DEV/$PART/size`
+          SIZE=$(cat "/sys/block/$DEV/$PART/size")
         fi
       fi
-    done
+    done < <(find "$MNT" -maxdepth 1 -type d -name "sd*" -print0)
 
     if [ -z "$DISK" ]; then
       echo "${RED}No disk available for the DSAS. Aborting${NORMAL}"
@@ -168,74 +167,72 @@ get_dsas(){
     echo "Creating DSAS directories in ${GREEN}$DISK/dsas${NORMAL}"
 
     for _user in bas haut; do
-      mkdir -p $DISK/dsas/$_user
-      chmod -R 750 $DISK/dsas/$_user
-      chown -R root.$_user $DISK/dsas/$_user
+      mkdir -p "$DISK/dsas/$_user"
+      chmod -R 750 "$DISK/dsas/$_user"
+      chown -R "root.$_user" "$DISK/dsas/$_user"
 
-      mkdir -p $DISK/dsas/$_user/share
-      chmod -R 770 $DISK/dsas/$_user/share
+      mkdir -p "$DISK/dsas/$_user/share"
+      chmod -R 770 "$DISK/dsas/$_user/share"
       # g+s so that all files and subdirectories keep the same group
-      chmod -R g+s $DISK/dsas/$_user/share
-      chown -R $_user.$_user $DISK/dsas/$_user/share
+      chmod -R g+s "$DISK/dsas/$_user/share"
+      chown -R "$_user.$_user" "$DISK/dsas/$_user/share"
     done
     # Files created by "verif" in /home/dsas/bas must have the group "share"
-    chgrp -R share  $DISK/dsas/bas/share
-    mkdir -p $DISK/dsas/log
-    chmod -R 770 $DISK/dsas/log
-    chown -R tc.verif $DISK/dsas/log
-    mkdir -p $DISK/log
-    chmod 750 $DISK/log
-    chown root.staff $DISK/log
+    chgrp -R share  "$DISK/dsas/bas/share"
+    mkdir -p "$DISK/dsas/log"
+    chmod -R 770 "$DISK/dsas/log"
+    chown -R tc.verif "$DISK/dsas/log"
+    mkdir -p "$DISK/log"
+    chmod 750 "$DISK/log"
+    chown root.staff "$DISK/log"
     DSAS=$DISK/dsas
   fi
 
   TCE=$(readlink /etc/sysconfig/tcedir)
   if [ -z "$TCE" ] || [ "${TCE:0:8}" == "/tmp/tce" ]; then
-    TCE=$(echo $DSAS | sed -e "s:/dsas::")
+    TCE=$(echo "$DSAS" | sed -e "s:/dsas::")
     echo "Setting up TCE directory on ${GREEN}$TCE${NORMAL}"
-    /usr/bin/tce-setdrive -s $TCE
-    chmod -R o-rwx $TCE/tce
+    /usr/bin/tce-setdrive -s "$TCE"
+    chmod -R o-rwx "$TCE/tce"
   fi
 }
 
 audit_perms(){
   echo "Auditing permissions of ${GREEN}$DSAS${NORMAL} in the background"
   grep -q users /etc/group || addgroup -g 51 users
-  for _d in $(find "$DSAS" -type d -mindepth 1 -maxdepth 1 -exec basename "{}" \; ); do
+  while IFS= read -r -d '' _d; do
+    _d=$(basename "$_d")
     for _user in bas haut log; do
        [ "$_d" == "$_user" ] && break 2
     done
     chgrp -R users "$_d"
     chmod go-rwx "$_d"
-  done
+  done < <(ind "$DSAS" -type d -mindepth 1 -maxdepth 1 -print)
   chgrp verif "$DSAS/log"
   chmod 770 "$DSAS/log"
   chmod g+s "$DSAS/log"
-  OLD_IFS=$IFS
-  IFS=$'\3'
   for _user in bas haut; do
     chown root.$_user "$DSAS/$_user"
     chmod 750 "$DSAS/$_user"
     chown $_user.$_user "$DSAS/$_user/share"
     chmod 770 "$DSAS/$_user/share"
-    for _d in $(find "$DSAS/$_user/share" -mindepth 1 -type d -exec echo -n -e "{}\x03" \; ); do
+    while IFS= read -r -d '' _d; do
       [ "$_user" == "bas" ] || chown haut.haut "$_d"
       [ "$_user" == "bas" ] && chown verif.share "$_d"
       chmod 770 "$_d"
-    done
+    done < <(find "$DSAS/$_user/share" -mindepth 1 -type d -print0)
   done
-  for _f in $(find "$DSAS/haut/share" -type f -exec echo -n -e "{}\x03" \; ); do
-    if [ $(stat -c%h "$_f") -eq 1 ]; then
+  while IFS= read -r -d '' _f; do
+    if [ "$(stat -c%h "$_f")" -eq 1 ]; then
       # not hardlinked so only in haut
       chown $_user.$_user "$_f"
       chmod 640 "$_f"
     fi
-  done
-  for _f in $(find "$DSAS/bas/share" -type f -exec echo -n -e "{}\x03" \; ); do
+  done < <(find "$DSAS/haut/share" -type f -print0)
+  while IFS= read -r -d '' _f; do
     chown verif.share "$_f"
     chmod 640 "$_f"
-  done
-  IFS=$OLD_IFS
+  done < <(find "$DSAS/bas/share" -type f -print0)
 }
 
 getnetdevices(){
@@ -245,13 +242,13 @@ getnetdevices(){
   # by /proc/net/dev. I get around this by allocating an interface prefix (typically "doc")
   # that is alphabetically first to the principal interface
   _tmp="$(awk -F: 'NR>2&&!/lo:|dummy.:|tunl.:/{print $1}' /proc/net/dev 2>/dev/null)"
-  echo -e "$(echo $_tmp | xargs -n1 | sort -)"
+  echo -e "$(echo "$_tmp" | xargs -n1 | sort -)"
 }  
   
 valid_ip(){
   if [[ $1 =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     for i in 1 2 3 4; do
-      [ $(echo "$1" | cut -d. -f$i) -gt 255 ] && return 1
+      [ "$(echo "$1" | cut -d. -f$i)" -gt 255 ] && return 1
     done
     return 0
   else
@@ -260,22 +257,20 @@ valid_ip(){
 }
 
 valid_cidr() {
-  mask=$(echo $1 | sed -e "s:^.*/\(.*\)$:\1:")
-  ip=$(echo $1 | sed -e "s:^\(.*\)/.*$:\1:")
+  mask=$(echo "$1" | sed -e "s:^.*/\(.*\)$:\1:")
+  ip=$(echo "$1" | sed -e "s:^\(.*\)/.*$:\1:")
   [[ "$mask" =~ ^[0-9]+$ ]] || return 1
-  [ $mask -gt 32 ] && return 1
-  valid_ip $ip
- 
-  [ $? ] || return 1
+  [ "$mask" -gt 32 ] && return 1
+  valid_ip "$ip" || return 1 
   return 0
 }
 
 config_interco(){
-    c=$(xmllint --xpath 'string(dsas/config/network/interco/haut/cidr)' $VAR/dsas_conf.xml)
+    c=$(xmllint --xpath 'string(dsas/config/network/interco/haut/cidr)' "$VAR/dsas_conf.xml")
     while :; do
-      INTERCO_CIDR="$(dialog --stdout --no-cancel --title 'Upper interconnexion network in CIDR format' --inputbox 'Address:' 0 0 $c)"
-      valid_cidr $INTERCO_CIDR || { dialog --msgbox "IP Address invalid" 0 0; continue; }
-      _cidr="$(echo $INTERCO_CIDR | sed -e "s:^.*/\(.*\)$:\1:")"
+      INTERCO_CIDR="$(dialog --stdout --no-cancel --title 'Upper interconnexion network in CIDR format' --inputbox 'Address:' 0 0 "$c")"
+      valid_cidr "$INTERCO_CIDR" || { dialog --msgbox "IP Address invalid" 0 0; continue; }
+      _cidr="$(echo "$INTERCO_CIDR" | sed -e "s:^.*/\(.*\)$:\1:")"
       if [ "$_cidr" -lt 24 ] || [ "$_cidr" -gt 30 ] ; then
         dialog --msgbox "CIDR must be between 24 and 30 invalid" 0 0
         continue
@@ -285,21 +280,21 @@ config_interco(){
     if [ "$INTERCO_CIDR" != "$c" ]; then
       echo -e "cd /dsas/config/network/interco/haut/cidr\nset $INTERCO_CIDR\nsave" | xmllint --shell $VAR/dsas_conf.xml > /dev/null
     fi
-    g=$(xmllint --xpath 'string(dsas/config/network/interco/haut/gateway)' $VAR/dsas_conf.xml)
+    g=$(xmllint --xpath 'string(dsas/config/network/interco/haut/gateway)' "$VAR/dsas_conf.xml")
     while :; do
-      INTERCO_GW="$(dialog --stdout --no-cancel --title 'Upper interconnexion gateway' --inputbox 'Address:' 0 0 $g)"
+      INTERCO_GW="$(dialog --stdout --no-cancel --title 'Upper interconnexion gateway' --inputbox 'Address:' 0 0 "$g")"
       [ -z "$INTERCO_GW" ] && break
-      valid_ip $INTERCO_GW && break
+      valid_ip "$INTERCO_GW" && break
       dialog --msgbox "IP Address invalid" 0 0
     done
     if [ "$INTERCO_GW" != "$g" ]; then
       echo -e "cd /dsas/config/network/interco/haut/gateway\nset $INTERCO_GW\nsave" | xmllint --shell $VAR/dsas_conf.xml > /dev/null
     fi
-    c=$(xmllint --xpath 'string(dsas/config/network/interco/bas/cidr)' $VAR/dsas_conf.xml)
+    c=$(xmllint --xpath 'string(dsas/config/network/interco/bas/cidr)' "$VAR/dsas_conf.xml")
     while :; do
-      INTERCO_CIDR="$(dialog --stdout --no-cancel --title 'Lower interconnexion network in CIDR format' --inputbox 'Address:' 0 0 $c)"
-      valid_cidr $INTERCO_CIDR || { dialog --msgbox "IP Address invalid" 0 0; continue; }
-      _cidr="$(echo $INTERCO_CIDR | sed -e "s:^.*/\(.*\)$:\1:")"
+      INTERCO_CIDR="$(dialog --stdout --no-cancel --title 'Lower interconnexion network in CIDR format' --inputbox 'Address:' 0 0 "$c")"
+      valid_cidr "$INTERCO_CIDR" || { dialog --msgbox "IP Address invalid" 0 0; continue; }
+      _cidr="$(echo "$INTERCO_CIDR" | sed -e "s:^.*/\(.*\)$:\1:")"
       if [ "$_cidr" -lt 24 ] || [ "$_cidr" -gt 30 ] ; then
         dialog --msgbox "CIDR must be between 24 and 30 invalid" 0 0
         continue
@@ -309,37 +304,37 @@ config_interco(){
     if [ "$INTERCO_CIDR" != "$c" ]; then
       echo -e "cd /dsas/config/network/interco/bas/cidr\nset $INTERCO_CIDR\nsave" | xmllint --shell $VAR/dsas_conf.xml > /dev/null
     fi
-    g=$(xmllint --xpath 'string(dsas/config/network/interco/bas/gateway)' $VAR/dsas_conf.xml)
+    g=$(xmllint --xpath 'string(dsas/config/network/interco/bas/gateway)' "$VAR/dsas_conf.xml")
     while :; do
-      INTERCO_GW="$(dialog --stdout --no-cancel --title 'Lower interconnexion gateway' --inputbox 'Address:' 0 0 $g)"
+      INTERCO_GW="$(dialog --stdout --no-cancel --title 'Lower interconnexion gateway' --inputbox 'Address:' 0 0 "$g")"
       [ -z "$INTERCO_GW" ] && break
-      valid_ip $INTERCO_GW && break
+      valid_ip "$INTERCO_GW" && break
       dialog --msgbox "IP Address invalid" 0 0
     done
     if [ "$INTERCO_GW" != "$g" ]; then
-      echo -e "cd /dsas/config/network/interco/bas/gateway\nset $INTERCO_GW\nsave" | xmllint --shell $VAR/dsas_conf.xml > /dev/null
+      echo -e "cd /dsas/config/network/interco/bas/gateway\nset $INTERCO_GW\nsave" | xmllint --shell "$VAR/dsas_conf.xml" > /dev/null
     fi
 }
 
 setup_interco(){
-    INTERCO_CIDR_HAUT=$(xmllint --xpath 'string(dsas/config/network/interco/haut/cidr)' $VAR/dsas_conf.xml)
-    _cidr="$(echo $INTERCO_CIDR_HAUT | sed -e "s:^.*/\(.*\)$:\1:")"
-    INTERCO_HAUT=$(echo $INTERCO_CIDR_HAUT | sed -e "s:^\(.*\)/.*$:\1:")
-    INTERCO_MASK_HAUT="255.255.255.$(( (255 << (32 - $_cidr)) & 255))"
-    _last="$(($(echo $INTERCO_HAUT | cut -d. -f4) & ((0xFF00 << ($_cidr - 24)) & 0xFF)))" 
-    INTERCO_CIDR_HAUT="$(echo $INTERCO_HAUT | cut -d. -f1-3).$_last"   
+    INTERCO_CIDR_HAUT=$(xmllint --xpath 'string(dsas/config/network/interco/haut/cidr)' "$VAR/dsas_conf.xml")
+    _cidr="$(echo "$INTERCO_CIDR_HAUT" | sed -e "s:^.*/\(.*\)$:\1:")"
+    INTERCO_HAUT=$(echo "$INTERCO_CIDR_HAUT" | sed -e "s:^\(.*\)/.*$:\1:")
+    INTERCO_MASK_HAUT="255.255.255.$(( (255 << (32 - _cidr)) & 255))"
+    _last="$(($(echo "$INTERCO_HAUT" | cut -d. -f4) & ((0xFF00 << (_cidr - 24)) & 0xFF)))" 
+    INTERCO_CIDR_HAUT="$(echo "$INTERCO_HAUT" | cut -d. -f1-3).$_last"   
 
-    INTERCO_CIDR_BAS=$(xmllint --xpath 'string(dsas/config/network/interco/bas/cidr)' $VAR/dsas_conf.xml)
-    _cidr="$(echo $INTERCO_CIDR_BAS | sed -e "s:^.*/\(.*\)$:\1:")"
-    INTERCO_BAS=$(echo $INTERCO_CIDR_BAS | sed -e "s:^\(.*\)/.*$:\1:")
-    INTERCO_MASK_BAS="255.255.255.$(( (255 << (32 - $_cidr)) & 255))"
-    _last="$(($(echo $INTERCO_BAS | cut -d. -f4) & ((0xFF00 << ($_cidr - 24)) & 0xFF)))" 
-    INTERCO_CIDR_BAS="$(echo $INTERCO_BAS | cut -d. -f1-3).$_last" 
+    INTERCO_CIDR_BAS=$(xmllint --xpath 'string(dsas/config/network/interco/bas/cidr)' "$VAR/dsas_conf.xml")
+    _cidr="$(echo "$INTERCO_CIDR_BAS" | sed -e "s:^.*/\(.*\)$:\1:")"
+    INTERCO_BAS=$(echo "$INTERCO_CIDR_BAS" | sed -e "s:^\(.*\)/.*$:\1:")
+    INTERCO_MASK_BAS="255.255.255.$(( (255 << (32 - _cidr)) & 255))"
+    _last="$(($(echo "$INTERCO_BAS" | cut -d. -f4) & ((0xFF00 << (_cidr - 24)) & 0xFF)))" 
+    INTERCO_CIDR_BAS="$(echo "$INTERCO_BAS" | cut -d. -f1-3).$_last" 
 
     if [ "$INTERCO_CIDR_BAS" != "$INTERCO_CIDR_HAUT" ] || [ "$INTERCO_MASK_BAS" != "$INTERCO_MASK_HAUT" ]; then
       # The two machines of the DSAS are on different lans. Need to configure the gateways
-      INTERCO_GW_HAUT=$(xmllint --xpath 'string(dsas/config/network/interco/haut/gateway)' $VAR/dsas_conf.xml)
-      INTERCO_GW_BAS=$(xmllint --xpath 'string(dsas/config/network/interco/bas/gateway)' $VAR/dsas_conf.xml)
+      INTERCO_GW_HAUT=$(xmllint --xpath 'string(dsas/config/network/interco/haut/gateway)' "$VAR/dsas_conf.xml")
+      INTERCO_GW_BAS=$(xmllint --xpath 'string(dsas/config/network/interco/bas/gateway)' "$VAR/dsas_conf.xml")
     else
       INTERCO_GW_HAUT=""
       INTERCO_GW_BAS=""
@@ -349,12 +344,12 @@ setup_interco(){
 valid_domain(){
   [ ${#1} -lt 4 ] && return 1
   [ ${#1} -gt 253 ] && return 1
-  [[ $1 =~ "^([a-zA-Z0-9](([a-zA-Z0-9-]){0,61}[a-zA-Z0-9])?\.)+([a-zA-Z]{2,})$" ]] || return 1
+  [[ $1 =~ ^([a-zA-Z0-9](([a-zA-Z0-9-]){0,61}[a-zA-Z0-9])?\.)+([a-zA-Z]{2,})$ ]] || return 1
   return 0
 }
 
 config_network(){
-  d=$(xmllint --xpath 'string(dsas/config/network/bas/dhcp)' $VAR/dsas_conf.xml)
+  d=$(xmllint --xpath 'string(dsas/config/network/bas/dhcp)' "$VAR/dsas_conf.xml")
   if [ "$d" == "true" ]; then
     d="on"
   else
@@ -371,45 +366,45 @@ config_network(){
 
   if [ "$DHCP" != "on" ]; then
     # Static IP. Configure the rest of the interface
-    c=$(xmllint --xpath 'string(dsas/config/network/bas/cidr)' $VAR/dsas_conf.xml)
+    c=$(xmllint --xpath 'string(dsas/config/network/bas/cidr)' "$VAR/dsas_conf.xml")
     while :; do
-      CIDR="$(dialog --stdout --no-cancel --title 'IP Address in CIDR format' --inputbox 'Address:' 0 0 $c)"
-      valid_cidr $CIDR && break;
+      CIDR="$(dialog --stdout --no-cancel --title 'IP Address in CIDR format' --inputbox 'Address:' 0 0 "$c")"
+      valid_cidr "$CIDR" && break;
       dialog --msgbox "IP Address invalid" 0 0
     done
     if [ "$CIDR" != "$c" ]; then
-      echo -e "cd /dsas/config/network/bas/cidr\nset $CIDR\nsave" | xmllint --shell $VAR/dsas_conf.xml > /dev/null
+      echo -e "cd /dsas/config/network/bas/cidr\nset $CIDR\nsave" | xmllint --shell "$VAR/dsas_conf.xml" > /dev/null
     fi
 
-    g=$(xmllint --xpath 'string(dsas/config/network/bas/gateway)' $VAR/dsas_conf.xml)
+    g=$(xmllint --xpath 'string(dsas/config/network/bas/gateway)' "$VAR/dsas_conf.xml")
     while :; do
-      GWAY="$(dialog --stdout --no-cancel --title 'Gateway IP Address' --inputbox 'Address:' 0 0 $g)"
+      GWAY="$(dialog --stdout --no-cancel --title 'Gateway IP Address' --inputbox 'Address:' 0 0 "$g")"
       [ -z "$GWAY" ] && break
-      valid_ip $GWAY && break
+      valid_ip "$GWAY" && break
       dialog --msgbox "IP Address invalid" 0 0
     done
     if [ "$GWAY" != "$g" ]; then
-      echo -e "cd /dsas/config/network/bas/gateway\nset $GWAY\nsave" | xmllint --shell $VAR/dsas_conf.xml > /dev/null
+      echo -e "cd /dsas/config/network/bas/gateway\nset $GWAY\nsave" | xmllint --shell "$VAR/dsas_conf.xml" > /dev/null
     fi
 
-    d=$(xmllint --xpath 'string(dsas/config/network/bas/dns/domain)' $VAR/dsas_conf.xml)
+    d=$(xmllint --xpath 'string(dsas/config/network/bas/dns/domain)' "$VAR/dsas_conf.xml")
     while :; do
-      DOMAIN="$(dialog --stdout --no-cancel --title 'DNS search domain' --inputbox 'Domain:' 0 0 $d)"
+      DOMAIN="$(dialog --stdout --no-cancel --title 'DNS search domain' --inputbox 'Domain:' 0 0 "$d")"
       [ -z "$DOMAIN" ] && break
-      valid_domain $DOMAIN && break
+      valid_domain "$DOMAIN" && break
       dialog --msgbox "Domain invalid" 0 0
     done
     if [ "$DOMAIN" != "$d" ]; then
       echo -e "cd /dsas/config/network/bas/dns/domain\nset $DOMAIN\nsave" | xmllint --shell $VAR/dsas_conf.xml > /dev/null
     fi
 
-    S=$(xmllint --xpath "string(dsas/config/network/bas/dns/nameserver)" $VAR/dsas_conf.xml)
+    S=$(xmllint --xpath "string(dsas/config/network/bas/dns/nameserver)" "$VAR/dsas_conf.xml")
     NS="$S"
     i=2
     while [ -n "$S" ]; do
-      S=$(xmllint --xpath "string(dsas/config/network/bas/dns/nameserver[$i])" $VAR/dsas_conf.xml)
+      S=$(xmllint --xpath "string(dsas/config/network/bas/dns/nameserver[$i])" "$VAR/dsas_conf.xml")
       [ -n "$S" ] && NS="$NS $S"
-      $((i++))
+      ((i++))
     done
     while :; do
       NAME="$(dialog --stdout --no-cancel --title 'DNS name servers' --inputbox 'Nameservers:' 0 0 "$NS")"
@@ -419,7 +414,7 @@ config_network(){
           ARGS="${ARGS}<nameserver />"
         else
           for S in $NAME; do
-            if  ! valid_ip $S; then 
+            if  ! valid_ip "$S"; then 
               dialog --msgbox "IP Address invalid" 0 0
               continue 2
             fi
@@ -437,7 +432,7 @@ config_network(){
 
 start_network(){
   NETDEVICES=$(getnetdevices)
-  if [ $(echo $NETDEVICES | wc -w) -lt 2 ]; then
+  if [ "$(echo "$NETDEVICES" | wc -w)" -lt 2 ]; then
     echo "${RED}At least two network devices are needed. Aborting !!${NORMAL}"
     exit 1
   fi
@@ -446,109 +441,109 @@ start_network(){
   /sbin/ifconfig lo 127.0.0.1 up
   route | grep -q 127.0.0.1 || /sbin/route add 127.0.0.1 lo &
 
-  ETH0=$(echo $NETDEVICES | cut -d" " -f1)
-  ETH1=$(echo $NETDEVICES | cut -d" " -f2)
+  ETH0=$(echo "$NETDEVICES" | cut -d" " -f1)
+  ETH1=$(echo "$NETDEVICES" | cut -d" " -f2)
 
   if [ -z "$NO_INTERCO" ]; then
     echo "Using static IP for ${GREEN}$ETH1${NORMAL}."
     if [ "$TYP" == "bas" ]; then
-      /sbin/ifconfig $ETH1 $INTERCO_BAS netmask $INTERCO_MASK_BAS up
+      /sbin/ifconfig "$ETH1" "$INTERCO_BAS" netmask "$INTERCO_MASK_BAS" up
       if [ -z "$INTERCO_GW_BAS" ]; then
-        /sbin/route add $INTERCO_HAUT $ETH1 &
+        /sbin/route add "$INTERCO_HAUT" "$ETH1" &
       else
-        /sbin/route add $INTERCO_HAUT gw $INTERCO_GW_BAS $ETH1 &
+        /sbin/route add "$INTERCO_HAUT" gw "$INTERCO_GW_BAS" "$ETH1" &
       fi
     else
-      /sbin/ifconfig $ETH1 $INTERCO_HAUT netmask $INTERCO_MASK_HAUT up
+      /sbin/ifconfig "$ETH1" "$INTERCO_HAUT" netmask "$INTERCO_MASK_HAUT" up
       if [ -z "$INTERCO_GW_HAUT" ]; then
-        /sbin/route add $INTERCO_BAS $ETH1 &
+        /sbin/route add "$INTERCO_BAS" "$ETH1" &
       else
-        /sbin/route add $INTERCO_BAS gw $INTERCO_GW_HAUT $ETH1 &
+        /sbin/route add "$INTERCO_BAS" gw "$INTERCO_GW_HAUT" "$ETH1" &
       fi
     fi
   fi
 
-  dhcp=$(xmllint --xpath "string(dsas/config/network/${TYP}/dhcp)" $VAR/dsas_conf.xml)
+  dhcp=$(xmllint --xpath "string(dsas/config/network/${TYP}/dhcp)" "$VAR/dsas_conf.xml")
   if [ "$dhcp" == "true" ]; then
     echo -n "Using DHCP broadcast for ${GREEN}$ETH0${NORMAL}..."
-    /sbin/udhcpc -b -i $ETH0 -x hostname:$(/bin/hostname) -p /var/run/udhcpc.$ETH0.pid > /dev/null 2>&1 &
+    /sbin/udhcpc -b -i "$ETH0" -x "hostname:$(/bin/hostname)" -p "/var/run/udhcpc.$ETH0.pid" > /dev/null 2>&1 &
     CNT=0
     until ifconfig | grep -q Bcast; do
-      [ $((CNT++)) -gt 60 ] && break || sleep 1
+      [ $((CNT++)) -gt 60 ] && break
+      sleep 1
     done
     sleep 1
-    [ $CNT -gt 60 ] && echo "${RED}Fail${NORMAL}"
-    [ $CNT -le 60 ] && echo "${GREEN}Ok${NORMAL}"          
+    [ "$CNT" -gt 60 ] && echo "${RED}Fail${NORMAL}"
+    [ "$CNT" -le 60 ] && echo "${GREEN}Ok${NORMAL}"          
   else
     echo "Using static IP for ${GREEN}$ETH0${NORMAL}."
-    cidr=$(xmllint --xpath "string(dsas/config/network/${TYP}/cidr)" $VAR/dsas_conf.xml)
-    IP=$(echo $cidr | sed -e "s:^\(.*\)/.*$:\1:")
-    mask=$(echo $cidr | sed -e "s:^.*/\(.*\)$:\1:")
-    value=$(( 0xffffffff ^ ((1 << (32 - $mask)) - 1) ))
+    cidr=$(xmllint --xpath "string(dsas/config/network/${TYP}/cidr)" "$VAR/dsas_conf.xml")
+    IP=$(echo "$cidr" | sed -e "s:^\(.*\)/.*$:\1:")
+    mask=$(echo "$cidr" | sed -e "s:^.*/\(.*\)$:\1:")
+    value=$(( 0xffffffff ^ ((1 << (32 - mask)) - 1) ))
     NET="$(( (value >> 24) & 0xff )).$(( (value >> 16) & 0xff )).$(( (value >> 8) & 0xff )).$(( value & 0xff ))"
-    GWAY=$(xmllint --xpath "string(dsas/config/network/${TYP}/gateway)" $VAR/dsas_conf.xml)
-    DOMAIN=$(xmllint --xpath "string(dsas/config/network/${TYP}/dns/domain)" $VAR/dsas_conf.xml)
+    GWAY=$(xmllint --xpath "string(dsas/config/network/${TYP}/gateway)" "$VAR/dsas_conf.xml")
+    DOMAIN=$(xmllint --xpath "string(dsas/config/network/${TYP}/dns/domain)" "$VAR/dsas_conf.xml")
 
-    /sbin/ifconfig $ETH0 $IP netmask $NET up
-    [ -z "$GWAY" ] || /sbin/route add default gw $GWAY &
+    /sbin/ifconfig "$ETH0" "$IP" netmask "$NET" up
+    [ -z "$GWAY" ] || /sbin/route add default gw "$GWAY" &
     [ -z "$DOMAIN" ] || echo -e "search $DOMAIN" > /etc/resolv.conf
-    NS=$(xmllint --xpath "string(dsas/config/network/${TYP}/dns/nameserver)" $VAR/dsas_conf.xml)
+    NS=$(xmllint --xpath "string(dsas/config/network/${TYP}/dns/nameserver)" "$VAR/dsas_conf.xml")
     i=2
     while :; do
       [ -z "${NS// }" ] && break
       echo -e "nameserver $NS" >> /etc/resolv.conf
-      NS=$(xmllint --xpath "string(dsas/config/network/${TYP}/dns/nameserver[$i])" $VAR/dsas_conf.xml)
-      i=$((i + 1))
+      NS=$(xmllint --xpath "string(dsas/config/network/${TYP}/dns/nameserver[$i])" "$VAR/dsas_conf.xml")
+      ((i++))
     done
   fi
 }
 
 stop_network(){
   NETDEVICES=$(getnetdevices)
-  ETH0=$(echo $NETDEVICES | cut -d" " -f1)
-  ETH1=$(echo $NETDEVICES | cut -d" " -f2)
-  GWAY=$(xmllint --xpath 'string(dsas/config/network/'${TYP}'/gateway)' $VAR/dsas_conf.xml.active)
-  [ -n "$GWAY" ] && /sbin/route del default gw $GWAY
+  ETH0=$(echo "$NETDEVICES" | cut -d" " -f1)
+  ETH1=$(echo "$NETDEVICES" | cut -d" " -f2)
+  GWAY=$(xmllint --xpath "string(dsas/config/network/${TYP}/gateway)" "$VAR/dsas_conf.xml.active")
+  [ -n "$GWAY" ] && /sbin/route del default gw "$GWAY"
   pkill udhcpc
-  /sbin/ifconfig $ETH0 down
+  /sbin/ifconfig "$ETH0" down
 
   if [ -z "$NO_INTERCO" ]; then
-    [ "$TYP" == "bas" ] && /sbin/route del $INTERCO_HAUT
-    [ "$TYP" == "haut" ] && /sbin/route del $INTERCO_BAS
+    [ "$TYP" == "bas" ] && /sbin/route del "$INTERCO_HAUT"
+    [ "$TYP" == "haut" ] && /sbin/route del "$INTERCO_BAS"
 
-    /sbin/ifconfig $ETH1 down
+    /sbin/ifconfig "$ETH1" down
   fi
   /sbin/ifconfig lo down
 }
 
 start_web_admin(){
-  cp $VAR/admin.conf.dsas $VAR/admin.conf
+  cp "$VAR/admin.conf.dsas" "$VAR/admin.conf"
   NETDEVICES=$(getnetdevices)
-  ETH0=$(echo $NETDEVICES | cut -d" " -f1)
-  ip=$(ifconfig $ETH0 | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
+  ETH0=$(echo "$NETDEVICES" | cut -d" " -f1)
+  ip=$(ifconfig "$ETH0" | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
   echo "Binding webserver to ${GREEN}$ETH0${NORMAL} and address ${GREEN}$ip${NORMAL}." 
   echo "server.bind = \"$ip\"" >> $VAR/admin.conf
   echo "Starting administration web server"
-  $as_tc lighttpd -Df $VAR/admin.conf &
+  $as_tc lighttpd -Df "$VAR/admin.conf" &
 }
 
 stop_web_admin(){
-  PID=$(ps a | grep admin.conf | grep -v grep | xargs | cut -d" " -f1)
-  [ -z "$PID" ] || kill $PID
+  pkill -f admin.conf
 }
 
 start_sshd(){
   if [ "$TYP" == "bas" ]; then
-    [ "$(xmllint --xpath "string(dsas/config/ssh/active)" $VAR/dsas_conf.xml)" == "false" ] && return 0
-    USER_TC=$(xmllint --xpath "string(dsas/config/ssh/user_tc)" $VAR/dsas_conf.xml) 
-    USER=$(xmllint --xpath "string(dsas/config/ssh/user_bas)" $VAR/dsas_conf.xml)
+    [ "$(xmllint --xpath "string(dsas/config/ssh/active)" "$VAR/dsas_conf.xml")" == "false" ] && return 0
+    USER_TC=$(xmllint --xpath "string(dsas/config/ssh/user_tc)" "$VAR/dsas_conf.xml") 
+    USER=$(xmllint --xpath "string(dsas/config/ssh/user_bas)" "$VAR/dsas_conf.xml")
     UID_TC=""
     i=1
     while :; do
-      _username=$(xmllint --xpath "string(dsas/config/users/user[$i]/username)" $VAR/dsas_conf.xml)
+      _username=$(xmllint --xpath "string(dsas/config/users/user[$i]/username)" "$VAR/dsas_conf.xml")
       [ -z "${_username// }" ] && break
-      _active=$(xmllint --xpath "string(dsas/config/users/user[$i]/active)" $VAR/dsas_conf.xml)
-      _type=$(xmllint --xpath "string(dsas/config/users/user[$i]/type)" $VAR/dsas_conf.xml)
+      _active=$(xmllint --xpath "string(dsas/config/users/user[$i]/active)" "$VAR/dsas_conf.xml")
+      _type=$(xmllint --xpath "string(dsas/config/users/user[$i]/type)" "$VAR/dsas_conf.xml")
       if [ "$_active" == "true" ] && [ "$_type" == "admin" ]; then
         if [ -z "$UID_TC" ]; then
           UID_TC="$_username"
@@ -561,10 +556,10 @@ start_sshd(){
     UID_TYP=""
     i=1
     while :; do
-      _username=$(xmllint --xpath "string(dsas/config/users/user[$i]/username)" $VAR/dsas_conf.xml)
+      _username=$(xmllint --xpath "string(dsas/config/users/user[$i]/username)" "$VAR/dsas_conf.xml")
       [ -z "${_username// }" ] && break
-      _active=$(xmllint --xpath "string(dsas/config/users/user[$i]/active)" $VAR/dsas_conf.xml)
-      _type=$(xmllint --xpath "string(dsas/config/users/user[$i]/type)" $VAR/dsas_conf.xml)
+      _active=$(xmllint --xpath "string(dsas/config/users/user[$i]/active)" "$VAR/dsas_conf.xml")
+      _type=$(xmllint --xpath "string(dsas/config/users/user[$i]/type)" "$VAR/dsas_conf.xml")
       if [ "$_active" == "true" ] && [ "$_type" == "$TYP" ]; then
         if [ -z "$UID_TYP" ]; then
           UID_TYP="$_username"
@@ -575,19 +570,19 @@ start_sshd(){
       i=$((i + 1))
     done
     NETDEVICES=$(getnetdevices)
-    ETH0=$(echo $NETDEVICES | cut -d" " -f1)
-    LISTEN=$(ifconfig $ETH0 | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
+    ETH0=$(echo "$NETDEVICES" | cut -d" " -f1)
+    LISTEN=$(ifconfig "$ETH0" | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
   else
     USER_TC="$INTERCO_BAS"
-    USER=$(xmllint --xpath "string(dsas/config/ssh/user_haut)" $VAR/dsas_conf.xml)
+    USER=$(xmllint --xpath "string(dsas/config/ssh/user_haut)" "$VAR/dsas_conf.xml")
     UID_TC="tc"
     UID_TYP=""
     i=1
     while :; do
-      _username=$(xmllint --xpath "string(dsas/config/users/user[$i]/username)" $VAR/dsas_conf.xml)
+      _username=$(xmllint --xpath "string(dsas/config/users/user[$i]/username)" "$VAR/dsas_conf.xml")
       [ -z "${_username// }" ] && break
-      _active=$(xmllint --xpath "string(dsas/config/users/user[$i]/active)" $VAR/dsas_conf.xml)
-      _type=$(xmllint --xpath "string(dsas/config/users/user[$i]/type)" $VAR/dsas_conf.xml)
+      _active=$(xmllint --xpath "string(dsas/config/users/user[$i]/active)" "$VAR/dsas_conf.xml")
+      _type=$(xmllint --xpath "string(dsas/config/users/user[$i]/type)" "$VAR/dsas_conf.xml")
       if [ "$_active" == "true" ] && [ "$_type" == "$TYP" ]; then
         if [ -z "$UID_TYP" ]; then
           UID_TYP="$_username"
@@ -617,7 +612,7 @@ start_sshd(){
 
   [ -z "$USER_TC" ] && [ -z "$USER" ] && return 0
   cp -f /usr/local/etc/ssh/sshd_config.dsas /usr/local/etc/ssh/sshd_config
-  if [ ! -z "$USER_TC" ] && [ ! -z "$UID_TC" ]; then
+  if [ -n "$USER_TC" ] && [ -n "$UID_TC" ]; then
     cat << EOF >> /usr/local/etc/ssh/sshd_config
 
 ListenAddress $LISTEN
@@ -629,7 +624,7 @@ Match User $UID_TC Address $USER_TC
 EOF
   fi
 
-  if [ ! -z "$USER" ] && [ ! -z "$UID_TYP" ]; then
+  if [ -n "$USER" ] && [ -n "$UID_TYP" ]; then
     cat << EOF >> /usr/local/etc/ssh/sshd_config
 Match User $UID_TYP Address $USER
 	PasswordAuthentication yes
@@ -661,7 +656,7 @@ EOF
     PID=$(cat /var/run/sshd.pid)
     if [ -d "/proc/$PID" ]; then
       echo "Sending ${GREEN}SIGHUP${NORMAL} to the ${GREEN}openssh${NORMAL} server"
-      kill -HUP $PID
+      kill -HUP "$PID"
     else
       echo "Starting the ${GREEN}openssh${NORMAL} server"
       /usr/local/etc/init.d/openssh start >> /var/log/sshd.log 2>&1
@@ -692,7 +687,7 @@ config_sshd(){
           echo -ne "\b/"
           ;;
       esac 
-      ping -W 1 -c 1 $INTERCO_HAUT > /dev/null  2>&1 && break
+      ping -W 1 -c 1 "$INTERCO_HAUT" > /dev/null  2>&1 && break
     done
     echo -e "\b"
     echo "SSH server on machine haut available"
@@ -702,7 +697,7 @@ config_sshd(){
     $as_haut ssh-keygen -b 4096 -t rsa -f /home/haut/.ssh/id_rsa -q -N ''
 
     echo "Copying public keys to machine haut"
-    $as_tc ssh-keyscan $INTERCO_HAUT > /home/tc/.ssh/known_hosts
+    $as_tc ssh-keyscan "$INTERCO_HAUT" > /home/tc/.ssh/known_hosts
     $as_tc ssh-keyscan haut >> /home/tc/.ssh/known_hosts
     cp /home/tc/.ssh/known_hosts /home/haut/.ssh/known_hosts
     chown tc.staff /home/tc/.ssh/known_hosts
@@ -711,7 +706,7 @@ config_sshd(){
     while :; do
       PASSWD="$(dialog --stdout --no-cancel --insecure --passwordbox 'Password user tc:' 0 0)"
       # Don't use $as_tc here as don't want the "-E"
-      sudo -u tc /usr/local/bin/sshpass -p $PASSWD ssh-copy-id -i /home/tc/.ssh/id_rsa.pub -f tc@$INTERCO_HAUT && break
+      sudo -u tc /usr/local/bin/sshpass -p "$PASSWD" ssh-copy-id -i /home/tc/.ssh/id_rsa.pub -f "tc@$INTERCO_HAUT" && break
       # FIXME Sleep to allow any error messages to be seen. Maybe remove later
       sleep 5
       dialog --msgbox "Password incorrect" 0 0
@@ -720,9 +715,9 @@ config_sshd(){
     cp /home/haut/.ssh/id_rsa.pub /tmp/authorized_keys
     chown tc.staff /tmp/authorized_keys
     chmod 600 /tmp/authorized_keys
-    $as_tc scp /tmp/authorized_keys tc@$INTERCO_HAUT:/tmp/authorized_keys
+    $as_tc scp /tmp/authorized_keys "tc@$INTERCO_HAUT:/tmp/authorized_keys"
     rm /tmp/authorized_keys
-    $as_tc ssh tc@$INTERCO_HAUT << EOF
+    $as_tc ssh "tc@$INTERCO_HAUT" << EOF
 sudo mkdir -p /home/bas/.ssh
 cat /tmp/authorized_keys >> /home/tc/.ssh/authorized_keys
 sudo mv -f /tmp/authorized_keys /home/bas/.ssh/authorized_keys
@@ -737,7 +732,7 @@ EOF
     [ -f /usr/local/etc/ssh/ssh_host_ed25519_key ] || /usr/local/bin/ssh-keygen -t ed25519 -N "" -f /usr/local/etc/ssh/ssh_host_ed25519_key
 
     echo "Backing up authorized keys on machine haut"
-    $as_tc ssh -i /home/tc/.ssh/id_rsa tc@$INTERCO_HAUT filetool.sh -b
+    $as_tc ssh -i /home/tc/.ssh/id_rsa "tc@$INTERCO_HAUT" filetool.sh -b
   fi
 }
 
@@ -746,32 +741,31 @@ stop_sshd(){
 }
 
 start_repo(){
-  repo="$(xmllint --xpath 'string(dsas/config/web/repo)' $VAR/dsas_conf.xml)"
+  repo="$(xmllint --xpath 'string(dsas/config/web/repo)' "$VAR/dsas_conf.xml")"
   if [ "$repo" != "true" ]; then return 0; fi
-  cp $VAR/repo.conf.dsas $VAR/repo.conf
+  cp "$VAR/repo.conf.dsas" "$VAR/repo.conf"
   NETDEVICES=$(getnetdevices)
-  ETH0=$(echo $NETDEVICES | cut -d" " -f1)
-  ip=$(ifconfig $ETH0 | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
+  ETH0=$(echo "$NETDEVICES" | cut -d" " -f1)
+  ip=$(ifconfig "$ETH0" | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
   echo "Binding repo to ${GREEN}$ETH0${NORMAL} and address ${GREEN}$ip${NORMAL}." 
   echo "server.bind = \"$ip"\" >> $VAR/repo.conf
   echo "Starting repository web server"
   # Start as root to allow use of port 443. But after change to user bas.repo
   # via options in repo.conf
-  lighttpd -Df $VAR/repo.conf &
+  lighttpd -Df "$VAR/repo.conf" &
 }
 
 stop_repo(){
-  PID=$(ps a | grep repo.conf | grep -v grep | xargs | cut -d" " -f1)
-  [ -z "$PID" ] || kill $PID
+  pkill -f repo.conf
 }
 
 start_syslog(){
-  syslog=$(xmllint --xpath "string(dsas/config/syslog/active)" $VAR/dsas_conf.xml)
-  server=$(xmllint --xpath "string(dsas/config/syslog/server)" $VAR/dsas_conf.xml)
+  syslog=$(xmllint --xpath "string(dsas/config/syslog/active)" "$VAR/dsas_conf.xml")
+  server=$(xmllint --xpath "string(dsas/config/syslog/server)" "$VAR/dsas_conf.xml")
 
   if [ "$syslog" == "true" ]; then
     [ "$TYP" == "bas" ] && [ -n "$server" ] && sopts=" -R $server -L "
-    /sbin/syslogd ${sopts} && echo "${GREEN}syslogd started.${NORMAL}"
+    echo "${sopts}" | xargs /sbin/syslogd && echo "${GREEN}syslogd started.${NORMAL}"
     /sbin/klogd && echo "${GREEN}klogd started.${NORMAL}"
   fi
 }
@@ -783,18 +777,18 @@ stop_syslog(){
 
 start_ntp(){
   # FIXME Use "-S" option of busybox ntpd to get information from service
-  ntp=$(xmllint --xpath "string(dsas/config/ntp/active)" $VAR/dsas_conf.xml)
-  next=$(xmllint --xpath "string(dsas/config/ntp/server[1])" $VAR/dsas_conf.xml)
+  ntp=$(xmllint --xpath "string(dsas/config/ntp/active)" "$VAR/dsas_conf.xml")
+  next=$(xmllint --xpath "string(dsas/config/ntp/server[1])" "$VAR/dsas_conf.xml")
 
   if [ "$ntp" == "true" ] && [ "$next" != "" ]; then
     i=2
     opts=""
     while [ -n "$next" ]; do
       opts="$opts -p $next"
-      next=$(xmllint --xpath "string(dsas/config/ntp/server[$i])" $VAR/dsas_conf.xml)
+      next=$(xmllint --xpath "string(dsas/config/ntp/server[$i])" "$VAR/dsas_conf.xml")
       i=$((i+1))
     done
-    /usr/sbin/ntpd ${opts} && echo "${GREEN}ntpd started.${NORMAL}"
+    echo "${opts}" | xargs /usr/sbin/ntpd && echo "${GREEN}ntpd started.${NORMAL}"
   fi
 }
 
@@ -804,9 +798,9 @@ stop_ntp(){
 
 start_radius(){
   mkdir -p "$(dirname "$RADIUS_SERVER")"
-  radius=$(xmllint --xpath "string(dsas/config/radius/active)" $VAR/dsas_conf.xml)
-  server=$(xmllint --xpath "string(dsas/config/radius/server)" $VAR/dsas_conf.xml)
-  secret=$(xmllint --xpath "string(dsas/config/radius/secret)" $VAR/dsas_conf.xml)
+  radius=$(xmllint --xpath "string(dsas/config/radius/active)" "$VAR/dsas_conf.xml")
+  server=$(xmllint --xpath "string(dsas/config/radius/server)" "$VAR/dsas_conf.xml")
+  secret=$(xmllint --xpath "string(dsas/config/radius/secret)" "$VAR/dsas_conf.xml")
 
   [ "$radius" != "true" ] && return
   [ -z "$server" ] && return
@@ -820,7 +814,7 @@ stop_radius(){
 }
 
 start_antivirus(){
-  antivirus=$(xmllint --xpath "string(dsas/config/antivirus/active)" $VAR/dsas_conf.xml)
+  antivirus=$(xmllint --xpath "string(dsas/config/antivirus/active)" "$VAR/dsas_conf.xml")
   if [ "$antivirus" == "true" ]; then
     ClamAVDir="/etc/sysconfig/tcedir/../dsas/bas/share/ClamAV"
     if [ -n "$ClamAVDir" ]; then
@@ -838,24 +832,26 @@ stop_antivirus(){
 }
 
 start_snmp(){
-  snmp=$(xmllint --xpath "string(dsas/config/snmp/active)" $VAR/dsas_conf.xml)
+  snmp=$(xmllint --xpath "string(dsas/config/snmp/active)" "$VAR/dsas_conf.xml")
   if [ "$snmp" == "true" ]; then
     NETDEVICES=$(getnetdevices)
-    ETH0=$(echo $NETDEVICES | cut -d" " -f1)
-    ip=$(ifconfig $ETH0 | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
-    snmp_username=$(xmllint --xpath "string(dsas/config/snmp/username)" $VAR/dsas_conf.xml)
-    snmp_password=$(xmllint --xpath "string(dsas/config/snmp/password)" $VAR/dsas_conf.xml)
-    snmp_encrypt=$(xmllint --xpath "string(dsas/config/snmp/encrypt)" $VAR/dsas_conf.xml)
-    snmp_passpriv=$(xmllint --xpath "string(dsas/config/snmp/passpriv)" $VAR/dsas_conf.xml)
-    snmp_privencrypt=$(xmllint --xpath "string(dsas/config/snmp/privencrypt)" $VAR/dsas_conf.xml)
+    ETH0=$(echo "$NETDEVICES" | cut -d" " -f1)
+    ip=$(ifconfig "$ETH0" | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
+    snmp_username=$(xmllint --xpath "string(dsas/config/snmp/username)" "$VAR/dsas_conf.xml")
+    snmp_password=$(xmllint --xpath "string(dsas/config/snmp/password)" "$VAR/dsas_conf.xml")
+    snmp_encrypt=$(xmllint --xpath "string(dsas/config/snmp/encrypt)" "$VAR/dsas_conf.xml")
+    snmp_passpriv=$(xmllint --xpath "string(dsas/config/snmp/passpriv)" "$VAR/dsas_conf.xml")
+    snmp_privencrypt=$(xmllint --xpath "string(dsas/config/snmp/privencrypt)" "$VAR/dsas_conf.xml")
     dsas_oid=$(grep "OID=" /usr/local/sbin/snmpdsas | cut -d= -f2)
     mkdir -p /usr/local/etc/snmp
     chown root.staff /usr/local/etc/snmp
     chmod 750 /usr/local/etc/snmp
-    echo "agentAddress udp:$ip:161" > /usr/local/etc/snmp/snmpd.conf
-    echo "CreateUser $snmp_username $snmp_encrypt $snmp_password $snmp_privencrypt $snmp_passpriv" >> /usr/local/etc/snmp/snmpd.conf
-    echo "rouser $snmp_username priv 1" >> /usr/local/etc/snmp/snmpd.conf
-    echo "pass $dsas_oid /usr/local/sbin/snmpdsas" >> /usr/local/etc/snmp/snmpd.conf
+    cat << EOF > /usr/local/etc/snmp/snmpd.conf
+agentAddress udp:$ip:161
+CreateUser $snmp_username $snmp_encrypt $snmp_password $snmp_privencrypt $snmp_passpriv
+rouser $snmp_username priv 1
+pass $dsas_oid /usr/local/sbin/snmpdsas
+EOF
     /usr/local/sbin/snmpd &
   fi
 }
@@ -867,7 +863,7 @@ stop_snmp(){
 start_chroot(){
  if [ -z "$ISDOCKER" ]; then
    echo "Setting up ${GREEN}lftp chroot jail${NORMAL}"
-   if [ ! $(mounted /opt/lftp/home/dsas/haut) ]; then
+   if [ ! "$(mounted /opt/lftp/home/dsas/haut)" ]; then
      # Create chroot jail for lftp as user haut
      mkdir -p  /opt/lftp/home/dsas/haut
      chown root.haut /opt/lftp/home/dsas/haut
@@ -883,8 +879,8 @@ start_chroot(){
      if [ "$1" == "--force" ]; then
        (umask 227; cp /home/haut/.ssh/ /opt/lftp/home/haut/.ssh)
      else
-       for _f in $(ls -1 /home/haut/.ssh); do
-         [ -f "/opt/lftp/home/haut/.ssh/$_f" ] || cp home/haut/.ssh/$_f /opt/lftp/home/haut/.ssh/$_f
+       for _f in ls -1 /home/haut/.ssh; do
+         [ -f "/opt/lftp/home/haut/.ssh/$_f" ] || cp "home/haut/.ssh/$_f" "/opt/lftp/home/haut/.ssh/$_f"
        done
      fi
      chmod 0440 /opt/lftp/home/haut/.ssh/id*
@@ -893,7 +889,7 @@ start_chroot(){
    fi
    chown -R root.haut /opt/lftp/home/haut
    chmod 0660 /opt/lftp/home/haut/.ssh/known_hosts
-   if [ ! $(mounted /opt/lftp/dev/pts) ]; then
+   if [ ! "$(mounted /opt/lftp/dev/pts)" ]; then
      # Create pty for chroot jail
      (umask 00022; mkdir -p  /opt/lftp/dev/pts)
      mount -t devpts devpts /opt/lftp/dev/pts -o ptmxmode=0666,newinstance
@@ -917,21 +913,21 @@ reboot_required(){
 
 save_config(){
   # Make a copy of the config file for later comparison
-  $as_tc cp -f $VAR/dsas_conf.xml $VAR/dsas_conf.xml.active
-  $as_tc chmod 644 $VAR/dsas_conf.xml $VAR/dsas_conf.xml.active
+  $as_tc cp -f $VAR/dsas_conf.xml "$VAR/dsas_conf.xml.active"
+  $as_tc chmod 644 $VAR/dsas_conf.xml "$VAR/dsas_conf.xml.active"
 
   echo "Saving DSAS configuration"
   $as_tc filetool.sh -b
 }
 
 check_xml_version(){
-  _ver=$(xmllint --xpath "string(dsas/version)" $VAR/dsas_conf.xml)
+  _ver=$(xmllint --xpath "string(dsas/version)" "$VAR/dsas_conf.xml")
   # If no XML version set to first XML file with version number
   if [ -z "$_ver" ]; then
     echo "XML version added"
     # Don't use xmllint here as can't easily add nodes. Just use sed
     mv $VAR/dsas_conf.xml $VAR/dsas_conf.xml.old
-    sed -i -e "s:<dsas>:<dsas>\n  <version>0.5</version>:" $VAR/dsas_conf.xml
+    sed -i -e "s:<dsas>:<dsas>\n  <version>0.5</version>:" "$VAR/dsas_conf.xml"
     chown tc.staff $VAR/dsas_conf.xml
     chmod 644 $VAR/dsas_conf.xml
     _ver="0.5"
@@ -941,7 +937,7 @@ check_xml_version(){
   
   REAL_VER_MAJOR="$(echo $DSAS_XML_VERSION | cut -d. -f1)"
   REAL_VER_MINOR="$(echo $DSAS_XML_VERSION | cut -d. -f2)"
-  if [ $REAL_VER_MAJOR -lt $VER_MAJOR ] || ([ $REAL_VER_MAJOR -eq $VER_MAJOR ] && [ $REAL_VER_MINOR -lt $VER_MINOR ]); then
+  if [ "$REAL_VER_MAJOR" -lt "$VER_MAJOR" ] || { [ "$REAL_VER_MAJOR" -eq "$VER_MAJOR" ] && [ "$REAL_VER_MINOR" -lt "$VER_MINOR" ]; }; then
     echo "${RED}Can not downgrade XML file.${NORMAL}"
     return
   fi
@@ -951,24 +947,24 @@ check_xml_version(){
     sed -i -e "s:<network>:<network>\n      <interco>\n        <cidr>192.168.192.0/24</cidr>\n      </interco>:" $VAR/dsas_conf.xml
   fi
   if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "7" ]; then 
-    INTERCO_CIDR=$(xmllint --xpath 'string(dsas/config/network/interco/cidr)' $VAR/dsas_conf.xml)
-    _cidr="$(echo $INTERCO_CIDR | sed -e "s:^.*/\(.*\)$:\1:")"
-    _ip=$(echo $INTERCO_CIDR | sed -e "s:^\(.*\)/.*$:\1:")
-    _last="$(($(echo $_ip | cut -d. -f4) & ((0xFF00 << ($_cidr - 24)) & 0xFF)))"
-    INTERCO="$(echo $_ip | cut -d. -f1-3).$_last"   
-    INTERCO_BAS="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 1)) )"
-    INTERCO_HAUT="$(echo $(echo $INTERCO | cut -d. -f1-3).$(($(echo $INTERCO | cut -d. -f4) + 2)) )"
-    INTERCO_GW="$(echo $_ip | cut -d. -f1-3).$((((0xFF << (32 - $_cidr)) ^ 0xFF) & 0xFF + $_last - 1))"
-    cp /var/dsas/dsas_conf.xml /var/dsas/dsas_conf.xml.old
-    awk '/^ +<\/interco>/ && found {found=""; next} /^ +<interco>/ {found=1} NF && !found'  $VAR/dsas_conf.xml.old \
+    INTERCO_CIDR=$(xmllint --xpath 'string(dsas/config/network/interco/cidr)' "$VAR/dsas_conf.xml")
+    _cidr="$(echo "$INTERCO_CIDR" | sed -e "s:^.*/\(.*\)$:\1:")"
+    _ip=$(echo "$INTERCO_CIDR" | sed -e "s:^\(.*\)/.*$:\1:")
+    _last="$(($(echo "$_ip" | cut -d. -f4) & ((0xFF00 << (_cidr - 24)) & 0xFF)))"
+    INTERCO="$(echo "$_ip" | cut -d. -f1-3).$_last"   
+    INTERCO_BAS="$(echo "$INTERCO" | cut -d. -f1-3).$(($(echo "$INTERCO" | cut -d. -f4) + 1))"
+    INTERCO_HAUT="$(echo "$INTERCO" | cut -d. -f1-3).$(($(echo "$INTERCO" | cut -d. -f4) + 2))"
+    INTERCO_GW="$(echo "$_ip" | cut -d. -f1-3).$((((0xFF << (32 - _cidr)) ^ 0xFF) & 0xFF + _last - 1))"
+    cp "$VAR/dsas_conf.xml" "$VAR/dsas_conf.xml.old"
+    awk '/^ +<\/interco>/ && found {found=""; next} /^ +<interco>/ {found=1} NF && !found'  "$VAR/dsas_conf.xml.old" \
         | sed -e "s:<network>:<network>\n      <interco>\n        <haut>\n          <cidr>$INTERCO_HAUT/$_cidr</cidr>\n          <gateway>$INTERCO_GW</gateway>\n        </haut>\n        <bas>\n          <cidr>$INTERCO_BAS/$_cidr</cidr>\n          <gateway>$INTERCO_GW</gateway>\n        </bas>\n      </interco>:" > $VAR/dsas_conf.xml
   fi
   if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "8" ]; then 
-    sed -i -e "s:</config>:<antivirus>\n        <active>false</active>\n        <uri></uri>\n      </antivirus>\n    </config>:" $VAR/dsas_conf.xml
+    sed -i -e "s:</config>:<antivirus>\n        <active>false</active>\n        <uri></uri>\n      </antivirus>\n    </config>:" "$VAR/dsas_conf.xml"
   fi
   if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "9" ]; then 
-    _users="    <users>\n      $(xmllint --xpath 'dsas/config/users/hash' $VAR/dsas_conf.xml)"
-    _first=$(xmllint --xpath 'string(dsas/config/users/first)' $VAR/dsas_conf.xml)
+    _users="    <users>\n      $(xmllint --xpath 'dsas/config/users/hash' "$VAR/dsas_conf.xml")"
+    _first=$(xmllint --xpath 'string(dsas/config/users/first)' "$VAR/dsas_conf.xml")
     [ -z "$_first" ] || _users="$_users\n      <first>true</first>"
     _users="$_users\n      <user>\n        <username>tc</username>\n        <description>Default account</description>\n        <type>admin</type>"
     _users="$_users\n        <active>true</active>\n      </user>\n    </users>"
@@ -986,16 +982,16 @@ check_xml_version(){
   fi
 
   if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "12" ]; then
-    _passpriv=$(xmllint --xpath 'string(dsas/config/snmp/password)' $VAR/dsas_conf.xml)
+    _passpriv=$(xmllint --xpath 'string(dsas/config/snmp/password)' "$VAR/dsas_conf.xml")
     sed -i -e "s:</snmp>:  <encrypt>SHA</encrypt>\n        <passpriv>${_passpriv}</passpriv>\n        <privencrypt>AES</privencrypt>      </snmp>:" $VAR/dsas_conf.xml
   fi
 
   if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "13" ]; then
     # The version 0.13 of the DSAS needs the authorized_keys of "bas" copied to "tc"
     if [ -f "$VAR/dsas_typ" ] && [ "$(cat $VAR/dsas_typ)" == "haut" ]; then
-      sudo cat /home/bas/.ssh/authorized_keys >> /home/tc/.ssh/authorized_keys
-      sudo chown -R tc.staff /home/tc/.ssh
-      sudo chmod -R 700 /home/tc/.ssh
+      cat /home/bas/.ssh/authorized_keys >> /home/tc/.ssh/authorized_keys
+      chown -R tc.staff /home/tc/.ssh
+      chmod -R 700 /home/tc/.ssh
     fi
   fi
 
@@ -1024,18 +1020,18 @@ case "${1}" in
     check_xml_version
 
     NETDEVICES=$(getnetdevices)
-    if [ $(echo $NETDEVICES | wc -w) -lt 2 ]; then
+    if [ "$(echo "$NETDEVICES" | wc -w)" -lt 2 ]; then
       echo "${RED}At least two network devices are needed. Aborting !!${NORMAL}"
       exit 1
     fi
 
-    if [ -f $VAR/dsas_typ ]; then
-      TYP="$(cat $VAR/dsas_typ)"
+    if [ -f "$VAR/dsas_typ" ]; then
+      TYP="$(cat "$VAR/dsas_typ")"
       echo "Machine configured as type: ${GREEN}$TYP${NORMAL}"
       CONFIG_SSH=""
     else
       TYP="$(dialog --stdout --no-cancel --radiolist 'Select machine type:' 0 0 0 haut 'Haut/High' on bas 'Bas/Low' off)"
-      $as_tc echo $TYP > $VAR/dsas_typ
+      $as_tc echo "$TYP" > "$VAR/dsas_typ"
       echo "Machine configured as type: ${GREEN}$TYP${NORMAL}"
       config_interco
       # The machine "haut" is configured from the web admin of "bas"
@@ -1043,7 +1039,7 @@ case "${1}" in
       CONFIG_SSH="true"
     fi
     setup_interco
-    [ -z "$ISDOCKER" ] && /usr/bin/sethostname $TYP
+    [ -z "$ISDOCKER" ] && /usr/bin/sethostname "$TYP"
     echo "# Hardcoded address of other DSAS machine" >> /etc/hosts
     [ "$TYP" == "bas" ] && echo "$INTERCO_HAUT haut" >> /etc/hosts
     [ "$TYP" == "haut" ] && echo "$INTERCO_BAS bas" >> /etc/hosts
@@ -1068,8 +1064,8 @@ case "${1}" in
     ;;
 
   stop)
-    if [ -f $VAR/dsas_typ ]; then
-      TYP="$(cat $VAR/dsas_typ)"
+    if [ -f "$VAR/dsas_typ" ]; then
+      TYP="$(cat "$VAR/dsas_typ")"
     else
       TYP="haut"
     fi
@@ -1095,7 +1091,7 @@ case "${1}" in
 
   reconfig)
     TYP="$(dialog --stdout --no-cancel --radiolist 'Select machine type:' 0 0 0 haut 'Haut/High' on bas 'Bas/Low' off)"
-    $as_tc echo $TYP > $VAR/dsas_typ
+    $as_tc echo "$TYP" > "$VAR/dsas_typ"
     echo "Machine configured as type: ${GREEN}$TYP${NORMAL}"
     config_interco
     setup_interco
@@ -1107,14 +1103,14 @@ case "${1}" in
 
   apply)
     if [ -f "$VAR/dsas_typ" ]; then
-      TYP="$(cat $VAR/dsas_typ)"
+      TYP="$(cat "$VAR/dsas_typ")"
     else
       TYP="haut"
     fi
     setup_interco
     # Only restart network if changed to avoid interupting transfers
-    OLD=$(xmllint --xpath "dsas/config/network" $VAR/dsas_conf.xml.active)
-    NEW=$(xmllint --xpath "dsas/config/network" $VAR/dsas_conf.xml)
+    OLD=$(xmllint --xpath "dsas/config/network" "$VAR/dsas_conf.xml.active")
+    NEW=$(xmllint --xpath "dsas/config/network" "$VAR/dsas_conf.xml")
     if [ "$OLD" != "$NEW" ]; then
       NO_INTERCO="true"
       stop_network

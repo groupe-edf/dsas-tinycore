@@ -1,13 +1,13 @@
 #!/bin/sh
 mv /etc/sysconfig/tcedir/mydata.tgz /etc/sysconfig/tcedir/mydata.tgz.old
 tmpdir=$(mktemp -d)
-sudo tar xzC $tmpdir -f /etc/sysconfig/tcedir/mydata.tgz.old
-sudo cp -pf /etc/shadow $tmpdir/etc/shadow
-sudo cp -pf /etc/passwd $tmpdir/etc/passwd
-cd $tmpdir
-sudo tar czf /etc/sysconfig/tcedir/mydata.tgz *
+sudo tar xzC "$tmpdir" -f /etc/sysconfig/tcedir/mydata.tgz.old
+sudo cp -pf /etc/shadow "$tmpdir/etc/shadow"
+sudo cp -pf /etc/passwd "$tmpdir/etc/passwd"
+cd "$tmpdir" || exit 1
+sudo tar czf /etc/sysconfig/tcedir/mydata.tgz ./*
 sudo chown tc.staff /etc/sysconfig/tcedir/mydata.tgz
 sudo chmod 660 /etc/sysconfig/tcedir/mydata.tgz
 cd /
-sudo rm -fr $tmpdir
+sudo rm -fr "$tmpdir"
 

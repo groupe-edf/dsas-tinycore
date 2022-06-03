@@ -1,3 +1,7 @@
+// declare bootstrap and marked global to keep eslint happy
+/*global bootstrap */
+/*global marked */
+
 // DSAS version variable
 const dsas_version = "1.1.1";
 
@@ -223,6 +227,8 @@ function modal_errors(errors, feedback = false){
     }
 }
 
+// Many functions in the file are called elsewhere
+// eslint-disable-next-line no-unused-vars
 function dsas_loggedin(update_timeout = true, is_admin = true){
     var uri;
     uri  = new URL("api/login.php", window.location.origin);
@@ -276,6 +282,7 @@ function dsas_init_loggedin(){
     });
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_login(){
     var username = document.getElementById("inp_user").value;
     var password = document.getElementById("inp_pass").value;
@@ -315,6 +322,7 @@ function dsas_login(){
     });
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_display_passwd(){
     fetch("api/dsas-passwd.php").then(response => {
         if (response.ok) 
@@ -334,6 +342,7 @@ function dsas_display_passwd(){
     });
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_change_passwd(){
     var user = document.getElementById("User").innerHTML;
     var passwd = document.getElementById("inp_pass").value;
@@ -373,6 +382,7 @@ function format_space(bytes) {
     }
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_status(){
     fetch("api/dsas-status.php").then(response => {
         if (response.ok) 
@@ -438,6 +448,7 @@ function machine_status(obj){
     return disk + memory + load;
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_check_warnings(disablenav = false, redirect = true){
     fetch("api/dsas-users.php").then(response => {
         if (response.ok) 
@@ -492,7 +503,6 @@ function log_highlight(line) {
     return (line.substr(0,2) === "  " ? 0 : 7);
 }
 
-
 function log_render(line) {
     try {
         var res = _(line.substr(4,15).trim()).padEnd(15);
@@ -506,6 +516,7 @@ function log_render(line) {
     }
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_togglelogs(){
     var btn = document.getElementById("loghide");
     if (timeout_logs !== 0)
@@ -521,6 +532,7 @@ function dsas_togglelogs(){
     }
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_display_logs(all = false){
     fetch("api/dsas-verif-logs.php").then(response => {
         if (response.ok) 
@@ -617,6 +629,7 @@ function dsas_display_users(){
     });
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_user_passwd(user){
     var modalDSAS = document.getElementById("modalDSAS");
     var body = "";
@@ -628,6 +641,7 @@ function dsas_user_passwd(user){
     modalDSAS.setAttribute("body", body);
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_real_user_passwd(user){
     var passwd = document.getElementById("UserPassword").value;
     var formData = new FormData;
@@ -654,10 +668,12 @@ function dsas_real_user_passwd(user){
     });
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_user_delete(user){
     modal_action(_("Delete the user '{0}' ?", user),"dsas_real_user_delete('" + user + "');", true);
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_real_user_delete(user){
     var formData = new FormData;
     formData.append("op", "delete");
@@ -684,6 +700,7 @@ function dsas_real_user_delete(user){
     });
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_user_new(){
     var modalDSAS = document.getElementById("modalDSAS");
     var body = "";
@@ -695,6 +712,7 @@ function dsas_user_new(){
     modalDSAS.setAttribute("body", body);
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_real_user_new(){
     var username = document.getElementById("NewUser").value;
     var formData = new FormData;
@@ -722,6 +740,7 @@ function dsas_real_user_new(){
     });
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_change_users(){
     fetch("api/dsas-users.php").then(response => {
         if (response.ok) 
@@ -852,11 +871,13 @@ function dsas_display_web(what = "all"){
     });
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_renew_cert(){
     modal_action(_("Are you sure you want to renew the certificate ?"),
         "dsas_renew_cert_real();", true);
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_renew_cert_real(){
     fetch("api/dsas-web.php").then(response => {
         if (response.ok) 
@@ -903,6 +924,7 @@ function dsas_renew_cert_real(){
     });
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_upload_crt() {
     var crt = document.getElementById("crtupload");
     var formData = new FormData();
@@ -1022,6 +1044,7 @@ function iface_body(iface, i) {
     "</div>";
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_change_net(what= "all", i = 0) { 
     if (what === "dhcp") {
         document.getElementById("iface_cidr" + i).disabled = 
@@ -1084,6 +1107,7 @@ function dsas_change_net(what= "all", i = 0) {
     }
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_display_service(what = "all"){
     fetch("api/dsas-service.php").then(response => {
         if (response.ok) 
@@ -1160,6 +1184,7 @@ function dsas_display_service(what = "all"){
     });
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_change_service(what) {
     if (what === "ssh") {
         document.getElementById("user_tc").disabled = 
@@ -1392,11 +1417,13 @@ function treat_x509_certs(certs, added = false) {
     return body;
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_cert_delete(name, finger){
     modal_action(_("Delete the certificate ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, finger.substr(0,50)),
         "dsas_cert_real_delete('" + name + "','" + finger + "');", true);
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_cert_real_delete(name, finger) {
     var formData = new FormData;
     formData.append("op", "delete");
@@ -1487,6 +1514,7 @@ function date_to_str(d) {
       d.substr(0,2) + " " + d.substr(6,2) + ":" + d.substr(8,2) + ":" + d.substr(10,2) + " UTC";
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_pubkey_name(){
     var modalDSAS = document.getElementById("modalDSAS");
     var body = "";
@@ -1498,6 +1526,7 @@ function dsas_pubkey_name(){
     modalDSAS.setAttribute("body", body);
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_upload_cert(type = "x509", name ="") {
     var cert = document.getElementById(type + "upload");
     var formData = new FormData();
@@ -1644,6 +1673,7 @@ function task_body(task) {
     return body;
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_task_delete(id, name){
     var body = _("Delete the task ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, id) +
     "<br><input class=\"form-check-iput\" type=\"checkbox\" id=\"TaskDeleteFiles\" checked>" +
@@ -1651,6 +1681,7 @@ function dsas_task_delete(id, name){
     modal_action(body, "dsas_task_real_delete('" + id + "');", true);
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_task_real_delete(id) {
     var formData = new FormData;
     var deleteFiles = document.getElementById("TaskDeleteFiles").checked;
@@ -1679,11 +1710,13 @@ function dsas_task_real_delete(id) {
     });
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_task_kill(id, name){
     var body = _("Kill the task ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, id);
     modal_action(body, "dsas_task_real_kill('" + id + "');", true);
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_task_real_kill(id) {
     var formData = new FormData;
     formData.append("op", "kill");
@@ -1710,6 +1743,7 @@ function dsas_task_real_kill(id) {
     });
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_task_new() {
     modal_task();
     document.getElementById("TaskName").value = "";
@@ -1724,6 +1758,7 @@ function dsas_task_new() {
     document.getElementById("TaskCert").innerHTML = "";
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_task_modify(id) {
     fetch("api/dsas-task.php").then(response => {
         if (response.ok) 
@@ -1801,11 +1836,13 @@ function has_arch(archs, arch){
     return false;
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_task_run(id, name){
     modal_action(_("Run the task ?&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}", name, id),
         "dsas_task_real_run('" + id + "');", true);
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_task_real_run(id) {
     var formData = new FormData;
     formData.append("op", "run");
@@ -1833,6 +1870,7 @@ function dsas_task_real_run(id) {
     });
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_task_info(id, name, len = 0) {
     var formData = new FormData;
     formData.append("op", "info");
@@ -1863,6 +1901,7 @@ function dsas_task_info(id, name, len = 0) {
     });
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_add_task_arch(archs = []) {
     var type = "";
     for (const opt of document.getElementsByTagName("option"))
@@ -1925,6 +1964,7 @@ function task_arch_body(type, archs) {
     return body;
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_add_task_cert() {
     var taskCert = document.getElementById("TaskCert");
     var name = "";
@@ -1952,6 +1992,7 @@ function dsas_add_task_cert() {
     }
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_task_cert_delete(fingerprint){
     var body = "";
     for (const line of document.getElementsByTagName("dsas-task-cert")) {
@@ -1963,6 +2004,7 @@ function dsas_task_cert_delete(fingerprint){
     document.getElementById("TaskCert").innerHTML = body;
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_modify_task(oldname = "", oldid = "") {
     var name = document.getElementById("TaskName").value;
 
@@ -2080,6 +2122,7 @@ function b64toBlob(b64Data, contentType="", sliceSize=512){
     return blob;
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_backup(){
     var modalDSAS = document.getElementById("modalDSAS");
     var body = "";
@@ -2091,6 +2134,7 @@ function dsas_backup(){
     modalDSAS.setAttribute("body", body);
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_real_backup(){
     var passwd = document.getElementById("BackupPassword").value;
     var uri = new URL("api/backup.php", window.location.origin);
@@ -2123,6 +2167,7 @@ function dsas_real_backup(){
     });     
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_restore(){
     var inp = document.createElement("input");
     document.body.appendChild(inp);
@@ -2134,6 +2179,7 @@ function dsas_restore(){
     inp.click();
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_passwd_restore(){
     var modalDSAS = document.getElementById("modalDSAS");
     var body = "";
@@ -2145,6 +2191,7 @@ function dsas_passwd_restore(){
     modalDSAS.setAttribute("body", body);
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_real_restore() {
     var passwd = document.getElementById("RestorePassword").value;
     var file = document.getElementById("RestoreSelectFile").files[0];
@@ -2197,6 +2244,7 @@ function dsas_headings(){
     return ph;
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_display_version(){
     document.getElementById("Version").innerHTML = "<p><span data-i18n>DSAS Version</span> : " + dsas_version + "</p>";
 }
@@ -2236,6 +2284,7 @@ function dsas_help_toc(){
     document.getElementById("toc").innerHTML = body + "<ul>";
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_display_help(){
     const urlParams = new URLSearchParams(window.location.search);
     const lang = urlParams.get("language");
@@ -2298,6 +2347,7 @@ function dsas_apply(){
     });
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_reboot(){
     var modalReboot = document.getElementById("modalDSAS");
     modalReboot.setAttribute("disable", true);
@@ -2400,6 +2450,7 @@ function waitreboot(counter = 0) {
     }
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_shutdown(){
     var modalShutdown= document.getElementById("modalDSAS");
 
@@ -2459,6 +2510,7 @@ function waitshutdown(counter = 0) {
     }
 }
 
+// eslint-disable-next-line no-unused-vars
 function dsas_logout(){
     // No error checking because, only possible error is that already logged out
     fetch("api/logout.php").then(() => {

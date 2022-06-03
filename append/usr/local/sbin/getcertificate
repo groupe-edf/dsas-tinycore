@@ -1,0 +1,85 @@
+#! /bin/sh
+# Busybox ash not supported. Use posix SH and disable a couple of
+# ash extensions I use
+#
+# shellcheck shell=sh
+# shellcheck disable=SC2039
+
+if [ -f "$(dirname "$0")/dsas_common.sh" ]; then
+  # shellcheck source=append/usr/local/sbin/dsas_common.sh
+  . "$(dirname "$0")/dsas_common.sh"
+else
+  1>&2 echo "Common functions not found !!"
+  exit 1
+fi
+
+# Usage get_certificate fingerprint
+get_certificate(){
+  local cert type i incert ca_bundle
+  i=1
+  incert="false"
+  ca_bundle=$(dsas_ca_file)
+  while :; do
+    cert=$(xmllint --xpath "string(dsas/certificates/certificate[$i]/pem)" "$CONF")
+    [ -z "$cert" ] && break
+    type=$(xmllint --xpath "string(dsas/certificates/certificate[$i]/type)" "$CONF")
+    echo "$cert" > /tmp/cert.$$
+
+    case $type in
+      x509)
+        f=$(openssl x509 -in /tmp/cert.$$ -noout -fingerprint -sha256 -inform pem  | cut -d= -f2 | sed -e "s/://g" | tr "[:upper:]" "[:lower:]")
+        [ "$f" == "$1" ] && { echo $i; return; }
+        ;;
+      gpg)
+        gpg -v < /tmp/cert.$$ 2>&1 | grep -q "$1" && { echo "$i"; return; }
+        ;;
+      pubkey)
+        tr -d "\n" < /tmp/cert.$$ | tr -d "\r" | sed -e "s/^-----BEGIN [A-Z ]*PUBLIC KEY-----//" | \
+            sed -e "s/-----END [A-Z ]*PUBLIC KEY-----$//" | base64 -d | sha256sum | cut -f1 -d" " | \
+            grep -q "$1" && { echo "$i"; return; }
+        ;;
+      *)
+        1>&2 echo "Unknown certificate type"
+        ;;
+    esac
+    /bin/rm /tmp/cert.$$
+    i=$((i + 1))
+  done
+
+  # Not one of the added certificates. Is it in the certificate store ?
+  while IFS= read -r line; do
+    if [ "$line" == "-----BEGIN CERTIFICATE-----" ]; then
+      if [ "$incert" == "true" ]; then
+        echo "error parsing $ca_bundle"
+      else
+        incert="true"
+        cert="$line"
+      fi
+    elif [ "$line" == "-----END CERTIFICATE-----" ]; then
+      if [ "$incert" == "false" ]; then
+        echo "error parsing $ca_bundle"
+      else
+        cert="$cert\n$line"
+        incert="false"
+        echo -e "$cert" > /tmp/cert.$$
+        f=$(openssl x509 -in /tmp/cert.$$ -noout -fingerprint -sha256 -inform pem  | cut -d= -f2 | sed -e "s/://g" | tr "[:upper:]" "[:lower:]")
+        [ "$f" == "$1" ] && { echo 0; return; }
+        /bin/rm /tmp/cert.$$
+      fi
+    else
+      cert="$cert\n$line"
+    fi
+  done < "$ca_bundle"
+}
+
+dsas_ca_file() {
+  for f in "/etc/ssl/ca-bundle.crt" "/etc/ssl/ca-certificates.crt" "/usr/local/etc/ssl/ca-bundle.crt" "/ust/local/etc/ssl/ca-certificates.crt"; do
+    if [ -f "$f" ]; then
+      echo $f
+      return
+    fi
+  done
+}
+
+get_certificate "$@"
+

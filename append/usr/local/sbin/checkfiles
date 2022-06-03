@@ -1,20 +1,31 @@
 #! /bin/sh
+# Busybox ash not supported. Use posix SH and disable a couple of
+# ash extensions I use
+#
+# shellcheck shell=sh
+# shellcheck disable=SC2039
 
-if [ -f "$(dirname $0)/dsas_common.sh" ]; then
-  . $(dirname $0)/dsas_common.sh
+if [ -f "$(dirname "$0")/dsas_common.sh" ]; then
+  # shellcheck source=append/usr/local/sbin/dsas_common.sh
+  . "$(dirname "$0")/dsas_common.sh"
 else
   1>&2 echo "Common functions not found !!"
-  exit -1
+  exit 1
 fi
 
 # Default options
 logfile="$LOG/dsas_verif.log"
 UMASK=640
+export UMASK
 clamav=0
 antivirus=0
+grp=share
+logstdout=0
+verbose=0
+dryrun=0
 
 help() {
-  echo "Usage: $(basename $0)  [Options] ID [ID...]"
+  echo "Usage: $(basename "$0")  [Options] ID [ID...]"
   echo "Verify files given by the task ID."
   echo "     -v|--verbose    Log all files verified"
   echo "     -q|--quiet      Log only files failing to verify"
@@ -24,7 +35,7 @@ help() {
   echo "     -l|--log        Send the logs to a file"
   echo "     -o <FILE>       Log to <FILE>, default $logfile"
   echo "     --out=<FILE>    Log to <FILE>"
-  echo "     -?|-h|--help    Print this help"
+  echo "     -h|--help       Print this help"
 }
 
 cleanup_and_exit() {
@@ -34,35 +45,65 @@ cleanup_and_exit() {
     /bin/rm -fr "$1"
     shift
   done
-  exit $status
+  exit "$status"
 }
 
 msg() {
-  if [ $logstdout -eq 1 ]; then
+  if [ "$logstdout" -eq 1 ]; then
     printf "%-3s %-15s %-32s %s %s\n" "$1" "$2" "$3" "$4" "$5"
-  elif [ -n $logfile ]; then
-    [ $verbose -ne 0 ] &&  printf "%-3s %-15s %-32s %s %s\n" "$1" "$2" "$3" "$4" "$5"
-    printf "%-3s %-15s %-32s %s %s\n" "$1" "$2" "$3" "$4" "$5" >> $logfile
+  elif [ -n "$logfile" ]; then
+    [ "$verbose" -ne 0 ] &&  printf "%-3s %-15s %-32s %s %s\n" "$1" "$2" "$3" "$4" "$5"
+    printf "%-3s %-15s %-32s %s %s\n" "$1" "$2" "$3" "$4" "$5" >> "$logfile"
   fi
 }
 
 msgline() {
-  local file=$1
-  local status=$2
-  local md5=$(cat "$file" | md5sum | sed -e "s/  -$//g")
-  local _file=`echo "$file" | sed -e "s:^${DSAS_HAUT}/::g"`
-  local d=$(date --utc '+%Y%m%d%H%M%S')
+  local file status md5 _file d
+  file=$1
+  status=$2
+  md5=$(md5sum "$file" | sed -e "s:  -$file$:g")
+  _file=$(echo "$file" | sed -e "s:^${DSAS_HAUT}/::g")
+  d=$(date --utc '+%Y%m%d%H%M%S')
   case $status in
-    0)   msg "  "  "Ok"              $md5 $d "$_file" ;;
-    -1)  msg "XX"  "Unknown type"   $md5  $d "$_file" ;;
-    1)   msg "**"  "Bad Sig"        $md5  $d "$_file" ;;
-    2)   msg "--"  "Checksum fail"  $md5  $d "$_file" ;;
-    3)   msg "**"  "Bad Interm Sig" $md5  $d "$_file" ;;
-    4)   msg "**"  "Fail virus chk" $md5  $d "$_file" ;;
-    5)   msg "**"  "Bad RPM Sig"    $md5  $d "$_file" ;;
-    255) msg "**"  "Not signed"     $md5  $d "$_file" ;;
-    *)   msg "XX"  "Unknown status" $md5  $d "$_file" ;;
+    0)   msg "  "  "Ok"             "$md5"  "$d" "$_file" ;;
+    -1)  msg "XX"  "Unknown type"   "$md5"  "$d" "$_file" ;;
+    1)   msg "**"  "Bad Sig"        "$md5"  "$d" "$_file" ;;
+    2)   msg "--"  "Checksum fail"  "$md5"  "$d" "$_file" ;;
+    3)   msg "**"  "Bad Interm Sig" "$md5"  "$d" "$_file" ;;
+    4)   msg "**"  "Fail virus chk" "$md5"  "$d" "$_file" ;;
+    5)   msg "**"  "Bad RPM Sig"    "$md5"  "$d" "$_file" ;;
+    255) msg "**"  "Not signed"     "$md5"  "$d" "$_file" ;;
+    *)   msg "XX"  "Unknown status" "$md5"  "$d" "$_file" ;;
   esac
+}
+
+myecho(){
+  [ $verbose -ne 0 ] && echo "$@"
+  # If not verbose the status will be 1. explicitly return 0
+  return 0
+}
+
+rm() {
+  if [ "$dryrun" == "0" ]; then
+    #FIXME is there a better way of handling spaces in the args ?
+    while [ "$#" -gt 0 ]; do
+      /bin/rm -fr "$1"
+      shift
+    done
+  else
+    echo "[DryRun] rm $*"
+  fi
+}
+
+task_id_to_idx(){
+  local _task_id
+  local i=1
+  while :; do
+    _task_id=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" "$CONF")
+    [ -z "$_task_id" ] && return 1;
+    [ "$1" == "$_task_id" ] && echo $i && return 
+    i=$((i + 1))
+  done
 }
 
 # Usage : check_checksum <file> <chksum> <type>
@@ -70,56 +111,66 @@ check_checksum() {
   local chk
 
   case $3 in
-    sha512) chk=$(cat "$1" | sha512sum - | sed -e "s/ -//g") ;;
-    sha256) chk=$(cat "$1" | sha256sum - | sed -e "s/ -//g") ;;
-    sha) chk=$(cat "$1" | sha1sum - | sed -e "s/ -$//g") ;;
-    md5) chk=$(cat "$1" | md5sum - | sed -e "s/ -$//g") ;;
+    sha512) chk=$(sha512sum "$1" | sed -e "s:  -$1$:g") ;;
+    sha256) chk=$(sha256sum "$1" | sed -e "s:  -$1$:g") ;;
+    sha) chk=$(sha1sum "$1" | sed -e "s:  -$1$:g") ;;
+    md5) chk=$(md5sum "$1" | sed -e "s:  -$1$:g") ;;
     *) return 0 ;;
   esac
-  [ $chk != "$2" ] && return 0
+  [ "$chk" != "$2" ] && return 0
   return 1
 }
 
 ln() {
   if [ "$dryrun" == "0" ]; then
-    if [ ! -d "$(dirname "$2")" ]; then
-      # Careful with the directory creation to ensure correct permissions and ownership
-      local _d=$2
-      local _d2=$(dirname "$_d")
-      while [ ! -d "$_d2" ]; do
-        _d="$_d2"
-        _d2=$(dirname "$_d2")
-      done
-      mkdir -m 770 -p "$(dirname "$2")"
-      chgrp -R $grp "$_d"
-      chmod -R 770 "$_d"
-    fi
+    [ -d "$(dirname "$2")" ] && mkdir "$(dirname "$2")"
     # This script is not running as root so can't change the owner. We
     # first have to copy the file.
     # FIXME : Hardcode path to gnu version of cp for the "--preserve" flag
     /usr/local/bin/cp --preserve=timestamp "$1" "$1.tmp.$$"
     /bin/mv -f "$1.tmp.$$" "$1"
     chmod 0640 "$1"
-    chgrp $grp "$1"
+    chgrp "$grp" "$1"
     /bin/ln -f "$1" "$2" 
   else
-    [ -d $(dirname $2) ] || echo "[DryRun] mkdir -m 770 -p $(dirname $2)"
+    [ -d "$(dirname "$2")" ] || echo "[DryRun] mkdir -m 770 -p $(dirname "$2")"
     echo "[DryRun] ln $*"
   fi
 }
 
+mkdir() {
+  # A command like "mkdir -m UMASK -p $dir" doesn't apply the
+  # umask to all directories. This function just enforces the
+  # desired permissions and ownerships. Passed only directories
+  local _d _d2
+
+  while [ "$#" -gt 0 ]; do
+    _d=$1
+    _d2=$(dirname "$_d")
+    while [ ! -d "$_d2" ]; do
+      _d="$_d2"
+      _d2=$(dirname "$_d2")
+    done      
+    /bin/mkdir -p "$(dirname "$2")"
+    chgrp -R "$grp" "$_d"
+    chmod -R 770 "$_d"  
+    shift
+  done
+}
+
+
 verifauthenticode(){
-  local _file hash hashes sigdir
-  local id=$1
-  local tempdir="$2"
-  local file="$3"
+  local _file hash hashes sigdir id tempdir file
+  id=$1
+  tempdir="$2"
+  file="$3"
 
   if [ -f "$tempdir/cert.0" ]; then
-    osslsigncode verify -CAfile "$tempdir/cert.0" "$file" 2>&1 > /dev/null || \
-        osslsigncode verify -CAfile "$tempdir/cert.0" -TSA-CAfile "$tempdir/cert.0" "$file" 2>&1 > /dev/null || \
+    osslsigncode verify -CAfile "$tempdir/cert.0" "$file" > /dev/null 2>&1 || \
+        osslsigncode verify -CAfile "$tempdir/cert.0" -TSA-CAfile "$tempdir/cert.0" "$file" > /dev/null 2>&1 || \
         return 1
   else
-    osslsigncode verify "$file" 2>&1 > /dev/null || return 1
+    osslsigncode verify "$file" > /dev/null 2>&1 || return 1
   fi
 
   if [ -f "$tempdir/cert.1" ]; then
@@ -128,7 +179,7 @@ verifauthenticode(){
     # and check them against the hash. If osslsigncode goes back to the behavior of version 2.1 
     # this block can be replaced with one line with the -require-leaf-hash option
     sigdir=$(mktemp -d)
-    osslsigncode extract-signature -pem -out "$sigdir/sig.pkcs7" -in "$file" 2>&1 > /dev/null
+    osslsigncode extract-signature -pem -out "$sigdir/sig.pkcs7" -in "$file" > /dev/null 2>&1
 
     # There can be multiple signatures in the PKCS7 file. openssl will only treat the 
     # first one normally. Find the offsets in the file for each signature block, and treat
@@ -138,23 +189,23 @@ verifauthenticode(){
 
     hashes=""
     for offset in $offsets; do
-      openssl pkcs7 -inform pem -in "$sigdir/sig.pkcs7" -outform der | dd bs=1 skip=$offset status=none | \
+      openssl pkcs7 -inform pem -in "$sigdir/sig.pkcs7" -outform der | dd bs=1 skip="$offset" status=none | \
           openssl pkcs7 -inform der -print_certs 2> /dev/null | \
           awk -v tmp="$sigdir" 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if (length($0) > 0) print > tmp "/sig" n ".pem"}'
 
-      for _file in $(find "$sigdir" -name "sig*.pem"); do
+      while IFS= read -r -d '' _file; do
         hashes="$hashes $(openssl x509 -in "$_file" -noout -fingerprint -sha256 -inform pem 2>&1 | \
-            cut -d= -f2 | sed -e 's/://g' | tr '[A-Z]' '[a-z]')"
-      done
+            cut -d= -f2 | sed -e 's/://g' | tr '[:upper:]' '[:lower:]')"
+      done < <(find "$sigdir" -name "sig*.pem" -print0)
       /bin/rm -f "$sigdir/sig*.pem"
     done
-    /bin/rm -fr $sigdir
+    /bin/rm -fr "$sigdir"
 
-    for _file in $(ls "$tempdir"); do
+    for _file in "$tempdir"/*; do
       [ "$(basename "$_file")" == "cert.0" ] && continue
-      hash="$(openssl x509 -in "$tempdir/$_file" -noout -fingerprint -sha256 -inform pem 2>&1 | \
-          cut -d= -f2 | sed -e 's/://g' | tr '[A-Z]' '[a-z]')"
-      [[ "$hashes" =~ "$hash" ]] || return 3
+      hash="$(openssl x509 -in "$_file" -noout -fingerprint -sha256 -inform pem 2>&1 | \
+          cut -d= -f2 | sed -e 's/://g' | tr '[:upper:]' '[:lower:]')"
+      [[ "$hashes" =~ $hash ]] || return 3
     done
   fi
 
@@ -162,9 +213,10 @@ verifauthenticode(){
 }
 
 verifgpg(){
-  local id=$1
-  local tempdir=$2
-  local file=$3
+  local id tempdir file
+  id=$1
+  tempdir=$2
+  file=$3
   if [ "${file##*.}" == "gpg" ]; then
     # gpg -sign
     gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file" >& /dev/null
@@ -182,23 +234,23 @@ verifgpg(){
 }
 
 verifopenssl(){
-  local id=$1
-  local tempdir="$2"
-  local file="$3"
-  local CAfile Leaf
+  local id tempdir file CAfile Leaf
+  id=$1
+  tempdir="$2"
+  file="$3"
 
   if [ -f "$tempdir/cert.0" ] && grep -q "PUBLIC KEY-----" "$tempdir/cert.0"; then
     # We have directly a public key
     openssl dgst -verify "$tempdir/cert.0" -signature "$file.sig" -binary "$file" 2> /dev/null
   else
-    for _file in $(ls "$tempdir"); do
+    for _file in "$tempdir"/*; do
       # Is the certificate the leaf certificate. If not add to CAFile
-      if openssl x509 -inform pem -noout -ext keyUsage -in "$tempfile/$_file" 2>/dev/null | \
+      if openssl x509 -inform pem -noout -ext keyUsage -in "$_file" 2>/dev/null | \
           grep -q -i "Certificate Sign"; then
         [ -z "$CAfile" ] && CAfile=$(mktemp)
-        cat "$tempdir/$_file" >> $CAfile
+        cat "$_file" >> "$CAfile"
       else
-        Leaf="$tempdir/$_file"
+        Leaf="$_file"
       fi
     done
     # Verify the key chain
@@ -215,11 +267,11 @@ verifopenssl(){
 }
 
 verifcyberwatch(){
-  local id=$1
-  local tempdir="$2"
-  local file="$3"
-  local zipdir=$(mktemp -d)
-  local status
+  local id tempdir file zipdir status
+  id=$1
+  tempdir="$2"
+  file="$3"
+  zipdir=$(mktemp -d)
 
   # Unzip the file
   unzip -q -d "$zipdir" "$file"
@@ -228,14 +280,15 @@ verifcyberwatch(){
   status=0
   head -c -1 "$zipdir/cyberwatch.sig" > "$tempdir/signature"
   head -c -1 "$zipdir/cyberwatch.db" | sha256sum | cut -f1 -d' ' | tr -d '\n' > "$tempdir/cyberwatch.db.sha256"
-  openssl dgst -sha256 -verify "$tempdir/cert.0" -signature "$tempdir/signature" "$tempdir/cyberwatch.db.sha256" > /dev/null || status = 1
+  openssl dgst -sha256 -verify "$tempdir/cert.0" -signature "$tempdir/signature" "$tempdir/cyberwatch.db.sha256" > /dev/null || status=1
 
   # Repack the zipfile so as to avoid potentially hidden files
   if [ "$status" == "0" ]; then
     if [ "$dryrun" == "1" ]; then
       echo "[DryRun]: cd \"$zipdir\"; zip -q \"$file.$$\" cyberwatch.sig cyberwatch.db"
     else
-      (cd "$zipdir"; zip -q "$file.$$" cyberwatch.sig cyberwatch.db)
+      # Use () to create sub-shell, so chdir is local to the sub-shell
+      (cd "$zipdir" || { 2>&1 echo "Failed to create temporary directory"; return 254; }; zip -q "$file.$$" cyberwatch.sig cyberwatch.db)
       /bin/mv -f "$file.$$" "$file"
     fi
   fi
@@ -245,21 +298,22 @@ verifcyberwatch(){
 }
 
 verifliveupdate(){
-  local id=$1
-  local tempdir="$2"
-  local src="$3"
-  local file="$4"
-  local zipdir="$5"
-  local dest="$6"
-  local livetri=$7
-  local sig grd args s1 s256 f basedir s t last filedir
+  local id tempdir src file zipdir dest livetri 
+  local sig grd args s1 s256 f basedir s t last filedir  
+  id=$1
+  tempdir="$2"
+  src="$3"
+  file="$4"
+  zipdir="$5"
+  dest="$6"
+  livetri=$7
 
   unzip -d "$zipdir" "$src/$file" >& /dev/null || 7z -o"$zipdir" x "$src/$file" >& /dev/null 
   sig=$(find "$zipdir" -name "*.sig")
   grd=$(find "$zipdir" -name "*.grd")
 
-  [ -n "$grd" ] || { 1>&2 myecho "File *.grd not found in the archive $(basename $file)"; return 1; }
-  [ -n "$sig" ] || { 1>&2 myecho "File *.sig not found in the archive $(basename $file)"; return 1; }
+  [ -n "$grd" ] || { 1>&2 myecho "File *.grd not found in the archive $(basename "$file")"; return 1; }
+  [ -n "$sig" ] || { 1>&2 myecho "File *.sig not found in the archive $(basename "$file")"; return 1; }
 
   # Assumes all of the CA are in $termpdir/cert.0 and the other certificates in $tempdir/cert.1
   args="-purpose any -no_check_time"
@@ -270,36 +324,42 @@ verifliveupdate(){
   for s in $sig; do
     # Special case v1.sig that is an alternative signature for v.sig
     [ "$(basename "$s")" == "v1.sig" ] && continue
-    t=$(echo $s | sed -e 's/.sig$/.grd/g')
-    echo $grd | grep -q $t || { 1>&2 myecho "Checksum file $t not found in the archive $(basename $file)"; return 1; }
+    t=$(echo "$s" | sed -e 's/.sig$/.grd/g')
+    echo "$grd" | grep -q "$t" || { 1>&2 myecho "Checksum file $t not found in the archive $(basename "$file")"; return 1; }
+    # I want the variable $args to do word splitting, ignore 
+    # the shellcheck error associated with it
+    # shellcheck disable=SC2086    
     openssl cms -verify -inform DER -in "$s" -content "$t" $args > /dev/null 2>&1 || \
-        { 1>&2 myecho "Verification failure of the file $t from the archive $(basename $file) "; return 1; }
+        { 1>&2 myecho "Verification failure of the file $t from the archive $(basename "$file") "; return 1; }
   done
 
   # Get base directory name
-  basedir=$(dirname $(find "$zipdir" -name "*.grd" | head -n1))
+  basedir=$(dirname "$(find "$zipdir" -name "*.grd" | head -n1)")
 
   # Fail if there are any files in the archive not listed in the file GRD
-  for f in $(cd "$basedir/"; find . -type f | cut -c3-); do
-    [[ "$f" =~ ".*.grd" ]] && continue
-    [[ "$f" =~ ".*.sig" ]] && continue
-    if ! grep -qi "$f" $grd; then
+  while IFS= read -r -d '' f; do
+    [[ "$f" =~ \.grd$ ]] && continue
+    [[ "$f" =~ \.sig$ ]] && continue
+    if ! grep -qi "$f" "$grd"; then
       # FIXME The JDB files have the files lic.dat and navlic.dat that are not listed 
       # in a grd file; What are these files ? How to check them ? For now we ignore
       # these files under three conditions:
       #    1. The file size is exactly 1048 bytes
-      #    2. navlic.dat et lic.dat are the same file
+      #    2. navlic.dat and lic.dat are the same file
       #    3. They are both listed in the catalog.dat file that is included in v.grd
-      if [ "$f" == "lic.dat" ] || [ "$f" == "navlic.dat" ]; then
-        [ "$(stat -c%s "$basedir/$f")" == "1048" ] || { 1>&2 myecho "Can not verify the file $f from the archive $(basename $file)"; return 1; }
-        [ -f "$basedir/lic.dat" ] && [ -f "$basedir/navlic.dat" ] && diff -q "$zipdir/lic.dat" "$zipdir/navlic.dat" || { 1>&2 myecho "Can not verify the file $f from the archive $(basename $file)"; return 1; }
-        grep -qi "$f" "$basedir/catalog.dat" || { 1>&2 myecho "Can not verify the file $f from the archive $(basename $file)"; return 1; }       
+      if [[ "$f" =~ lic.dat$ ]] || [[ "$f" =~ navlic.dat$ ]]; then
+        [ "$(stat -c%s "$f")" == "1048" ] || { 1>&2 myecho "Can not verify the file $(basename "$f") from the archive $(basename "$file")"; return 1; }
+        if [ ! -f "$basedir/lic.dat" ] || [ ! -f "$basedir/navlic.dat" ] || ! diff -q "$zipdir/lic.dat" "$zipdir/navlic.dat"; then
+          1>&2 myecho "Can not verify the file $(basename "$f") from the archive $(basename "$file")"
+          return 1
+        fi
+        grep -qi "$f" "$basedir/catalog.dat" || { 1>&2 myecho "Can not verify the file $(basename "$f") from the archive $(basename "$file")"; return 1; }       
       else
-        1>&2 myecho "Can not verify the file $f from the archive $(basename $file)"; 
+        1>&2 myecho "Can not verify the file $(basename "$f") from the archive $(basename "$file")"; 
         return 1;
       fi
     fi
-  done
+  done < <(find "$basedir" -type f -print0 | cut -c3-)
 
   s1=""
   s256=""
@@ -309,27 +369,27 @@ verifliveupdate(){
   for t in $grd; do
     while :; do
       IFS= read -r line || last="true"
-      if [ -n "$last" ] || [[ "$line" =~ "^\[File-.*\]" ]]; then
-        [ -z "$last" ] && [ -z "$f" ] && { f=$(echo $line | sed -e "s/^\[File-\(.*\)\]\s*$/\1/g"); continue; }
+      if [ -n "$last" ] || [[ "$line" =~ ^\[File-.*\] ]]; then
+        [ -z "$last" ] && [ -z "$f" ] && { f=$(echo "$line" | sed -e "s/^\[File-\(.*\)\]\s*$/\1/g"); continue; }
         if [ -f "$basedir/$f" ]; then
-          [ -z "$s256" ] || sha256sum "$basedir/$f" | grep -q $s256 || \
-              { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename $file)"; return 2; }
-          [ -z "$s1" ] || sha1sum "$basedir/$f" | grep -q $s1 || \
-              { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename $file)"; return 2; }
-          [ -z "$s256" ] && [ -z "$s1" ] && { 1>&2 myecho "File $f from the archive $(basename $file) has no checksum"; return 2; }
+          [ -z "$s256" ] || sha256sum "$basedir/$f" | grep -q "$s256" || \
+              { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename "$file")"; return 2; }
+          [ -z "$s1" ] || sha1sum "$basedir/$f" | grep -q "$s1" || \
+              { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename "$file")"; return 2; }
+          [ -z "$s256" ] && [ -z "$s1" ] && { 1>&2 myecho "File $f from the archive $(basename "$file") has no checksum"; return 2; }
           1>&2 myecho "File $f from the archive $(basename "$file") verified"
         elif [ -f "$src/$filedir/$f" ]; then
           # Only reverify the hash if its not already done.
           if [ ! "$src/$filedir/$f" -ef "$dest/$filedir/$f" ]; then
-            [ -z "$s256" ] || sha256sum "$src/$filedir/$f" | grep -q $s256 || \
-                { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename $file)"; return 2; }
-            [ -z "$s1" ] || sha1sum "$src/$filedir/$f" | grep -q $s1 || \
-                { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename $file)"; return 2; }
-            [ -z "$s256" ] && [ -z "$s1" ] && { 1>&2 myecho "File $f from the archive $(basename $file) has no checksum"; return 2; }
+            [ -z "$s256" ] || sha256sum "$src/$filedir/$f" | grep -q "$s256" || \
+                { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename "$file")"; return 2; }
+            [ -z "$s1" ] || sha1sum "$src/$filedir/$f" | grep -q "$s1" || \
+                { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename "$file")"; return 2; }
+            [ -z "$s256" ] && [ -z "$s1" ] && { 1>&2 myecho "File $f from the archive $(basename "$file") has no checksum"; return 2; }
             if [ -n "$livetri" ]; then
               if [ "$antivirus" == "true" ]; then
                 # Antivirus test
-                clamdscan "$src/$filedir/$f" >& /dev/null || { 1>&2 myecho "File $f from the archive $(basename $file) failed anti-virus check";  return 4; }
+                clamdscan "$src/$filedir/$f" >& /dev/null || { 1>&2 myecho "File $f from the archive $(basename "$file") failed anti-virus check";  return 4; }
               fi
               msgline "$src/$filedir/$f" 0
               ln "$src/$filedir/$f" "$dest/$filedir/$f"
@@ -340,47 +400,46 @@ verifliveupdate(){
           1>&2 echo "File $f not found. skipping"
         fi
         [ -z "$last" ] || break;
-        f=$(echo $line | sed -e "s/^\[File-\(.*\)\]\s*$/\1/g")
-        [ -f "$basedir/$f" ] || [ -f "$src/$filedir/$f" ] || f=$(echo $f | awk '{print tolower($0)}')
+        f=$(echo "$line" | sed -e "s/^\[File-\(.*\)\]\s*$/\1/g")
+        [ -f "$basedir/$f" ] || [ -f "$src/$filedir/$f" ] || f=$(echo "$f" | awk '{print tolower($0)}')
         s1=""
         s256=""
-      elif [[ "$line" =~ "^SHA1=.*" ]]; then
-        s1=$(echo $line | sed -e "s/^SHA1=\([0-9a-fA-F]*\)\s*$/\1/g")
-      elif [[ "$line" =~ "^SHA256=.*" ]]; then
-        s256=$(echo $line | sed -e "s/^SHA256=\([0-9a-fA-F]*\)\s*$/\1/g")
+      elif [[ "$line" =~ ^SHA1=.* ]]; then
+        s1=$(echo "$line" | sed -e "s/^SHA1=\([0-9a-fA-F]*\)\s*$/\1/g")
+      elif [[ "$line" =~ ^SHA256=.* ]]; then
+        s256=$(echo "$line" | sed -e "s/^SHA256=\([0-9a-fA-F]*\)\s*$/\1/g")
       fi
-    done < $t
+    done < "$t"
   done
 
-  1>&2 myecho "Archive $(basename $file) correctly verified"
+  1>&2 myecho "Archive $(basename "$file") correctly verified"
 
   # Repack the zip file before returning to avoid potentiel hidden files
   if [[ "${file##*.}" == "7z" ]]; then 
     if [ "$dryrun" == "0" ]; then
-      (cd "$zipdir"; 7z a "$src/$file.$$" *)
+      (cd "$zipdir" || { 2>&1 echo "Failed to create temporary directory"; return 254; }; 7z a "$src/$file.$$" ./*)
       /bin/mv "$src/$file.$$" "$src/$file"
     else
       echo "[DryRun] : cd \"$zipdir\"; 7z a \"$src/$file.$$\" \*"
     fi
   else
     if [ "$dryrun" == "0" ]; then
-      (cd "$zipdir"; zip -q "$src/$file.$$" * >& /dev/null)
+      (cd "$zipdir"|| { 2>&1 echo "Failed to create temporary directory"; return 254; }; zip -q "$src/$file.$$" ./* >& /dev/null)
       /bin/mv -f "$src/$file.$$" "$src/$file"
     else
       echo "[DryRun] : cd \"$zipdir\"; zip -q \"$src/$file.$$\" \*"
     fi
   fi
 
-
   return 0
 }
 
 verifdirectory() {
-  local file status i j fprint tempdir idx auth
-  local id=$1
-  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
-  local type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
-
+  local file status i j fprint tempdir idx auth id dir type
+  id=$1
+  dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
+  type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
+  
   # Validate check type
   case $type in
     authenticode|openssl|gpg|liveupdate|cyberwatch) : ;;
@@ -393,11 +452,11 @@ verifdirectory() {
   while :; do
     fprint=$(xmllint --xpath "string(dsas/tasks/task[$id]/cert[$j]/fingerprint)" "$CONF")
     [ -z "$fprint" ] && break;
-    idx=$(get_certificate $fprint)
+    idx=$(getcertificate "$fprint")
     [ -z "$idx" ] && { 1>&2 echo "Certificate used by task($id) not found !!"; cleanup_and_exit 1 "$tempdir"; }
-    if [ $idx -eq 0 ]; then
+    if [ "$idx" -eq 0 ]; then
       if [ "$type" == "liveupdate" ]; then
-        cat /tmp/cert.$$ >> $tempdir/cert.0
+        cat /tmp/cert.$$ >> "$tempdir/cert.0"
       else
         [ -f "$tempdir/cert.0" ] && 1>&2 myecho "Multiple authority certificates defined" 
         /bin/mv "/tmp/cert.$$" "$tempdir/cert.0"
@@ -427,37 +486,32 @@ verifdirectory() {
   fi
 
   # Create directory if needed
-  [ -d "$DSAS_BAS/$dir" ] || (mkdir -m 770 -p "$DSAS_BAS/$dir"; chgrp -R $grp "$DSAS_BAS/$(echo $dir | cut -d/ -f1)")
-
-  # Set IFS to '\3', so the loop over the files and directories work with spaces in the file names
-  OLD_IFS=$IFS
-  IFS=$'\3'
-
+  [ -d "$DSAS_BAS/$dir" ] || mkdir "$DSAS_BAS/$dir"
+  
   # Remove the files in our tree bas and not in haut.
-  for file in $(cd "$DSAS_BAS/$dir"; find . -type f -exec echo -n -e "{}\x03" \; ); do
-    if [ "$(stat --printf "%h\n"  "$DSAS_BAS/$dir/${file:2}")" == "1" ]; then
-      1>&2 myecho "Removing stale file ${file:2}"
-      rm -f "$DSAS_BAS/$dir/${file:2}"
+  while IFS= read -r -d '' file; do
+    if [ "$(stat --printf "%h\n"  "$file")" == "1" ]; then
+      1>&2 myecho "Removing stale file ${file#"$DSAS_BAS/${dir%/}/"}"
+      rm -f "$file"
     fi
-  done
+  done < <(find "$DSAS_BAS/$dir" -type f -print0)
 
   # If LiveUpdate, test files *livetri.zip first as they can sign other files
-  if [ "$type" == "liveupdate" ]; then
-    for file in $(cd "$DSAS_HAUT"; find "$dir" -type f \( -name "*livetri.zip" -o -name "minitri.flg" \
-        -o -name "SymantecProductCatalog.zip" -o -name "*.jdb" \) -exec echo -n -e "{}\x03" \; ); do
-      IFS=$OLD_IFS
-
+  if [ "$type" == "liveupdate" ]; then        
+    while IFS= read -r -d '' file; do
+      file=${file#"$DSAS_HAUT/"}    
+    
       # If file exists in bas skip. Hardlinked, so test is fast
       [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
 
       zipdir=$(mktemp -d)
       if [[ "$file" == "*livetri.zip" ]]; then
-        verifliveupdate $id "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS" "true"
+        verifliveupdate "$id" "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS" "true"
       elif [[ "$file" == "*minitri.flg" ]]; then
         # minitri.flg is one byte with a single 0x20 character
-        [ "$(cat $DSAS_HAUT/$file)" == " " ]
+        [ "$(cat "$DSAS_HAUT/$file")" == " " ]
       else
-        verifliveupdate $id "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS"
+        verifliveupdate "$id" "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS"
       fi
       status=$?
       if [ "$status" == "0" ] && [ "$antivirus" == "true" ]; then
@@ -466,29 +520,29 @@ verifdirectory() {
       msgline "$DSAS_HAUT/$file" $status
       [ $status -eq 0 ] && ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
       /bin/rm -fr "$zipdir"
-      IFS=$'\3'
-    done 
+    done < <(find "$DSAS_HAUT/$dir" -type f \( -name "*livetri.zip" -o -name "minitri.flg" \
+        -o -name "SymantecProductCatalog.zip" -o -name "*.jdb" \) -print0)
   else
-    for file in $(cd "$DSAS_HAUT"; find $dir -type f -exec echo -n -e "{}\x03" \; ); do
-      IFS=$OLD_IFS
-
+    while IFS= read -r -d '' file; do
+      file=${file#"$DSAS_HAUT/"}    
+    
       # If file exists in bas skip. Hardlinked, so test is fast
       [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
 
       case $type in
-        authenticode) verifauthenticode $id "$tempdir" "$DSAS_HAUT/$file" ;;
+        authenticode) verifauthenticode "$id" "$tempdir" "$DSAS_HAUT/$file" ;;
         cyberwatch)
           [ "${file##*.}" != "zip" ]  && msgline "$DSAS_HAUT/$file" 255 && continue 
-          verifcyberwatch $id "$tempdir" "$DSAS_HAUT/$file"
+          verifcyberwatch "$id" "$tempdir" "$DSAS_HAUT/$file"
           ;;
         openssl) 
           [ "${file##*.}" == "sig" ]  && continue 
-          verifopenssl $id "$tempdir" "$DSAS_HAUT/$file"
+          verifopenssl "$id" "$tempdir" "$DSAS_HAUT/$file"
           ;;
         gpg)
           [ "${file##*.}" == "sig" ] && continue
           [ "${file##*.}" == "asc" ] && [ -f "$DSAS_HAUT/$(dirname "$file")/$(basename -s .asc "$file")" ] && continue
-          verifgpg $id "$tempdir" "$DSAS_HAUT/$file"
+          verifgpg "$id" "$tempdir" "$DSAS_HAUT/$file"
           ;;
       esac
       status=$?
@@ -507,26 +561,24 @@ verifdirectory() {
         fi
         [ "$type" == "openssl" ] && ln "$DSAS_HAUT/$file.sig" "$DSAS_BAS/$file.sig"
       fi
-      IFS=$'\3'
-    done
+    done < <(find "$DSAS_HAUT/$dir" -type f -print0 )
   fi
   /bin/rm -fr "$tempdir"
 
   # There might be empty directories lying about. Remove them
-  IFS=$'\3'
-  for _dir in $(find "$DSAS_BAS/$dir" -mindepth 1 -type d -exec echo -n -e "{}\x03" \; ); do
+  while IFS= read -r -d '' _dir; do
     [ "$(ls -A "$_dir")" ] || { 1>&2 echo "Removing empty directory $_dir"; rmdir "$_dir"; }
-  done
-  IFS=$OLD_IFS
+  done < <(find "$DSAS_BAS/$dir" -mindepth 1 -type d -print0 )
+
 }
 
 verify_packages() {
-  local file chktype chksum
-  local dir=$1
-  local rpm_k=$2
+  local file chktype chksum dir rpm_k
+  dir=$1
+  rpm_k=$2
   shift 2
   while [ "$#" -gt 2 ]; do
-    if [ ${1: -3} == "rpm" ]; then
+    if [ "${1: -3}" == "rpm" ]; then
       file="$1"
       chktype=$2
       chksum=$3
@@ -541,12 +593,12 @@ verify_packages() {
     [ "$DSAS_HAUT/$dir/$file" -ef "$DSAS_BAS/$dir/$file" ] && continue
 
     if [ -f "$DSAS_HAUT/$dir/$file" ]; then
-      if  check_checksum "$DSAS_HAUT/$dir/$file" $chksum $chktype; then
+      if  check_checksum "$DSAS_HAUT/$dir/$file" "$chksum" "$chktype"; then
         msgline "$DSAS_HAUT/$dir/$file" 2
-      elif [ "$rpm_k" == "1" ] && ! rpm -K "$DSAS_HAUT/$dir/$file" 2>&1 1> /dev/null; then
+      elif [ "$rpm_k" == "1" ] && ! rpm -K "$DSAS_HAUT/$dir/$file" 1> /dev/null 2>&1; then
         msgline "$DSAS_HAUT/$dir/$file" 5      
       elif [ "$antivirus" == "true" ]; then
-        if rpm2cpio "$DSAS_HAUT/$dir/$file" | clamdscan - >& /dev/null; then
+        if rpm2cpio "$DSAS_HAUT/$dir/$file" | clamdscan - > /dev/null 2>&1; then
           msgline "$DSAS_HAUT/$dir/$file" 0
           ln "$DSAS_HAUT/$dir/$file" "$DSAS_BAS/$dir/$file"
         else
@@ -561,36 +613,36 @@ verify_packages() {
 }
 
 verifrepo() {
-  local tempdir fprint idx filelist chksum chktype unzipfile filetable
-  local id=$1
-  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
-  local type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
+  local tempdir fprint idx filelist chksum chktype filetable id dir type
+  id=$1
+  dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
+  type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
 
   tempdir=$(mktemp -d)
   fprint=$(xmllint --xpath "string(dsas/tasks/task[$id]/cert[1]/fingerprint)" "$CONF")
-  idx=$(get_certificate $fprint)
+  idx=$(getcertificate "$fprint")
   [ -z "$idx" ] && { 1>&2 echo "Certificate used by task\($id\) not found !!"; exit 1; }
   /bin/mv "/tmp/cert.$$" "$tempdir/cert.0"
-  gpg --dearmor "$tempdir/cert.0" >& /dev/null
+  gpg --dearmor "$tempdir/cert.0" > /dev/null 2>&1
 
   if [ "$type" == "repomd" ]; then
     if ! gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg"  \
           --verify "$DSAS_HAUT/$dir/repodata/repomd.xml.asc" \
-          "$DSAS_HAUT/$dir/repodata/repomd.xml" >& /dev/null; then
+          "$DSAS_HAUT/$dir/repodata/repomd.xml" > /dev/null 2>&1; then
       1>&2 echo "Failed to verify repomd.xml signature"
       exit 1
     fi
   else
     # For rpm signature verification need to import GPG key
-    rpm --import "$tempdir/cert.0" 2>&1 1> /dev/null
+    rpm --import "$tempdir/cert.0" > /dev/null 2>&1
   fi 
 
   # Create the destination directory if needed
-  [ -d "$DSAS_BAS/$dir" ] || mkdir -m 770 -p "$DSAS_BAS/$dir"; chgrp $grp -R "$DSAS_BAS/$(echo $dir | cut -d/ -f1)"
+  [ -d "$DSAS_BAS/$dir" ] || mkdir "$DSAS_BAS/$dir"
 
   # Test antivirus 
   if [ "$antivirus" == "true" ]; then
-    clamdscan "$DSAS_HAUT/$dir/repodata/repomd.xml" >& /dev/null || { msgline "$DSAS_HAUT/$dir/repodata/repomd.xml" 4; exit 1; }
+    clamdscan "$DSAS_HAUT/$dir/repodata/repomd.xml" > /dev/null 2>&1 || { msgline "$DSAS_HAUT/$dir/repodata/repomd.xml" 4; exit 1; }
   fi
 
   # Copy repomd.xml* to $bas
@@ -598,31 +650,28 @@ verifrepo() {
   [ -f "$DSAS_HAUT/$dir/repodata/repomd.xml.asc" ] && ln "$DSAS_HAUT/$dir/repodata/repomd.xml.asc" "$DSAS_BAS/$dir/repodata/repomd.xml.asc"
 
   # Remove files in repodata not listed in repomd.xml
-  for _file in $(find "$DSAS_BAS/$dir/repodata" -type f) ; do
-    _f=$(basename $_file)
-    [[ "$_f" =~ "repomd.xml" ]] && continue
+  while IFS= read -r -d '' _file; do
+    _f=$(basename "$_file")
+    [[ "$_f" =~ repomd.xml$ ]] && continue
     grep "$_f" "$DSAS_BAS/$dir/repodata/repomd.xml" && continue
     myecho "Removing stale file repodata/${_f}"
     rm -f "$_file"
-  done
+  done < <(find "$DSAS_BAS/$dir/repodata" -type f)
 
   # Verify the checksum of all files referenced in repomd.xml and copy to $bas
   i=1
   while :; do
     # Note that we have to ignore the xml namespace (initial cat/sed)
-    f=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
-         sed -e "s:repomd xmlns:repomd ignore:g" | \
+    f=$(sed -e "s:repomd xmlns:repomd ignore:g" "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
          xmllint --xpath "string(//repomd/data[$i]/location/@href)" -)
     [ -z "$f" ] && break
 
     # Verify its checksum
-    chksum=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
-         sed -e "s:repomd xmlns:repomd ignore:g" | \
+    chksum=$(sed -e "s:repomd xmlns:repomd ignore:g" "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
          xmllint --xpath "string(//repomd/data[$i]/checksum)" - )
-    chktype=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
-         sed -e "s:repomd xmlns:repomd ignore:g" | \
+    chktype=$(sed -e "s:repomd xmlns:repomd ignore:g" "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
          xmllint --xpath "string(//repomd/data[$i]/checksum/@type)" - )
-    if  check_checksum "$DSAS_HAUT/$dir/$f" $chksum $chktype; then
+    if  check_checksum "$DSAS_HAUT/$dir/$f" "$chksum" "$chktype"; then
       1>&2 echo "Error verifying checksum of $f"
       cleanup_and_exit 1 "$tempdir"
     fi
@@ -633,55 +682,56 @@ verifrepo() {
     fi
 
     ln "$DSAS_HAUT/$dir/$f" "$DSAS_BAS/$dir/$f"
-    i=$(($i + 1))
+    i=$((i + 1))
   done
 
   # Identify the primary file list
   # Note that we have to ignore the xml namespace (initial cat/sed)
-  filelist=$(cat "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
-         sed -e "s:repomd xmlns:repomd ignore:g" | \
+  filelist=$(sed -e "s:repomd xmlns:repomd ignore:g" "$DSAS_HAUT/$dir/repodata/repomd.xml" | \
          xmllint --xpath 'string(//repomd/data[@type="primary"]/location/@href)' -)
 
   # Recover a table of the hashtype, hash and file names
-  if [[ "$filelist" =~ ".*.gz" ]] || [[ "$filelist" =~ ".*.bz2" ]]; then
+  if [[ "$filelist" =~ \.gz$ ]] || [[ "$filelist" =~ \.bz2$ ]]; then
     filetable=$(zcat "$DSAS_HAUT/$dir/$filelist" | \
             sed -e "s/xmlns=/ignore=/g" | \
             xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | \
             sed -e 's:.*href="\(.*\)"/>$:\1:g' \
               -e 's:.*type="\([^"]*\)"[^>]*>\([0-9a-fA-F]*\)</checksum>:\1 \2:g')
   else
-    filetable=$(cat "$DSAS_HAUT/$dir/$filelist" | \
-            sed -e "s/xmlns=/ignore=/g" | \
+    filetable=$(sed -e "s/xmlns=/ignore=/g" "$DSAS_HAUT/$dir/$filelist" | \
             xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | \
             sed -e 's:.*href="\(.*\)"/>$:\1:g' \
               -e 's:.*type="\([^"]*\)"[^>]*>\([0-9a-fA-F]*\)</checksum>:\1 \2:g')
   fi
 
   # Remove the files in $DSAS_BAS and not listed in primary.xml
-  for _file in $(cd "$DSAS_BAS/$dir"; find . -path ./repodata -prune -type f -o -type f); do
-    if [ "$(stat --printf "%h\n"  "$DSAS_BAS/$dir/${file:2}")" == "1" ]; then
-      1>&2 myecho "Removing stale file ${_file:2}"
-      rm -f "$DSAS_BAS/$dir/${_file:2}"
+  while IFS= read -r -d '' file; do
+    if [ "$(stat --printf "%h\n"  "$file")" == "1" ]; then
+      1>&2 myecho "Removing stale file ${file#"$DSAS_BAS/${dir%/}/"}"
+      rm -f "$file"
     fi
-  done
+  done < <(find "$DSAS_BAS/$dir" -path ./repodata -prune -type f -o -type f -print0)
 
   # Verify the packages
+  # I want the variable $filetable to do word splitting, ignore 
+  # the shellcheck error associated with it
+  # shellcheck disable=SC2086 
   [ "$type" == "rpm" ] && verify_packages "$dir" 1 $filetable
+  # shellcheck disable=SC2086 
   [ "$type" == "rpm" ] || verify_packages "$dir" 0 $filetable
   
   # Remove all RPM signature keys    
-  [ "$type" == "rpm" ] && rpm -e $(rpm -qa)
+  [ "$type" == "rpm" ] && rpm -e "$(rpm -qa)"
 
   /bin/rm -fr "$tempdir"
 }
 
 verifdeb(){
-  local chktyp inhash hashtyp _hash _hash_md5 _hash_sha256 _size _file 
-  local j pool have_pool packages inpackage tempdir archs _arch i _f package
-  local id=$1
-  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
-  local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" $CONF)
-  local type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" $CONF)
+  local chktyp inhash hashtyp _hash _hash_md5 _hash_sha256 _arch _file 
+  local j pool have_pool packages tempdir archs i _f package id dir type
+  id=$1
+  dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
+  type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
 
   pool=$(dirname "$dir")
   have_pool="0"
@@ -689,14 +739,14 @@ verifdeb(){
     [ -d "$DSAS_HAUT/$pool/pool" ] && have_pool="1" && break
     pool=$(dirname "$pool")
   done
-  [ "$have_pool" == "0" ] && $(1>&2 echo "Debian pool directory not found"; exit 1)
+  [ "$have_pool" == "0" ] && { 1>&2 echo "Debian pool directory not found"; exit 1; }
 
   tempdir=$(mktemp -d)
   j=1
   while :; do
     fprint=$(xmllint --xpath "string(dsas/tasks/task[$id]/cert[$j]/fingerprint)" "$CONF")
     [ -z "$fprint" ] && break;
-    idx=$(get_certificate $fprint)
+    idx=$(getcertificate "$fprint")
     [ -z "$idx" ] && { 1>&2 echo "Certificate used by task($id) not found !!"; cleanup_and_exit 1 "$tempdir"; }
     gpg --no-default-keyring --keyring "$tempdir/keyring.gpg" --import /tmp/cert.$$ >& /dev/null
     j=$((j + 1))
@@ -720,10 +770,10 @@ verifdeb(){
   fi
 
   # Create the destination directory if needed
-  [ -d "$DSAS_BAS/$dir" ] || (mkdir -m 770 -p $DSAS_BAS/$dir; chgrp $grp -R $DSAS_BAS/$dir)
+  [ -d "$DSAS_BAS/$dir" ] || mkdir "$DSAS_BAS/$dir"
 
   # Copy *Release* to $bas
-  for _file in "Release Release.gpg InRelease"; do
+  for _file in Release Release.gpg InRelease; do
     [ -f "$DSAS_HAUT/$dir/$_file" ] && ln "$DSAS_HAUT/$dir/$_file" "$DSAS_BAS/$dir/$_file"
   done
 
@@ -737,7 +787,7 @@ verifdeb(){
   archs=""
   i=1
   while :; do
-    _arch=$(xmllint --xpath "string(dsas/tasks/task[$id]/archs/arch[$i])" $CONF)
+    _arch=$(xmllint --xpath "string(dsas/tasks/task[$id]/archs/arch[$i])" "$CONF")
     [ -z "$_arch" ] && break;
     archs="$archs $_arch"
     i=$((i + 1))
@@ -748,11 +798,11 @@ verifdeb(){
   while read -r line; do
     # Assume that each hash is listed after the correct flag and has
     # a leading space
-    [ "$inhash" == "0" ] && [[ "$line" =~ "^$hashtyp$" ]] && inhash="1" && continue
+    [ "$inhash" == "0" ] && [[ "$line" =~ ^$hashtyp$ ]] && inhash="1" && continue
     [ "$inhash" == "1" ] && [[ "$line" =~ ":$" ]] && inhash="0" && continue
     [ "$inhash" == "0" ] && continue
 
-    IFS=' ' read _hash _size _file << EOF
+    IFS=' ' read -r _hash _ _file << EOF
 $line
 EOF
     if [ -f "$DSAS_HAUT/$dir/$_file" ]; then
@@ -760,16 +810,16 @@ EOF
       [ "$DSAS_HAUT/$dir/$_file" -ef "$DSAS_BAS/$dir/$_file" ] && continue
 
       # Only check Package, Package.gz and Package.xz files if desired architecture 
-      _f=$(basename $_file)
+      _f=$(basename "$_file")
       if [ "$_f" == "Packages" ] || [ "$_f" == "Packages.gz" ] || [ "$_f" == "Packages.xz" ]; then
-        _f=$(dirname $_file)
-        [[ "$archs" =~ "${_f##*-}" ]] || continue
+        _f=$(dirname "$_file")
+        [[ "$archs" =~ ${_f##*-} ]] || continue
       fi
 
-      if  check_checksum "$DSAS_HAUT/$dir/$_file" $_hash $chktyp; then
+      if  check_checksum "$DSAS_HAUT/$dir/$_file" "$_hash" "$chktyp"; then
         msgline "$DSAS_HAUT/$dir/$_file" 2  
       else
-        [ -d "$(dirname "$DSAS_BAS/$dir/$_file")" ] || (mkdir -m 770 -p "$(dirname "$DSAS_BAS/$dir/$_file")"; chgrp $grp -R "$(dirname "$DSAS_BAS/$dir/$_file")")
+        [ -d "$(dirname "$DSAS_BAS/$dir/$_file")" ] || mkdir "$(dirname "$DSAS_BAS/$dir/$_file")"
         if [ "$antivirus" == "true" ]; then
           if clamdscan "$DSAS_HAUT/$dir/$_file" >& /dev/null; then
             msgline "$DSAS_HAUT/$dir/$_file" 0
@@ -784,42 +834,41 @@ EOF
       fi
       # For now ignore missing files
     fi
-  done < $DSAS_HAUT/$dir/Release
+  done < "$DSAS_HAUT/$dir/Release"
 
   # For each file Packages.gz, and maybe Sources.gz, download the listed files 
   # into the pool directory
   packages=$(find "$DSAS_BAS/$dir" -name "Packages.gz")
   [[ "$archs" =~ "source" ]] && packages="$packages $(find "$DSAS_BAS/$dir" -name "Sources.gz")"
   for package in $packages; do
-    inpackage=0
     _file=""
     _hash_md5=""
     _hash_sha256=""
     zcat "$package" | while read -r line; do
       # Use sed rather than xargs to strip leading/trailing whitespace as strings might
       # contain quotes and other special characters
-      [[ "$line" =~ "Filename:" ]] && _file="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
-      [[ "$line" =~ "MD5sum:" ]] && _hash_md5="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
-      [[ "$line" =~ "SHA256:" ]] && _hash_sha256="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
-      if [ -z "$(echo $line | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" ]; then
+      [[ "$line" =~ "Filename:" ]] && _file="$(echo "$line" | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
+      [[ "$line" =~ "MD5sum:" ]] && _hash_md5="$(echo "$line" | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
+      [[ "$line" =~ "SHA256:" ]] && _hash_sha256="$(echo "$line" | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
+      if [ -z "$(echo "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" ]; then
         if [ -f "$DSAS_HAUT/$pool/$_file" ]; then
           # If file exists in bas skip. Hardlinked, so test is fast
           [ "$DSAS_HAUT/$pool/$_file" -ef "$DSAS_BAS/$pool/$_file" ] && continue
 
           # Only test hash with one of the two hashes
-          status = 0
+          status=0
           if [ -n "$_hash_sha256"  ]; then
-            if check_checksum "$DSAS_HAUT/$pool/$_file" $_hash_sha256 sha256; then
-              status = $?
+            if check_checksum "$DSAS_HAUT/$pool/$_file" "$_hash_sha256" "sha256"; then
+              status=$?
               msgline "$DSAS_HAUT/$pool/$_file" 2
             fi
-          elif check_checksum "$DSAS_HAUT/$pool/$_file" $_hash_md5 md5; then
-            status = $?
+          elif check_checksum "$DSAS_HAUT/$pool/$_file" "$_hash_md5" "md5"; then
+            status=$?
             msgline "$DSAS_HAUT/$pool/$_file" 2
           fi
 
           if [ "$status" -eq 0 ]; then
-            [ -d "$(dirname i"$DSAS_BAS/$pool/$_file")" ] || (mkdir -m 770 -p "$(dirname "$DSAS_BAS/$pool/$_file")"; chgrp $grp -R "$(dirname "$DSAS_BAS/$pool/$_file")")
+            [ -d "$(dirname i"$DSAS_BAS/$pool/$_file")" ] || mkdir"$(dirname "$DSAS_BAS/$pool/$_file")"
 
             if [ "$antivirus" == "true" ]; then
               if ar p "$DSAS_HAUT/$pool/$_file" | clamdscan - >& /dev/null; then
@@ -845,9 +894,9 @@ EOF
 }
 
 passdirectory(){
-  local file status i j fprint tempdir idx auth pool have_pool
-  local id=$1
-  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
+  local file status i j fprint tempdir idx auth pool have_pool id dir
+  id=$1
+  dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
 
   if [ "$2" == "deb" ]; then
     pool=$(dirname "$dir")
@@ -856,27 +905,25 @@ passdirectory(){
       [ -d "$DSAS_HAUT/$pool/pool" ] && have_pool="1" && break
       pool=$(dirname "$pool")
     done
-    [ "$have_pool" == "0" ] && $(1>&2 echo "Debian pool directory not found"; exit 1)
+    [ "$have_pool" == "0" ] && { 1>&2 echo "Debian pool directory not found"; exit 1; }
   fi
 
-  # Set IFS to '\0', so the loop over the files and directories work with spaces in the file names
-  OLD_IFS=$IFS
-  IFS=$'\3'
-
   # Create directory if needed
-  for _d in $(cd "$DSAS_HAUT"; find "$dir" -type d -exec echo -n -e "{}\x03" \; ); do
-    [ -d "$DSAS_BAS/$_d" ] || (mkdir -m 770 -p "$DSAS_BAS/$_d"; chgrp -R $grp "$DSAS_BAS/$(echo $_d | cut -d/ -f1)")
-  done
+  while IFS= read -r -d '' _d; do
+    _d=${_d#"$DSAS_HAUT/"}   
+    [ -d "$DSAS_BAS/$_d" ] || mkdir "$DSAS_BAS/$_d"
+  done < <(cdfind "$DSAS_HAUT/$dir" -type d -print0)
 
   # Remove the files in our tree bas and not in haut.
-  for file in $(cd "$DSAS_BAS/$dir"; find . -type f -exec echo -n -e "{}\x03" \; ); do
-    if [ "$(stat --printf "%h\n"  "$DSAS_BAS/$dir/${file:2}")" == "1" ]; then
-      1>&2 myecho "Removing stale file ${file:2}"
-      rm -f "$DSAS_BAS/$dir/${file:2}"
+  while IFS= read -r -d '' file; do
+    if [ "$(stat --printf "%h\n"  "$file")" == "1" ]; then
+      1>&2 myecho "Removing stale file ${file#"$DSAS_BAS/${dir%/}/"}"
+      rm -f "$file"
     fi
-  done
+  done < <(find "$DSAS_BAS/$dir" -type f -print0)
 
-  for file in $(cd "$DSAS_HAUT"; find "$dir" -type f -exec echo -n -e "{}\x03" \; ); do
+  while IFS= read -r -d '' file; do
+    file=${file#"$DSAS_HAUT/"}
     # If file exists in bas skip. Hardlinked, so test is fast
     [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
 
@@ -884,23 +931,25 @@ passdirectory(){
     # the logs aren't yet used
     1>&2 myecho "ln '$DSAS_HAUT/$file' '$DSAS_BAS/$file'"
     ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
-  done
+  done < <(find "$DSAS_HAUT/$dir" -type f -print0)
 
   if [ "$2" == "deb" ]; then
     # Create directories if needed
-    for _d in $(cd "$DSAS_HAUT"; find "$pool/pool" -type d -exec echo -n -e "{}\x03" \; ); do
-      [ -d "$DSAS_BAS/$_d" ] || (mkdir -m 770 -p "$DSAS_BAS/$_d"; chgrp $grp -R "$DSAS_BAS/$_d")
-    done
+    while IFS= read -r -d '' _d; do
+      _d=${_d#"$DSAS_HAUT/"}  
+      [ -d "$DSAS_BAS/$_d" ] || mkdir "$DSAS_BAS/$_d"
+    done < <(find "$DSAS_HAUT/$pool/pool" -type d -print0)
 
     # Remove the files in our tree bas and not in haut.
-    for file in $(cd "$DSAS_BAS/$pool/pool"; find . -type f -exec echo -n -e "{}\x03" \; ); do
-      if [ "$(stat --printf "%h\n"  "$DSAS_BAS/$pool/pool/${file:2}")" == "1" ]; then
-        1>&2 myecho "Removing stale file ${file:2}"
-        rm -f "$DSAS_BAS/$pool/pool/${file:2}"
+    while IFS= read -r -d '' file; do
+      if [ "$(stat --printf "%h\n"  "$file")" == "1" ]; then
+        1>&2 myecho "Removing stale file ${file#"$DSAS_BAS/$pool/pool/"}"
+        rm -f "$file"
       fi
-    done
+    done < <(find "$DSAS_BAS/$pool/pool" -type f -print0)
 
-    for file in $(cd "$DSAS_HAUT"; find "$pool/pool" -type f -exec echo -n -e "{}\x03" \; ); do
+    while IFS= read -r -d '' file; do
+      file=${file#"$DSAS_HAUT/"}
       # If file exists in bas skip. Hardlinked, so test is fast
       [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
 
@@ -908,15 +957,13 @@ passdirectory(){
       # the logs aren't yet used
       1>&2 myecho "ln '$DSAS_HAUT/$file' '$DSAS_BAS/$file'"
       ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
-    done
+    done < <(find "$DSAS_HAUT/$pool/pool" -type f -print0)
   fi
 
   # There might be empty directories lying about. Remove them
-  IFS=$'\3'
-  for _dir in $(find "$DSAS_BAS/$dir" -mindepth 1 -type d -exec echo -n -e "{}\x03" \; ); do
+  while IFS= read -r -d '' _dir; do
     [ "$(ls -A "$_dir")" ] || { 1>&2 echo "Removing empty directory $_dir"; rmdir "$_dir"; }
-  done
-  IFS=$OLD_IFS
+  done < <(find "$DSAS_BAS/$dir" -mindepth 1 -type d -print0 )
 }
 
 verifclamav(){
@@ -926,7 +973,7 @@ verifclamav(){
   [ "$antivirus" == "true" ] || return
 
   # Create directory if needed
-  [ -d "$DSAS_BAS/$dir" ] || (mkdir -m 770  -p "$DSAS_BAS/$dir"; chgrp $grp -R "$DSAS_BAS/$dir")
+  [ -d "$DSAS_BAS/$dir" ] || mkdir "$DSAS_BAS/$dir"
   
   if [ "$TYP" == "haut" ]; then
     for file in main.cvd daily.cvd bytecode.cvd; do
@@ -943,7 +990,7 @@ verifclamav(){
       [ "$DSAS_HAUT/$dir/$file" -ef "$DSAS_BAS/$dir/$file" ] && continue
 
       # Verify the signature of the ClamAV signatures, with ClamAV itself
-      if $(sigtool -i "$DSAS_HAUT/$dir/$file" >& /dev/null); then
+      if sigtool -i "$DSAS_HAUT/$dir/$file" > /dev/null 2>&1; then
         msgline "$DSAS_HAUT/$dir/$file" $?
         ln "$DSAS_HAUT/$dir/$file" "$DSAS_BAS/$dir/$file"
       else
@@ -959,14 +1006,13 @@ while [ "$#" -gt 0 ]; do
   case $1 in
     -v|--verbose) verbose=1 ;;
     -q|--quiet) verbose=0 ;;
-    -r[--rotate) rotate=1 ;;
     -n|--dryrun) dryrun=1 ;;
     -c|--clamav) clamav=1 ;;
     -s|--stdout) logstdout=1 ;;
     -l|--log) logstdout=0 ;;
     -o) logfile=$2; shift 1 ;;
     --out=*) logfile=${1#*=} ;;
-    -?|-h|--help) help; exit 0 ;;
+    -h|--help) help; exit 0 ;;
     -*) 1>&2 echo "Unrecognized option : $1"; help; exit 1 ;;
     *) 
       [ -n "$ids" ] && { 1>&2 echo "Only a single task is allowed"; exit 1; }
@@ -977,7 +1023,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 # Check existence of DSAS directories
-[ -d $DSAS_HOME ] || { echo "DSAS home directory missing"; exit 1; }
+[ -d "$DSAS_HOME" ] || { echo "DSAS home directory missing"; exit 1; }
 [ -d "$DSAS_BAS" ] || { echo "DSAS bas directory missing"; exit 1; }
 
 # If dryrun, force verbose
@@ -991,12 +1037,11 @@ antivirus="$(xmllint --xpath "string(dsas/config/antivirus/active)" "$CONF")"
 idx=""
 for _id in $ids; do
   if [ ${#_id} -lt 5 ] && [[ $_id =~ ^[0-9]+$ ]]; then
-    _idx=$(xmllint --xpath "string(dsas/tasks/task[$_id]/id)" $CONF)
+    _idx=$(xmllint --xpath "string(dsas/tasks/task[$_id]/id)" "$CONF")
     [ -z "$_idx" ] && { 1>&2 echo "Task id ($_id) does not exist"; exit 1; }
     idx="$idx $_id"
   else
-    _idx=$(task_id_to_idx $_id)
-    [ $? -ne 0 ] && { 1>&2 echo "Task id\($_id\) does not exist"; exit 1; }
+    _idx=$(task_id_to_idx "$_id") || { 1>&2 echo "Task id\($_id\) does not exist"; exit 1; }
     idx="$idx $_idx"
   fi
 done
@@ -1005,12 +1050,12 @@ for _id in $idx; do
   type=$(xmllint --xpath "string(dsas/tasks/task[$_id]/type)" "$CONF")
   if [ "$TYP" == "haut" ]; then
     # No verification on the machine haut
-    passdirectory $_id $type
+    passdirectory "$_id" "$type"
   else
     case $type in
-      rpm|repomd) verifrepo $_id; ;;
-      deb) verifdeb $_id; ;;
-      authenticode|openssl|gpg|liveupdate|cyberwatch) verifdirectory $_id; ;; 
+      rpm|repomd) verifrepo "$_id"; ;;
+      deb) verifdeb "$_id"; ;;
+      authenticode|openssl|gpg|liveupdate|cyberwatch) verifdirectory "$_id"; ;; 
       *) 1>&2 echo "Unknown task type : $type"; exit 1 ;;
     esac
   fi

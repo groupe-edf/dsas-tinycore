@@ -1,11 +1,13 @@
 #! /bin/sh
 
 # Setup tcedir
+# FIXME : shellcheck want to replace "ls -1" by "find"
+# Need to test it on a docker
 MNT=$(ls -1 /mnt | head -1 | sed -e "s:/$::")
-ln -s /mnt/$MNT/tce /etc/sysconfig/tcedir
-mkdir -p /mnt/${MNT}/tce/optional
-chown -R root:staff /mnt/${MNT}/tce /usr/local/tce.installed
-chmod -R g+w /mnt/${MNT}/tce
+ln -s "/mnt/$MNT/tce" /etc/sysconfig/tcedir
+mkdir -p "/mnt/${MNT}/tce/optional"
+chown -R root:staff "/mnt/${MNT}/tce" /usr/local/tce.installed
+chmod -R g+w "/mnt/${MNT}/tce"
 
 while [ "$#" -gt 0 ]; do
   case $1 in

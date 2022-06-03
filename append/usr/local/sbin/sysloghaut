@@ -1,10 +1,16 @@
 #!/bin/sh
+# Busybox ash not supported. Use posix SH and disable a couple of
+# ash extensions I use
+#
+# shellcheck shell=sh
+# shellcheck disable=SC2039
 
-if [ -f "$(dirname $0)/dsas_common.sh" ]; then
-  . $(dirname $0)/dsas_common.sh
+if [ -f "$(dirname "$0")/dsas_common.sh" ]; then
+  # shellcheck source=append/usr/local/sbin/dsas_common.sh
+  . "$(dirname "$0")/dsas_common.sh"
 else
   1>&2 echo "Common functions not found !!"
-  exit -1
+  exit 1
 fi
 
 HLOG="/var/log/messages"
@@ -14,32 +20,34 @@ HLOG0="/var/log/messages.0"
 if [ "$(whoami)" != "haut" ]; then
   [ "$#" -ne 0 ] && { 1>&2 echo "$0: No arguments permitted"; exit 1; }
   # Get the status of the last run
+  # shellcheck disable=SC2153
   LAST=$LOG/syslog.haut
   HLOGSZ=0
   HLOGH=""
   HLOGSZ0=0
   HLOGH0=""
   if [ -f "$LAST" ]; then
-    HLOGSZ=$(head -1 $LAST | cut -d' ' -f2)
+    HLOGSZ=$(head -1 "$LAST" | cut -d' ' -f2)
     [ -z "$HLOGSZ" ] && HLOGSZ=0
-    HLOGH=$(head -1 $LAST | cut -d' ' -f3)
+    HLOGH=$(head -1 "$LAST" | cut -d' ' -f3)
     [ -z "$HLOGH" ] && HLOGH=""
-    HLOGSZ0=$(grep $HLOG0 $LAST | cut -d' ' -f2)
+    HLOGSZ0=$(grep "$HLOG0" "$LAST" | cut -d' ' -f2)
     [ -z "$HLOGSZ0" ] && HLOGSZ0=0
-    HLOGH0=$(grep $HLOG0 $LAST | cut -d' ' -f3)
+    HLOGH0=$(grep "$HLOG0" "$LAST" | cut -d' ' -f3)
     [ -z "$HLOGH0" ] && HLOGH0=""
   fi
-  if [ $(id -u) == 0 ]; then
-    sudo -E -u haut $0 $HLOGSZ $HLOGSZ0 $HLOGH $HLOGH0 > $LAST.new
-  elif [ "$(whoami)" == "tc" ]; then
-    sudo sudo -E -u haut $0 $HLOGSZ $HLOGSZ0 $HLOGH $HLOGH0 > $LAST.new
+  # shellcheck disable=SC2024
+  if [ "$(id -u)" = 0 ]; then
+    sudo -E -u haut "$0" "$HLOGSZ" "$HLOGSZ0" "$HLOGH" "$HLOGH0" > "$LAST.new"
+  elif [ "$(whoami)" = "tc" ]; then
+    sudo sudo -E -u haut "$0" $HLOGSZ $HLOGSZ0 "$HLOGH" "$HLOGH0" > "$LAST.new"
   else
     1>&2 echo "$0: Must be run as user 'haut'"
     false
   fi
   status=$?
-  [ "$status" == "0" ] && mv $LAST.new $LAST
-  [ "$status" == "0" ] || rm $LAST.new 
+  [ "$status" = "0" ] && mv "$LAST.new" "$LAST"
+  [ "$status" = "0" ] || rm "$LAST.new" 
   exit $status
 fi
 
@@ -48,22 +56,22 @@ HLOGSZ=$1
 HLOGSZ0=$2
 [ "$HLOGSZ0" != "0" ] && HLOGH0=$4
 
-syslog=$(xmllint --xpath "string(dsas/config/syslog/active)" $VAR/dsas_conf.xml)
-server=$(xmllint --xpath "string(dsas/config/syslog/server)" $VAR/dsas_conf.xml)
+syslog=$(xmllint --xpath "string(dsas/config/syslog/active)" "$VAR/dsas_conf.xml")
+server=$(xmllint --xpath "string(dsas/config/syslog/server)" "$VAR/dsas_conf.xml")
 [ "$syslog" != "true" ] && exit 0 
 [ -z "$server" ] && exit 0 
 
 # Get /var/log/messages from the machine haut
 tempdir=$(mktemp -d)
-scp tc@$INTERCO_HAUT:$HLOG $tempdir/$(basename $HLOG)
+scp "tc@$INTERCO_HAUT:$HLOG" "$tempdir/$(basename "$HLOG")"
 
 parse_pri(){
   # Recovers the syslog PRI field from the linux syslog and appends the
   # RFC3164 conforming PRI field to the syslog message. The HEADER and
   # BODY of RFC3164 are left as is
-  pri=$(echo $* | cut -d' ' -f5)
-  fac=$(echo $pri | cut -d. -f1)
-  sev=$(echo $pri | cut -d. -f2)
+  pri=$(echo "$@" | cut -d' ' -f5)
+  fac=$(echo "$pri" | cut -d. -f1)
+  sev=$(echo "$pri" | cut -d. -f2)
   case $fac in
     "kern") ret=0 ;;
     "user") ret=1 ;;
@@ -83,52 +91,52 @@ parse_pri(){
     "solaris-cron") ret=15 ;;
     *) ret=16 ;;
   esac
-  ret=$(($ret * 8))
+  ret=$((ret * 8))
   case $sev in
     "emerg"|"panic") : ;;
-    "alert") ret=$(($ret + 1)) ;;
-    "crit") ret=$(($ret + 2))  ;;
-    "err"|"error") ret=$(($ret + 3))  ;;
-    "warn"|"warning") ret=$(($ret + 4))  ;;
-    "notice") ret=$(($ret + 5))  ;;
-    "info") ret=$(($ret + 6)) ;;
-    *) ret=$(($ret + 7)) ;;
+    "alert") ret=$((ret + 1)) ;;
+    "crit") ret=$((ret + 2))  ;;
+    "err"|"error") ret=$((ret + 3))  ;;
+    "warn"|"warning") ret=$((ret + 4))  ;;
+    "notice") ret=$((ret + 5))  ;;
+    "info") ret=$((ret + 6)) ;;
+    *) ret=$((ret + 7)) ;;
   esac
   echo "<${ret}>$*"
 }
 
 # Is it different ?
-NHLOGH=$(sha256sum $tempdir/$(basename $HLOG) | cut -d' ' -f1) 
+NHLOGH=$(sha256sum "$tempdir/$(basename "$HLOG")" | cut -d' ' -f1) 
 if [ "$NHLOGH" != "$HLOGH" ]; then
   # Fetch $HLOG0 as well
   1>&2 echo "File $HLOG different ${NHLOGH:0:10}.. (${HLOGH:0:10}..)"
-  if scp tc@$INTERCO_HAUT:$HLOG0 $tempdir/$(basename $HLOG0); then
-    NHLOGH0=$(sha256sum $tempdir/$(basename $HLOG0) | cut -d' ' -f1) 
+  if scp "tc@$INTERCO_HAUT:$HLOG0" "$tempdir/$(basename "$HLOG0")"; then
+    NHLOGH0=$(sha256sum "$tempdir/$(basename "$HLOG0")" | cut -d' ' -f1) 
     if [ "$NHLOGH0" != "$HLOGH0" ]; then
       1>&2 echo "File $HLOG0 different ${NHLOGH0:0:10}.. (${HLOGH0:0:10}..)"
       # The machine haut has rotated its logs
-      if [ "$(sha256sum $tempdir/$(basename $HLOG0) | cut -d' ' -f1)" != "$HLOGH" ]; then
+      if [ "$(sha256sum "$tempdir/$(basename "$HLOG0")" | cut -d' ' -f1)" != "$HLOGH" ]; then
         # There are lines in $HLOG0 to treat
-        dd status=none bs=1 skip=$HLOGSZ0 if=$tempdir/$(basename $HLOG0) | while read -r line; do
-          parse_pri $line
-        done | nc -w 1 -u $server 514
+        dd status=none bs=1 skip="$HLOGSZ0" if="$tempdir/$(basename "$HLOG0")" | while read -r line; do
+          parse_pri "$line"
+        done | nc -w 1 -u "$server" 514
       fi
-      HLOGH0=$NLOGH0
-      HLOGSZ0="$(stat -c%s $tempdir/$(basename $HLOG0))"
+      HLOGH0=$NHLOGH0
+      HLOGSZ0="$(stat -c%s "$tempdir/$(basename "$HLOG0")")"
       HLOGSZ=0
     fi
   fi
   # Treat the lines in $HLOG
-  dd status=none bs=1 skip=$HLOGSZ if=$tempdir/$(basename $HLOG) | while read -r line; do
-    parse_pri $line 
-  done | nc -w 1 -u $server 514
+  dd status=none bs=1 skip=$HLOGSZ if="$tempdir/$(basename "$HLOG")" | while read -r line; do
+    parse_pri "$line" 
+  done | nc -w 1 -u "$server" 514
 
   # Update the status file
-  HLOGH="$(sha256sum $tempdir/$(basename $HLOG) | cut -d' ' -f1)"
-  HLOGSZ="$(stat -c%s $tempdir/$(basename $HLOG))"
+  HLOGH="$(sha256sum "$tempdir/$(basename "$HLOG")" | cut -d' ' -f1)"
+  HLOGSZ="$(stat -c%s "$tempdir/$(basename "$HLOG")")"
   echo "$HLOG $HLOGSZ $HLOGH"
   echo "$HLOG0 $HLOGSZ0 $HLOGH0"
 fi
 
 # Remove temporary files
-/bin/rm -fr $tempdir
+/bin/rm -fr "$tempdir"

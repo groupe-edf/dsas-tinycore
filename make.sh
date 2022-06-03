@@ -44,6 +44,7 @@ while [ "$#" -gt 0 ]; do
       echo "     realclean       Remove all files, leaving a clean build tree"
       echo "     check           Run test code to test correct function of checkfiles" 
       echo "     iso             Build the DSAS ISO file. This the default command"
+      echo "     static          Run static analysis on the DSAS source code"
       echo "Valid options are"
       echo "     -r|--rebuild    Force the rebuild of source packages"
       echo "     -f|--download   Force the source packages to be re-downloaded"
@@ -446,6 +447,26 @@ realclean)
 check)
   error "Self test are not written yet"
   exit 1
+  ;;
+static)
+  if [ -x "vendor/bin/phpstan" ]; then
+    vendor/bin/phpstan
+  else
+    msg "### Install phpstan via composer before continuing"
+  fi
+  if which eslint> /dev/null 2>&1; then
+    eslint $append/usr/local/share/www/dsas.js
+  else
+    msg "### Install eslint before continuing"
+  fi
+  if which shellcheck > /dev/null 2>&1; then
+    shellcheck -x $append/usr/local/sbin/* \
+                  $append/etc/init.d/services/dsas \
+                  $append/etc/init.d/rcS.docker \
+                  make.sh
+  else
+    msg "### Install shellcheck before continuing"
+  fi
   ;;
 build)
   shift

@@ -1,16 +1,21 @@
 #! /bin/sh
+# Busybox ash not supported. Use posix SH and disable a couple of
+# ash extensions I use
+#
+# shellcheck shell=sh
+# shellcheck disable=SC2039
 
 # if root rerun as user tc
-if [ $(id -u) == 0 ]; then
-  sudo -E -u tc $0 $*
-  exit $?
+if [ "$(id -u)" = 0 ]; then
+  sudo -E -u tc "$0" "$@" || exit 1
 fi
 
 # if not user tc, quit
 [ "$(whoami)" != "tc" ] && { 1>&2 echo "$0: Must be run as user 'tc'"; exit 1; }
 
-if [ -f "$(dirname $0)/dsas_common.sh" ]; then
-  . $(dirname $0)/dsas_common.sh
+if [ -f "$(dirname "$0")/dsas_common.sh" ]; then
+  # shellcheck source=append/usr/local/sbin/dsas_common.sh
+  . "$(dirname "$0")/dsas_common.sh"
 else
   1>&2 echo "Common functions not found !!"
   exit 1
@@ -20,18 +25,25 @@ fi
 [ "$TYP" == "haut" ] && { 1>&2 echo "$0: Must be run from machine 'bas'"; exit 1; }
 
 # Create run log file if it doesn't exist
-[ -f "$RUNLOG" ] || touch $RUNLOG
+RUNLOG="$LOG/dsas_runlog"
+[ -f "$RUNLOG" ] || touch "$RUNLOG"
+
+myecho(){
+  [ "$verbose" -ne 0 ] && echo "$@"
+  # If not verbose the status will be 1. explicitly return 0
+  return 0
+}
 
 utc_date(){
   date --utc '+%Y%m%d%H%M%S'
 }
 
 fixdate(){
-  printf "$1" | sed -E -e 's/(....)(..)(..)(..)(..)(..)/\1-\2-\3 \4:\5:\6/'
+  echo "$1" | sed -E -e 's/(....)(..)(..)(..)(..)(..)/\1-\2-\3 \4:\5:\6/'
 }
 
 should_run(){
- _dif=$(($(date -d "$(fixdate $(utc_date) )" '+%s') - $(date -d "$(fixdate $1)" '+%s') ))
+ _dif=$(($(date -d "$(fixdate "$(utc_date)")" '+%s') - $(date -d "$(fixdate "$1")" '+%s') ))
   case "$2" in
     never) return 1; ;;
     quarterhourly)  [ $_dif -lt 900 ] && return 1;  ;;
@@ -49,10 +61,16 @@ ids=""
 opts=""
 force=""
 clamav=0
+verbose=0
+
+logfile="$LOG/dsas_verif.log"
+[ -f "$logfile" ] || ( umask 0007; touch "$logfile"; )
+[ "$(stat -c '%G' "$logfile")" == "verif" ] || chgrp verif "$logfile"
+
 while [ "$#" -gt 0 ]; do
   case $1 in
     -h|--help)
-      echo "Usage: $(basename $0)  [Options] ID"
+      echo "Usage: $(basename "$0")  [Options] ID"
       echo "Run verification task given by the task ID"
       echo "     -f|--force      Force task to run"
       echo "     -v|--verbose    Log all files verified"
@@ -63,8 +81,6 @@ while [ "$#" -gt 0 ]; do
       exit 0
       ;;
     -f|--force) force="true"; ;;
-    -v|--verbose) verbose=1; opts="$opts -v"; ;;
-    -q|--quiet) verbose=0; opts="$opts -q"; ;;
     -c|--clamav) clamav=1; opts="$opts -c"; ;;
     -*) opts="$opts $1"; ;;
      *) ids="$ids $1" ;;
@@ -72,45 +88,48 @@ while [ "$#" -gt 0 ]; do
   shift 1
 done
 
+# shellcheck disable=SC2086
+# shellcheck disable=SC2181
 if [ "$clamav" == "1" ]; then
   # Only run clamav checks
   1>&2 myecho "$0: #### Tasks on machine HAUT ####"
-  sudo sudo -u haut ssh tc@$INTERCO_HAUT sudo sudo -u haut $(dirname $0)/getfiles $opts
-  [ $? -eq 0 ] && sudo sudo -u haut ssh tc@$INTERCO_HAUT sudo sudo -u verif $(dirname $0)/checkfiles $opts
+  sudo sudo -u haut ssh "tc@$INTERCO_HAUT" sudo sudo -u haut "$(dirname "$0")/getfiles" $opts
+  [ $? -eq 0 ] && sudo sudo -u haut ssh "tc@$INTERCO_HAUT" sudo sudo -u verif "$(dirname "$0")/checkfiles" $opts
   [ $? -eq 0 ] && 1>&2 myecho "$0: #### Tasks on machine BAS ####"
-  [ $? -eq 0 ] && sudo sudo -u haut $(dirname $0)/getfiles $opts
-  [ $? -eq 0 ] && sudo sudo -u verif $(dirname $0)/checkfiles $opts -o $logfile
+  [ $? -eq 0 ] && sudo sudo -u haut "$(dirname "$0")/getfiles" $opts
+  [ $? -eq 0 ] && sudo sudo -u verif "$(dirname "$0")/checkfiles" $opts -o $logfile
 
   exit $?
 fi
 
 # Cleanup the runlog file, removing non existant/deleted tasks
-/bin/mv $RUNLOG $RUNLOG.old
-cat $RUNLOG.old  | while read -r line; do
+/bin/mv "$RUNLOG" "$RUNLOG.old"
+touch "$RUNLOG"
+while read -r line; do
   i=1
   while :; do
-    _idx=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" $CONF)
+    _idx=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" "$CONF")
     [ -z "$_idx" ] && break
-    [[ "$line" =~ "$_idx" ]] && echo $line >> $RUNLOG && break
+    [[ "$line" =~ $_idx ]] && echo "$line" >> "$RUNLOG" && break
     i=$((i + 1))
   done
-done
+done < "$RUNLOG.old"
 
-if [ -z $ids ]; then
+if [ -z "$ids" ]; then
   # No tasks specified. Get a list of all tasks
   i=1
   while :; do
-    _id=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" $CONF)
+    _id=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" "$CONF")
     [ -z "$_id" ] && break
     # Is the task scheduled to run ? Is the run forced ?
     if [ -z "$force" ]; then
-      _run=$(xmllint --xpath "string(dsas/tasks/task[$i]/run)" $CONF)
+      _run=$(xmllint --xpath "string(dsas/tasks/task[$i]/run)" "$CONF")
       case "$_run" in
         hourly|daily|weekly|monthly) : ;;
         *) i=$((i + 1)); continue; ;;
       esac
-      _last=$(cat $RUNLOG | grep $_id | xargs | cut -d' ' -f2) 
-      [ -z "$_last" ] || should_run $_last $_run && ids="$ids $_id"    
+      _last=$(grep "$_id" "$RUNLOG" | xargs | cut -d' ' -f2) 
+      [ -z "$_last" ] || should_run "$_last" "$_run" && ids="$ids $_id"    
     else
       ids="$ids $_id"
     fi
@@ -121,26 +140,26 @@ else
   newids=""
   for _id in $ids; do
     if [ ${#_id} -lt 5 ] && [[ $_id =~ ^[0-9]+$ ]]; then
-      _idx=$(xmllint --xpath "string(dsas/tasks/task[$_id]/id)" $CONF)
+      _idx=$(xmllint --xpath "string(dsas/tasks/task[$_id]/id)" "$CONF")
       i=$_id
     else
       i=1
       while :; do
-        _idx=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" $CONF)
+        _idx=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" "$CONF")
         [ -z "$_idx" ] && break
-        [ "$_id" == "$_idx" ] && break
+        [ "$_id" = "$_idx" ] && break
         i=$((i + 1))
       done
     fi
     [ -z "$_idx" ] && { 1>&2 echo "Task $_id not found"; continue; }
     if [ -z "$force" ]; then
-      _run=$(xmllint --xpath "string(dsas/tasks/task[$i]/run)" $CONF)
+      _run=$(xmllint --xpath "string(dsas/tasks/task[$i]/run)" "$CONF")
       case "$_run" in
         hourly|daily|weekly|monthly) :; ;;
         *) continue; ;;
       esac
-      _last=$(cat $RUNLOG | grep $_id | xargs | cut -d' ' -f2)
-      [ -z "$_last" ] || should_run $_last $_run && newids="$newids $_idx" 
+      _last=$(grep "$_id" "$RUNLOG" | xargs | cut -d' ' -f2)
+      [ -z "$_last" ] || should_run "$_last" "$_run" && newids="$newids $_idx" 
     else
       newids="$newids $_idx"
     fi
@@ -148,29 +167,27 @@ else
   ids=$newids
 fi
 
-logfile="$LOG/dsas_verif.log"
-[ -f "$logfile" ] || ( umask 0007; touch $logfile; )
-[ "$(stat -c '%G' $logfile)" == "verif" ] || chgrp verif $logfile
-
 [ -z "$ids" ] && 1>&2 myecho "$0: No tasks to run !!"
 
+# shellcheck disable=SC2086
+# shellcheck disable=SC2181
 for _id in $ids; do
   # Check if task is already running and skip if not 
-  _pid=$(pgrep $_id)
+  _pid=$(pgrep "$_id")
   [ -n "$_pid" ] && { 1>&2 myecho "$0 task $_id is running"; continue; }
 
   1>&2 myecho "$0 : #### Tasks started - $(date --utc) ####"
   1>&2 myecho "$0 : #### Tasks on machine HAUT ####"
-  sudo sudo -u haut ssh tc@$INTERCO_HAUT $(dirname $0)/getfiles $opts $_id
-  [ $? -eq 0 ] && sudo sudo -u haut ssh tc@$INTERCO_HAUT sudo sudo -u verif $(dirname $0)/checkfiles $opts $_id
+  sudo sudo -u haut ssh "tc@$INTERCO_HAUT" "$(dirname "$0")/getfiles" $opts "$_id"
+  [ $? -eq 0 ] && sudo sudo -u haut ssh "tc@$INTERCO_HAUT" sudo sudo -u verif "$(dirname "$0")/checkfiles" $opts "$_id"
   [ $? -eq 0 ] && 1>&2 myecho "$0 : #### Tasks on machine BAS ####"
-  [ $? -eq 0 ] && $(dirname $0)/getfiles $opts $_id
-  [ $? -eq 0 ] && sudo sudo -u verif $(dirname $0)/checkfiles $opts -o $logfile $_id
+  [ $? -eq 0 ] && "$(dirname "$0")/getfiles" $opts "$_id"
+  [ $? -eq 0 ] && sudo sudo -u verif "$(dirname "$0")/checkfiles" $opts -o "$logfile" "$_id"
 
   # Log the run date and exit status of the task
   _str=$(printf "%-26s %-16s %d" "$_id" "$(utc_date)" $?)
-  grep -q $_id $RUNLOG && sed -i -e "s/^$_id.*$/$_str/" $RUNLOG 
-  grep -q $_id $RUNLOG || echo $_str >> $RUNLOG
+  grep -q "$_id" "$RUNLOG" && sed -i -e "s/^$_id.*$/$_str/" "$RUNLOG" 
+  grep -q "$_id" "$RUNLOG" || echo "$_str" >> "$RUNLOG"
 
   1>&2 myecho "$0 : #### Tasks Terminated - $(date --utc) ####"
 done

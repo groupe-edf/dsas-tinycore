@@ -1,13 +1,19 @@
 #! /bin/sh
+# Busybox ash not supported. Use posix SH and disable a couple of
+# ash extensions I use
+#
+# shellcheck shell=sh
+# shellcheck disable=SC2039
 
 # if not user tc, quit
 [ "$(whoami)" != "tc" ] && { 1>&2 echo "$0: Must be run as user 'tc'"; exit 1; }
 
-if [ -f "$(dirname $0)/dsas_common.sh" ]; then
-  . $(dirname $0)/dsas_common.sh
+if [ -f "$(dirname "$0")/dsas_common.sh" ]; then
+  # shellcheck source=append/usr/local/sbin/dsas_common.sh
+  . "$(dirname "$0")/dsas_common.sh"
 else
   1>&2 echo "Common functions not found !!"
-  exit -1
+  exit 1
 fi
 
 as_haut="sudo sudo -E -u haut"
@@ -20,10 +26,39 @@ else
   # Update resolv.conf and hosts in the chroot as networking might have changed
   for _f in /etc/hosts /etc/resolv.conf; do
     [ -f "$_ldir/$_f" ] || sudo /bin/cp -p $_f $_ldir$_f
-    diff -q $_f $_ldir$_f >& /dev/null || sudo /bin/cp -p $_f $_ldir$_f
+    diff -q $_f $_ldir$_f > /dev/null 2>&1 || sudo /bin/cp -p $_f $_ldir$_f
   done
 fi
 umask 022
+
+myecho(){
+  [ "$verbose" -ne 0 ] && echo "$@"
+  # If not verbose the status will be 1. explicitly return 0
+  return 0
+}
+
+rm() {
+  if [ "$dryrun" == "0" ]; then
+    #FIXME is there a better way of handling spaces in the args ?
+    while [ "$#" -gt 0 ]; do
+      /bin/rm -fr "$1"
+      shift
+    done
+  else
+    echo "[DryRun] rm $*"
+  fi
+}
+
+task_id_to_idx(){
+  local _task_id
+  local i=1
+  while :; do
+    _task_id=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" "$CONF")
+    [ -z "$_task_id" ] && return 1;
+    [ "$1" == "$_task_id" ] && echo $i && return 
+    i=$((i + 1))
+  done
+}
 
 # Usage : check_checksum <file> <chksum> <type>
 check_checksum() {
@@ -36,16 +71,17 @@ check_checksum() {
     md5) chk=$($as_haut cat "$1" | md5sum - | sed -e "s/ -$//g") ;;
     *) return 0 ;;
   esac
-  [ $chk != "$2" ] && return 0
+  [ "$chk" != "$2" ] && return 0
   return 1
 }
 
 get_uri(){
-  if [ "$TYP" == "haut" ]; then
-    echo $(xmllint --xpath "string(dsas/tasks/task[$1]/uri)" "$CONF") 
+  if [ "$TYP" = "haut" ]; then
+    xmllint --xpath "string(dsas/tasks/task[$1]/uri)" "$CONF" 
   else
-    local _dir=$(xmllint --xpath "string(dsas/tasks/task[$1]/directory)" "$CONF")
-    local _uri="$DSAS_HOME/bas"
+    local _dir _uri
+    _dir=$(xmllint --xpath "string(dsas/tasks/task[$1]/directory)" "$CONF")
+    _uri="$DSAS_HOME/bas"
     _uri=${DSAS_BAS:${#_uri}}
     echo "sftp://bas:@$INTERCO_HAUT$_uri/$_dir/"
   fi
@@ -69,27 +105,27 @@ lftp_ca_options() {
     # Setup the LFTP CA if needed. If ClamAv force self_signed for now
     # ClamAV signatures are verified elsewhere before use
     [ "$clamav" == "1" ] && ca_finger="self"
-    [ "$clamav" == "1" ] || ca_finger=$(xmllint --xpath "string(dsas/tasks/task[$id]/ca/fingerprint)" $CONF)
+    [ "$clamav" == "1" ] || ca_finger=$(xmllint --xpath "string(dsas/tasks/task[$id]/ca/fingerprint)" "$CONF")
 
     case $ca_finger in
       "")  : ;;
       "self") opt="$opt set ssl:verify-certificate false;" ;;
       *)
-        idx=$(get_certificate $ca_finger)
+        idx=$(getcertificate "$ca_finger")
         cp /tmp/cert.$$ $_ldir/tmp/cert.$$
         chmod 644 $_ldir/tmp/cert.$$
         [ -z "$idx" ] || opt="$opt set ssl:ca-file /tmp/cert.$$; "
         ;;
     esac
   fi
-  echo $opt
+  echo "$opt"
 }
 
 getclamav() {
-  local uri
-  local dir="ClamAV"
-  local name="ClamAV"
-  local opt=$(lftp_ca_options)
+  local uri dir name opt
+  dir="ClamAV"
+  name="ClamAV"
+  opt=$(lftp_ca_options)
 
   # Return if antivirus is not active
   [ "$(xmllint --xpath "string(dsas/config/antivirus/active)" "$CONF")" == "true" ] || return
@@ -126,12 +162,12 @@ getclamav() {
 }
 
 getdirectory() {
-  local isdir
-  local id=$1
-  local uri=$(get_uri $id)
-  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
-  local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" "$CONF")
-  local opt=$(lftp_ca_options $id)
+  local isdir id uri dir name opt
+  id=$1
+  uri=$(get_uri "$id")
+  dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
+  name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" "$CONF")
+  opt=$(lftp_ca_options "$id")
 
   if [ -z "$uri" ]; then
     # The URI can be empty. gracefully exit
@@ -144,7 +180,7 @@ getdirectory() {
 
   # Test whether we have a file or a directory, and fail if server not found 
   _stderr=$(2>&1 $chroot_lftp -c "$opt open '$uri'") && isdir="1"
-  echo $_stderr | grep -q "Fatal" && { 1>&2 echo "Fatal: Server '$uri' not found"; exit 1; }
+  echo "$_stderr" | grep -q "Fatal" && { 1>&2 echo "Fatal: Server '$uri' not found"; exit 1; }
 
   if [ -z "$isdir" ]; then
     myecho "Downloading file : $(basename "$uri")"
@@ -169,7 +205,7 @@ getdirectory() {
   OLD_IFS=$IFS
   IFS=$'\3'
   for _dir in $_dirs;  do
-    [ "$as_haut ls -A '$_dir'" ] || $as_haut rmdir "$_dir"
+    $as_haut ls -A "$_dir" || $as_haut rmdir "$_dir"
   done
   IFS=$OLD_IFS
 
@@ -193,11 +229,11 @@ get_packages() {
      chksum=$2
     fi
     if $as_haut [ -f "$dest/$file" ]; then
-      if check_checksum "$dest/$file" $chksum $chktype; then
+      if check_checksum "$dest/$file" "$chksum" "$chktype"; then
         # Checksum of file is different redownload the file
         myecho "Downloading file $file [Checksum different!!]"
         if [ "$dryrun" == "0" ]; then
-          [ -d "$(dirname "$dest/$file")" ] || $as_haut mkdir -m 770 -p $(dirname "$dest/$file")
+          [ -d "$(dirname "$dest/$file")" ] || $as_haut mkdir -m 770 -p "$(dirname "$dest/$file")"
           [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" >& /dev/null
           [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'"
         fi
@@ -205,7 +241,7 @@ get_packages() {
     else
       myecho "Downloading file $file"
       if [ "$dryrun" == "0" ]; then
-        [ -d "$(dirname "$dest/$file")" ] || $as_haut mkdir -m 770  -p $(dirname "$dest/$file")
+        [ -d "$(dirname "$dest/$file")" ] || $as_haut mkdir -m 770  -p "$(dirname "$dest/$file")"
         [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" >& /dev/null
         [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'"
       fi
@@ -216,12 +252,13 @@ get_packages() {
 
 getrepo() {
   local i filelist chksum chktype filetable _file
-  local id=$1
-  local uri=$(get_uri $id)
-  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
-  local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" "$CONF")
-  local type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
-  local opt=$(lftp_ca_options $id)
+  local id uri dir name type opt
+  id=$1
+  uri=$(get_uri "$id")
+  dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
+  name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" "$CONF")
+  type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
+  opt=$(lftp_ca_options "$id")
 
   case $type in
     repomd|rpm)
@@ -232,15 +269,15 @@ getrepo() {
        $as_haut [ -d "$DSAS_HAUT/$dir/repodata" ] || $as_haut mkdir -m 770 -p "$DSAS_HAUT/$dir/repodata"
 
        _stderr=$(2>&1 $chroot_lftp -c "$opt get -e '$uri/repodata/repomd.xml' -o '$DSAS_HAUT/$dir/repodata/repomd.xml'")
-       echo $_stderr | grep -q "Fatal" && { 1>&2 echo "Fatal: Server '$uri' not found"; exit 1; }
-       echo $_stderr | grep -q "failed" && { 1>&2 echo "Fatal: file '$uri/repodata/repomd.xml' not found"; exit 1; }
+       echo "$_stderr" | grep -q "Fatal" && { 1>&2 echo "Fatal: Server '$uri' not found"; exit 1; }
+       echo "$_stderr" | grep -q "failed" && { 1>&2 echo "Fatal: file '$uri/repodata/repomd.xml' not found"; exit 1; }
 
        [ "$type" == "rpm" ] || $chroot_lftp -c "$opt get -e '$uri/repodata/repomd.xml.asc' -o '$DSAS_HAUT/$dir/repodata/repomd.xml.asc'" >& /dev/null
 
        # Remove files in repodata not listed in repomd.xml
        for _file in $($as_haut find "$DSAS_HAUT/$dir/repodata" -type f) ; do
-         _f=$(basename $_file)
-         [[ "$_f" =~ "repomd.xml" ]] && continue
+         _f=$(basename "$_file")
+         [[ "$_f" =~ repomd.xml$ ]] && continue
          $as_haut grep -q "$_f" "$DSAS_HAUT/$dir/repodata/repomd.xml" >& /dev/null && continue
          myecho "Removing stale file repodata/${_f}"
          $as_haut rm -f "$_file"
@@ -263,17 +300,17 @@ getrepo() {
 
          # Download if checksum different
          if $as_haut [ ! -f "$DSAS_HAUT/$dir/$f" ] ||
-             check_checksum "$DSAS_HAUT/$dir/$f" $chksum $chktype; then
+             check_checksum "$DSAS_HAUT/$dir/$f" "$chksum" "$chktype"; then
            myecho "Downloading file $f listed in repomd.xml for $name"
            [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$f' -o '$DSAS_HAUT/$dir/$f'" >& /dev/null
            [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$f' -o '$DSAS_HAUT/$dir/$f'"
 
            # Verify its checksum
-           if check_checksum "$DSAS_HAUT/$dir/$f" $chksum $chktype; then
+           if check_checksum "$DSAS_HAUT/$dir/$f" "$chksum" "$chktype"; then
                1>&2 echo "Error verifiying checksum of $f"
            fi
          fi
-         i=$(($i + 1))
+         i=$((i + 1))
        done
 
        # Identify the primary file list and download it
@@ -283,7 +320,7 @@ getrepo() {
          xmllint --xpath 'string(//repomd/data[@type="primary"]/location/@href)' - )
 
        # Recover a table of the hashtype, hash and file names
-       if [[ "$filelist" =~ ".*.gz" ]] || [[ "$filelist" =~ ".*.bz2" ]]; then
+       if [[ "$filelist" =~ \.gz$ ]] || [[ "$filelist" =~ \.bz2$ ]]; then
          filetable=$($as_haut zcat "$DSAS_HAUT/$dir/$filelist" | \
             sed -e "s/xmlns=/ignore=/g" | \
             xmllint --xpath '//package[@type="rpm"]/location | //package[@type="rpm"]/checksum' - | \
@@ -308,9 +345,13 @@ getrepo() {
        done
 
        # Download the packages
+       #
+       # I want the variable $filetable to do word splitting, ignore 
+       # the shellcheck error associated with it
+       # shellcheck disable=SC2086
        get_packages "$DSAS_HAUT/$dir" "$uri" "$opt" $filetable
        ;;
-    *) 1>&2 echo "Unrecognized repositiory check type $check"; exit 1; ;;
+    *) 1>&2 echo "Unrecognized repositiory check type $type"; exit 1; ;;
   esac
 
   [ -f "/tmp/cert.$$" ] && rm /tmp/cert.$$
@@ -320,23 +361,24 @@ getrepo() {
 }
 
 getdeb() {
-  local chktyp inhash hashtyp _hash _hash_md5 _hash_sha256 _size _file
-  local pool pool_local have_pool packages inpackage archs i _arch _f
-  local id=$1
-  local uri=$(get_uri $id)
-  local dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" $CONF)
-  local name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" $CONF)
-  local type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" $CONF)
-  local opt=$(lftp_ca_options $id)
+  local chktyp inhash hashtyp _hash _hash_md5 _hash_sha256 _file
+  local pool pool_local have_pool packages archs i _arch _f
+  local id uri dir name type opt
+  id=$1
+  uri=$(get_uri "$id")
+  dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
+  name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" "$CONF")
+  type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
+  opt=$(lftp_ca_options "$id")
 
   case $type in
     deb)
        # Create the destination directory if needed
-       $as_haut [ -d "$DSAS_HAUT/$dir" ] || $as_haut mkdir -m 770 -p $DSAS_HAUT/$dir
+       $as_haut [ -d "$DSAS_HAUT/$dir" ] || $as_haut mkdir -m 770 -p "$DSAS_HAUT/$dir"
 
        # Test server ok before continuing
        _stderr=$(2>&1 $chroot_lftp -c "$opt open '$uri/'")
-       echo $_stderr | grep -q "Fatal" && (1>&2 echo "Fatal: Server '$uri' not found"; exit 1)
+       echo "$_stderr" | grep -q "Fatal" && (1>&2 echo "Fatal: Server '$uri' not found"; exit 1)
 
        myecho "Downloading Release/Release.gpg from $name"
        if [ "$verbose" -eq 0 ]; then
@@ -349,8 +391,8 @@ getdeb() {
          $chroot_lftp -c "$opt get -e '$uri/InRelease' -o '$DSAS_HAUT/$dir/InRelease'"
        fi
 
-       $as_haut [ -f "$DSAS_HAUT/$dir/Release" ] || $(1>&2 echo "Failed to download 'Release'"; exit 1)
-       $as_haut [ -f "$DSAS_HAUT/$dir/Release.gpg" ] || $(1>&2 echo "Failed to download 'Release.gpg'"; exit 1)
+       $as_haut [ -f "$DSAS_HAUT/$dir/Release" ] || { 1>&2 echo "Failed to download 'Release'"; exit 1; }
+       $as_haut [ -f "$DSAS_HAUT/$dir/Release.gpg" ] || { 1>&2 echo "Failed to download 'Release.gpg'"; exit 1; }
 
        # Find the pool directory
        pool=$(dirname "$uri")
@@ -372,7 +414,7 @@ getdeb() {
        archs=""
        i=1
        while :; do
-         _arch=$(xmllint --xpath "string(dsas/tasks/task[$id]/archs/arch[$i])" $CONF)
+         _arch=$(xmllint --xpath "string(dsas/tasks/task[$id]/archs/arch[$i])" "$CONF")
          [ -z "$_arch" ] && break;
          archs="$archs $_arch"
          i=$((i + 1))
@@ -380,43 +422,44 @@ getdeb() {
        
        # Identify all files listed in Release and download them
        inhash=0
-       $as_haut cat $DSAS_HAUT/$dir/Release | while read -r line; do
+       $as_haut cat "$DSAS_HAUT/$dir/Release" | while read -r line; do
          # Assume that each hash is listed after the correct flag and has
          # a leading space
-         [ "$inhash" == "0" ] && [[ "$line" =~ "^$hashtyp$" ]] && inhash="1" && continue
+         [ "$inhash" == "0" ] && [[ "$line" =~ ^${hashtyp}$ ]] && inhash="1" && continue
          [ "$inhash" == "1" ] && [[ "$line" =~ ":$" ]] && inhash="0" && continue
          [ "$inhash" == "0" ] && continue
 
-         IFS=' ' read _hash _size _file << EOF
+         # Ignore second value, use "_" variable 
+         IFS=' ' read -r _hash _ _file << EOF
 $line
 EOF
          # Only download Package, Package.gz and Package.xz files if desired architecture 
-         _f=$(basename $_file)
+         _f=$(basename "$_file")
          if [ "$_f" == "Release" ] || [ "$_f" == "Packages" ] || [ "$_f" == "Packages.gz" ] || [ "$_f" == "Packages.xz" ]; then
-           _f=$(dirname $_file)
-           [[ "$archs" =~ "${_f##*-}" ]] || continue
+           _f=$(dirname "$_file")
+           [[ "$archs" =~ ${_f##*-} ]] || continue
          fi
 
          # Only download Contents* files if desired architecture
-         _f=$(basename $_file)
+         _f=$(basename "$_file")
          if [ "${_f:0:8}" == "Contents" ]; then
            _arch=${_f:9}
            _arch=${_arch#*udeb-}
            _arch=${_arch%%.gz}
            _arch=${_arch%%.xz}
-           [[ "$archs" =~ "$_arch" ]] || continue
+           [[ "$archs" =~ $_arch ]] || continue
          fi
 
          # Only download installers if desired architecture
          _f=${_file##/}
-         _f=$(echo $_f | cut -d/ -f2)
+         _f=$(echo "$_f" | cut -d/ -f2)
          if [ "${_f:0:9}" == "installer" ]; then
            _arch=${_f:10}
-           [[ "$archs" =~ "$_arch" ]] || continue
+           [[ "$archs" =~ $_arch ]] || continue
          fi
 
          if $as_haut [ -f "$DSAS_HAUT/$dir/$_file" ]; then
-           if check_checksum "$DSAS_HAUT/$dir/$_file" $_hash $chktyp; then
+           if check_checksum "$DSAS_HAUT/$dir/$_file" "$_hash" "$chktyp"; then
              myecho "Downloading file $_file [Checksum different!!]"
              [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
              [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
@@ -430,7 +473,7 @@ EOF
              # doesn't always have uncompressed versions if compressed versions exist
              if [[ "$_file" == "*.gz" ]] ||  [[ "$_file" == "*.xz" ]] ||  [[ "$_file" == "*.bz2" ]]; then
                $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
-             elif $as_haut grep $_file $DSAS_HAUT/$dir/Release | grep -o "...$" | grep -q ".gz\|.xz\|bz2"; then
+             elif $as_haut grep "$_file" "$DSAS_HAUT/$dir/Release" | grep -o "...$" | grep -q ".gz\|.xz\|bz2"; then
                $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
              else
                $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
@@ -445,24 +488,26 @@ EOF
        [[ "$archs" =~ "source" ]] && packages="$packages $($as_haut find "$DSAS_HAUT/$dir" -name "Sources.gz")"
        for package in $packages ; do
          myecho "Downloading files from $package"
-         inpackage=0
          _file=""
          _hash_md5=""
          _hash_sha256=""
          $as_haut zcat "$package" | while read -r line; do
            # Use sed to strip leading and trailing space, as can't used xargs due to possible
            # illegal characters like single quotes in strings. 
-           [[ "$line" =~ "Filename:" ]] && _file="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
-           [[ "$line" =~ "MD5sum:" ]] && _hash_md5="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
-           [[ "$line" =~ "SHA256:" ]] && _hash_sha256="$(echo $line | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
-           if [ -z "$(echo $line | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" ]; then
+           [[ "$line" =~ "Filename:" ]] && _file="$(echo "$line" | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
+           [[ "$line" =~ "MD5sum:" ]] && _hash_md5="$(echo "$line" | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
+           [[ "$line" =~ "SHA256:" ]] && _hash_sha256="$(echo "$line" | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
+           if [ -z "$(echo "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" ]; then
              if $as_haut [ -f "$DSAS_HAUT/$pool_local/$_file" ]; then
                if [ -n "$_hash_sha256" ]; then
-                 check_checksum "$DSAS_HAUT/$pool_local/$_file" $_hash_sha256 sha256
+                 check_checksum "$DSAS_HAUT/$pool_local/$_file" "$_hash_sha256" "sha256"
                else 
-                 check_checksum "$DSAS_HAUT/$pool_local/$_file" $_hash_md5 md5
+                 check_checksum "$DSAS_HAUT/$pool_local/$_file" "$_hash_md5" "md5"
                fi
                
+               # Can't check return status directly as suggested by shellcheck
+               # without a large code duplication. Ignore related shellcheck error
+               # shellcheck disable=SC2181
                if [ "$?" -eq 0 ]; then
                  myecho "Downloading file $_file [Checksum different!!]"
                  [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'" >& /dev/null
@@ -493,16 +538,18 @@ EOF
 }
 
 help() {
-  echo "Usage: $(basename $0)  [Options] ID"
+  echo "Usage: $(basename "$0")  [Options] ID"
   echo "Get files given by the task ID"
   echo "     -v|--verbose    Log all files verified"
   echo "     -q|--quiet      Log only files failing to verify"
   echo "     -n|--dryrun     Perform minimum actions"
   echo "     -c|--clamav     Get ClamAv signature files"
-  echo "     -?|-h|--help    Print this help"
+  echo "     -h|--help       Print this help"
 }
 
 clamav=0
+verbose=0
+dryrun=0
 
 # Parse options
 ids=""
@@ -512,7 +559,7 @@ while [ "$#" -gt 0 ]; do
     -q|--quiet) verbose=0 ;;
     -n|--dryrun) dryrun=1 ;;
     -c|--clamav) clamav=1 ;;
-    -?|-h|--help) help; exit 0 ;;
+    -h|--help) help; exit 0 ;;
     -*) 1>&2 echo "Unrecognized option : $1"; help; exit 1 ;;
      *)
        # Only allow a single task to be able to exit en error correctly 
@@ -523,7 +570,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 # Check existence of DSAS directories
-[ -d $DSAS_HOME ] || { echo "DSAS home directory missing"; exit 1; }
+[ -d "$DSAS_HOME" ] || { echo "DSAS home directory missing"; exit 1; }
 $as_haut [ -d "$DSAS_HAUT" ] || { echo "DSAS haut directory missing"; exit 1; }
 
 # If dryrun, force verbose
@@ -536,22 +583,21 @@ $as_haut [ -d "$DSAS_HAUT" ] || { echo "DSAS haut directory missing"; exit 1; }
 idx=""
 for _id in $ids; do
   if [ ${#_id} -lt 5 ] && [[ $_id =~ ^[0-9]+$ ]]; then
-    _idx=$(xmllint --xpath "string(dsas/tasks/task[$_id]/id)" $CONF)
+    _idx=$(xmllint --xpath "string(dsas/tasks/task[$_id]/id)" "$CONF")
     [ -z "$_idx" ] && { 1>&2 echo "Task id ($_id) does not exist"; exit 1; }
     idx="$idx $_id"
   else
-    _idx=$(task_id_to_idx $_id)
-    [ $? -ne 0 ] && { 1>&2 echo "Task id ($_id) does not exist"; exit 1; }
+    _idx=$(task_id_to_idx "$_id") || { 1>&2 echo "Task id ($_id) does not exist"; exit 1; }
     idx="$idx $_idx"
   fi
 done
 
 for _idx in $idx; do
-  type=$(xmllint --xpath "string(dsas/tasks/task[$_idx]/type)" $CONF)
+  type=$(xmllint --xpath "string(dsas/tasks/task[$_idx]/type)" "$CONF")
   case $type in
-    rpm|repomd) getrepo $_idx; ;;
-    deb) getdeb $_idx; ;;
-    authenticode|openssl|gpg|liveupdate|cyberwatch) getdirectory $_idx; ;;
+    rpm|repomd) getrepo "$_idx"; ;;
+    deb) getdeb "$_idx"; ;;
+    authenticode|openssl|gpg|liveupdate|cyberwatch) getdirectory "$_idx"; ;;
     *) 1>&2 echo "Unknown task type : $type"; exit 1; ;;
   esac
 done

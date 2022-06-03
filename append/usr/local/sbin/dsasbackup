@@ -1,16 +1,22 @@
 #! /bin/sh
+# Busybox ash not supported. Use posix SH and disable a couple of
+# ash extensions I use
+#
+# shellcheck shell=sh
+# shellcheck disable=SC2039
 
 # If root rerun as user tc
-if [ $(id -u) == 0 ];then
-  sudo -E -u tc $0 $*
+if [ "$(id -u)" = 0 ];then
+  sudo -E -u tc "$0" "$@"
   exit $?
 fi
 
 # if not user tc, quit
 [ "$(whoami)" != "tc" ] && { 1>&2 echo "$0: Must de run as user 'tc'"; exit 1; }
 
-if [ -f "$(dirname $0)/dsas_common.sh" ]; then
-  . $(dirname $0)/dsas_common.sh
+if [ -f "$(dirname "$0")/dsas_common.sh" ]; then
+  # shellcheck source=append/usr/local/sbin/dsas_common.sh
+  . "$(dirname "$0")/dsas_common.sh"
 else
   1>&2 echo "Common functions not found !!"
   exit 1
@@ -40,7 +46,7 @@ RESTORE=0
 APPLY=0
 BKP=""
 PASSWD=""
-OPTS=""
+
 while [ "$#" -gt 0 ]; do
   case $1 in
     -r|--restore) RESTORE=1 ;;
@@ -57,44 +63,47 @@ done
 [ -z "$BKP" ] && BKP="/tmp/dsas_backup.tgz"
 
 blowfish_encrypt(){
-  cat << EOD | /usr/bin/bcrypt -c $1 2> /dev/null  
+  cat << EOD | /usr/bin/bcrypt -c "$1" 2> /dev/null  
 $2
 $2
 EOD
 }
 
 blowfish_decrypt(){
-  cat << EOD | /usr/bin/bcrypt -o $1.bfe 2> /dev/null > $1
+  cat << EOD | /usr/bin/bcrypt -o "$1.bfe" 2> /dev/null > "$1"
 $2
 EOD
 }
 
 if [ "$RESTORE" -eq 0 ]; then
   # Create the backup on the machine haut
-  (umask 077; sudo sudo -u haut ssh tc@$INTERCO_HAUT sudo tar -C / -c -z -f - $FILES > /tmp/haut.tgz)
-  [ -n "$PASSWD" ] && (umask 077; cd /tmp; blowfish_encrypt haut.tgz $PASSWD)
+  # shellcheck disable=SC2024
+  # shellcheck disable=SC2086
+  (umask 077; sudo sudo -u haut ssh "tc@$INTERCO_HAUT" sudo tar -C / -c -z -f - $FILES > /tmp/haut.tgz)
+  [ -n "$PASSWD" ] && (umask 077; cd /tmp || exit 1; blowfish_encrypt haut.tgz "$PASSWD")
   
   # Get the backup for the machine bas
+  # shellcheck disable=SC2024
+  # shellcheck disable=SC2086
   (umask 077; sudo tar -C / -c -z -f - $FILES > /tmp/bas.tgz)
-  [ -n "$PASSWD" ] && (umask 077; cd /tmp; blowfish_encrypt bas.tgz $PASSWD)
+  [ -n "$PASSWD" ] && (umask 077; cd /tmp || exit 1; blowfish_encrypt bas.tgz "$PASSWD")
 
   # Create the backup file
   [ -f "$BKP" ] && /bin/rm -f $BKP  
   if [ -z "$PASSWD" ]; then
-    (umask 077; cd /tmp; tar -czf $BKP haut.tgz bas.tgz)
+    (umask 077; cd /tmp || exit 1; tar -czf $BKP haut.tgz bas.tgz)
   else
-    (umask 077; cd /tmp; tar -czf $BKP haut.tgz.bfe bas.tgz.bfe)
+    (umask 077; cd /tmp || exit 1; tar -czf $BKP haut.tgz.bfe bas.tgz.bfe)
   fi
 
   # Remove temporary files
-  (cd /tmp; /bin/rm -f haut.tgz bas.tgz haut.tgz.bfe bas.tgz.bfe)
+  (cd /tmp || exit 1; /bin/rm -f haut.tgz bas.tgz haut.tgz.bfe bas.tgz.bfe)
 else
   # Remove existing files
-  (cd /tmp; /bin/rm -f haut.tgz bas.tgz haut.tgz.bfe bas.tgz.bfe)
+  (cd /tmp || exit 1; /bin/rm -f haut.tgz bas.tgz haut.tgz.bfe bas.tgz.bfe)
 
   # Unpack the tar file
-  (umask 077; cd /tmp; tar -zxf $BKP)
-  [ $? -eq 0 ] || exit 1;
+  (umask 077; cd /tmp || exit 1; tar -zxf $BKP) || exit 1
 
   if [ -z "$PASSWD" ]; then
     [ -f "/tmp/haut.tgz" ] || { 1>&2 echo "Backup corrupted or encrypted"; exit 1; }
@@ -104,20 +113,20 @@ else
     [ -f "/tmp/bas.tgz.bfe" ] || { 1>&2 echo "Backup corrupted or not encrypted"; exit 1; }
 
     # Decrypt the files 
-    (umask 077; cd /tmp; blowfish_decrypt haut.tgz $PASSWD)
-    [ $? -eq 0 ] || { 1>&2 echo "Can not decrypt the backup. Check the password"; exit 1; }
-    (umask 077; cd /tmp; blowfish_decrypt bas.tgz $PASSWD)
-    [ $? -eq 0 ] || { 1>&2 echo "The backup is corrupted"; exit 1; }
+    (umask 077; cd /tmp || exit 1; blowfish_decrypt haut.tgz "$PASSWD") || \
+        { 1>&2 echo "Can not decrypt the backup. Check the password"; exit 1; }
+    (umask 077; cd /tmp || exit 1; blowfish_decrypt bas.tgz "$PASSWD") || \
+        { 1>&2 echo "The backup is corrupted"; exit 1; }
   fi
 
   # Control the contents of the tar files and only allow files in the list $FILES
   for bkp in /tmp/bas.tgz /tmp/haut.tgz; do
     for file in $(tar tzf $bkp); do
       for p in $FILES; do
-        if [ "${p%/}" == "$p" ]; then
-          [ "$file" == "$p" ] && continue 2  # legal file
+        if [ "${p%/}" = "$p" ]; then
+          [ "$file" = "$p" ] && continue 2  # legal file
         else
-          [ "${file:0:${#p}}" == "$p" ] && continue 2  # legal directory
+          [ "${file:0:${#p}}" = "$p" ] && continue 2  # legal directory
         fi
       done
       { 1>&2 echo "The backup contains illegal files"; exit 1; }
@@ -125,11 +134,11 @@ else
   done
 
   # The value of dsas->config->users->first should be preserved 
-  first=$(xmllint --xpath 'string(dsas/config/users/first)' $VAR/dsas_conf.xml)
+  first=$(xmllint --xpath 'string(dsas/config/users/first)' "$VAR/dsas_conf.xml")
 
   # Unpack the files on machine haut
-  cat /tmp/haut.tgz | (sudo sudo -u haut ssh tc@$INTERCO_HAUT sudo tar -C / -x -z -f -)
-  [ $? -eq 0 ] || { 1>&2 echo "Can not transfer the backup to the machine haut"; exit 1; }
+  (sudo sudo -u haut ssh "tc@$INTERCO_HAUT" sudo tar -C / -x -z -f -) < /tmp/haut.tgz || \
+      { 1>&2 echo "Can not transfer the backup to the machine haut"; exit 1; }
 
   # Unpack the files on machine bas
   (sudo tar -C / -x -z -f /tmp/bas.tgz)
@@ -141,55 +150,54 @@ else
   else
     args="$args <first>$first</first>"
   fi
-  for arg in $(xmllint --xpath "dsas/config/users/*" $VAR/dsas_conf.xml); do
+  for arg in $(xmllint --xpath "dsas/config/users/*" "$VAR/dsas_conf.xml"); do
     [[ "$arg" =~ "^<first" ]] && continue
     args="$args$arg"
   done
   args="$args\nsave"
-  echo -e "$arg" | xmllint --shell $VAR/dsas_conf.xml > /dev/null 2>&1
+  echo -e "$arg" | xmllint --shell "$VAR/dsas_conf.xml" > /dev/null 2>&1
 
   # The installed users need to be updated with adduser/deluser to correspond to
   # the users in the xml config file, but only on the machine bas
   while read -r line; do
-    user=$(echo $line | cut -d: -f1)
-    uid=$(echo $line | cut -d: -f3)
-    [ $uid -lt 1000 ] && continue
-    [ "$user" == "tc" ] && continue
-    [ "$user" == "bas" ] && continue
-    [ "$user" == "haut" ] && continue
-    [ "$user" == "verif" ] && continue
-    [ "$user" == "nobody" ] && continue
+    user=$(echo "$line" | cut -d: -f1)
+    uid=$(echo "$line" | cut -d: -f3)
+    [ "$uid" -lt 1000 ] && continue
+    [ "$user" = "tc" ] && continue
+    [ "$user" = "bas" ] && continue
+    [ "$user" = "haut" ] && continue
+    [ "$user" = "verif" ] && continue
+    [ "$user" = "nobody" ] && continue
     # Have an added user
     id=1
     while :; do
-      _user=$(xmllint --xpath "string(dsas/config/users/user[$id]/username)" $VAR/dsas_conf.xml)
+      _user=$(xmllint --xpath "string(dsas/config/users/user[$id]/username)" "$VAR/dsas_conf.xml")
       [ -z "$_user" ] && break
-      [ "$user" == "$_user" ] && continue 2
-      id=$(($id + 1))
+      [ "$user" = "$_user" ] && continue 2
+      id=$((id + 1))
     done
-    sudo deluser $user
+    sudo deluser "$user"
   done < /etc/passwd
   id=1
   while :; do
-    _user=$(xmllint --xpath "string(dsas/config/users/user[$id]/username)" $VAR/dsas_conf.xml)
+    _user=$(xmllint --xpath "string(dsas/config/users/user[$id]/username)" "$VAR/dsas_conf.xml")
     [ -z "$_user" ] && break
-    if ! cut -f1 -d: /etc/passwd | grep -x -q $_user; then
-      sudo adduser -G users -h $DSAS_HOME/$_user -s /bin/sh -D $_user
+    if ! cut -f1 -d: /etc/passwd | grep -x -q "$_user"; then
+      sudo adduser -G users -h "$DSAS_HOME/$_user" -s /bin/sh -D "$_user"
     fi
-    id=$(($id + 1))
+    id=$((id + 1))
   done
 
   # Save the restored files to the active configuration.   
-  /usr/bin/filetool.sh -b 2>&1 > /dev/null
-  [ $? -eq 0 ] || { 1>&2 echo "Error running filetool"; exit 1; }
+  /usr/bin/filetool.sh -b > /dev/null 2>&1 || { 1>&2 echo "Error running filetool"; exit 1; }
 
   # Apply the configuration if requested
   if [ "$APPLY" -ne 0 ]; then
-    sudo /etc/init.d/services/dsas apply 2>&1 > /dev/null
-    [ $? -eq 0 ] || { 1>&2 echo "Error applying the configuration"; exit 1; }
+    sudo /etc/init.d/services/dsas apply > /dev/null 2>&1 || \
+        { 1>&2 echo "Error applying the configuration"; exit 1; }
   fi
 
   # Remove temporary files
-  (cd /tmp; /bin/rm -f haut.tgz bas.tgz haut.tgz.bfe bas.tgz.bfe)
+  (cd /tmp || exit 1; /bin/rm -f haut.tgz bas.tgz haut.tgz.bfe bas.tgz.bfe)
 fi
 

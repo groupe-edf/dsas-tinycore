@@ -1,11 +1,17 @@
 #! /bin/sh
+# Busybox ash not supported. Use posix SH and disable a couple of
+# ash extensions I use
+#
+# shellcheck shell=sh
+# shellcheck disable=SC2039
 
-if [ -f "$(dirname $0)/dsas_common.sh" ]; then
+if [ -f "$(dirname "$0")/dsas_common.sh" ]; then
   # Only the $LOG variable is needed
-  . $(dirname $0)/dsas_common.sh
+  # shellcheck source=append/usr/local/sbin/dsas_common.sh
+  . "$(dirname "$0")/dsas_common.sh"
 else
   echo "Common functions not found !!"
-  exit -1
+  exit 1
 fi
 
 # Maximum number of logs to keep
@@ -20,11 +26,11 @@ rotate_logs() {
 }
 
 if [ "$#" -gt 0 ]; then
-  for logfile in $*; do
-    rotate_logs $logfile
+  for logfile in "$@"; do
+    rotate_logs "$logfile"
   done
 else
-  for logfile in $(find $LOG -maxdepth 1 -name "*.log"); do
-    rotate_logs $logfile
-  done
+  while IFS= read -r -d '' logfile; do
+    rotate_logs "$logfile"
+  done < <(find "$LOG" -maxdepth 1 -name "*.log" -print0)
 fi
