@@ -152,20 +152,19 @@ get_tcz() {
     dep=$target.dep
     if test ! -f "$target"; then
       if test -f "$pkg_dir/$package.pkg"; then
-        # shemmcheck disable=SC2030
-        (_old="$extract"; extract="$build"; build_pkg "$package"; extract=$_old )
+        # shellcheck disable=SC2030
+        (_old="$extract"; extract="$build"; build_pkg "$package"; extract="$_old" )
       elif test -f "$tce_dir/$package.tcz"; then
-        msg fetching package "$package" ...
+        msg "fetching package $package ..."
         cp "$tce_dir/$package.tcz" "$target"
         if ! test -f "$tce_dir/$package/tcz.dep"; then
           touch "$tce_dir/$package.tcz.dep"
         fi
       else
-        msg fetching package "$package" ...
-        $curl_cmd -o "$target $tcz_url/$package.tcz" || exit 1
+        msg "fetching package $package ..."
+        $curl_cmd -o "$target" "$tcz_url/$package.tcz" || exit 1
       fi
     fi
-
     if test ! -f "$dep"; then
       msg "fetching dep list of $package ..."
       if test -f "$tce_dir/$package.tcz.dep"; then
@@ -173,16 +172,13 @@ get_tcz() {
       else
          $curl_cmd -o "$dep" "$tcz_url/$package.tcz.dep" || touch $dep
       fi
-      grep -q 404 "$dep" && >$dep
-      if test -s "$dep"; then
-        get_tcz "$(sed -e s/.tcz$// "$dep")"
-      fi
+      grep -q 404 "$dep" || get_tcz $(sed -e s/.tcz$// "$dep")
     fi
   done
 }
 
 install_tcz() {
-    get_tcz "$@"
+    get_tcz $@
     exit_if_nonroot
     for package; do 
         target=$tcz_dir/$package.tcz
@@ -199,7 +195,7 @@ install_tcz() {
             fi
             dep=$target.dep
             if test -s "$dep"; then
-              install_tcz "$(sed -e s/.tcz$// "$dep")"
+              install_tcz $(sed -e s/.tcz$// "$dep")
             fi
         fi  
     done
