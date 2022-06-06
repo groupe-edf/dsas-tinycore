@@ -873,7 +873,13 @@ EOF
             [ -d "$(dirname i"$DSAS_BAS/$pool/$_file")" ] || mkdir "$(dirname "$DSAS_BAS/$pool/$_file")"
 
             if [ "$antivirus" == "true" ]; then
-              if ar p "$DSAS_HAUT/$pool/$_file" | clamdscan - >& /dev/null; then
+              status=0
+              # clamav won't recognize the stream type if just "ar p" is used.
+              # Need to treat each file in the archive individually
+              while read -r _df; do
+                ar p "$DSAS_HAUT/$pool/$_file" "$_df" | clamdscan - > /dev/null 2>&1 || { status=4; break; }
+              done < <(ar t "$DSAS_HAUT/$pool/$_file")
+              if [ "$status" = "0" ]; then
                 msgline "$DSAS_HAUT/$pool/$_file" 0
                 ln "$DSAS_HAUT/$pool/$_file" "$DSAS_BAS/$pool/$_file"
               else
