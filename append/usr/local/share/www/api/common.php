@@ -7,6 +7,13 @@ define("_DSAS_VAR", "/var/dsas");
 define("_DSAS_LOG", _DSAS_HOME . "/log");
 define("_DSAS_XML", _DSAS_VAR . "/dsas_conf.xml");
 
+
+/**
+ * Returns a string with the path to the A certificate bundle of the machine
+ *
+ * @return string
+ *     A string with the the absolute path of the CA certificate bundle
+ */
 function dsas_ca_file() : string {
   foreach (["/etc/ssl/ca-bundle.crt", "/etc/ssl/ca-certificates.crt",
            "/usr/local/etc/ssl/ca-bundle.crt", "/usr/local/etc/ssl/ca-certificates.crt"] as $f) {
@@ -16,6 +23,20 @@ function dsas_ca_file() : string {
   return "";
 }
 
+/**
+ * Returns true if an active session exists for the requested user. If the current
+ * this is more than 10 minutes since the last call to this function. The user is
+ * automatically logged out
+ *
+ * @param bool $update_timeout
+ *     If false the call to this function does not update the inactivity counter. This
+ *     allows testing if the user is logged in from status updates, etc
+ * @param bool $admin_only
+ *     If true, this function will always return false for non administrator uses
+ * @return bool
+ *     Returns true if a current session is active and last activity was less than 10
+ *     minutes ago
+ */
 function dsas_loggedin(bool $update_timeout = true, bool $admin_only = true) : bool {
   // Initialize the session, ignoring uninitalised session ids
   ini_set("session.use_strict_mode", "1");
@@ -44,6 +65,11 @@ function dsas_loggedin(bool $update_timeout = true, bool $admin_only = true) : b
     return true;
 }
 
+/**
+ * Return true is the user of the current session is an administrator
+ *
+ * @return bool
+ */
 function dsas_is_admin() : bool {
   $dsas = simplexml_load_file(_DSAS_XML);
   if ($dsas === false)
@@ -59,6 +85,14 @@ function dsas_is_admin() : bool {
   return false;
 }
 
+/**
+ * Return true is the user requested is marked as active
+ *
+ * @param string $user
+ *     A string that might contain ther username of a user in the XML configuration file
+ * @return bool
+ *     Returns true if the user is both in the XML both and marked as active
+ */
 function dsas_user_active(string $user) : bool {
   $dsas = simplexml_load_file(_DSAS_XML);
   if ($dsas === false)
@@ -75,7 +109,12 @@ function dsas_user_active(string $user) : bool {
 }
 
 /**
+ * A wrapper around proc_open to allow the control of linux procesus to the local
+ * machine. It should have arguments passed as an array to prevent the process
+ * spawning a shell that might be attacked
+ *
  * @param array<string> $args list of arguments to pass to proc_open
+ * @param string $cwd
  * @param array<string> $stdin An array of strings representing line by line the input
  * @return array{retval: int, stdout: string, stderr: string} 
  */
@@ -145,6 +184,16 @@ function dsas_exec(array|string $args, string $cwd = null, array $stdin = []) : 
   }
 }
 
+/**
+ * Wrapper around the real function to test the user password. Now just simplified to use PAM
+ *
+ * @param string $user
+ *     The username to test
+ * @param string $pass
+ *     The password to test
+ * @return
+ *     Returns true if user and password are valid. Waiting 3 seconds to return false otherwise
+ */
 function dsas_checkpass(string $user, string $pass) : bool {
     if (pam_auth($user, $pass, $error, false, "php"))
       return true;
@@ -152,6 +201,14 @@ function dsas_checkpass(string $user, string $pass) : bool {
       return false;
 }
 
+/**
+ * A function to impose password complexity rules
+ *
+ * @param string $passwd
+ *     The password to have its complexity tested
+ * @return bool
+ *     Returns true if password is of valid complexity
+ */
 function complexity_test(string $passwd) : bool {
    // Passwords must be at least 8 characters long and contain at least 3 of LUDS
    if (strlen($passwd) < 8)
@@ -185,6 +242,13 @@ function interco_haut() : string {
   return "haut";
 }
 
+/**
+ * A function to test whether a password change should be forced. This allows the default
+ * password to be forced to be changed
+ *
+ * @return bool
+ *     Returns true if the user must change their password
+ */
 function force_passwd() : bool {
   $dsas = simplexml_load_file(_DSAS_XML);
   if ($dsas !== false && $dsas->config->users->first == 'true')
@@ -193,7 +257,17 @@ function force_passwd() : bool {
 }
 
 /**
- * @return array{retval: int, stdout: string, stderr: string} 
+ * Function to change a users password. Users are controlled as local linux users
+ *
+ * @param string $name
+ *     The username to have their password changes
+ * @param string $passwd
+ *     The password to change to
+ * @param string $hash
+ *     The hash type to used. By default 'sha512'
+ * @return array{retval: int, stdout: string, stderr: string}
+ *     A keyed array containg the output of the attempted password change. 'retval' is zero if
+ *     sucessful 
  */
 function change_passwd(string $name, string $passwd, string $hash = "sha512") : array {
  // Remove all white space to avoid RCE. Space illegal in username and password
@@ -243,12 +317,29 @@ function change_passwd(string $name, string $passwd, string $hash = "sha512") : 
   return ["retval" => $retval, "stdout" => "", "stderr" => $stderr];
 }
 
+/**
+ * Converts a IPv4 mask like '255.255.255.0' into CIDR format, like '24'. This fnction
+ * does no error checking and it is assuming the mask is already tested as valid
+ *
+ * @param string $mask
+ *     The mask to convert to CIDR format
+ * @return string
+ *     The mask in CIDR format 
+ */
 function mask2cidr(string $mask) : string {
   $long = ip2long($mask);
   $base = ip2long("255.255.255.255");
   return (string)(32-log(($long ^$base)+1,2));
 }
 
+/**
+ * Returns the IP address and mask in CIDR format of a given interface
+ *
+ * @param string $interface
+ *     A valid interface on the local machine. For example 'eth0'
+ * @return string
+ *     The ip address of the interface and its mask in CIDR format
+ */
 function ip_interface(string $interface) : string{  
   $pattern1 = "/inet addr:(\d+\.\d+\.\d+\.\d+)/";
   $pattern2 = "/Mask:(\d+\.\d+\.\d+\.\d+)/";
@@ -270,9 +361,11 @@ function ip_interface(string $interface) : string{
     return "";                            
 }             
 
-
 /**
+ * Returns a string array of the non trival interfaces on the local machine
+ * 
  * @return array<int, array{name: string, net: string}>
+ *    Return an array where each element is an interface and its IP address
  */
 function get_ifaces() : array {                                                          
   $handle = opendir("/sys/class/net");                                          
@@ -296,6 +389,15 @@ function get_ifaces() : array {
   return $ifaces;                                                               
 }                                                                               
 
+/**
+ * A function to test whether a string representatio of an IPv4 address is valid. The
+ * string can be with or without the mask in CIDR format
+ *
+ * @param string $addr
+ *     The IP address to check if it is valid
+ * @return bool $nomask
+ *     Is true if no mask is used, otherwise $addr must be in CIDR format
+ */
 function ip_valid(string $addr, bool $nomask) : string{
   $addr = trim($addr);
   if ($nomask || empty(strpos($addr, "/"))){
@@ -329,6 +431,14 @@ function ip_valid(string $addr, bool $nomask) : string{
   return "";
 }
 
+/**
+ * A function to test whether a string is a valid IP adress or domain name
+ *
+ * @param string $addr
+ *     The address to test
+ * @return sting
+ *     Returns and empty strig if valid, otherwise the error in the return value
+ */
 function inet_valid(string $addr) : string {
   # If it starts in a number, it's an IP address
   if (is_numeric($addr[0]))
@@ -337,6 +447,15 @@ function inet_valid(string $addr) : string {
     return (is_valid_domain($addr) ? "" : "The address is invalid");
 }
 
+/**
+ * Tests whether a URI is valid, having a protocol that is supported; Protocol must be
+ * one of ftp, ftps, sftp, http or https 
+ *
+ * @param string $uri
+ *     The URI to test
+ * @return string
+ *     Returns an empty string id the URI is valid, otehriwse ther error in the return value
+ */
 function uri_valid(string $uri) : string {
   $tmp = preg_split('!://!', $uri);
   if (!$tmp || ($tmp[0] != "ftp" && $tmp[0] != "ftps" && $tmp[0] != "sftp" && 
@@ -350,7 +469,13 @@ function uri_valid(string $uri) : string {
 }
 
 /**
- * @return array<int, string> An array of log file
+ * Return an array with each element being one of the rotated log files desired
+ *
+ * @param string $_file
+ *     The base name of the logfile to return. The log $file is return in the first place
+ *     $file.0 in the second if it exists, $file.1 in the next, etc  
+ * @return array<int, string> 
+ *     An array of log files
  */
 function dsas_get_logs(string $_file = _DSAS_LOG . "/dsas_verif.log") : array {
   $logs = array();
@@ -362,6 +487,17 @@ function dsas_get_logs(string $_file = _DSAS_LOG . "/dsas_verif.log") : array {
   return $logs;
 }
 
+/**
+ * Returns a string with the request part of a log file. This allow incremental download 
+ * new log elements to the file, skipping the parts alreay downloaded
+ *
+ * @param int $len
+ *     The number of bytes of the file to skip
+ * @param string $_file
+ *     The log to download from
+ * @return string
+ *     The new elements of the log file
+ */
 function dsas_get_log(int $len = 0, string $_file = _DSAS_LOG . "/dsas_verif.log") : string {
   $logs = "";
   if (is_file($_file)) {
@@ -375,8 +511,13 @@ function dsas_get_log(int $len = 0, string $_file = _DSAS_LOG . "/dsas_verif.log
 }
 
 /**
+ * A function to create a new SSL certificate and its corresponding CSR for the
+ * web site; A 2048 bit RSA key is used a SHA256 digest.
+ *
  * @param array<string, string> $options
+ *     An array with the X509 options of the certificate to create
  * @return array{pub: string, priv: string, csr: string}
+ *     An array with the various newly created certificates
  */
 function renew_web_cert(array $options, int $days) : array {
   foreach (array('countryName', 'stateOrProvinceName', 'localityName',
@@ -409,6 +550,11 @@ function renew_web_cert(array $options, int $days) : array {
 }
 
 /**
+ * Parse PEM encoded string as a set of X509 certificates. Returns an array
+ * with each element a X509 certificate
+ *
+ * @param string $certfile
+ *     A string contains a concatenated set of X509 certificates in PEM formats
  * @return array<int, array<string, mixed>>
  */
 function parse_x509(string $certfile) : array {
@@ -447,9 +593,11 @@ function parse_x509(string $certfile) : array {
     return []; 
 }
 
-
 /**
+ * Convert to UTF8 to be json safe. Array return value
+ *
  * @param array<string, mixed> $d
+ *    Array or string to convert
  * @return array<string, mixed>
  */
 function utf8ize(array $d) : array {
@@ -459,7 +607,10 @@ function utf8ize(array $d) : array {
 }
 
 /**
+ * Convert to UTF8 to be json safe. Mutable return value
+ *
  * @param array<string, mixed> $d
+ *    Array or string to convert
  * @return array<string, mixed>
  */
 function _utf8ize(array|string|int $d) : array|string|int {
