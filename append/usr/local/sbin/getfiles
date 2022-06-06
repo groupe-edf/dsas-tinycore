@@ -202,7 +202,7 @@ getdirectory() {
 
   # There might be empty directories lying about. Remove them. 
   while IFS= read -r -d '' _dir; do
-    [ -z "$($as_haut /bin/ls -A "$_dir")" ] && { 1>&2 myecho "Removing empty directory $_dir"; $as_haut /bin/rmdir "$_dir"; }
+    [ -z "$($as_haut /bin/ls -A "$_dir")" ] && { myecho "Removing empty directory $_dir"; $as_haut /bin/rmdir "$_dir"; }
   done < <($as_haut find "$DSAS_HAUT/$dir" -mindepth 1 -type d -print0)
 
   exit 0
