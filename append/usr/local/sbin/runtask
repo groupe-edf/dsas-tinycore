@@ -81,6 +81,8 @@ while [ "$#" -gt 0 ]; do
       exit 0
       ;;
     -f|--force) force="true"; ;;
+    -v|--verbose) verbose=1; opts="$opts -v"; ;;
+    -q|--quiet) verbose=0; opts="$opts -q"; ;;
     -c|--clamav) clamav=1; opts="$opts -c"; ;;
     -*) opts="$opts $1"; ;;
      *) ids="$ids $1" ;;

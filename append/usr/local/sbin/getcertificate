@@ -23,18 +23,18 @@ get_certificate(){
     cert=$(xmllint --xpath "string(dsas/certificates/certificate[$i]/pem)" "$CONF")
     [ -z "$cert" ] && break
     type=$(xmllint --xpath "string(dsas/certificates/certificate[$i]/type)" "$CONF")
-    echo "$cert" > /tmp/cert.$$
+    echo "$cert" > /tmp/cert.$2
 
     case $type in
       x509)
-        f=$(openssl x509 -in /tmp/cert.$$ -noout -fingerprint -sha256 -inform pem  | cut -d= -f2 | sed -e "s/://g" | tr "[:upper:]" "[:lower:]")
+        f=$(openssl x509 -in /tmp/cert.$2 -noout -fingerprint -sha256 -inform pem  | cut -d= -f2 | sed -e "s/://g" | tr "[:upper:]" "[:lower:]")
         [ "$f" == "$1" ] && { echo $i; return; }
         ;;
       gpg)
-        gpg -v < /tmp/cert.$$ 2>&1 | grep -q "$1" && { echo "$i"; return; }
+        gpg -v < /tmp/cert.$2 2>&1 | grep -q "$1" && { echo "$i"; return; }
         ;;
       pubkey)
-        tr -d "\n" < /tmp/cert.$$ | tr -d "\r" | sed -e "s/^-----BEGIN [A-Z ]*PUBLIC KEY-----//" | \
+        tr -d "\n" < /tmp/cert.$2 | tr -d "\r" | sed -e "s/^-----BEGIN [A-Z ]*PUBLIC KEY-----//" | \
             sed -e "s/-----END [A-Z ]*PUBLIC KEY-----$//" | base64 -d | sha256sum | cut -f1 -d" " | \
             grep -q "$1" && { echo "$i"; return; }
         ;;
@@ -42,7 +42,7 @@ get_certificate(){
         1>&2 echo "Unknown certificate type"
         ;;
     esac
-    /bin/rm /tmp/cert.$$
+    /bin/rm /tmp/cert.$2
     i=$((i + 1))
   done
 
@@ -61,10 +61,10 @@ get_certificate(){
       else
         cert="$cert\n$line"
         incert="false"
-        echo -e "$cert" > /tmp/cert.$$
-        f=$(openssl x509 -in /tmp/cert.$$ -noout -fingerprint -sha256 -inform pem  | cut -d= -f2 | sed -e "s/://g" | tr "[:upper:]" "[:lower:]")
+        echo -e "$cert" > /tmp/cert.$2
+        f=$(openssl x509 -in /tmp/cert.$2 -noout -fingerprint -sha256 -inform pem  | cut -d= -f2 | sed -e "s/://g" | tr "[:upper:]" "[:lower:]")
         [ "$f" == "$1" ] && { echo 0; return; }
-        /bin/rm /tmp/cert.$$
+        /bin/rm /tmp/cert.$2
       fi
     else
       cert="$cert\n$line"

@@ -12,6 +12,7 @@ else
   1>&2 echo "Common functions not found !!"
   exit 1
 fi
+getcert=$(dirname "$0")/getcertificate
 
 # Default options
 logfile="$LOG/dsas_verif.log"
@@ -61,7 +62,7 @@ msgline() {
   local file status md5 _file d
   file=$1
   status=$2
-  md5=$(md5sum "$file" | sed -e "s:  -$file$:g")
+  md5=$(md5sum "$file" | sed -e "s:  $file$::g")
   _file=$(echo "$file" | sed -e "s:^${DSAS_HAUT}/::g")
   d=$(date --utc '+%Y%m%d%H%M%S')
   case $status in
@@ -111,10 +112,10 @@ check_checksum() {
   local chk
 
   case $3 in
-    sha512) chk=$(sha512sum "$1" | sed -e "s:  -$1$:g") ;;
-    sha256) chk=$(sha256sum "$1" | sed -e "s:  -$1$:g") ;;
-    sha) chk=$(sha1sum "$1" | sed -e "s:  -$1$:g") ;;
-    md5) chk=$(md5sum "$1" | sed -e "s:  -$1$:g") ;;
+    sha512) chk=$(sha512sum "$1" | sed -e "s:  $1$:g") ;;
+    sha256) chk=$(sha256sum "$1" | sed -e "s:  $1$:g") ;;
+    sha) chk=$(sha1sum "$1" | sed -e "s:  $1$:g") ;;
+    md5) chk=$(md5sum "$1" | sed -e "s:  $1$:g") ;;
     *) return 0 ;;
   esac
   [ "$chk" != "$2" ] && return 0
@@ -452,7 +453,7 @@ verifdirectory() {
   while :; do
     fprint=$(xmllint --xpath "string(dsas/tasks/task[$id]/cert[$j]/fingerprint)" "$CONF")
     [ -z "$fprint" ] && break;
-    idx=$(getcertificate "$fprint")
+    idx=$($getcert "$fprint" $$)
     [ -z "$idx" ] && { 1>&2 echo "Certificate used by task($id) not found !!"; cleanup_and_exit 1 "$tempdir"; }
     if [ "$idx" -eq 0 ]; then
       if [ "$type" == "liveupdate" ]; then
@@ -474,7 +475,8 @@ verifdirectory() {
         if [ "$type" == "liveupdate" ]; then
           cat "/tmp/cert.$$" >> "$tempdir/cert.1"
         else
-          /bin/mv -f "/tmp/cert.$$" "$tempdir/cert.$((i++))"
+          /bin/mv -f "/tmp/cert.$$" "$tempdir/cert.$i"
+          i=$((i+1))
         fi
       fi
     fi
@@ -620,7 +622,7 @@ verifrepo() {
 
   tempdir=$(mktemp -d)
   fprint=$(xmllint --xpath "string(dsas/tasks/task[$id]/cert[1]/fingerprint)" "$CONF")
-  idx=$(getcertificate "$fprint")
+  idx=$($getcert "$fprint" $$)
   [ -z "$idx" ] && { 1>&2 echo "Certificate used by task\($id\) not found !!"; exit 1; }
   /bin/mv "/tmp/cert.$$" "$tempdir/cert.0"
   gpg --dearmor "$tempdir/cert.0" > /dev/null 2>&1
@@ -746,7 +748,7 @@ verifdeb(){
   while :; do
     fprint=$(xmllint --xpath "string(dsas/tasks/task[$id]/cert[$j]/fingerprint)" "$CONF")
     [ -z "$fprint" ] && break;
-    idx=$(getcertificate "$fprint")
+    idx=$($getcert "$fprint" $$)
     [ -z "$idx" ] && { 1>&2 echo "Certificate used by task($id) not found !!"; cleanup_and_exit 1 "$tempdir"; }
     gpg --no-default-keyring --keyring "$tempdir/keyring.gpg" --import /tmp/cert.$$ >& /dev/null
     j=$((j + 1))
@@ -912,7 +914,7 @@ passdirectory(){
   while IFS= read -r -d '' _d; do
     _d=${_d#"$DSAS_HAUT/"}   
     [ -d "$DSAS_BAS/$_d" ] || mkdir "$DSAS_BAS/$_d"
-  done < <(cdfind "$DSAS_HAUT/$dir" -type d -print0)
+  done < <(find "$DSAS_HAUT/$dir" -type d -print0)
 
   # Remove the files in our tree bas and not in haut.
   while IFS= read -r -d '' file; do

@@ -15,6 +15,7 @@ else
   1>&2 echo "Common functions not found !!"
   exit 1
 fi
+getcert=$(dirname "$0")/getcertificate
 
 as_haut="sudo sudo -E -u haut"
 _ldir="/opt/lftp"
@@ -111,7 +112,7 @@ lftp_ca_options() {
       "")  : ;;
       "self") opt="$opt set ssl:verify-certificate false;" ;;
       *)
-        idx=$(getcertificate "$ca_finger")
+        idx=$($getcert "$ca_finger" $$)
         cp /tmp/cert.$$ $_ldir/tmp/cert.$$
         chmod 644 $_ldir/tmp/cert.$$
         [ -z "$idx" ] || opt="$opt set ssl:ca-file /tmp/cert.$$; "
