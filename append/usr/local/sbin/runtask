@@ -156,7 +156,9 @@ else
   ids=$newids
 fi
 
-[ -z "$ids" ] && 1>&2 myecho "$0: No tasks to run !!"
+# If no tasks to run exit. This avoids the cleanup code below being
+# run if the crontab job runs before the XML file is restored on boot
+[ -z "$ids" ] && { 1>&2 myecho "$0: No tasks to run !!" ; exit 0; }
 
 # shellcheck disable=SC2086
 # shellcheck disable=SC2181
