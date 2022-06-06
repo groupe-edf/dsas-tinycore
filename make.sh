@@ -456,16 +456,16 @@ static)
   else
     msg "### Install phpstan via composer before continuing"
   fi
-  if which eslint> /dev/null 2>&1; then
+  if which eslint > /dev/null 2>&1; then
     eslint $append/usr/local/share/www/dsas.js
   else
     msg "### Install eslint before continuing"
   fi
   if which shellcheck > /dev/null 2>&1; then
-    shellcheck -x $append/usr/local/sbin/* \
-                  $append/etc/init.d/services/dsas \
-                  $append/etc/init.d/rcS.docker \
-                  make.sh
+    shellcheck -x "$append/usr/local/sbin/*" \
+                  "$append/etc/init.d/services/dsas" \
+                  "$append/etc/init.d/rcS.docker" \
+                  "make.sh"
   else
     msg "### Install shellcheck before continuing"
   fi
