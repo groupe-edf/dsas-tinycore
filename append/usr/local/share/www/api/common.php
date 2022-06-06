@@ -191,7 +191,7 @@ function dsas_exec(array|string $args, string $cwd = null, array $stdin = []) : 
  *     The username to test
  * @param string $pass
  *     The password to test
- * @return
+ * @return bool
  *     Returns true if user and password are valid. Waiting 3 seconds to return false otherwise
  */
 function dsas_checkpass(string $user, string $pass) : bool {
@@ -395,7 +395,7 @@ function get_ifaces() : array {
  *
  * @param string $addr
  *     The IP address to check if it is valid
- * @return bool $nomask
+ * @return string $nomask
  *     Is true if no mask is used, otherwise $addr must be in CIDR format
  */
 function ip_valid(string $addr, bool $nomask) : string{
@@ -436,7 +436,7 @@ function ip_valid(string $addr, bool $nomask) : string{
  *
  * @param string $addr
  *     The address to test
- * @return sting
+ * @return string
  *     Returns and empty strig if valid, otherwise the error in the return value
  */
 function inet_valid(string $addr) : string {
