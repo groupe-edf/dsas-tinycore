@@ -895,6 +895,7 @@ start_chroot(){
      # Create pty for chroot jail
      (umask 00022; mkdir -p  /opt/lftp/dev/pts)
      mount -t devpts devpts /opt/lftp/dev/pts -o ptmxmode=0666,newinstance
+     [ -e "/opt/lftp/dev/ptmx" ] || ln -r -s /opt/lftp/dev/pts/ptmx /opt/lftp/dev/ptmx
    fi
  fi
 }

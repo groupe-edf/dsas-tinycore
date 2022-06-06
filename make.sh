@@ -570,7 +570,7 @@ docker)
   # are installed to allow for files to be overwritten. Run as root 
   # and correct the ownership of files 
   msg append dsas files
-  rsync -rlptv "$append/$extract/"
+  rsync -rlptv "$append/" "$extract/"
   mkdir -p "$extract/home/tc"
   chown root.root "$extract"
   chmod 755 "$extract/home"
@@ -733,12 +733,11 @@ EOF
   { msg "Setting up lftp chroot jail"; chroot $extract /tmp/script; } || { error "Unexpected error ($?) in lftp chroot creation"; exit 1; }
   /bin/rm -f $extract/tmp/script
   mknod -m=666 $extract/opt/lftp/dev/null c 1 3
-  (cd "$extract/opt/lftp/dev/" || exit 1; ln -s pts/ptmx $extract/opt/lftp/dev/ptmx)
 
   # Add console timeout to all .profile files
   while IFS= read -r -d '' file; do
     echo "export TMOUT=300" >> "$file"
-  done < <(ind $extract -name ".profile" -print0)
+  done < <(find $extract -name ".profile" -print0)
 
   # customize boot screen
   cp -p ./boot/isolinux/boot.msg "$newiso/boot/"

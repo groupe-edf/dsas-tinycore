@@ -66,10 +66,10 @@ check_checksum() {
   local chk
 
   case $3 in
-    sha512) chk=$($as_haut cat "$1" | sha512sum - | sed -e "s/ -//g") ;;
-    sha256) chk=$($as_haut cat "$1" | sha256sum - | sed -e "s/ -//g") ;;
-    sha) chk=$($as_haut cat "$1" | sha1sum - | sed -e "s/ -$//g") ;;
-    md5) chk=$($as_haut cat "$1" | md5sum - | sed -e "s/ -$//g") ;;
+    sha512) chk=$($as_haut sha512sum "$1" | sed -e "s:  $1$::g") ;;
+    sha256) chk=$($as_haut sha256sum "$1" | sed -e "s:  $1$::g") ;;
+    sha) chk=$($as_haut sha1sum "$1" | sed -e "s:  $1$::g") ;;
+    md5) chk=$($as_haut md5sum "$1" | sed -e "s:  $1$::g") ;;
     *) return 0 ;;
   esac
   [ "$chk" != "$2" ] && return 0
@@ -274,6 +274,7 @@ getrepo() {
        for _file in $($as_haut find "$DSAS_HAUT/$dir/repodata" -type f) ; do
          _f=$(basename "$_file")
          [[ "$_f" =~ repomd.xml$ ]] && continue
+         [[ "$_f" =~ repomd.xml.asc$ ]] && continue
          $as_haut grep -q "$_f" "$DSAS_HAUT/$dir/repodata/repomd.xml" >& /dev/null && continue
          myecho "Removing stale file repodata/${_f}"
          $as_haut rm -f "$_file"

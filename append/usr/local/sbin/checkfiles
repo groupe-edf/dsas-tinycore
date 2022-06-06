@@ -112,10 +112,10 @@ check_checksum() {
   local chk
 
   case $3 in
-    sha512) chk=$(sha512sum "$1" | sed -e "s:  $1$:g") ;;
-    sha256) chk=$(sha256sum "$1" | sed -e "s:  $1$:g") ;;
-    sha) chk=$(sha1sum "$1" | sed -e "s:  $1$:g") ;;
-    md5) chk=$(md5sum "$1" | sed -e "s:  $1$:g") ;;
+    sha512) chk=$(sha512sum "$1" | sed -e "s:  $1$::g") ;;
+    sha256) chk=$(sha256sum "$1" | sed -e "s:  $1$::g") ;;
+    sha) chk=$(sha1sum "$1" | sed -e "s:  $1$::g") ;;
+    md5) chk=$(md5sum "$1" | sed -e "s:  $1$::g") ;;
     *) return 0 ;;
   esac
   [ "$chk" != "$2" ] && return 0
