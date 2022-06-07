@@ -243,9 +243,15 @@ function modal_errors(errors, feedback = false){
     }
 }
 
+function dsas_origin() {
+  // Can't just use window.location.origin as we might be wrapped in a WebSSL portal 
+  var s = String(window.location);
+  return s.substring(0, s.lastIndexOf("/") + 1);
+}
+
 function dsas_loggedin(update_timeout = true, is_admin = true){
     var uri;
-    uri  = new URL("api/login.php", window.location.origin);
+    uri  = new URL("api/login.php", dsas_origin());
     uri.search = new URLSearchParams({timeout: update_timeout, admin : is_admin});
     fetch(uri).then(response => {
         if (! response.ok)
@@ -281,11 +287,11 @@ function dsas_init_loggedin(){
         document.getElementById("inp_user").setAttribute("class", "form-control");
     });  
 
-    uri  = new URL("api/login.php", window.location.origin);
+    uri  = new URL("api/login.php", dsas_origin());
     uri.search = new URLSearchParams({admin : true });
     fetch(uri).then(response => {
         if (response.ok)
-            window.location = "/";
+            window.location = "index.html";
         else {
             uri.search = new URLSearchParams({admin : false });
             fetch(uri).then(response => {
@@ -467,7 +473,7 @@ function dsas_check_warnings(disablenav = false, redirect = true){
                 statusText: response.statusText});
     }).then(obj => {
         if ((obj.first == "true") && redirect)
-            window.location = "/passwd.html";
+            window.location = "passwd.html";
     }).catch(error => {
         fail_loggedin(error.statusText);
     });
@@ -576,7 +582,7 @@ function dsas_display_logs(all = false){
 
 function dsas_refresh_logs(all = false){
     // Only get the lines that have changed in the most recent log"
-    var uri = new URL("api/dsas-verif-logs.php", window.location.origin);
+    var uri = new URL("api/dsas-verif-logs.php", dsas_origin());
     uri.search = new URLSearchParams({REFRESH_LEN : DSASLogs.logs[0].length});
 
     fetch(uri).then(response => {
@@ -2112,7 +2118,7 @@ function dsas_backup(){
 
 function dsas_real_backup(){
     var passwd = document.getElementById("BackupPassword").value;
-    var uri = new URL("api/backup.php", window.location.origin);
+    var uri = new URL("api/backup.php", dsas_origin());
     uri.search = new URLSearchParams({passwd: passwd});
     fetch(uri).then(response => {
         if (response.ok) 
@@ -2267,14 +2273,16 @@ function dsas_display_help(){
             return Promise.reject({status: response.status, 
                 statusText: response.statusText});
     }).then(text => {
-    // If user text was passed here we'd need to sanitize it, but the documentation
-    // is supplied with the DSAS.  
+       // If user text was passed here we'd need to sanitize it, but the documentation
+        // is supplied with the DSAS. 
+        // FIXME Fortigate SSL VPN F***'s up here. Kludge to fix it. 
+        marked.setOptions({baseUrl: dsas_origin()});
         document.getElementById("Documentation").innerHTML = "<article class=\"markdown-body\">" + 
-        marked(text) + "</article>";
+        marked.parse(text).replace(/fgt_sslvpn.url_rewrite\(/g, '') + "</article>";
         dsas_help_toc();
     }).catch(error => {
         if (!fail_loggedin(error.statusText))
-            modal_message("Erreur pendant le chargement de la documentation : " + error.statusText);
+            modal_message(_("Error during documentation download : ") + error.statusText);
     });
 }
 
@@ -2552,7 +2560,7 @@ class multiLang {
                     document.cookie = "Language=" + _lang + "; expires=Fri 31 Dec 9999 23:59:59;SameSite=Lax";
                     for (let _head of document.getElementsByTagName("dsas-header")) 
                         _head.render();
-                    if (window.location.pathname === "/help.html") {
+                    if (window.location.pathname === "help.html") {
                         // Special case for help.html
                         window.location = "help.html?language=" + this.currentLanguage;
                     } else {
