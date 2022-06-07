@@ -870,7 +870,7 @@ EOF
           fi
 
           if [ "$status" -eq 0 ]; then
-            [ -d "$(dirname i"$DSAS_BAS/$pool/$_file")" ] || mkdir"$(dirname "$DSAS_BAS/$pool/$_file")"
+            [ -d "$(dirname i"$DSAS_BAS/$pool/$_file")" ] || mkdir "$(dirname "$DSAS_BAS/$pool/$_file")"
 
             if [ "$antivirus" == "true" ]; then
               if ar p "$DSAS_HAUT/$pool/$_file" | clamdscan - >& /dev/null; then
