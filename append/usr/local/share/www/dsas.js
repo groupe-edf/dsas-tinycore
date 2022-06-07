@@ -2846,56 +2846,63 @@ class DisplayLogs {
             this.view = this.holder.appendChild(document.createElement("div"));
 
         if (this.logs.length > 0) {
-            var lines;
-            var index;
-            var firstItem = Math.floor(this.holder.scrollTop / this.height);
-            var lastItem = firstItem + Math.ceil(this.holder.offsetHeight / this.height);
-            if (lastItem + 1 >= this.nitems)
-                lastItem = this.nitems - 1;
-            this.view.id = "view";
-            this.view.style.top = (firstItem * this.height) + "px";
-            this.view.style.position = "absolute";
-            this.curItem = firstItem;
+            if (this.logs[this.tab].length > 0) {
+                var lines;
+                var index;
+                var firstItem = Math.floor(this.holder.scrollTop / this.height);
+                var lastItem = firstItem + Math.ceil(this.holder.offsetHeight / this.height);
+                if (lastItem + 1 >= this.nitems)
+                    lastItem = this.nitems - 1;
+                this.view.id = "view";
+                this.view.style.top = (firstItem * this.height) + "px";
+                this.view.style.position = "absolute";
+                this.curItem = firstItem;
 
-            var pre;
-            if (this.filter) {
-                var line = 0;
-                lines = this.logs[this.tab].split("\n");
-                for (index = 0; index < lines.length; ++index) {
-                    if (this.filter(lines[index])) {
-                        if (line >= firstItem) {
-                            pre = document.createElement("pre");
-                            if ((this.tab == this.highlight["tab"]) && (line === this.highlight["line"])) 
-                                pre.className = "my-0 bg-info overflow-hidden";
-                            else
-                                pre.className = "my-0 " + this.color(lines[index]) + " overflow-hidden";      
-                            pre.innerHTML = (this.render ? this.render(lines[index]) : lines[index]);
-                            this.view.appendChild(pre);
+                var pre;
+                if (this.filter) {
+                    var line = 0;
+                    lines = this.logs[this.tab].split("\n");
+                    for (index = 0; index < lines.length; ++index) {
+                        if (this.filter(lines[index])) {
+                            if (line >= firstItem) {
+                                pre = document.createElement("pre");
+                                if ((this.tab == this.highlight["tab"]) && (line === this.highlight["line"])) 
+                                    pre.className = "my-0 bg-info overflow-hidden";
+                                else
+                                    pre.className = "my-0 " + this.color(lines[index]) + " overflow-hidden";      
+                                pre.innerHTML = (this.render ? this.render(lines[index]) : lines[index]);
+                                this.view.appendChild(pre);
+                            }
+                            line++;
+                            if (line > lastItem)
+                                break;
                         }
-                        line++;
-                        if (line > lastItem)
-                            break;
+                    }
+                } else {
+                    lines = this.logs[this.tab].split("\n");
+                    for (index = firstItem; index <= lastItem; ++index) {
+                        pre = document.createElement("pre");
+                        if ((this.tab == this.highlight["tab"]) && (index === this.highlight["line"])) 
+                            pre.className = "my-0 bg-info overflow-hidden";
+                        else
+                            pre.className = "my-0 " + this.color(lines[index]) + " overflow-hidden";
+                        pre.innerHTML = (this.render ? this.render(lines[index]) : lines[index]);
+                        this.view.appendChild(pre);
                     }
                 }
             } else {
-                lines = this.logs[this.tab].split("\n");
-                for (index = firstItem; index <= lastItem; ++index) {
-                    pre = document.createElement("pre");
-                    if ((this.tab == this.highlight["tab"]) && (index === this.highlight["line"])) 
-                        pre.className = "my-0 bg-info overflow-hidden";
-                    else
-                        pre.className = "my-0 " + this.color(lines[index]) + " overflow-hidden";
-                    pre.innerHTML = (this.render ? this.render(lines[index]) : lines[index]);
-                    this.view.appendChild(pre);
-                }
+                var pre = document.createElement("pre");
+                pre.className = "my-0 text-muted";
+                pre.innerHTML = _("&lt;Empty&gt;");
+                this.view.appendChild(pre);
             }
         }
-        document.getElementById("heightForcer").style.height = (this.nitems * this.height) + "px";
+        document.getElementById("heightForcer").style.height = ((this.nitems === 0 ? 1 : this.nitems) * this.height) + "px";
         if (this.hidescrollbar)
         // work around for non chrome browsers, hides the scrollbar
             this.holder.style.width = (this.holder.offsetWidth * 2 - this.view.offsetWidth) + "px";
     }
-}
+ }
 
 class DSASModal extends HTMLElement {
     constructor(){

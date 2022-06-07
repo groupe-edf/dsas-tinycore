@@ -253,7 +253,8 @@
     "SNMP Authentification Protocol" : "",
     "SNMP Privacy Password" : "",
     "SNMP Privacy Protocol" : "",
-    "Info : {0}" : ""
+    "Info : {0}" : "",
+    "&lt;Empty&gt;" : ""
   },
   "fr" : {
     "DSAS Version" : "Version du DSAS",
@@ -512,6 +513,7 @@
     "SNMP Authentification Protocol" : "Protocole SNMP d'authentication",
     "SNMP Privacy Password" : "Mot de passe SNMP de confidentialité",
     "SNMP Privacy Protocol" : "Protocole SNMP de confidentialité",
-    "Info : {0}" : "Info : {0}"
+    "Info : {0}" : "Info : {0}",
+    "&lt;Empty&gt;" : "&lt;Vide&gt;"
   }
 }
