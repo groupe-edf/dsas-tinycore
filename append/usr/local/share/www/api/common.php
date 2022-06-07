@@ -502,8 +502,10 @@ function dsas_get_log(int $len = 0, string $_file = _DSAS_LOG . "/dsas_verif.log
   $logs = "";
   if (is_file($_file)) {
     if ($fp = fopen($_file, "r")) {
-      fseek($fp, $len);
-      $logs = (string)fread($fp , (int)filesize($_file));
+      if ($len > 0)
+        fseek($fp, $len);
+      if (filesize($_file) > 0)
+        $logs = (string)fread($fp , (int)filesize($_file));
       fclose($fp);
     }
   }
