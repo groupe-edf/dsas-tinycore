@@ -2846,6 +2846,7 @@ class DisplayLogs {
             this.view = this.holder.appendChild(document.createElement("div"));
 
         if (this.logs.length > 0) {
+            var pre;
             if (this.logs[this.tab].length > 0) {
                 var lines;
                 var index;
@@ -2858,7 +2859,6 @@ class DisplayLogs {
                 this.view.style.position = "absolute";
                 this.curItem = firstItem;
 
-                var pre;
                 if (this.filter) {
                     var line = 0;
                     lines = this.logs[this.tab].split("\n");
@@ -2891,7 +2891,7 @@ class DisplayLogs {
                     }
                 }
             } else {
-                var pre = document.createElement("pre");
+                pre = document.createElement("pre");
                 pre.className = "my-0 text-muted";
                 pre.innerHTML = _("&lt;Empty&gt;");
                 this.view.appendChild(pre);
@@ -2902,7 +2902,7 @@ class DisplayLogs {
         // work around for non chrome browsers, hides the scrollbar
             this.holder.style.width = (this.holder.offsetWidth * 2 - this.view.offsetWidth) + "px";
     }
- }
+}
 
 class DSASModal extends HTMLElement {
     constructor(){
