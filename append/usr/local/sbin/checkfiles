@@ -151,8 +151,8 @@ mkdir() {
     while [ ! -d "$_d2" ]; do
       _d="$_d2"
       _d2=$(dirname "$_d2")
-    done      
-    /bin/mkdir -p "$(dirname "$2")"
+    done
+    /bin/mkdir -p "$1"
     chgrp -R "$grp" "$_d"
     chmod -R 770 "$_d"  
     shift
