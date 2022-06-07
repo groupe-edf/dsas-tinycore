@@ -23,6 +23,7 @@ rotate_logs() {
     [ -f "${1}.$((i-1))" ] && /bin/mv "${1}.$((i-1))" "${1}.$i"
   done
   [ -f "${1}" ] && /bin/mv "${1}" "${1}.1"
+  touch "${1}"
 }
 
 if [ "$#" -gt 0 ]; then
@@ -34,3 +35,7 @@ else
     rotate_logs "$logfile"
   done < <(find "$LOG" -maxdepth 1 -name "*.log" -print0)
 fi
+
+# Post rotate, need to send lighttpd a HUP so that the web error and access
+# logs are be found by the web server
+pkill -HUP lighttpd
