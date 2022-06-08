@@ -370,6 +370,8 @@ verifliveupdate(){
   for t in $grd; do
     while :; do
       IFS= read -r line || last="true"
+      # If I do what shellcheck wants this code fails !!
+      # shellcheck disable=SC2076
       if [ -n "$last" ] || [[ "$line" =~ "^\[File-.*\]" ]]; then
         [ -z "$last" ] && [ -z "$f" ] && { f=$(echo "$line" | sed -e "s/^\[File-\(.*\)\]\s*$/\1/g"); continue; }
         if [ -f "$basedir/$f" ]; then

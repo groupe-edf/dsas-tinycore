@@ -244,9 +244,9 @@ function modal_errors(errors, feedback = false){
 }
 
 function dsas_origin() {
-  // Can't just use window.location.origin as we might be wrapped in a WebSSL portal 
-  var s = String(window.location);
-  return s.substring(0, s.lastIndexOf("/") + 1);
+    // Can't just use window.location.origin as we might be wrapped in a WebSSL portal 
+    var s = String(window.location);
+    return s.substring(0, s.lastIndexOf("/") + 1);
 }
 
 function dsas_loggedin(update_timeout = true, is_admin = true){
@@ -2273,12 +2273,12 @@ function dsas_display_help(){
             return Promise.reject({status: response.status, 
                 statusText: response.statusText});
     }).then(text => {
-       // If user text was passed here we'd need to sanitize it, but the documentation
+        // If user text was passed here we'd need to sanitize it, but the documentation
         // is supplied with the DSAS. 
         // FIXME Fortigate SSL VPN F***'s up here. Kludge to fix it. 
         marked.setOptions({baseUrl: dsas_origin()});
         document.getElementById("Documentation").innerHTML = "<article class=\"markdown-body\">" + 
-        marked.parse(text).replace(/fgt_sslvpn.url_rewrite\(/g, '') + "</article>";
+        marked.parse(text).replace(/fgt_sslvpn.url_rewrite\(/g, "") + "</article>";
         dsas_help_toc();
     }).catch(error => {
         if (!fail_loggedin(error.statusText))

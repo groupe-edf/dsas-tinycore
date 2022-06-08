@@ -462,7 +462,15 @@ static)
     msg "### Install eslint before continuing"
   fi
   if which shellcheck > /dev/null 2>&1; then
-    shellcheck -x "$append/usr/local/sbin/*" \
+    shellcheck -x "$append/usr/local/sbin/checkfiles" \
+                  "$append/usr/local/sbin/dsaspasswd" \
+                  "$append/usr/local/sbin/getcertificate" \
+                  "$append/usr/local/sbin/getfiles" \
+                  "$append/usr/local/sbin/killtask" \
+                  "$append/usr/local/sbin/rotatelogs" \
+                  "$append/usr/local/sbin/runtask" \
+                  "$append/usr/local/sbin/snmpdsas" \
+                  "$append/usr/local/sbin/sysloghaut" \
                   "$append/etc/init.d/services/dsas" \
                   "$append/etc/init.d/rcS.docker" \
                   "make.sh"
