@@ -18,6 +18,11 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
   
     switch ($_POST["op"]){
       case "add":
+        /** @var array{name: string, id: string, type: string, 
+          * run: string, directory: string, uri: string,
+          * ca: array{name: string, fingerprint: string},
+          * archs: array{array{arch: string, active: string}},
+          * certs: array{array{name: string, fingerprint: string}}} $data */
         $data = json_decode($_POST["data"], true);
         $name = htmlspecialchars($data["name"]);
         if (trim($name) == "")
@@ -68,7 +73,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
               case "ppc64el":
               case "s390x":
                 // Architecture ok
-                if (!isset($arch["active"]))
+                if ($arch["active"] !== "true" && $arch["active"] !== "false")
                   $errors[] = ["error" => "Invalid debian architecture"];
                 break;
               default:
@@ -171,6 +176,11 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           if (! $certok) {
             $cafile = dsas_ca_file();                                                      
             if ($cafile) {
+              // The format of an x509 can be quite arbitrary. So only 
+              // declare the bits I need here
+              /** @var array{array{fingerprint: string, pem: string, 
+                * subject: array{CN: string, OU: string, O: string}, 
+                * extensions: array{subjectKeyIdentifier: string}}} $ca */
               $ca = parse_x509($cafile);
               foreach ($ca as $x509_cert) {
                 if ($x509_cert["fingerprint"] == $cert["fingerprint"]) {
@@ -402,6 +412,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
 
       case "name" :
+        /** @var array{old: string, new: string, id: string} */
         $data = json_decode($_POST["data"], true);
         $old = $data["old"];
         $id = $data["id"];

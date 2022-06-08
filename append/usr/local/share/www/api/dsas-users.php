@@ -5,6 +5,7 @@ if (! dsas_loggedin())
   header("HTTP/1.0 403 Forbidden");
 else if($_SERVER["REQUEST_METHOD"] == "POST"){
     $dsas = simplexml_load_file(_DSAS_XML);
+    /** @var array{username: string, passwd: string, description: string, type: string, active: string} $data */
     $data = json_decode($_POST["data"], true);
     if ($dsas === false) {
       header("Content-Type: application/json");
@@ -79,7 +80,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             if ($user->username == $data["username"]) {
               $found = true;
               unset($dsas->config->users->user[$i]);
-              $output = dsas_exec(["sudo", "deluser", "--remove-home", $data["username"]]);
+              $output = dsas_exec(["sudo", "deluser", "--remove-home", (string)$data["username"]]);
               if ($output["retval"] != 0)
                 $errors[] = ["error" => ["Error during user deletion '{0}'", (string)$output["stderr"]]];
               break;
@@ -92,6 +93,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
      
       case "modify":
+        /** @var array{username: string, passwd: string, description: string, type: string, active: string} $duser */  
         foreach ($data as $duser) {
           $found = false;
           $i = 0;         

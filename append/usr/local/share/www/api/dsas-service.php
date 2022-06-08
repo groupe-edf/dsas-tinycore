@@ -13,6 +13,16 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
          
     switch ($_POST["op"]){
       case "all":
+        /** @var array{ssh: array{active: string, user_tc: string, 
+          *                       user_bas: string, user_haut: string},
+          *            radius: array{active: string, server: string, secret: string},
+          *            syslog: array{active: string, server: string},
+          *            ntp: array{active: string, server: string[]},
+          *            antivirus: array{active: string, uri: string},
+          *            web: array{repo: string},
+          *            snmp: array{active: string, username: string, password: string,
+                                   encrypt: string, passpriv: string, 
+                                   privencrypt: string}} $data */
         $data = json_decode($_POST["data"], true);
         // Lines like these stop the users from passing values other than true/false
         $dsas->config->ssh->active = ($data["ssh"]["active"] === "true" ? "true" : "false");

@@ -13,6 +13,10 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
      
     switch ($_POST["op"]){
       case "all":
+        /** @var array{bas: array{dhcp: string, cidr: string, gateway: string, 
+          *                       dns: array{domain: string, nameserver: string[]}},
+          *            haut: array{dhcp: string, cidr: string, gateway: string, 
+          *                       dns: array{domain: string, nameserver: string[]}}} $data */
         $data = json_decode($_POST["data"], true);
         $ifaces = get_ifaces();
         $j=0;

@@ -10,7 +10,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
       echo json_encode(["error" => "Error loading XML file"]);
       die();
     }
-    
+    /** @var array{username: string, passwd: string} $data */
     $data = json_decode($_POST["data"], true);
     $errors = array();
     if ($data["username"] != $_SESSION["username"])
