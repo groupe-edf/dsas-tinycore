@@ -17,7 +17,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           *                       user_bas: string, user_haut: string},
           *            radius: array{active: string, server: string, secret: string},
           *            syslog: array{active: string, server: string},
-          *            ntp: array{active: string, server: string[]},
+          *            ntp: array{active: string, server: array{string}},
           *            antivirus: array{active: string, uri: string},
           *            web: array{repo: string},
           *            snmp: array{active: string, username: string, password: string,
@@ -103,7 +103,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         if (empty($pool_err)) {
           unset($dsas->config->ntp->server);
           foreach ($data["ntp"]["server"] as $server)
-            $dsas->config->ntp->server[] = $server;
+            // The ntp[0] is here just to avoid a level 9 PHPStan error
+            $dsas->config->ntp[0]->server[] = $server;
         } else
           $errors[] = ["ntp_pool" => $pool_err];
 

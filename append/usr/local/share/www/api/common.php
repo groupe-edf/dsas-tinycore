@@ -113,12 +113,12 @@ function dsas_user_active(string $user) : bool {
  * machine. It should have arguments passed as an array to prevent the process
  * spawning a shell that might be attacked
  *
- * @param array<string> $args list of arguments to pass to proc_open
+ * @param array<string>|string $args list of arguments to pass to proc_open
  * @param string $cwd
  * @param array<string> $stdin An array of strings representing line by line the input
  * @return array{retval: int, stdout: string, stderr: string} 
  */
-function dsas_exec(array|string $args, string $cwd = null, array $stdin = []) : array {
+function dsas_exec(mixed $args, string $cwd = null, array $stdin = []) : array {
   # Simplify the call to proc_open with the means to avoids spawning a shell
   # and escaping the args integrated. The args MUST be passed as an array to get
   # the escaping to work properly.
@@ -603,25 +603,26 @@ function parse_x509(string $certfile) : array {
  * @return array<string, mixed>
  */
 function utf8ize(array $d) : array {
-  foreach ($d as $k => $v)
-    $d[$k] = _utf8ize($v);
+    foreach ($d as $k => $v) {
+        $d[$k] = _utf8ize($v);
+    }
   return $d;
 }
 
 /**
  * Convert to UTF8 to be json safe. Mutable return value
  *
- * @param array<string, mixed> $d
+ * @param mixed $d
  *    Array or string to convert
- * @return array<string, mixed>
+ * @return mixed
  */
-function _utf8ize(array|string|int $d) : array|string|int {
+function _utf8ize(mixed $d) : mixed {
   if (is_array($d)) {
     foreach ($d as $k => $v) {
         $d[$k] = _utf8ize($v);
     }
   } else if (is_string ($d)) {
-    return utf8_encode($d);
+    $d = utf8_encode($d);
   }
   return $d;
 }

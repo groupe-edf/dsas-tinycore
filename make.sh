@@ -452,16 +452,19 @@ check)
   ;;
 static)
   if [ -x "vendor/bin/phpstan" ]; then
+    msg "Running PHPStan on usr/local/share/www/api"
     vendor/bin/phpstan
   else
     msg "### Install phpstan via composer before continuing"
   fi
   if which eslint > /dev/null 2>&1; then
+    msg "Running eslint on usr/local/share/www/dsas.js"
     eslint $append/usr/local/share/www/dsas.js
   else
     msg "### Install eslint before continuing"
   fi
   if which shellcheck > /dev/null 2>&1; then
+    msg "Running shellcheck on shell code"
     shellcheck -x "$append/usr/local/sbin/checkfiles" \
                   "$append/usr/local/sbin/dsaspasswd" \
                   "$append/usr/local/sbin/getcertificate" \
