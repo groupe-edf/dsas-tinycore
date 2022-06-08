@@ -338,6 +338,7 @@ verifliveupdate(){
 
   # Fail if there are any files in the archive not listed in the file GRD
   while IFS= read -r -d '' f; do
+    f=${f#"$basedir/"}
     [[ "$f" =~ \.grd$ ]] && continue
     [[ "$f" =~ \.sig$ ]] && continue
     if ! grep -qi "$f" "$grd"; then
@@ -359,7 +360,7 @@ verifliveupdate(){
         return 1;
       fi
     fi
-  done < <(find "$basedir" -type f -print0 | cut -c3-)
+  done < <(find "$basedir" -type f -print0)
 
   s1=""
   s256=""
@@ -369,7 +370,7 @@ verifliveupdate(){
   for t in $grd; do
     while :; do
       IFS= read -r line || last="true"
-      if [ -n "$last" ] || [[ "$line" =~ ^\[File-.*\] ]]; then
+      if [ -n "$last" ] || [[ "$line" =~ "^\[File-.*\]" ]]; then
         [ -z "$last" ] && [ -z "$f" ] && { f=$(echo "$line" | sed -e "s/^\[File-\(.*\)\]\s*$/\1/g"); continue; }
         if [ -f "$basedir/$f" ]; then
           [ -z "$s256" ] || sha256sum "$basedir/$f" | grep -q "$s256" || \
