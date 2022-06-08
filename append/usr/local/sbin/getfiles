@@ -50,6 +50,26 @@ rm() {
   fi
 }
 
+mkdir() {
+  # A command like "mkdir -m UMASK -p $dir" doesn't apply the
+  # umask to all directories. This function just enforces the
+  # desired permissions and ownerships. Passed only directories
+  local _d _d2
+
+  while [ "$#" -gt 0 ]; do
+    _d=$1
+    _d2=$(dirname "$_d")
+    while $as_haut [ ! -d "$_d2" ]; do
+      _d="$_d2"
+      _d2=$(dirname "$_d2")
+    done
+    $as_haut /bin/mkdir -p "$1"
+    $as_haut chgrp -R "haut" "$_d"
+    $as_haut chmod -R 770 "$_d"
+    shift
+  done
+}
+
 task_id_to_idx(){
   local _task_id
   local i=1
@@ -145,7 +165,7 @@ getclamav() {
   fi
 
   # Create directory if needed
-  [ -d "${DSAS_HAUT}/$dir" ] || $as_haut mkdir -m 770  -p "${DSAS_HAUT}/$dir"
+  [ -d "${DSAS_HAUT}/$dir" ] || mkdir "${DSAS_HAUT}/$dir"
 
   # Download the CVD files. Can't mirror as can't do ls on directory database.clamav.net 
   for _file in main.cvd daily.cvd bytecode.cvd; do
@@ -177,7 +197,7 @@ getdirectory() {
   fi
 
   # Create directory if needed
-  [ -d "${DSAS_HAUT}/$dir" ] || $as_haut mkdir -m 770 -p "${DSAS_HAUT}/$dir"
+  [ -d "${DSAS_HAUT}/$dir" ] || mkdir "${DSAS_HAUT}/$dir"
 
   # Test whether we have a file or a directory, and fail if server not found 
   _stderr=$(2>&1 $chroot_lftp -c "$opt open '$uri'") && isdir="1"
@@ -229,7 +249,7 @@ get_packages() {
         # Checksum of file is different redownload the file
         myecho "Downloading file $file [Checksum different!!]"
         if [ "$dryrun" == "0" ]; then
-          [ -d "$(dirname "$dest/$file")" ] || $as_haut mkdir -m 770 -p "$(dirname "$dest/$file")"
+          [ -d "$(dirname "$dest/$file")" ] || mkdir "$(dirname "$dest/$file")"
           [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" >& /dev/null
           [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'"
         fi
@@ -237,7 +257,7 @@ get_packages() {
     else
       myecho "Downloading file $file"
       if [ "$dryrun" == "0" ]; then
-        [ -d "$(dirname "$dest/$file")" ] || $as_haut mkdir -m 770  -p "$(dirname "$dest/$file")"
+        [ -d "$(dirname "$dest/$file")" ] || mkdir "$(dirname "$dest/$file")"
         [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" >& /dev/null
         [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'"
       fi
@@ -259,10 +279,10 @@ getrepo() {
   case $type in
     repomd|rpm)
        # Create the destination directory if needed
-       $as_haut [ -d "$DSAS_HAUT/$dir" ] || $as_haut mkdir -m 770  -p "$DSAS_HAUT/$dir"
+       $as_haut [ -d "$DSAS_HAUT/$dir" ] || mkdir "$DSAS_HAUT/$dir"
 
        myecho "Downloading repodata/repomd.xml from $name"
-       $as_haut [ -d "$DSAS_HAUT/$dir/repodata" ] || $as_haut mkdir -m 770 -p "$DSAS_HAUT/$dir/repodata"
+       $as_haut [ -d "$DSAS_HAUT/$dir/repodata" ] || mkdir "$DSAS_HAUT/$dir/repodata"
 
        _stderr=$(2>&1 $chroot_lftp -c "$opt get -e '$uri/repodata/repomd.xml' -o '$DSAS_HAUT/$dir/repodata/repomd.xml'")
        echo "$_stderr" | grep -q "Fatal" && { 1>&2 echo "Fatal: Server '$uri' not found"; exit 1; }
@@ -371,7 +391,7 @@ getdeb() {
   case $type in
     deb)
        # Create the destination directory if needed
-       $as_haut [ -d "$DSAS_HAUT/$dir" ] || $as_haut mkdir -m 770 -p "$DSAS_HAUT/$dir"
+       $as_haut [ -d "$DSAS_HAUT/$dir" ] || mkdir "$DSAS_HAUT/$dir"
 
        # Test server ok before continuing
        _stderr=$(2>&1 $chroot_lftp -c "$opt open '$uri/'")
@@ -463,7 +483,7 @@ EOF
            fi
          else
            myecho "Downloading file $_file"
-           [ -d "$(dirname "$DSAS_HAUT/$dir/$_file")" ] || $as_haut mkdir -m 770 -p "$(dirname "$DSAS_HAUT/$dir/$_file")"
+           [ -d "$(dirname "$DSAS_HAUT/$dir/$_file")" ] || mkdir "$(dirname "$DSAS_HAUT/$dir/$_file")"
            [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
            if [ "$verbose" -ne 0 ]; then
              # Only print verbose for uncompressed files without compressed versions. Debian
@@ -512,7 +532,7 @@ EOF
                fi
              elif [ -n "$_file" ]; then
                myecho "Downloading file $_file"
-               [ -d "$(dirname "$DSAS_HAUT/$pool_local/$_file")" ] || $as_haut mkdir -m 770 -p "$(dirname "$DSAS_HAUT/$pool_local/$_file")"
+               [ -d "$(dirname "$DSAS_HAUT/$pool_local/$_file")" ] || mkdir "$(dirname "$DSAS_HAUT/$pool_local/$_file")"
                [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'" >& /dev/null
                [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'"
              fi

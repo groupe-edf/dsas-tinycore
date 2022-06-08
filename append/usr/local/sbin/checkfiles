@@ -159,7 +159,6 @@ mkdir() {
   done
 }
 
-
 verifauthenticode(){
   local _file hash hashes sigdir id tempdir file
   id=$1
