@@ -1188,11 +1188,11 @@ function dsas_display_service(what = "all"){
 function dsas_change_service(what) {
     if (what === "ssh") {
         document.getElementById("user_tc").disabled = 
-       document.getElementById("user_bas").disabled = 
-       document.getElementById("user_haut").disabled =  ! document.getElementById("ssh").checked;
+            document.getElementById("user_bas").disabled = 
+            document.getElementById("user_haut").disabled =  ! document.getElementById("ssh").checked;
     } else if (what === "radius") {
         document.getElementById("radius_server").disabled = 
-       document.getElementById("radius_secret").disabled =  ! document.getElementById("radius").checked;
+            document.getElementById("radius_secret").disabled =  ! document.getElementById("radius").checked;
     } else if (what === "syslog") {
         document.getElementById("syslog_server").disabled = ! document.getElementById("syslog").checked;
     } else if (what === "ntp") {
@@ -1216,9 +1216,15 @@ function dsas_change_service(what) {
             serv.ssh.user_haut = document.getElementById("user_haut").value;
             if (! serv.radius)
                 serv.radius = {};
-            serv.radius.active = (document.getElementById("radius").checked ? "true" : "false");
-            serv.radius.server = document.getElementById("radius_server").value;
-            serv.radius.secret = document.getElementById("radius_secret").value;
+            if (! empty_obj(document.getElementById("radius"))) {
+                serv.radius.active = (document.getElementById("radius").checked ? "true" : "false");
+                serv.radius.server = document.getElementById("radius_server").value;
+                serv.radius.secret = document.getElementById("radius_secret").value;
+            } else {
+                serv.radius.active = "false";
+                serv.radius.server = "";
+                serv.radius.secret = "";
+            }
             serv.syslog.active = (document.getElementById("syslog").checked ? "true" : "false");
             serv.syslog.server = document.getElementById("syslog_server").value;
             serv.ntp.active = (document.getElementById("ntp").checked ? "true" : "false");
