@@ -57,15 +57,17 @@ mkdir() {
   local _d _d2
 
   while [ "$#" -gt 0 ]; do
-    _d=$1
-    _d2=$(dirname "$_d")
-    while $as_haut [ ! -d "$_d2" ]; do
-      _d="$_d2"
-      _d2=$(dirname "$_d2")
-    done
-    $as_haut /bin/mkdir -p "$1"
-    $as_haut chgrp -R "haut" "$_d"
-    $as_haut chmod -R 770 "$_d"
+    if $as_haut [ ! -d "$1" ]; then
+      _d=$1
+      _d2=$(dirname "$_d")
+      while $as_haut [ ! -d "$_d2" ]; do
+        _d="$_d2"
+        _d2=$(dirname "$_d2")
+      done
+      $as_haut /bin/mkdir -p "$1"
+      $as_haut chgrp -R "haut" "$_d"
+      $as_haut chmod -R 770 "$_d"
+    fi
     shift
   done
 }
