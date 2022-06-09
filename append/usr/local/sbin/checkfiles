@@ -124,7 +124,7 @@ check_checksum() {
 
 ln() {
   if [ "$dryrun" == "0" ]; then
-    [ -d "$(dirname "$2")" ] && mkdir "$(dirname "$2")"
+    [ -d "$(dirname "$2")" ] || mkdir "$(dirname "$2")"
     # This script is not running as root so can't change the owner. We
     # first have to copy the file.
     # FIXME : Hardcode path to gnu version of cp for the "--preserve" flag
