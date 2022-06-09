@@ -2560,7 +2560,8 @@ class multiLang {
                     document.cookie = "Language=" + _lang + "; expires=Fri 31 Dec 9999 23:59:59;SameSite=Lax";
                     for (let _head of document.getElementsByTagName("dsas-header")) 
                         _head.render();
-                    if (window.location.pathname === "help.html") {
+                    if ((window.location.pathname === "help.html") ||
+                        (window.location.pathname === "/help.html")) {
                         // Special case for help.html
                         window.location = "help.html?language=" + this.currentLanguage;
                     } else {
