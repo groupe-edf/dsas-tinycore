@@ -536,7 +536,7 @@ stop_web_admin(){
 
 start_sshd(){
   if [ "$TYP" == "bas" ]; then
-    [ "$(xmllint --xpath "string(dsas/config/ssh/active)" "$VAR/dsas_conf.xml")" == "false" ] && return 0
+    [ "$(xmllint --xpath "string(dsas/config/ssh/active)" "$VAR/dsas_conf.xml")" == "false" ] && { stop_sshd; return 0; }
     USER_TC=$(xmllint --xpath "string(dsas/config/ssh/user_tc)" "$VAR/dsas_conf.xml") 
     USER=$(xmllint --xpath "string(dsas/config/ssh/user_bas)" "$VAR/dsas_conf.xml")
     UID_TC=""
@@ -612,7 +612,7 @@ start_sshd(){
     sed -i -e "s/\(share:.*\):verif,bas,haut\(.*\)$/\1:verif,bas,haut,$UID_TYP/" /etc/group
   fi
 
-  [ -z "$USER_TC" ] && [ -z "$USER" ] && return 0
+  [ -z "$USER_TC" ] && [ -z "$USER" ] && { stop_sshd; return 0; }
   cp -f /usr/local/etc/ssh/sshd_config.dsas /usr/local/etc/ssh/sshd_config
   if [ -n "$USER_TC" ] && [ -n "$UID_TC" ]; then
     cat << EOF >> /usr/local/etc/ssh/sshd_config
