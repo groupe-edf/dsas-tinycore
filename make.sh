@@ -126,7 +126,9 @@ msg() {
 
 cmd() {
     echo "[cmd]" "$@"
-    "$@"
+    # Yes I want word-splitting here
+    # shellcheck disable=SC2068
+    $@
 }
 
 error() {
@@ -168,9 +170,10 @@ get_tcz() {
       else
          $curl_cmd -o "$dep" "$tcz_url/$package.tcz.dep" || touch "$dep"
       fi
+      grep -q 404 "$dep" && cp /dev/null "$dep"
       # Want word splitting on arg to get_tcz
       # shellcheck disable=SC2046
-      grep -q 404 "$dep" || get_tcz $(sed -e s/.tcz$// "$dep")
+      get_tcz $(sed -e s/.tcz$// "$dep")
     fi
   done
 }
@@ -394,10 +397,11 @@ EOF
           [ -f "$tcz_dir/$tcz" ] && rm "$tcz_dir/$tcz"
           tempdir=$(mktemp -d)
           chmod 755 "$tempdir"
-          (cd "$extract$destdir" || exit 1; tar -cf - "$dirs" | tar -C "$tempdir" -x -f -) 
+          # shellcheck disable=SC2086
+          (cd "$extract$destdir" || exit 1; tar -cf - $dirs | tar -C "$tempdir" -x -f -) 
           mksquashfs "$tempdir" "$tcz_dir/$tcz"
           rm -fr "$tempdir"
-          md5sum "$tcz_dir/$tcz" | sed -e "s/  $tcz_dir/$tcz$//g" > "$tcz_dir/$tcz.md5.txt"
+          md5sum "$tcz_dir/$tcz" | sed -e "s:  $tcz_dir/$tcz$::g" > "$tcz_dir/$tcz.md5.txt"
           if [ "$pkg" = "main" ]; then
             echo -n "" > "$tcz_dir/$tcz.dep"
             for dep in $_dep; do
@@ -613,8 +617,11 @@ docker)
       chown tc.staff "$extract/home/tc"
       chown tc.staff "$extract/home/tc/installer"
       cp /etc/resolv.conf $extract/etc/resolv.conf && msg "copy resolv.conf"
+      # http_proxy is import (or not) from the environment 
+      # shellcheck disable=SC2154
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+
 export http_proxy=$http_proxy
 export https_proxy=$https_proxy
 cd /home/tc
@@ -628,6 +635,7 @@ EOF
       # Install Facebook Webdriver
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+# shellcheck disable=SC2154
 export http_proxy=$http_proxy
 export https_proxy=$https_proxy
 cd /home/tc
@@ -643,7 +651,7 @@ EOF
       download "https://github.com/SeleniumHQ/selenium/releases/download/selenium-4.2.0/selenium-server-4.2.2.jar" "$src_dir"
       cp "$src_dir/selenium-server-4.2.2.jar" $extract/home/tc
       chown tc.staff "$extract/home/tc/selenium-server-4.2.2.jar"
-      echo << EOF > "$extract/home/tc/runtests"
+      cat << EOF > "$extract/home/tc/runtests"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 java -jar selenium-server-4.2.2.jar stanalone
 EOF
