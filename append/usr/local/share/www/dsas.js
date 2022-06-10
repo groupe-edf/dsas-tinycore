@@ -2849,9 +2849,9 @@ class DisplayLogs {
                             if (line >= firstItem) {
                                 pre = document.createElement("pre");
                                 if ((this.tab == this.highlight["tab"]) && (line === this.highlight["line"])) 
-                                    pre.className = "my-0 bg-info overflow-hidden";
+                                    pre.className = "my-0 bg-info overflow-auto";
                                 else
-                                    pre.className = "my-0 " + this.color(lines[index]) + " overflow-hidden";      
+                                    pre.className = "my-0 " + this.color(lines[index]) + " overflow-auto";      
                                 pre.innerHTML = (this.render ? this.render(lines[index]) : lines[index]);
                                 this.view.appendChild(pre);
                             }
@@ -2865,9 +2865,9 @@ class DisplayLogs {
                     for (index = firstItem; index <= lastItem; ++index) {
                         pre = document.createElement("pre");
                         if ((this.tab == this.highlight["tab"]) && (index === this.highlight["line"])) 
-                            pre.className = "my-0 bg-info overflow-hidden";
+                            pre.className = "my-0 bg-info overflow-auto";
                         else
-                            pre.className = "my-0 " + this.color(lines[index]) + " overflow-hidden";
+                            pre.className = "my-0 " + this.color(lines[index]) + " overflow-auto";
                         pre.innerHTML = (this.render ? this.render(lines[index]) : lines[index]);
                         this.view.appendChild(pre);
                     }
