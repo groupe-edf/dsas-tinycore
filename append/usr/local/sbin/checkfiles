@@ -380,7 +380,6 @@ verifliveupdate(){
           [ -z "$s1" ] || sha1sum "$basedir/$f" | grep -q "$s1" || \
               { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename "$file")"; return 2; }
           [ -z "$s256" ] && [ -z "$s1" ] && { 1>&2 myecho "File $f from the archive $(basename "$file") has no checksum"; return 2; }
-          1>&2 myecho "File $f from the archive $(basename "$file") verified"
         elif [ -f "$src/$filedir/$f" ]; then
           # Only reverify the hash if its not already done.
           if [ ! "$src/$filedir/$f" -ef "$dest/$filedir/$f" ]; then
@@ -397,7 +396,6 @@ verifliveupdate(){
               msgline "$src/$filedir/$f" 0
               ln "$src/$filedir/$f" "$dest/$filedir/$f"
             fi
-            1>&2 myecho "File $f verified"
           fi
         else
           1>&2 echo "File $f not found. skipping"
@@ -414,8 +412,6 @@ verifliveupdate(){
       fi
     done < "$t"
   done
-
-  1>&2 myecho "Archive $(basename "$file") correctly verified"
 
   # Repack the zip file before returning to avoid potentiel hidden files
   if [[ "${file##*.}" == "7z" ]]; then 
