@@ -1,6 +1,6 @@
 Log of the principal changes to the DSAS
 
-Version 1.1.1 (XXXXXXX)
+Version 1.1.1 (10 June 2022)
 - Checking if task is running before deleting or running it
 - Allow tasks to be killed 
 - Use DisplayLog in task logs to allow auto log update
