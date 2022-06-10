@@ -209,12 +209,22 @@ get() {
 }
 
 download() {
+  if [ "$1" = "-f" ]; then
+    shift
+    noext="true"
+  fi
   if [ "$forcedownload" -eq 0 ]; then
     if [ ! -f "$2/$(basename "$1")" ]; then
-      case $(echo "$1" | sed -e "s/.*\(\..*\)$/\1/g") in
-        .tgz|.tbz|.tar|.gz|.bz2|.xz) get "$@"; ;;
-        *) error "Unknown file extension $1"; ;;
-      esac
+      if  [ "$noext" = "true" ]; then
+        # Ignore extension
+        shift
+        get "$@"
+      else
+        case $(echo "$1" | sed -e "s/.*\(\..*\)$/\1/g") in
+          .jar|.tgz|.tbz|.tar|.gz|.bz2|.xz) get "$@"; ;;
+          *) error "Unknown file extension $1"; ;;
+        esac
+      fi
     fi
   else
     get "$1" "$2"
@@ -572,11 +582,6 @@ docker)
   install_tcz lftp
   install_tcz libpam-radius-auth
 
-  if [ "$testcode" = "1" ]; then
-    install_tcz freeradius
-    install_tcz rsyslog
-  fi
-
   # Copy the pre-extracted packages to work dir. This must be after packages
   # are installed to allow for files to be overwritten. Run as root 
   # and correct the ownership of files 
@@ -585,6 +590,74 @@ docker)
   mkdir -p "$extract/home/tc"
   chown root.root "$extract"
   chmod 755 "$extract/home"
+
+  if [ "$testcode" = "1" ]; then
+    # Install packages to allow testing of rsyslog and radius
+    install_tcz freeradius
+    install_tcz rsyslog
+
+    # The integration testing framework is based en Selenium which needs a recent
+    # JRE, and these are only available on 64bitp plateforms. Only install the 
+    # Selenium/PHP test code if arch=64
+    if [ "$arch" = 64 ]; then
+
+
+      # Install PHP cli and add iconv and phar extension
+      install_tcz php-8.0-cli
+      sed -i -e "s/;extension=phar/extension=phar/" $extract/usr/local/etc/php/php.ini
+      sed -i -e "s/;extension=iconv/extension=iconv/" $extract/usr/local/etc/php/php.ini
+
+      # Install PHP composer
+      download -f "https:/getcomposer.org/installer" "$src_dir"
+      cp "$src_dir/installer" "$extract/home/tc"
+      chown tc.staff "$extract/home/tc"
+      chown tc.staff "$extract/home/tc/installer"
+      cp /etc/resolv.conf $extract/etc/resolv.conf && msg "copy resolv.conf"
+      cat << EOF > "$extract/tmp/script"
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=$http_proxy
+export https_proxy=$https_proxy
+cd /home/tc
+php installer
+rm installer
+EOF
+      chmod a+x "$extract/tmp/script"
+      msg "Insatll PHP Composer"
+      chroot --userspec=tc "$extract" /tmp/script || error composer installation failed
+
+      # Install Facebook Webdriver
+      cat << EOF > "$extract/tmp/script"
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=$http_proxy
+export https_proxy=$https_proxy
+cd /home/tc
+php composer.phar require php-webdriver/webdriver
+EOF
+      chmod a+x "$extract/tmp/script"
+      msg "Insatll PHP Web driver"  
+      chroot --userspec=tc "$extract" /tmp/script
+      rm $extract/etc/resolv.conf
+
+      # Install openjdk8, selenium and a script to run the test
+      install_tcz openjdk-8-jre
+      download "https://github.com/SeleniumHQ/selenium/releases/download/selenium-4.2.0/selenium-server-4.2.2.jar" "$src_dir"
+      cp "$src_dir/selenium-server-4.2.2.jar" $extract/home/tc
+      chown tc.staff "$extract/home/tc/selenium-server-4.2.2.jar"
+      echo << EOF > "$extract/home/tc/runtests"
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+java -jar selenium-server-4.2.2.jar stanalone
+EOF
+       chown tc.staff "$extract/home/tc/runtests"
+       chmod 755  "$extract/home/tc/runtests"
+
+       # Download and install the chrome (only 64bit) and gecko (firefox) webdrivers
+       download "https://chromedriver.storage.googleapis.com/94.0.4606.41/chromedriver_linux64.zip" "$src_dir"
+       unzip -d "$extract/usr/local/bin" "$src_dir/chromedriver_linux.zip"
+       download "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux${arch}.tar.gz" "$src_dir"
+       tar xCzf "$extract/usr/local/bin" "$src_dir/geckodriver-v0.31.0-linux${arch}.tar.gz"
+    fi
+  fi
+
 
   # prevent autologin of tc user
   ( cd "$extract/etc" || exit 1; sed -i -r 's/(.*getty)(.*autologin)(.*)/\1\3/g'  inittab; )
