@@ -1942,7 +1942,7 @@ certificates used by Symantec for signatures have expired, and Symantec have not
 time stamped signatures with an openssl time server. So `openssl` will refuse to validate the files
 provided by Symantec. The second problem is in the fields `X509v3 Key Usage` and
 `X509v3 Extended Key Usage`. `openssl` requires that all certificates in the chain of trust
-supports the same signing options, but the `Code Signing CA` certificate supports the  Code Signing` option,
+supports the same signing options, but the `Code Signing CA` certificate supports the  `Code Signing` option,
 but the other two certificates in the chain do not support it. Two other options of `openssl` are
 necessary in order to bypass such problems, 
 
@@ -2123,8 +2123,8 @@ group `repo` to which the two users` tc` and `bas` belong.
 The administration server is run as the user `tc` and can only access files accessible to the
 `tc` user. The site is only available in https on the port `5000`. The site is written in 
 `HTML5, JS and bootstrap5` for the frontend and` PHP8` for the backend. The authentication on 
-the site is done with the connector "SASL" to the accounts local to the machine `lower`. 
-`SASL` is configured to work only with` Unix domain sockets` completely local to the machine, 
+the site is done with a connector to `Linux PAM` and the accounts local to the machine `lower`. 
+`PAM` is configured to work only with `Unix domain sockets` completely local to the machine, 
 therefore accessible only to the process running on the machine. The backend returns a session
 identifier for a successful login. This identifier is checked for each operation on the backend, 
 and expired after ten minutes without access to the machine.

@@ -1682,7 +1682,7 @@ Chaque utilisateur ajouté via l'interface d'adminsitration du DSAS aurait le sh
 
 ### Les droits d'écriture de chaque utilisateur
 
-Les droits d’écriture de chacun des utilisateurs est comme selon le tableau ci-dessous
+Les droits d'écriture de chacun des utilisateurs est comme selon le tableau ci-dessous
 
 | compte | Dossier avec des droits d’écriture                    |
 |--------|-------------------------------------------------------|
@@ -1691,15 +1691,15 @@ Les droits d’écriture de chacun des utilisateurs est comme selon le tableau c
 | haut  | /tmp, /home/haut, /home/dsas/haut |
 | bas   | /tmp, /home/bas, /home/dsas/bas |
 
-L’utilisateur `tc` a besoin d’accès a certains dossiers afin de faire opération d’administration. 
-L’utilisateur `verif` a accès aux fichiers des utilisateurs `bas` et `haut` mais également pour l’écriture
-des logs et à `/usr/local/var/lib/rpm` afin que l`utilisateur `verif` pourrait installer des certificats GPG 
-pour `rpm` sans avoir les droits de `sudo`. Les certificats préexistant de rpm sont effacés à chaque
-usage, et ce droit pour l’`utilisateur `verif` est sans risque.
+L'utilisateur `tc` a besoin d'accès a certains dossiers afin de faire des opérations d'administration. 
+L'utilisateur `verif` a accès aux fichiers des utilisateurs `bas` et `haut` mais également pour 
+l'écriture des logs et à `/usr/local/var/lib/rpm` afin que l'utilisateur `verif` pourrait installer des
+certificats GPG  pour `rpm` sans avoir les droits de `sudo`. Les certificats préexistant de rpm sont 
+effacés à chaque usage, et ce droit pour l'utilisateur `verif` est sans risque.
 
 ## Cloisonnement disque 
 
-Les fichiers téléchargés et vérifiés par le DSAS sont tous stocké sur un disque.
+Les fichiers téléchargés et vérifiés par le DSAS sont tous stockés sur un disque.
 Ce disque est monté avec le flag "noexec" et aucun fichier téléchargé par le
 DSAS sur ce disque pourrait être utilisé afin de compromettre l'intégrité du
 DSAS.  Les utilisateurs "haut" et "bas" sont restrient à copier les fichiers seulement 
@@ -1707,11 +1707,11 @@ sur cette disque. L'ensemble des fichiers exécutable du DSAS sont sur un "ramdi
 en mémoire de la machine et copié depuis l'image ISO à chaque redémarrage.
 
 Un hardlink sous linux est exactement le même fichier dupliqué à un autre endroit. 
-L'usage des hardlink entre les fichiers du guichet haut du sas et le guichet bas 
+L'usage des hardlinks entre les fichiers du guichet haut du sas et le guichet bas 
 pourrait permettre un simplification de l'architecture, car aucun moyen de tracer les
 fichiers téléchargés sera nécessaire et ça sans augmentation de l'espace disque.
 
-En revanche les hardlink doit respecter les exigences d'accès entre les guichets haut
+En revanche les hardlinks doivent respecter les exigences d'accès entre les guichets haut
 et bas. Quand un fichier existe dans les deux zones, il faut que
 
 - L'utilisateur haut ne peut pas modifier le fichier visible dans le guichet bas
@@ -1722,7 +1722,6 @@ et bas. Quand un fichier existe dans les deux zones, il faut que
 - L'accès par les utilisateurs bas et haut devrait être cloissoné par un `chroot jail`
   et par consequence le dossier prinicipal de chaque utilisateur doit avoir un UID de 
   `root`
-
 
 Avec les permissions suivantes
 
@@ -1974,7 +1973,7 @@ format `DER`. La commande normale de vérification de signature `SMIME` est
 $ openssl cms -verify -inform der -in v.sig -content v.grd
 ```
 
-cette commande va vérifier les signatures contenu dans `v.sig' contre les certificats racines 
+cette commande va vérifier les signatures contenu dans `v.sig` contre les certificats racines 
 installé sur la machine et comparer contre le hache du fichier `v.grd`. Le certificat racine 
 typiquement utilisé est `Symantec Root 2005 CA`, et donc le vrai vérification à mettre en place 
 est 
@@ -1985,10 +1984,10 @@ $ openssl cms -verify -CAfile SymantecRoot2005CA.pem -inform der -in v.sig -cont
 
 qu'on va trouver deux autres problème avec les chaines de signature de Symantec. Deux des trois certificats
 racines utilisés par Symantec pour les signatures ont expiré, et Symantec n'ont pas utilisé
-des signatures horodaté avec un server de temps openssl. Donc, òpenssl` va réfuser de valider les fichiers
+des signatures horodaté avec un server de temps openssl. Donc, `openssl` va réfuser de valider les fichiers
 fournis par Symantec. Le deuxième problème est dans les champs `X509v3 Key Usage` et `X509v3 Extended
 Key Usage`. `openssl` demande que l'ensemble des certificats de la chaine de confiance support les mêmes
-options de signature, mais le certificat `Code Signing CA` support l'option `Code Signing', mais les
+options de signature, mais le certificat `Code Signing CA` support l'option `Code Signing`, mais les
 deux autres certificats dans la chaine ne le supportent pas. Deux autres options de `openssl` sont
 nécessaire afin de détourner ces problèmes, comme
 
@@ -2174,8 +2173,8 @@ groupe `repo` auquel appartiennent les deux utilisateurs `tc` et `bas`.
 Le serveur d'administration est exécuté en tant qu'utilisateur `tc` est ne peux accéder
 que des fichiers accessible à l'utilisateur `tc`. Le site est disponible seulement en https 
 sur la port `5000`. Le site est écrit en `HTML5, JS et bootstrap5` pour le frontend et `PHP8` 
-pour le backend.  L’authentification sur le site est faite avec le connecteur `SASL` aux comptes 
-local à la machine `bas`. `SASL` est configuré de fonctionner qu’avec des `Unix domain socket` 
+pour le backend.  L'authentification sur le site est faite avec un connecteur à `Linux PAM` aux comptes 
+local à la machine `bas`. `PAM` est configuré de fonctionner qu'avec des `Unix domain socket` 
 complétement local à la machine, donc accessible que au processus tournant sur la machine.
 Le backend retourne une session identifiant pour un login réussite. Cet identifiant est
 vérifié a chaque opération sur le backend, et périmé après dix minutes sans accès à la 
@@ -2191,8 +2190,8 @@ commande système nécessaire à l'administration, et
 Le site de dépôt optionnel est exécuté en tant que l'utilisateur `bas` et ne peut
 accéder que des fichiers disponible pour l'utilisateur `bas`. Cette liste de fichiers est
 très limité est inclut en gros que des fichiers préinstallé ou vérifié par le DSAS. Le site 
-est disponible seulement en https sur la port `443`. Les utilisateurs du dépôt n’ont que le droit
-de télécharger des fichiers et en aucun cas, ils auraient le droit d’ajouter des fichiers au dépôt.
+est disponible seulement en https sur la port `443`. Les utilisateurs du dépôt n'ont que le droit
+de télécharger des fichiers et en aucun cas, ils auraient le droit d'ajouter des fichiers au dépôt.
 
 ## Des problemes associés avec Docker
 
