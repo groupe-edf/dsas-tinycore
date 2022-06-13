@@ -1,0 +1,6 @@
+#/bin/sh
+
+export LD_LIBRARY_PATH=/usr/local/jdk/lib:/usr/local/lib:/usr/lib:/lib
+java -jar selenium-server-4.2.2.jar standalone > /dev/null 2>&1 &
+
+

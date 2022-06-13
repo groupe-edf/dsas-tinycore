@@ -110,6 +110,7 @@ mnt=$work/mnt
 image=$work/extract
 build=$work/build
 append=./append
+testdir=./test
 dsascd=$work/dsas.iso
 rootfs64=$work/rootfs64
 docker=$work/docker
@@ -220,7 +221,6 @@ download() {
     if [ ! -f "$2/$(basename "$1")" ]; then
       if  [ "$noext" = "true" ]; then
         # Ignore extension
-        shift
         get "$@"
       else
         case $(echo "$1" | sed -e "s/.*\(\..*\)$/\1/g") in
@@ -559,7 +559,6 @@ docker)
   # first and manually created the link
   install_tcz libtirpc
   chroot "$extract" /bin/ln -s /usr/local/lib/libtirpc.so.3 /lib/libtirpc.so.3
-  
 
   # Install the needed packages
   install_tcz busybox  # Busybox with PAM and TMOUT support
@@ -572,6 +571,7 @@ docker)
   install_tcz libxml2-bin   # For xmllint
   install_tcz gnupg
   install_tcz lighttpd
+  install_tcz clamav
   install_tcz php-8.0-cgi
   install_tcz php-8.0-ext
   install_tcz php-pam
@@ -580,7 +580,6 @@ docker)
   install_tcz rpm
   install_tcz p7zip         # Needed by LiveUpdate
   install_tcz zip-unzip     # Needed to allow repacking of unsigned zip files
-  install_tcz clamav
   install_tcz Linux-PAM
   install_tcz net-snmp
   install_tcz lftp
@@ -589,48 +588,51 @@ docker)
   # Copy the pre-extracted packages to work dir. This must be after packages
   # are installed to allow for files to be overwritten. Run as root 
   # and correct the ownership of files 
-  msg append dsas files
+  msg Append DSAS files
   rsync -rlptv "$append/" "$extract/"
   mkdir -p "$extract/home/tc"
   chown root.root "$extract"
   chmod 755 "$extract/home"
 
   if [ "$testcode" = "1" ]; then
+    # Install test specific DSAS files
+    msg Append test specific DSAS files
+     rsync -rlptv "$testdir/" "$extract/"
+  
     # Install packages to allow testing of rsyslog and radius
     install_tcz freeradius
     install_tcz rsyslog
 
     # The integration testing framework is based en Selenium which needs a recent
-    # JRE, and these are only available on 64bitp plateforms. Only install the 
+    # JRE, and these are only available on 64bit plateforms. Only install the 
     # Selenium/PHP test code if arch=64
     if [ "$arch" = 64 ]; then
-
-
       # Install PHP cli and add iconv and phar extension
       install_tcz php-8.0-cli
       sed -i -e "s/;extension=phar/extension=phar/" $extract/usr/local/etc/php/php.ini
       sed -i -e "s/;extension=iconv/extension=iconv/" $extract/usr/local/etc/php/php.ini
-
+      sed -i -e "s/;extension=curl/extension=curl/" $extract/usr/local/etc/php/php.ini
+      sed -i -e "s/;extension=zip/extension=zip/" $extract/usr/local/etc/php/php.ini
+            
       # Install PHP composer
       download -f "https:/getcomposer.org/installer" "$src_dir"
       cp "$src_dir/installer" "$extract/home/tc"
-      chown tc.staff "$extract/home/tc"
-      chown tc.staff "$extract/home/tc/installer"
+      chmod a+rx "$extract/home/tc/installer"
+      chroot "$extract" chown -R tc.staff "/home/tc/"
       cp /etc/resolv.conf $extract/etc/resolv.conf && msg "copy resolv.conf"
-      # http_proxy is import (or not) from the environment 
+      # http_proxy is imported (or not) from the environment 
       # shellcheck disable=SC2154
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-
 export http_proxy=$http_proxy
 export https_proxy=$https_proxy
 cd /home/tc
-php installer
+env HOME=/home/tc php installer || exit 1
 rm installer
 EOF
       chmod a+x "$extract/tmp/script"
-      msg "Insatll PHP Composer"
-      chroot --userspec=tc "$extract" /tmp/script || error composer installation failed
+      msg "Install PHP Composer $extract"
+      HOME=/home/tc chroot --userspec=tc "$extract" /tmp/script || error composer installation failed
 
       # Install Facebook Webdriver
       cat << EOF > "$extract/tmp/script"
@@ -639,30 +641,27 @@ export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 export http_proxy=$http_proxy
 export https_proxy=$https_proxy
 cd /home/tc
-php composer.phar require php-webdriver/webdriver
+env HOME=/home/tc php composer.phar require php-webdriver/webdriver
 EOF
       chmod a+x "$extract/tmp/script"
-      msg "Insatll PHP Web driver"  
+      msg "Install PHP Web driver"  
       chroot --userspec=tc "$extract" /tmp/script
       rm $extract/etc/resolv.conf
 
-      # Install openjdk8, selenium and a script to run the test
-      install_tcz openjdk-8-jre
+      # Install openjdk and selenium 
+      download "https://download.oracle.com/java/18/latest/jdk-18_linux-x64_bin.tar.gz" "$src_dir"
+      tar xCzf "$extract/usr/local" "$src_dir/jdk-18_linux-x64_bin.tar.gz"
+      jdk=$(find $extract/usr/local -maxdepth 1 -type d -name "*jdk*")
+      ( cd $extract/usr/local; ln -s ${jdk#$extract/usr/local/} jdk; )
       download "https://github.com/SeleniumHQ/selenium/releases/download/selenium-4.2.0/selenium-server-4.2.2.jar" "$src_dir"
       cp "$src_dir/selenium-server-4.2.2.jar" $extract/home/tc
-      chown tc.staff "$extract/home/tc/selenium-server-4.2.2.jar"
-      cat << EOF > "$extract/home/tc/runtests"
-export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-java -jar selenium-server-4.2.2.jar stanalone
-EOF
-       chown tc.staff "$extract/home/tc/runtests"
-       chmod 755  "$extract/home/tc/runtests"
-
-       # Download and install the chrome (only 64bit) and gecko (firefox) webdrivers
-       download "https://chromedriver.storage.googleapis.com/94.0.4606.41/chromedriver_linux64.zip" "$src_dir"
-       unzip -d "$extract/usr/local/bin" "$src_dir/chromedriver_linux.zip"
-       download "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux${arch}.tar.gz" "$src_dir"
-       tar xCzf "$extract/usr/local/bin" "$src_dir/geckodriver-v0.31.0-linux${arch}.tar.gz"
+      chroot "$extract" chown tc.staff "/home/tc/selenium-server-4.2.2.jar"
+      
+      # Download and install the chrome (only 64bit) and gecko (firefox) webdrivers
+      download "https://chromedriver.storage.googleapis.com/94.0.4606.41/chromedriver_linux64.zip" "$src_dir"
+      unzip -d "$extract/usr/local/bin" "$src_dir/chromedriver_linux64.zip"
+      download "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux${arch}.tar.gz" "$src_dir"
+      tar xCzf "$extract/usr/local/bin" "$src_dir/geckodriver-v0.31.0-linux${arch}.tar.gz"
     fi
   fi
 
@@ -840,6 +839,9 @@ EOF
     cp -p ./boot/isolinux/isolinux64.cfg "$newiso/boot/isolinux/isolinux.cfg"
   fi
 
+  # Change ISO name if test version
+  [ "$testcode" = "1" ] && dsascd=${dsascd%.iso}-test.iso
+  
   msg creating $dsascd
   ( cd "$extract" || exit 1; find . | cpio -o -H newc; ) | gzip -2 > "$squashfs"
   mkisofs=$(which mkisofs genisoimage | head -n 1)
