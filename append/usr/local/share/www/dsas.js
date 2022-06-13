@@ -19,7 +19,7 @@
  */
  
 // DSAS version variable
-const dsas_version = "1.1.1";
+const dsas_version = "1.1.2";
 
 // Timeout variable
 var timeout_login = 0;

@@ -21,8 +21,5 @@ _pkgs="main{/usr/local}"
 _post_install=\
 "
 cd /usr/local/etc/pam.d
-mv common-auth common-auth.old
-echo 'auth           [success=done new_authtok_reqd=done ignore=ignore default=die]        pam_radius_auth.so localifdown conf=/etc/raddb/server' > common-auth
-cat common-auth.old >> common-auth
 sed -i -e 's/pam_unix.so/pam_unix.so try_first_pass/' common-auth
 "

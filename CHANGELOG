@@ -1,5 +1,8 @@
 Log of the principal changes to the DSAS
 
+Version 1.1.2 (XX XXXX XXX)
+- Fix initial boot failure due to radius issue
+
 Version 1.1.1 (10 June 2022)
 - Checking if task is running before deleting or running it
 - Allow tasks to be killed 
