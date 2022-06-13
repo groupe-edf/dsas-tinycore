@@ -37,6 +37,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $output = dsas_exec(["sudo", "adduser", "-G", "users", "-h", _DSAS_HOME . "/" . $duser, "-s", "/bin/sh", "-D", $duser]);
             if ($output["retval"] != 0)
               $errors[] = ["error" => ["Error during user addition '{0}'", (string)$output["stderr"]]];
+            dsas_exec(["sudo", "chmod", "go-rwx", _DSAS_HOME ."/" . $duser]);
           }
         }
         break;

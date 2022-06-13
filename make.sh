@@ -739,10 +739,11 @@ chown -R tc.staff /home/tc
 chmod -R o-rwx /home/tc /home/haut /home/bas /home/verif 
 chown -R root.staff /var/dsas
 chmod 775 /var/dsas          # Write perm for verif
-chmod 640 /var/dsas/*.csr /var/dsas/*.pem
+chmod 640 /var/dsas/*.csr /var/dsas/*.pem /var/dsas/*.dsas
+chmod 660 /var/dsas/dsas_conf.xml
 chown tc.repo /var/dsas/*.csr /var/dsas/*.pem
-chmod 664 /var/dsas/dsas_conf.xml
-chown tc.staff /var/dsas/dsas_conf.xml
+chown tc.verif /var/dsas/dsas_conf.xml
+chown root.repo /var/dsas/repo.conf*
 chown -R root.staff /opt
 chmod 770 /opt
 chmod 770 /opt/.filetool.lst

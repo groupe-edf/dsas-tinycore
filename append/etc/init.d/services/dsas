@@ -521,6 +521,8 @@ stop_network(){
 
 start_web_admin(){
   cp "$VAR/admin.conf.dsas" "$VAR/admin.conf"
+  chown root.staff $VAR/admin.conf $VAR/admin.conf.dsas
+  chmod 640 $VAR/admin.conf $VAR/admin.conf.dsas
   NETDEVICES=$(getnetdevices)
   ETH0=$(echo "$NETDEVICES" | cut -d" " -f1)
   ip=$(ifconfig "$ETH0" | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
@@ -746,6 +748,8 @@ start_repo(){
   repo="$(xmllint --xpath 'string(dsas/config/web/repo)' "$VAR/dsas_conf.xml")"
   if [ "$repo" != "true" ]; then return 0; fi
   cp "$VAR/repo.conf.dsas" "$VAR/repo.conf"
+  chown root.repo $VAR/repo.conf $VAR/repo.conf.dsas
+  chmod 640 $VAR/repo.conf $VAR/repo.conf.dsas
   NETDEVICES=$(getnetdevices)
   ETH0=$(echo "$NETDEVICES" | cut -d" " -f1)
   ip=$(ifconfig "$ETH0" | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
@@ -917,7 +921,8 @@ reboot_required(){
 save_config(){
   # Make a copy of the config file for later comparison
   $as_tc cp -f $VAR/dsas_conf.xml "$VAR/dsas_conf.xml.active"
-  $as_tc chmod 644 $VAR/dsas_conf.xml "$VAR/dsas_conf.xml.active"
+  $as_tc chmod 640 $VAR/dsas_conf.xml "$VAR/dsas_conf.xml.active"
+  $as_tc chown tc.verif $VAR/dsas_conf.xml "$VAR/dsas_conf.xml.active"
 
   echo "Saving DSAS configuration"
   $as_tc filetool.sh -b
@@ -1034,7 +1039,8 @@ case "${1}" in
       CONFIG_SSH=""
     else
       TYP="$(dialog --stdout --no-cancel --radiolist 'Select machine type:' 0 0 0 haut 'Haut/High' on bas 'Bas/Low' off)"
-      $as_tc echo "$TYP" > "$VAR/dsas_typ"
+      echo "$TYP" > "$VAR/dsas_typ"
+      chown 640 "$VAR/dsas_typ"
       echo "Machine configured as type: ${GREEN}$TYP${NORMAL}"
       config_interco
       # The machine "haut" is configured from the web admin of "bas"
@@ -1060,6 +1066,8 @@ case "${1}" in
       start_snmp
       # Put root crontab file in place so it only runs on the machine bas
       /bin/cp $VAR/crontab.dsas /var/spool/cron/crontabs/root
+      chown root.root /var/spool/cron/crontabs/root
+      chmod 600 /var/spool/cron/crontabs/root
     fi
 
     start_chroot
@@ -1094,7 +1102,8 @@ case "${1}" in
 
   reconfig)
     TYP="$(dialog --stdout --no-cancel --radiolist 'Select machine type:' 0 0 0 haut 'Haut/High' on bas 'Bas/Low' off)"
-    $as_tc echo "$TYP" > "$VAR/dsas_typ"
+    echo "$TYP" > "$VAR/dsas_typ"
+    chown 640 "$VAR/dsas_typ"
     echo "Machine configured as type: ${GREEN}$TYP${NORMAL}"
     config_interco
     setup_interco
