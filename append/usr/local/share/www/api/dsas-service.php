@@ -140,7 +140,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $errors[] = ["snmp_pass" => "The SNMP password is illegal"];
         else if ($snmp_password != str_replace("/\s+/", "", $snmp_password))
           $errors[] = ["snmp_pass" => "The SNMP password can not contain white spaces"];
-        else if (! complexity_test($snmp_password))
+        else if ($dsas->config->snmp->active === "true" && ! complexity_test($snmp_password))
           $errors[] = ["snmp_pass" => "The SNMP password is insufficently complex"];
         else
           $dsas->config->snmp->password = $snmp_password;
@@ -156,7 +156,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $errors[] = ["snmp_passpriv" => "The SNMP password is illegal"];
         else if ($snmp_passpriv != str_replace("/\s+/", "", $snmp_passpriv))
           $errors[] = ["snmp_passpriv" => "The SNMP password can not contain white spaces"];
-        else if (! complexity_test($snmp_passpriv))
+        else if ($dsas->config->snmp->active === "true" && ! complexity_test($snmp_passpriv))
           $errors[] = ["snmp_passpriv" => "The SNMP password is insufficently complex"];
         else
           $dsas->config->snmp->passpriv = $snmp_passpriv;
