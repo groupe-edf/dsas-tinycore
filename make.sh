@@ -432,6 +432,33 @@ EOF
   done
 }
 
+install_firefox(){
+  package=firefox
+  target=$tcz_dir/$package.tcz
+  dep=$target.dep
+  latest=firefox_getLatest
+  if test ! -f "$target"; then
+    if test -f "$tce_dir/$package.tcz"; then
+      msg "fetching package $package ..."
+      cp "$tce_dir/$package.tcz" "$target"
+      if ! test -f "$tce_dir/$package/tcz.dep"; then
+        touch "$tce_dir/$package.tcz.dep"
+      fi
+    else
+      msg "Installing package $package ..."
+      tce-load -wi $latest || exit 1
+      msg "Constructing package $package"
+      firefox_getLatest.sh -e || exit 1
+      msg "fecthing package $package"
+      cp "$tce_dir/$package.tcz" "$target"
+      if ! test -f "$tce_dir/$package/tcz.dep"; then
+        touch "$tce_dir/$package.tcz.dep"
+      fi
+    fi
+  fi
+  install_tcz $package
+}
+
 get_unpack_livecd(){
   test -f $livecd0 || msg Downloading $livecd_url
   test -f $livecd0 || cmd "$curl_cmd" -o "$livecd0" "$livecd_url" || exit 1
@@ -597,32 +624,31 @@ docker)
   if [ "$testcode" = "1" ]; then
     # Install test specific DSAS files
     msg Append test specific DSAS files
-     rsync -rlptv "$testdir/" "$extract/"
+    rsync -rlptv "$testdir/" "$extract/"
   
     # Install packages to allow testing of rsyslog and radius
     install_tcz freeradius
     install_tcz rsyslog
 
-    # The integration testing framework is based en Selenium which needs a recent
-    # JRE, and these are only available on 64bit plateforms. Only install the 
-    # Selenium/PHP test code if arch=64
-    if [ "$arch" = 64 ]; then
-      # Install PHP cli and add iconv and phar extension
-      install_tcz php-8.0-cli
-      sed -i -e "s/;extension=phar/extension=phar/" $extract/usr/local/etc/php/php.ini
-      sed -i -e "s/;extension=iconv/extension=iconv/" $extract/usr/local/etc/php/php.ini
-      sed -i -e "s/;extension=curl/extension=curl/" $extract/usr/local/etc/php/php.ini
-      sed -i -e "s/;extension=zip/extension=zip/" $extract/usr/local/etc/php/php.ini
+    # Install firefox
+    install_firefox
+
+    # Install PHP cli and add iconv and phar extension
+    install_tcz php-8.0-cli
+    sed -i -e "s/;extension=phar/extension=phar/" $extract/usr/local/etc/php/php.ini
+    sed -i -e "s/;extension=iconv/extension=iconv/" $extract/usr/local/etc/php/php.ini
+    sed -i -e "s/;extension=curl/extension=curl/" $extract/usr/local/etc/php/php.ini
+    sed -i -e "s/;extension=zip/extension=zip/" $extract/usr/local/etc/php/php.ini
             
-      # Install PHP composer
-      download -f "https:/getcomposer.org/installer" "$src_dir"
-      cp "$src_dir/installer" "$extract/home/tc"
-      chmod a+rx "$extract/home/tc/installer"
-      chroot "$extract" chown -R tc.staff "/home/tc/"
-      cp /etc/resolv.conf $extract/etc/resolv.conf && msg "copy resolv.conf"
-      # http_proxy is imported (or not) from the environment 
-      # shellcheck disable=SC2154
-      cat << EOF > "$extract/tmp/script"
+    # Install PHP composer
+    download -f "https:/getcomposer.org/installer" "$src_dir"
+    cp "$src_dir/installer" "$extract/home/tc"
+    chmod a+rx "$extract/home/tc/installer"
+    chroot "$extract" chown -R tc.staff "/home/tc/"
+    cp /etc/resolv.conf $extract/etc/resolv.conf && msg "copy resolv.conf"
+    # http_proxy is imported (or not) from the environment 
+    # shellcheck disable=SC2154
+    cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 export http_proxy=$http_proxy
 export https_proxy=$https_proxy
@@ -630,12 +656,12 @@ cd /home/tc
 env HOME=/home/tc php installer || exit 1
 rm installer
 EOF
-      chmod a+x "$extract/tmp/script"
-      msg "Install PHP Composer $extract"
-      HOME=/home/tc chroot --userspec=tc "$extract" /tmp/script || error composer installation failed
+    chmod a+x "$extract/tmp/script"
+    msg "Install PHP Composer $extract"
+    HOME=/home/tc chroot --userspec=tc "$extract" /tmp/script || error composer installation failed
 
-      # Install Facebook Webdriver
-      cat << EOF > "$extract/tmp/script"
+    # Install Facebook Webdriver
+    cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 # shellcheck disable=SC2154
 export http_proxy=$http_proxy
@@ -643,28 +669,15 @@ export https_proxy=$https_proxy
 cd /home/tc
 env HOME=/home/tc php composer.phar require php-webdriver/webdriver
 EOF
-      chmod a+x "$extract/tmp/script"
-      msg "Install PHP Web driver"  
-      chroot --userspec=tc "$extract" /tmp/script
-      rm $extract/etc/resolv.conf
+    chmod a+x "$extract/tmp/script"
+    msg "Install PHP Web driver"  
+    chroot --userspec=tc "$extract" /tmp/script
+    rm $extract/etc/resolv.conf
 
-      # Install openjdk and selenium 
-      download "https://download.oracle.com/java/18/latest/jdk-18_linux-x64_bin.tar.gz" "$src_dir"
-      tar xCzf "$extract/usr/local" "$src_dir/jdk-18_linux-x64_bin.tar.gz"
-      jdk=$(find $extract/usr/local -maxdepth 1 -type d -name "*jdk*")
-      ( cd $extract/usr/local; ln -s ${jdk#$extract/usr/local/} jdk; )
-      download "https://github.com/SeleniumHQ/selenium/releases/download/selenium-4.2.0/selenium-server-4.2.2.jar" "$src_dir"
-      cp "$src_dir/selenium-server-4.2.2.jar" $extract/home/tc
-      chroot "$extract" chown tc.staff "/home/tc/selenium-server-4.2.2.jar"
-      
-      # Download and install the chrome (only 64bit) and gecko (firefox) webdrivers
-      download "https://chromedriver.storage.googleapis.com/94.0.4606.41/chromedriver_linux64.zip" "$src_dir"
-      unzip -d "$extract/usr/local/bin" "$src_dir/chromedriver_linux64.zip"
-      download "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux${arch}.tar.gz" "$src_dir"
-      tar xCzf "$extract/usr/local/bin" "$src_dir/geckodriver-v0.31.0-linux${arch}.tar.gz"
-    fi
+    # Download and install the gecko (firefox) webdriver
+    download "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux${arch}.tar.gz" "$src_dir"
+    tar xCzf "$extract/usr/local/bin" "$src_dir/geckodriver-v0.31.0-linux${arch}.tar.gz"   
   fi
-
 
   # prevent autologin of tc user
   ( cd "$extract/etc" || exit 1; sed -i -r 's/(.*getty)(.*autologin)(.*)/\1\3/g'  inittab; )
