@@ -25,6 +25,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
 
           if ($net["dhcp"] == "true") {
             $dsas->config->network->{$iface}->dhcp = "true";
+            $j++;
             continue;
           } else
             $dsas->config->network->{$iface}->dhcp = "false";
