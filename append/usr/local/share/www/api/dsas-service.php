@@ -33,7 +33,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           foreach (explode(",",$user_tc) as $inet) {
             if (substr($inet,0,1) === "!")
               $inet = substr($inet,1,strlen($inet)-1); 
-            if ($user_tc_err = ip_valid($inet, false))
+            if ($user_tc_err = ip_valid($inet, 0))
               break;
           }
         }
@@ -48,7 +48,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           foreach (explode(",",$user_bas) as $inet) {
             if (substr($inet,0,1) === "!")
               $inet = substr($inet,1,strlen($inet)-1); 
-            if ($user_bas_err = ip_valid($inet, false))
+            if ($user_bas_err = ip_valid($inet, 0))
               break;
           }
         }
@@ -63,7 +63,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           foreach (explode(",",$user_haut) as $inet) {
             if (substr($inet,0,1) === "!")
               $inet = substr($inet,1,strlen($inet)-1); 
-            if ($user_haut_err = ip_valid($inet, false))
+            if ($user_haut_err = ip_valid($inet, 0))
               break;
           }
         }

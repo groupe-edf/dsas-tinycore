@@ -395,12 +395,16 @@ function get_ifaces() : array {
  *
  * @param string $addr
  *     The IP address to check if it is valid
- * @return string $nomask
- *     Is true if no mask is used, otherwise $addr must be in CIDR format
+ * @param int $nomask
+ *     -1 = No mask is used
+ *      0 = Autodetect if a mask is used
+ *      1 = A mask is used and address in CIDR format
+ * @return string
+ *     a non empty string if an error occured
  */
-function ip_valid(string $addr, bool $nomask) : string{
+function ip_valid(string $addr, int $nomask) : string{
   $addr = trim($addr);
-  if ($nomask || empty(strpos($addr, "/"))){
+  if ($nomask < 0 || ($nomask == 0 && empty(strpos($addr, "/")))){
     $net = $addr;
   } else {
     $arr = explode("/", $addr, 2);
@@ -442,7 +446,7 @@ function ip_valid(string $addr, bool $nomask) : string{
 function inet_valid(string $addr) : string {
   # If it starts in a number, it's an IP address
   if (is_numeric($addr[0]))
-    return ip_valid($addr, true);
+    return ip_valid($addr, -1);
   else
     return (is_valid_domain($addr) ? "" : "The address is invalid");
 }

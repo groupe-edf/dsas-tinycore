@@ -31,7 +31,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $dsas->config->network->{$iface}->dhcp = "false";
 
           $cidr = htmlspecialchars(trim($net["cidr"]));
-          $cidr_err = ip_valid($cidr, false);
+          $cidr_err = ip_valid($cidr, 1);
           if (empty($cidr_err))
             $dsas->config->network->{$iface}->cidr = $cidr;
           else
@@ -41,7 +41,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           if (empty($gateway))
             $gateway_err = "";
           else
-            $gateway_err = ip_valid($gateway, true);
+            $gateway_err = ip_valid($gateway, -1);
           if (empty($gateway_err))
             $dsas->config->network->{$iface}->gateway = $gateway;
           else
@@ -53,7 +53,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
              $errors[] = [ "iface_dns_domain" . $j => "Domain is invalid"];
           
           foreach ($net["dns"]["nameserver"] as $server) {
-            if (!empty($dns_err = ip_valid($server, true)))
+            if (!empty($dns_err = ip_valid($server, -1)))
               break;
           }
           if (empty($dns_err)) {
