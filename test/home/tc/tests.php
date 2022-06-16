@@ -5,6 +5,7 @@ require_once(__DIR__ . '/vendor/autoload.php');
 use Facebook\WebDriver\Firefox\FirefoxDriver;
 use Facebook\WebDriver\Firefox\FirefoxOptions;
 use Facebook\WebDriver\Firefox\FirefoxProfile;
+use Facebook\WebDriver\Exception\TimeoutException;
 use Facebook\WebDriver\WebDriverWait;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\WebDriverExpectedCondition;
@@ -48,14 +49,15 @@ function test(string $_msg, callable $_fn, bool $_fatal = false) {
       pass();
     else if ($_fatal) {
       fail();
-      throw new RunTimeException("The previous error was fatal");
+      throw new RuntimeException("The previous error was fatal");
     } else
       fail();
   } catch (Throwable $e) {
     fail();
-    echo $e->getMessage() . PHP_EOL;
     if ($_fatal) 
       throw $e;
+    else
+      echo $e->getMessage() . PHP_EOL;
   }
 }
 
@@ -84,6 +86,21 @@ function hostip() {
   }
   return ""; 
 }
+
+function readline($prompt = null) {
+  if ($prompt)
+    echo $prompt;
+  exec("stty -echo");
+  $line = rtrim(fgets(STDIN, 1024));
+  exec("stty echo");
+  echo PHP_EOL;
+  return $line;
+}
+
+// Read password from console
+$password = readline("Enter password of user '" . _user . "' [Return for default]: ");
+if (empty($password))
+  $password = _pass;
 
 // Main block of test code
 try {
@@ -153,11 +170,15 @@ try {
   // Enter good username and password
   test("Testing Login", function() {
       $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_user"))->clear()->sendKeys(_user);
-      $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys(_pass);
+      $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys($GLOBALS["password"]);
       $GLOBALS["driver"]->findElement(WebDriverBy::className("btn"))->click();
       // Wait to be on main page
-      $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Main"));
-      return ($GLOBALS["driver"]->getTitle() === "Main");
+      try { 
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Main"));
+      } catch (TimeoutException $e) {
+        throw new RuntimeException("Bad Password");
+      }
+      return true;
     }, true);
 
   // Check Status section of main page has real values
@@ -228,9 +249,165 @@ try {
   $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#iface1']"))->click();
 
   // FIXME Save state of the upper network
+  test("Saving network state of upper machine", function () {
+      $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("iface_dhcp1")));
+      $GLOBALS["net1"]["dhcp"] = $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_dhcp1"))->isSelected();
+      $GLOBALS["net1"]["cidr"] = $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_cidr1"))->getAttribute("value");
+      $GLOBALS["net1"]["gateway"] = $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_gateway1"))->getAttribute("value");
+      $GLOBALS["net1"]["domain"] = $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_dns_domain1"))->getAttribute("value");
+      $GLOBALS["net1"]["nameserver"] = $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_nameserver1"))->getAttribute("value");
+      return true;
+    }, true);
 
   // FIXME Try setting and rereading the network details of the Upper machine
-  
+  test("Setting good static IP address configuration", function () {
+      if ($GLOBALS["driver"]->findElement(WebDriverBy::id("iface_dhcp1"))->isSelected())
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_dhcp1"))->click();
+      $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_cidr1"))->clear()->sendKeys("192.168.0.1/24");
+      $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_gateway1"))->clear()->sendKeys("192.168.0.254");
+      $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_dns_domain1"))->clear()->sendKeys("example.com");
+      $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_nameserver1"))->clear()->sendKeys("8.8.8.8" . PHP_EOL . "1.1.1.1");
+      // Have to be careful not to click the Apply button
+      foreach ($GLOBALS["driver"]->findElements(WebDriverBy::className("btn")) as $el) {
+        if (str_contains($el->getAttribute("class"), "nav-link"))
+          continue;
+        if ($el->getTagName() !== "input")
+          continue;
+        $el->click();
+        break;
+      }
+      sleep(0.2);  // Wait to ensure changes made
+      // Refresh page and reread values
+      $GLOBALS["driver"]->navigate()->refresh();
+      $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#iface1']")));
+      $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#iface0']"))->click();
+      $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#iface1']"))->click();
+      $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("iface_dhcp1")));
+      if ($GLOBALS["driver"]->findElement(WebDriverBy::id("iface_dhcp1"))->isSelected() ||
+          ("192.168.0.1/24" !== $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_cidr1"))->getAttribute("value")) ||
+          ("192.168.0.254" !== $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_gateway1"))->getAttribute("value")) ||
+          ("example.com" !== $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_dns_domain1"))->getAttribute("value")) ||
+          ! str_contains($GLOBALS["driver"]->findElement(WebDriverBy::id("iface_nameserver1"))->getAttribute("value"), "1.1.1.1"))
+        throw new RuntimeException("Could not set upper network values");
+      return true;
+    });
+
+  // Try setting bad values to the network fields
+  test("Setting bad CIDR address 1", function () {
+      $GLOBALS["driver"]->executeScript("for (feed of document.getElementsByClassName(\"form-control\")) feed.setAttribute(\"class\", \"form-control\");");
+      $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_cidr1"))->clear()->sendKeys("270.0.1.1/24");
+      foreach ($GLOBALS["driver"]->findElements(WebDriverBy::className("btn")) as $el) {
+        if (str_contains($el->getAttribute("class"), "nav-link"))
+          continue;
+        if ($el->getTagName() !== "input")
+          continue;
+        $el->click();
+        break;
+      }
+      try { 
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className("is-invalid")));
+      } catch (TimeoutException $e) {
+        throw new RuntimeException("Undetected bad CIDR value");
+      }
+      return (str_contains($GLOBALS["driver"]->findElement(WebDriverBy::id("iface_cidr1"))->getAttribute("class"), "is-invalid"));
+    }); 
+  test("Setting bad CIDR address 2", function () {
+      $GLOBALS["driver"]->executeScript("for (feed of document.getElementsByClassName(\"form-control\")) feed.setAttribute(\"class\", \"form-control\");");
+      $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_cidr1"))->clear()->sendKeys("192.168.0.1");
+      foreach ($GLOBALS["driver"]->findElements(WebDriverBy::className("btn")) as $el) {
+        if (str_contains($el->getAttribute("class"), "nav-link"))
+          continue;
+        if ($el->getTagName() !== "input")
+          continue;
+        $el->click();
+        break;
+      }
+      try { 
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className("is-invalid")));
+      } catch (TimeoutException $e) {
+        throw new RuntimeException("Undetected bad CIDR value");
+      }
+      return (str_contains($GLOBALS["driver"]->findElement(WebDriverBy::id("iface_cidr1"))->getAttribute("class"), "is-invalid"));
+    }, true); 
+  test("Setting bad CIDR address 3", function () {
+      $GLOBALS["driver"]->executeScript("for (feed of document.getElementsByClassName(\"form-control\")) feed.setAttribute(\"class\", \"form-control\");");
+      $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_cidr1"))->clear()->sendKeys("test.example.com");
+      foreach ($GLOBALS["driver"]->findElements(WebDriverBy::className("btn")) as $el) {
+        if (str_contains($el->getAttribute("class"), "nav-link"))
+          continue;
+        if ($el->getTagName() !== "input")
+          continue;
+        $el->click();
+        break;
+      }
+      try { 
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className("is-invalid")));
+      } catch (TimeoutException $e) {
+        throw new RuntimeException("Undetected bad CIDR value");
+      }
+      return (str_contains($GLOBALS["driver"]->findElement(WebDriverBy::id("iface_cidr1"))->getAttribute("class"), "is-invalid"));
+    }); 
+  $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_cidr1"))->clear()->sendKeys("192.168.0.1");
+  test("Setting bad gateway address 1", function () {
+      $GLOBALS["driver"]->executeScript("for (feed of document.getElementsByClassName(\"form-control\")) feed.setAttribute(\"class\", \"form-control\");");
+      $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_gateway1"))->clear()->sendKeys("270.0.1.1");
+      foreach ($GLOBALS["driver"]->findElements(WebDriverBy::className("btn")) as $el) {
+        if (str_contains($el->getAttribute("class"), "nav-link"))
+          continue;
+        if ($el->getTagName() !== "input")
+          continue;
+        $el->click();
+        break;
+      }
+      try { 
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className("is-invalid")));
+      } catch (TimeoutException $e) {
+        throw new RuntimeException("Undetected bad Gateway value");
+      }
+      //$GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#iface1']")));
+      //$GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#iface0']"))->click();
+      //$GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#iface1']"))->click();
+      return (str_contains($GLOBALS["driver"]->findElement(WebDriverBy::id("iface_gateway1"))->getAttribute("class"), "is-invalid"));
+    }); 
+  test("Setting bad gateway address 2", function () {
+      $GLOBALS["driver"]->executeScript("for (feed of document.getElementsByClassName(\"form-control\")) feed.setAttribute(\"class\", \"form-control\");");
+      $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_gateway1"))->clear()->sendKeys("192.168.0.254/24");
+      foreach ($GLOBALS["driver"]->findElements(WebDriverBy::className("btn")) as $el) {
+        if (str_contains($el->getAttribute("class"), "nav-link"))
+          continue;
+        if ($el->getTagName() !== "input")
+          continue;
+        $el->click();
+        break;
+      }
+      try { 
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className("is-invalid")));
+      } catch (TimeoutException $e) {
+        throw new RuntimeException("Undetected bad Gateway value");
+      }
+      return (str_contains($GLOBALS["driver"]->findElement(WebDriverBy::id("iface_gateway1"))->getAttribute("class"), "is-invalid"));
+    }); 
+  test("Setting bad gateway address 3", function () {
+      $GLOBALS["driver"]->executeScript("for (feed of document.getElementsByClassName(\"form-control\")) feed.setAttribute(\"class\", \"form-control\");");
+      $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_gateway1"))->clear()->sendKeys("test.example.com");
+      foreach ($GLOBALS["driver"]->findElements(WebDriverBy::className("btn")) as $el) {
+        if (str_contains($el->getAttribute("class"), "nav-link"))
+          continue;
+        if ($el->getTagName() !== "input")
+          continue;
+        $el->click();
+        break;
+      }
+      try { 
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className("is-invalid")));
+      } catch (TimeoutException $e) {
+        throw new RuntimeException("Undetected bad Gateway value");
+      }
+      return (str_contains($GLOBALS["driver"]->findElement(WebDriverBy::id("iface_gateway1"))->getAttribute("class"), "is-invalid"));
+    }); 
+  $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_gateway1"))->clear()->sendKeys("192.168.0.254");
+ 
+ 
   // FIXME Try applying and seeing if network changed on upper machine
 
   // FIXME Restore state of upper network and apply
@@ -287,7 +464,7 @@ try {
 
 } catch (Exception $e) {
   // Catch other errors here so that firefox is shut down cleanly
-  echo $e->getMessage();
+  echo $e->getMessage() . PHP_EOL;
 } finally {
   // Quit firefox instance
   $driver->quit();
