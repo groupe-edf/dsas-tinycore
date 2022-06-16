@@ -818,7 +818,7 @@ start_radius(){
 
 stop_radius(){
   sed -i -e ':a;N;s/^.*pam_radius_server.so.*\n//' /usr/local/etc/pam.d/common-auth
-  rm $RADIUS_SERVER
+  rm $RADIUS_SERVER >& /dev/null
 }
 
 start_antivirus(){
