@@ -13,7 +13,7 @@ use Facebook\WebDriver\WebDriverSelect;
 use Facebook\WebDriver\WebDriverExpectedCondition;
 
 // Modifiable constants
-$what = "serv" ; // all, login, status, web, net, serv, cert, task, user, backup 
+$what = "user" ; // all, login, status, web, net, serv, cert, task, user, backup 
 define("_user", "tc");
 define("_pass", "dSaO2021cTf");
 define("_delay", 5);  // 5 seconds
@@ -183,7 +183,7 @@ function modalfn($msg, $fld, $value, $modal = true) {
 copy("/var/dsas/dsas_conf.xml", "/var/dsas/dsas_conf.xml.test"); 
 
 // Read password from console
-$password = readline("Enter password of user '" . _user . "' [Return for default]: ");
+$password = readline(_normal . "Enter password of user '" . _user . "' [Return for default]: ");
 if (empty($password))
   $password = _pass;
 
@@ -211,6 +211,7 @@ try {
       $caps->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
       $caps->setCapability(FirefoxDriver::PROFILE, $firefoxProfile);
       $caps->setCapability("acceptInsecureCerts", true);
+      $caps->setCapability("loggingPrefs", ['browser' => 'all']);
       $GLOBALS["driver"] = FirefoxDriver::start($caps);
       return true;
     }, true);
@@ -626,8 +627,28 @@ try {
         return ($retval != 0);
       }); 
 
-    // FIXME SYSLOG
+    // Test activating and changing syslog with empty syslog server
+    test("Activation of syslogd", function () {
+        if (! $GLOBALS["driver"]->findElement(WebDriverBy::id("syslog"))->isSelected())
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("syslog"))->click();
 
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("syslog_server"))->clear();
+        save();
+        apply();
+        exec("pgrep syslogd", $data, $retval);
+        return($retval == 0); 
+      });
+        
+    // Ensure that deactivating ntp works correctly
+    test("Deactivation of syslog", function () {
+        if ($GLOBALS["driver"]->findElement(WebDriverBy::id("syslog"))->isSelected())
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("syslog"))->click();
+        save();
+        apply();
+        exec("pgrep syslogd", $data, $retval);
+        return ($retval != 0);
+      });
+        
     // Test activating and changing ntp hosts (multiple IPs)
     test("Activation of NTP", function () {
         if (! $GLOBALS["driver"]->findElement(WebDriverBy::id("ntp"))->isSelected())
@@ -646,7 +667,7 @@ try {
         return true;
       });
         
-    // iEnsure that deactivating ntp works correctly
+    // Ensure that deactivating ntp works correctly
     test("Deactivation of NTP", function () {
         if ($GLOBALS["driver"]->findElement(WebDriverBy::id("ntp"))->isSelected())
           $GLOBALS["driver"]->findElement(WebDriverBy::id("ntp"))->click();
@@ -729,7 +750,90 @@ try {
   }
 
   if ($what === "all" || $what === "user") {
-    //FIXME
+    // Navigate to /users.html via navbar 
+    test("Navigating to /users.html via navbar", function () {
+        $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='users.html']"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Users"));
+        return ($GLOBALS["driver"]->getTitle() === "Users");
+      }, true);
+
+    // Test a bad username
+    test("Try to add bad username", function () {
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::xpath("//img[@src='plus-lg.svg']")));
+        sleep(2);
+        echo $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a/img[@src='plus-lg.svg']"))->getAttribute("onclick");
+
+
+        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a/img[@src='plus-lg.svg']"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("NewUser")));
+        usleep(500000);
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("NewUser"))->clear()->sendKeys("T3stUs3%");
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        try {
+          $GLOBALS["driver"]->wait(1, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+          $GLOBALS["driver"]->wait(1, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
+        } catch (Exception $e) {
+          // The modal hasn't cleared and so there's an error as we want. Clear and return
+          usleep(500000);
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("NewUser")));
+          return true;
+        }
+        return false;
+      }, true); 
+
+    // Add a test user. Don't need to apply here 
+    test("Try to adding a username", function () {
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("Users")));
+        $GLOBALS["driver"]->findElement(WebDriverBy::tagName("img"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("NewUser")));
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("NewUser"))->clear()->sendKeys("testuser");
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        try {
+          $GLOBALS["driver"]->wait(1, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+        } catch (Exception $e) {
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("NewUser")));
+          return false;
+        }
+        return true;
+      }); 
+
+    // Try adding the same user and see if an error results
+    test("Try to adding an existing username", function () {
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("Users")));
+        $GLOBALS["driver"]->findElement(WebDriverBy::tagName("img"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("NewUser")));
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("NewUser"))->clear()->sendKeys("testuser");
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        try {
+          $GLOBALS["driver"]->wait(1, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+        } catch (Exception $e) {
+          // The modal has clear and so there's an error as we want. Clear and return
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("NewUser")));
+          return true;
+        }
+        return false;
+      }); 
+
+    // FIXME Change their information 
+ 
+    // FIXME Test changing to a bad password
+
+    // FIXME Change the password of the test user. Examine /etc/passwd
+
+    // FIXME logout and connecting again as new user. If ok logout and back in as tc
+
+    // FIXME deactivate user and logout and try connecting again as new user. If ok logout and back in as tc
+
+    // FIXME Change user type to lower. Logout and back in and see 
+    // that we end up on the page passwd.html and not index.html
+    // Logout and back in again
+
+    // FIXME Delete test user and examine /etc/passwd and /home
+
   }
 
   if ($what === "all" || $what === "backup") {
