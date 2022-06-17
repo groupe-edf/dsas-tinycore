@@ -176,7 +176,7 @@ function modalfn($msg, $fld, $value, $modal = true) {
         throw new RuntimeException("Error setting value");
       }
       return (str_contains($GLOBALS["driver"]->findElement(WebDriverBy::id($fld))->getAttribute("value"), $value));
-    }, true); 
+    }); 
 }
 
 // Save XML configure file for restoration at the end
@@ -378,7 +378,7 @@ try {
             ! str_contains($GLOBALS["driver"]->findElement(WebDriverBy::id("iface_nameserver1"))->getAttribute("value"), "1.1.1.1"))
           throw new RuntimeException("Could not set upper network values");
         return true;
-      }, true);
+      });
 
     // Try setting bad values to the network fields
     feedfn("Setting bad CIDR address 1", "iface_cidr1", "270.0.1.1/24");
@@ -486,7 +486,7 @@ try {
         $privencrypt = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("snmp_privencrypt")));
         foreach ($privencrypt->getOptions() as $el) {
           if ($el->isSelected()) {
-            $GLOBALS["serv"]["snmp_prvencrypt"] = $el->getAttribute("value");
+            $GLOBALS["serv"]["snmp_privencrypt"] = $el->getAttribute("value");
             break;
           }
         } 
@@ -509,7 +509,7 @@ try {
     feedfn("Setting bad admin address", "user_tc", "270.0.1.1/24");
     // Try setting good SSH IP addresses for admin
     modalfn("Setting good admin address", "user_tc", "127.0.0.1/32");
-    // FIXME Try setting complex SSH IP addresses for admin (10.0.2.0/24,!10.0.2.100)
+    // Try setting complex SSH IP addresses for admin (10.0.2.0/24,!10.0.2.100)
     modalfn("Setting complex admin address", "user_tc", "0.0.0.0/0,!127.0.0.1");
     $GLOBALS["driver"]->findElement(WebDriverBy::id("user_tc"))->clear()->sendKeys("0.0.0.0/0");
     feedfn("Setting bad upper user address", "user_haut", "270.0.1.1/24");
@@ -598,14 +598,64 @@ try {
     if ($GLOBALS["driver"]->findElement(WebDriverBy::id("ssh"))->isSelected())
       $GLOBALS["driver"]->findElement(WebDriverBy::id("ssh"))->click();
 
-    // FIXME SNMP
+    // Test activation of SNMP
+    test("Activation of SNMPv3", function () {
+        if (! $GLOBALS["driver"]->findElement(WebDriverBy::id("snmp"))->isSelected())
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("snmp"))->click();
+
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("snmp_user"))->clear()->sendKeys("TestUser");
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("snmp_pass"))->clear()->sendKeys("P@ssw0rd!");
+        $encrypt = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("snmp_encrypt")));
+        $encrypt->selectByValue("SHA");
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("snmp_passpriv"))->clear()->sendKeys("P@ssw0rd!");
+        $privencrypt = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("snmp_privencrypt")));
+        $privencrypt->selectByValue("AES");
+        save();
+        apply();
+        exec("snmpwalk -v3 -l authPriv -u TestUser -a SHA -A P@ssw0rd! -x AES -X P@ssw0rd! 10.0.2.15 1.3.6.1.4.1.16845.100.100.2.0", $data, $retval);
+        return ($retval == 0);
+      });
+
+    // Ensure that snmp is properly deactivated
+    test("Deactivation of SNMPv3", function () {
+        if ($GLOBALS["driver"]->findElement(WebDriverBy::id("snmp"))->isSelected())
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("snmp"))->click();
+        save();
+        apply();
+        exec("pgrep snmpd", $data, $retval);
+        return ($retval != 0);
+      }); 
 
     // FIXME SYSLOG
 
-    // FIXME Test activating and changing ntp hosts (multiple IPs)
+    // Test activating and changing ntp hosts (multiple IPs)
+    test("Activation of NTP", function () {
+        if (! $GLOBALS["driver"]->findElement(WebDriverBy::id("ntp"))->isSelected())
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("ntp"))->click();
 
-    // FIXME deactivate NTP
-
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("ntp_pool"))->clear()->sendKeys("ntp1.example.com" . PHP_EOL . "ntp2.example.com");
+        save();
+        apply();
+        exec("pgrep ntpd", $data, $retval);
+        if ($retval == 0) {
+          $cmdline = file_get_contents("/proc/" . $data[0] . "/cmdline");
+          if (! preg_match("/.*ntp1.example.com.*ntp2.example.com.*$/", $cmdline))
+            throw new RuntimeException("Incorrect ntp commandline");
+        } else
+          throw new RuntimeException("Can not start ntpd");
+        return true;
+      });
+        
+    // iEnsure that deactivating ntp works correctly
+    test("Deactivation of NTP", function () {
+        if ($GLOBALS["driver"]->findElement(WebDriverBy::id("ntp"))->isSelected())
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("ntp"))->click();
+        save();
+        apply();
+        exec("pgrep ntpd", $data, $retval);
+        return ($retval != 0);
+      });
+        
     // FIXME Try activating and applying antivirus and see if
     // clamdscan is running. Needs CVD files pre-installed
 
@@ -696,13 +746,16 @@ try {
   $driver->takeScreenshot("screenshot.png");
   echo "Screenshot of navigator avaiilable in file 'screenshot.png'" . PHP_EOL;
 } finally {
+  // Restore original XML configure file and apply it
+  test("Restoring original configuration", function () {
+      copy("/var/dsas/dsas_conf.xml.test", "/var/dsas/dsas_conf.xml"); 
+      unlink("/var/dsas/dsas_conf.xml.test");
+      apply();
+      return true;
+    });
+
   // Quit firefox instance
   $driver->quit();
-
-  // Restore original XML configure file 
-  echo "Restoring original configuration" . PHP_EOL;
-  copy("/var/dsas/dsas_conf.xml.test", "/var/dsas/dsas_conf.xml"); 
-  unlink("/var/dsas/dsas_conf.xml.test");
 }
 
 ?>
