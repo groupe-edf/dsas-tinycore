@@ -1202,6 +1202,9 @@ function dsas_change_service(what) {
     } else if (what === "snmp") {
         document.getElementById("snmp_user").disabled = ! document.getElementById("snmp").checked;
         document.getElementById("snmp_pass").disabled = ! document.getElementById("snmp").checked;
+        document.getElementById("snmp_encrypt").disabled = ! document.getElementById("snmp").checked;
+        document.getElementById("snmp_passpriv").disabled = ! document.getElementById("snmp").checked;
+        document.getElementById("snmp_privencrypt").disabled = ! document.getElementById("snmp").checked;
     } else if (what !== "repo") {
         fetch("api/dsas-service.php").then(response => {
             if (response.ok) 

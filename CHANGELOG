@@ -1,6 +1,7 @@
 Log of the principal changes to the DSAS
 
 Version 1.1.2 (XX XXXX XXX)
+- Problem setting extended SNMPv3 options
 - Fix initial boot failure due to radius issue
 - Allow empty SNMP passwords if SNMP inactive
 
