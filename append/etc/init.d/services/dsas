@@ -529,7 +529,7 @@ start_web_admin(){
   echo "Binding webserver to ${GREEN}$ETH0${NORMAL} and address ${GREEN}$ip${NORMAL}." 
   echo "server.bind = \"$ip\"" >> $VAR/admin.conf
   echo "Starting administration web server"
-  $as_tc lighttpd -Df "$VAR/admin.conf" &
+  $as_tc lighttpd -Df "$VAR/admin.conf" >& /dev/null &
 }
 
 stop_web_admin(){
@@ -758,7 +758,7 @@ start_repo(){
   echo "Starting repository web server"
   # Start as root to allow use of port 443. But after change to user bas.repo
   # via options in repo.conf
-  lighttpd -Df "$VAR/repo.conf" &
+  lighttpd -Df "$VAR/repo.conf" >& /dev/null &
 }
 
 stop_repo(){
