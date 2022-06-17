@@ -632,8 +632,9 @@ docker)
 
     # Install firefox, explicitly install the fonts
     install_firefox
-    install Xorg-fonts
-    install unifont 
+    install_tcz Xorg-fonts
+    install_tcz xfonts-unifont
+    install_tcz unifont 
 
     # Install PHP cli and add iconv and phar extension
     install_tcz php-8.0-cli
