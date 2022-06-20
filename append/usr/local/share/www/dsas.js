@@ -13,7 +13,7 @@
  * exported dsas_task_real_delete dsas_task_kill dsas_task_real_kill dsas_task_new
  * exported dsas_task_modify dsas_task_run dsas_task_real_run dsas_task_info
  * exported dsas_add_task_arch dsas_add_task_cert dsas_task_cert_delete
- * exported dsas_modify_task dsas_backupF dsas_real_backup dsas_restore 
+ * exported dsas_modify_task dsas_backup dsas_real_backup dsas_restore 
  * exported dsas_passwd_restore dsas_real_restore dsas_display_version 
  * exported dsas_display_help dsas_reboot dsas_shutdown dsas_logout
  */
