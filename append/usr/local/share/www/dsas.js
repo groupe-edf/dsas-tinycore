@@ -622,7 +622,7 @@ function dsas_display_users(){
             const is_tc = user.username === "tc";
             body = body + "<tr><th scope=\"row\" id=\"username_" + user.username + "\">" + user.username + "</th>";
             body = body + "<td><input type=\"text\" id=\"description_" + user.username + "\" value=\"" + print_obj(user.description) + "\" class=\"form-control\"" + (is_tc ? " disabled readonly" : "") + "></td>";
-            body = body + "<td><select class=\"form-select\" name=\"UserType\" id=\"UserType\"" + (is_tc ? " disabled" : "") + ">" +
+            body = body + "<td><select class=\"form-select\" name=\"UserType_" + user.username + "\" id=\"UserType" + user.username + "\"" + (is_tc ? " disabled" : "") + ">" +
           "<option id=\"admin_" + user.username + "\" value=\"admin\"" + (user.type === "admin" ? " selected" : "") + ">" + _("administrator") + "</option>" +
           "<option id=\"bas_" + user.username + "\" value=\"bas\"" + (user.type === "bas" ? " selected" : "") + ">" + _("lower") + "</option>" +
           "<option id=\"haut_" + user.username + "\" value=\"haut\"" + (user.type === "haut" ? " selected" : "") + ">" + _("upper") + "</option>" +
