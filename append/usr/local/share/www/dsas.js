@@ -13,7 +13,7 @@
  * exported dsas_task_real_delete dsas_task_kill dsas_task_real_kill dsas_task_new
  * exported dsas_task_modify dsas_task_run dsas_task_real_run dsas_task_info
  * exported dsas_add_task_arch dsas_add_task_cert dsas_task_cert_delete
- * exported dsas_modify_task dsas_backup dsas_real_backup dsas_restore 
+ * exported dsas_modify_task dsas_backupF dsas_real_backup dsas_restore 
  * exported dsas_passwd_restore dsas_real_restore dsas_display_version 
  * exported dsas_display_help dsas_reboot dsas_shutdown dsas_logout
  */
@@ -622,7 +622,7 @@ function dsas_display_users(){
             const is_tc = user.username === "tc";
             body = body + "<tr><th scope=\"row\" id=\"username_" + user.username + "\">" + user.username + "</th>";
             body = body + "<td><input type=\"text\" id=\"description_" + user.username + "\" value=\"" + print_obj(user.description) + "\" class=\"form-control\"" + (is_tc ? " disabled readonly" : "") + "></td>";
-            body = body + "<td><select class=\"form-select\" name=\"UserType_" + user.username + "\" id=\"UserType" + user.username + "\"" + (is_tc ? " disabled" : "") + ">" +
+            body = body + "<td><select class=\"form-select\" name=\"UserType_" + user.username + "\" id=\"UserType_" + user.username + "\"" + (is_tc ? " disabled" : "") + ">" +
           "<option id=\"admin_" + user.username + "\" value=\"admin\"" + (user.type === "admin" ? " selected" : "") + ">" + _("administrator") + "</option>" +
           "<option id=\"bas_" + user.username + "\" value=\"bas\"" + (user.type === "bas" ? " selected" : "") + ">" + _("lower") + "</option>" +
           "<option id=\"haut_" + user.username + "\" value=\"haut\"" + (user.type === "haut" ? " selected" : "") + ">" + _("upper") + "</option>" +
