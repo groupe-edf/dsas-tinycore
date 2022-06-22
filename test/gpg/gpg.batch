@@ -1,0 +1,9 @@
+%echo Generating GPG key for DSAS test
+Key-Type: default
+Name-Real: Test User
+Name-Comment: GPG certification for DSAS testing
+Name-Email: test.user@example.com
+Expire-Date: 0
+Passphrase: DummyPassPhrase
+%commit
+%echo done

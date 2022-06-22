@@ -479,11 +479,13 @@ source)
   exit 0
   ;;
 clean)
+  make -C testfiles clean
   rm -fr $image $build $newiso $mnt $dsascd $rootfs64 $dsascd.md5 \
       $docker $dockimage $source $work/dsas_pass.txt
   exit 0
   ;;
 realclean)
+  make -C testfiles clean
   rm -fr $work
   exit 0
   ;;
@@ -625,7 +627,14 @@ docker)
     # Install test specific DSAS files
     msg Append test specific DSAS files
     rsync -rlptv "$testdir/" "$extract/"
-  
+
+    # Install test files. Force rebuild and remove temporary PKG file
+    make -C test clean
+    make -C test pkg
+    rm -f $tcz_dir/dsastestfiles.tcz
+    install_tcz dsastestfiles
+    rm -f $pkg_dir/dsastestfiles.pkg  $tcz_dir/dsastestfiles.tcz
+
     # Install packages to allow testing of rsyslog and radius
     install_tcz freeradius
     install_tcz rsyslog

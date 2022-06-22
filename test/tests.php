@@ -1110,7 +1110,8 @@ try {
 
     // Backup the configuration
     test("Backing up the configuration via navbar", function () {
-        unlink("/home/tc/dsas_backup.tgz");
+        if (file_exists("/home/tc/dsas_backup.tgz"))
+          unlink("/home/tc/dsas_backup.tgz");
         save();
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[contains(@onclick,'dsas_backup();')]"))->click();
@@ -1200,6 +1201,9 @@ try {
         exec("grep testuser /etc/passwd", $data, $retval);
         return ($retval == 0);
       });
+
+    if (file_exists("/home/tc/dsas_backup.tgz"))
+      unlink("/home/tc/dsas_backup.tgz");
 
     // Delete added user
     test("Delete the added user", function () {
