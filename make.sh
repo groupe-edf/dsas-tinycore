@@ -504,8 +504,10 @@ EOF
       [ -f "$package" ] && rm "$package"
       tempdir=$(mktemp -d)
       chmod 755 "$tempdir"
+      mkdir $tempdir/usr/local/share/dsas
+      chmod -R 755 $tempdir/usr
       # shellcheck disable=SC2086
-      (cd "$extract" || exit 1; tar -cf - home/tc/composer.* home/tc/vendor home/tc/.config home/tc/.composer  | tar -C "$tempdir" -x -f -) 
+      (cd "$extract/home/tc" || exit 1; tar -cf - vendor | tar -C "$tempdir/usr/local/share/dsas" -x -f -) 
       mksquashfs "$tempdir" "$target"
       rm -fr "$tempdir"
       md5sum "$target" | sed -e "s:  $target$::g" > "$target.md5.txt"
