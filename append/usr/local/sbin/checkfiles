@@ -230,7 +230,7 @@ verifgpg(){
     # gpg --detach-sig --sign
     gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file.sig" "$file" >& /dev/null
   fi
-  return 1
+  return $?
 }
 
 verifopenssl(){
