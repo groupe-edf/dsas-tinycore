@@ -3,7 +3,7 @@ BASE :=  /tmp
 endif
 
 XMLFILE := ${BASE}/dsas_conf.xml
-HAUT := ${BASE}/home/dsas//haut/share
+HAUT := ${BASE}/share/tests
 
 define newline
 
@@ -14,7 +14,7 @@ define task
     <task>
       <name>Openssl</name>
       <id>${id}</id>
-      <directory>Openssl</directory>
+      <directory>tests/Openssl</directory>
       <uri />
       <type>openssl</type>
       <run>never</run>

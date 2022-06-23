@@ -3,7 +3,7 @@ BASE :=  /tmp
 endif
 
 XMLFILE := ${BASE}/dsas_conf.xml
-HAUT := ${BASE}/home/dsas/haut/share
+HAUT := ${BASE}/share/tests
 
 define newline
 
@@ -14,7 +14,7 @@ define task
     <task>
       <name>Gpg</name>
       <id>${id}</id>
-      <directory>Gpg</directory>
+      <directory>tests/Gpg</directory>
       <uri />
       <type>gpg</type>
       <run>never</run>

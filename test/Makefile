@@ -22,8 +22,9 @@ pkg:
 	rm -f dsas_conf.xml
 
 all : setup $(SUBDIRS)
-	chmod -R g-rwx $(BASE)/home
-	cd $(BASE); tar --owner haut --group haut -cvzf ../tests.tgz home 
+	chmod -R o-rwx $(BASE)/share
+	find $(BASE)/share -mindepth 1 -type d -exec chmod 770 {} \;
+	cd $(BASE)/share; tar --owner haut --group haut -cvzf ../../tests.tgz . 
 
 install:
 	mkdir -p $(DEST)/home/tc
