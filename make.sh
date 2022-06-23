@@ -459,6 +459,64 @@ install_firefox(){
   install_tcz $package
 }
 
+
+install_webdriver(){
+   package=dsaswebdriver
+   target=$tcz_dir/$package.tcz
+   dep=$target.dep
+   if test ! -f "$target"; then
+      # Install PHP composer
+      download -f "https:/getcomposer.org/installer" "$src_dir"
+      cp "$src_dir/installer" "$extract/home/tc"
+      chmod a+rx "$extract/home/tc/installer"
+      chroot "$extract" chown -R tc.staff "/home/tc/"
+      cp /etc/resolv.conf $extract/etc/resolv.conf && msg "copy resolv.conf"
+      # http_proxy is imported (or not) from the environment 
+      # shellcheck disable=SC2154
+      cat << EOF > "$extract/tmp/script"
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=$http_proxy
+export https_proxy=$https_proxy
+cd /home/tc
+env HOME=/home/tc php installer || exit 1
+rm installer
+EOF
+      chmod a+x "$extract/tmp/script"
+      msg "Install PHP Composer $extract"
+      HOME=/home/tc chroot --userspec=tc "$extract" /tmp/script || error composer installation failed
+
+    # Install Facebook Webdriver
+      cat << EOF > "$extract/tmp/script"
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+# shellcheck disable=SC2154
+export http_proxy=$http_proxy
+export https_proxy=$https_proxy
+cd /home/tc
+env HOME=/home/tc php composer.phar require php-webdriver/webdriver
+EOF
+      chmod a+x "$extract/tmp/script"
+      msg "Install PHP Web driver"  
+      chroot --userspec=tc "$extract" /tmp/script
+      rm $extract/etc/resolv.conf
+
+      # Create the package for next use
+      msg "Creating $packahe.tcz"
+      [ -f "$package" ] && rm "$package"
+      tempdir=$(mktemp -d)
+      chmod 755 "$tempdir"
+      # shellcheck disable=SC2086
+      (cd "$extract" || exit 1; tar -cf - home/tc/composer.* home/tc/vendor home/tc/.config home/tc/.composer  | tar -C "$tempdir" -x -f -) 
+      mksquashfs "$tempdir" "$target"
+      rm -fr "$tempdir"
+      md5sum "$target" | sed -e "s:  $target$::g" > "$target.md5.txt"
+      echo -n "" > "$target.dep"
+    else
+      install_tcz $package
+    fi
+}
+
+
+
 get_unpack_livecd(){
   test -f $livecd0 || msg Downloading $livecd_url
   test -f $livecd0 || cmd "$curl_cmd" -o "$livecd0" "$livecd_url" || exit 1
@@ -628,12 +686,15 @@ docker)
     msg Append test specific DSAS files
     rsync -rlptv "$testdir/" "$extract/"
 
-    # Install test files. Force rebuild and remove temporary PKG file
-    make -C test clean
-    make -C test pkg
-    rm -f $tcz_dir/dsastestfiles.tcz
-    install_tcz dsastestfiles
-    rm -f $pkg_dir/dsastestfiles.pkg  $tcz_dir/dsastestfiles.tcz
+    # Install test files. Force remove temporary PKG file
+    if test ! -f "$tcz_dir/dsastestfiles.tcz"; then
+      make -C test clean
+      make -C test pkg
+      install_tcz dsastestfiles
+      rm -f $pkg_dir/dsastestfiles.pkg 
+    else
+      install_tcz dsastestfiles
+    fi
 
     # Install packages to allow testing of rsyslog and radius
     install_tcz freeradius
@@ -651,40 +712,9 @@ docker)
     sed -i -e "s/;extension=iconv/extension=iconv/" $extract/usr/local/etc/php/php.ini
     sed -i -e "s/;extension=curl/extension=curl/" $extract/usr/local/etc/php/php.ini
     sed -i -e "s/;extension=zip/extension=zip/" $extract/usr/local/etc/php/php.ini
-            
-    # Install PHP composer
-    download -f "https:/getcomposer.org/installer" "$src_dir"
-    cp "$src_dir/installer" "$extract/home/tc"
-    chmod a+rx "$extract/home/tc/installer"
-    chroot "$extract" chown -R tc.staff "/home/tc/"
-    cp /etc/resolv.conf $extract/etc/resolv.conf && msg "copy resolv.conf"
-    # http_proxy is imported (or not) from the environment 
-    # shellcheck disable=SC2154
-    cat << EOF > "$extract/tmp/script"
-export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
-cd /home/tc
-env HOME=/home/tc php installer || exit 1
-rm installer
-EOF
-    chmod a+x "$extract/tmp/script"
-    msg "Install PHP Composer $extract"
-    HOME=/home/tc chroot --userspec=tc "$extract" /tmp/script || error composer installation failed
 
-    # Install Facebook Webdriver
-    cat << EOF > "$extract/tmp/script"
-export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-# shellcheck disable=SC2154
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
-cd /home/tc
-env HOME=/home/tc php composer.phar require php-webdriver/webdriver
-EOF
-    chmod a+x "$extract/tmp/script"
-    msg "Install PHP Web driver"  
-    chroot --userspec=tc "$extract" /tmp/script
-    rm $extract/etc/resolv.conf
+    # Install PHP webdriver via composer             
+    install_webdriver
 
     # Download and install the gecko (firefox) webdriver
     download "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux${arch}.tar.gz" "$src_dir"
