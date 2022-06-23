@@ -83,14 +83,12 @@ bad.gpg:
 
 virus.asc: 
 	rm -f virus.asc
-	# Echo EICAR virus test to file
-	echo "X50!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*" >  virus
-	gpg --pinentry-mode loopback --passphrase-file=passphrase --clearsign virus 
-	rm -f virus
+	cp ../eicar virus
+	gpg --pinentry-mode loopback --passphrase-file=passphrase -a --detach-sig virus
 
 install: Gpg.pub sign.gpg clear.asc detach.sig detachclear.asc unsigned bad.gpg virus.asc	
-	$(eval id:=$(shell < /dev/random tr -dc a-f0-9 | head -c "24"; echo;))
-	$(eval finger:=$(shell sed -n '2,13p' Gpg.pub | sed -e "s:\s+::g" | base64 -d | sha256sum | cut -f1 -d' '))
+	$(eval id:=$(shell < /dev/random tr -dc a-f0-9 | head -c "24"; echo;))	
+	$(eval finger:=$(shell gpg -v Gpg.pub 2> /dev/null | head -2 | tail -1 | xargs))
 	$(eval t:=$(shell echo '$(subst $(newline),\n,$(task))'))
 	$(eval c:=$(shell echo '$(subst $(newline),\n,$(cert))'))
 	sed -i -e 's:<tasks>:<tasks>\n    ${t}:' ${XMLFILE}
@@ -99,7 +97,7 @@ install: Gpg.pub sign.gpg clear.asc detach.sig detachclear.asc unsigned bad.gpg 
 	  { if (/<pem><\/pem>/) { print "      <pem>" pemcert "</pem>"; } else { print $$0; }}' ${XMLFILE} Gpg.pub
 	mkdir -p ${HAUT}/Gpg
 	cp -f sign.gpg clear.asc detach detach.sig detachclear detachclear.asc \
-	   unsigned bad.gpg virus.asc ${HAUT}/Gpg
+	   unsigned bad.gpg virus virus.asc ${HAUT}/Gpg
 
 clean:
 	rm -f Gpg.pub sign sign.gpg clear clear.asc detach detach.sig

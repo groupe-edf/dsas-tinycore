@@ -58,8 +58,7 @@ bad.txt: BadOpensslPriv.pem
 
 virus.txt: OpensslPriv.pem
 	rm -f virus.txt virus.txt.sig
-	# Echo EICAR virus test to file
-	echo "X50!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*" >  virus.txt
+	cp ../eicar virus.txt
 	openssl dgst -sign OpensslPriv.pem -keyform PEM -sha256 -out virus.txt.sig -binary virus.txt
 
 unsigned.txt: 

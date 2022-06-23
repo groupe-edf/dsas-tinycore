@@ -1,7 +1,11 @@
+#! /usr/local/bin/php
+
+// DSAS test suite to test all functionality of the DSAS
+
 <?php
 
 putenv("WEBDRIVER_FIXEFOX_DRIVER=/usr/local/bin/geckodriver");
-require_once(__DIR__ . '/vendor/autoload.php');
+require_once('/usr/local/share/dsas/vendor/autoload.php');
 use Facebook\WebDriver\Firefox\FirefoxDriver;
 use Facebook\WebDriver\Firefox\FirefoxOptions;
 use Facebook\WebDriver\Firefox\FirefoxProfile;
@@ -13,7 +17,7 @@ use Facebook\WebDriver\WebDriverSelect;
 use Facebook\WebDriver\WebDriverExpectedCondition;
 
 // Modifiable constants
-$what = "all" ; // all, login, status, web, net, serv, cert, task, user, backup 
+$what = "verif" ; // all, verif, secu, login, status, web, net, serv, cert, task, user, backup 
 $sshot = true;
 define("_user", "tc");
 define("_pass", "dSaO2021cTf");
@@ -21,6 +25,7 @@ define("_delay", 5);  // 5 seconds
 define("_retry", 50);  // 50 ms
 define("_LEN", 60);
 define("_adminport", "5000");
+define("_share", "/usr/local/share/dsas");
 define("_red", "\033[1;31m");
 define("_green", "\033[1;32m");
 define("_yellow", "\033[1;33m");
@@ -28,6 +33,7 @@ define("_normal", "\033[1;39m");
 
 // Don't modify below here
 $sidx = 0;
+$nfail = 0;
 
 function msg($msg = "Test") {
   if (strlen($msg) > _LEN)
@@ -43,10 +49,12 @@ function pass() {
 
 function fail() {
   echo _yellow . "[FAIL]" . _normal . PHP_EOL;
+  $GLOBALS["nfail"]++;
 }
 
 function fatal() {
   echo _red. "[FATAL]" . _normal . PHP_EOL;
+  $GLOBALS["nfail"]++;
 }
 
 function screenshot() {
@@ -62,7 +70,9 @@ function modal_delay() {
   usleep(500000);
 }
 
-function test(string $_msg, callable $_fn, bool $_fatal = false) {
+function test(string $_msg, callable $_fn, bool $_fatal = false, $sshot = -1) {
+  if ($sshot === -1)
+    $sshot = $GLOBALS["sshot"];
   try {
     msg($_msg);
     if ($_fn())
@@ -71,7 +81,7 @@ function test(string $_msg, callable $_fn, bool $_fatal = false) {
       throw new RuntimeException("The previous error was fatal");
     else {
       fail();
-      if ($GLOBALS["sshot"]) 
+      if ($sshot) 
         screenshot();
     }
   } catch (Throwable $e) {
@@ -81,7 +91,7 @@ function test(string $_msg, callable $_fn, bool $_fatal = false) {
     } else {
       fail();
       echo $e->getMessage() . PHP_EOL;
-      if ($GLOBALS["sshot"])
+      if ($sshot)
         screenshot();
     }
   }
@@ -201,9 +211,6 @@ function modalfn($msg, $fld, $value, $modal = true) {
     }); 
 }
 
-// Save XML configure file for restoration at the end
-copy("/var/dsas/dsas_conf.xml", "/var/dsas/dsas_conf.xml.test"); 
-
 // Read password from console
 $password = readline(_normal . "Enter password of user '" . _user . "' [Return for default]: ");
 if (empty($password))
@@ -211,6 +218,109 @@ if (empty($password))
 
 // Main block of test code
 try {
+  // Save XML configure file for restoration at the end
+  msg("Save current configuration");
+  if (copy("/var/dsas/dsas_conf.xml", "/var/dsas/dsas_conf.xml.test"))
+    pass();
+  else
+    fatal();
+
+  // Setup default test conditions
+  test("Setting up default test conditions", function() {
+      exec("sudo sudo -u verif mkdir -p /home/dsas/bas/share/ClamAV", $data, $retval);
+      if ($retval != 0)
+        throw new RuntimeException("Error creating ClamAV directory");
+      exec("sudo cp " . _share . "/eicar.ndb /home/dsas/bas/share/ClamAV", $data, $retval);
+      if ($retval != 0)
+        throw new RuntimeException("Error copying to ClamAV directory"); 
+      $retval = copy(_share . "/dsas_conf.xml", "/var/dsas/dsas_conf.xml");
+      if (! $retval)
+        throw new RuntimeException("Error copying XML config on lower machine"); 
+      exec("ssh tc@haut cp -f " . _share . "/dsas_conf.xml /var/dsas/", $data, $retval);
+      if ($retval != 0)
+        throw new RuntimeException("Error copying XML config on upper machine"); 
+      exec("sudo /etc/init.d/services/dsas apply", $data, $retval);
+      if ($retval != 0)
+        throw new RuntimeException("Error applying on lower machine"); 
+      exec("ssh tc@haut sudo /etc/init.d/services/dsas apply", $data, $retval);
+      if ($retval != 0)
+        throw new RuntimeException("Error applying on upper machine"); 
+      exec("ssh tc@haut sudo rm -fr /home/dsas/haut/share/tests /home/dsas/bas/share/tests", $data, $retval);
+      if ($retval != 0)
+        throw new RuntimeException("Error removing old test files on upper machine");
+      exec("sudo rm -fr /home/dsas/haut/share/tests /home/dsas/bas/share/tests", $data, $retval);
+      if ($retval != 0)
+        throw new RuntimeException("Error removing old test files on lower machine"); 
+      exec("ssh tc@haut sudo tar -C /home/dsas/haut/share -xzf " . _share . "/tests.tgz", $data, $retval);
+      if ($retval != 0)
+        throw new RuntimeException("Error installing test files on upper machine");
+      return true; 
+    }, true); 
+
+  // Tests to check that the DSAS verifications function as wanted
+  if ($what === "all" || $what === "verif") {
+    $dsas = simplexml_load_file("/var/dsas/dsas_conf.xml");
+    foreach ($dsas->tasks->task as $GLOBALS["task"]) {
+      test("Verifying " . $task->type . " functions correctly", function () {
+          $task = $GLOBALS["task"];
+          exec("runtask -f " . $task->id . " 2>1", $data, $retval);
+          if ($retval != 0)
+            throw new RuntimeException("Error running task type '" . $task->type . "'");
+          exec("sudo find /home/dsas/bas/share/" . $task->directory . " -name 'virus*'", $d);
+          if (! empty($d))
+            throw new RuntimeException("Virus not detected in '" . $task->type . "' verification");
+          exec("sudo find /home/dsas/bas/share/" . $task->directory . " -name 'bad*'", $d);
+          if (! empty($d))
+            throw new RuntimeException("Badly signed file not detected in '" . $task->type . "' verification");
+          exec("sudo find /home/dsas/bas/share/" . $task->directory . " -name 'unsign*'", $d);
+          if (! empty($d))
+            throw new RuntimeException("Unsigned file not detected in '" . $task->type . "' verification"); 
+          // FIXME Should we check that wanted files are passed ? How to do it generically ?
+          return true;
+        }, false, false);
+    }
+  }
+
+  if ($what === "all" || $what === "secu") {
+     // FIXME Add lots more tests of the security settings here
+     test("Testing open TCP ports on upper machine", function () {
+         exec("sudo tc@haut netstat -nat 2> /dev/null", $data);
+         $ip = hostip();
+         foreach ($data as $d) {
+           preg_match("/^tcp.*\s([0-9.]+):([0-9]+).*\s([0-9.]+):.*LISTEN\s*$/",
+              trim($d), $regex);
+           if (empty($regex))
+             continue;
+           if ($regex[1] == $ip)
+              throw new RuntimeException("Open port '" . $regex[2] . "' on principal interface of upper machine" . PHP_EOL . $regex[0]); 
+           // Only port 22 on the interconnection network should be open
+           if ($regex[2] != "22")
+              throw new RuntimeException("Unexpected port '" .$regex[2] . "' open on upper machine" . PHP_EOL . $regex[0]); 
+           break;
+         }
+         return true;
+       }, false, false);
+
+     test("Testing open TCP ports on lower machine", function () {
+         exec("netstat -nat 2> /dev/null", $data);
+         $ip = hostip();
+         foreach ($data as $d) {
+           preg_match("/^tcp.*\s([0-9.]+):([0-9]+).*\s([0-9.]+):.*LISTEN\s*$/",
+              trim($d), $regex);
+           if (empty($regex))
+             continue;
+           if ($regex[1] != $ip)
+              throw new RuntimeException("Open port '" . $regex[2] . "' on interconnection interface of lower machine" . PHP_EOL . $regex[0]);
+           // In the default configuration only the adiminstration port 5000
+           // on the interconnection network should be open
+           if ($regex[2] != "5000")
+              throw new RuntimeException("Unexpected port '" .$regex[2] . "' open on lower machine" . PHP_EOL . $regex[0]); 
+           break;
+         }
+         return true;
+       }, false, false);
+  }
+
   // Setup local firefox instance
   test("Setting up firefox instance", function () {
       $firefoxOptions = new FirefoxOptions();
@@ -468,16 +578,18 @@ try {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("iface_dhcp1")));
         if ($GLOBALS["net1"]["dhcp"] != $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_dhcp1"))->isSelected())
           $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_dhcp1"))->click();
-        $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_cidr1"))->clear()->sendKeys($GLOBALS["net1"]["cidr"]);
-        $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_gateway1"))->clear()->sendKeys($GLOBALS["net1"]["gateway"]);
-        $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_dns_domain1"))->clear()->sendKeys($GLOBALS["net1"]["domain"]);
-        $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_nameserver1"))->clear()->sendKeys($GLOBALS["net1"]["nameserver"]);
+	if (! $GLOBALS["net1"]["dhcp"] ) {
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_cidr1"))->clear()->sendKeys($GLOBALS["net1"]["cidr"]);
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_gateway1"))->clear()->sendKeys($GLOBALS["net1"]["gateway"]);
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_dns_domain1"))->clear()->sendKeys($GLOBALS["net1"]["domain"]);
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_nameserver1"))->clear()->sendKeys($GLOBALS["net1"]["nameserver"]);
+        }
         save(false);
         apply();
         return true;
       }, true);
 
-    // FIXME should I repeat the above for iface0 ? Seems to be overkill
+    // FIXME should I repeat the above for iface0 ? Seems to be overkill as its uses the same code
   }
 
   if ($what === "all" || $what === "serv") {
@@ -1235,6 +1347,7 @@ try {
     //FIXME
   }
 
+
 } catch (Exception $e) {
   // Catch other errors here so that firefox is shut down cleanly
   echo $e->getMessage() . PHP_EOL;
@@ -1250,6 +1363,11 @@ try {
 
   // Quit firefox instance
   $driver->quit();
+
+  if ($nfail !== 0)
+    return 1;
+  else
+    return 0;
 }
 
 ?>

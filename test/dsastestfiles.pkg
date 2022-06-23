@@ -10,4 +10,4 @@ _pkg_path=dsastestfiles-<VERSION>
 _conf_cmd=""
 _make_cmd="make all"
 _install_cmd="make install DEST="
-_pkgs='main{/home,/var}'
+_pkgs='main{/usr,/var}'

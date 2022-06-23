@@ -48,26 +48,28 @@ FakeCyberWatch.pem: FakeCyberWatchPriv.pem
 
 good.zip: FakeCyberWatchPriv.pem
 	rm -f cyberwatch.db cyberwatch.db.sha256 cyberwatch.sig
-	echo "1Fake cyberwatch signature file" > cyberwatch.db
-	head -c 1 cyberwatch.db | sha256sum | cut -f1 -d' ' | tr -d '\n' > cyberwatch.db.sha256
+	echo "Fake cyberwatch signature file" > cyberwatch.db
+	head -c -1 cyberwatch.db | sha256sum | cut -f1 -d' ' | tr -d '\n' > cyberwatch.db.sha256
 	openssl dgst -sign FakeCyberWatchPriv.pem -keyform PEM -sha256 -out cyberwatch.sig cyberwatch.db.sha256
+	echo "" >> cyberwatch.sig
 	zip good.zip cyberwatch.db cyberwatch.sig
 	rm -f cyberwatch.db cyberwatch.db.sha256 cyberwatch.sig
 
 bad.zip: BadCyberWatchPriv.pem
 	rm -f cyberwatch.db cyberwatch.db.sha256 cyberwatch.sig
-	echo "1Fake cyberwatch signature file" > cyberwatch.db
-	head -c 1 cyberwatch.db | sha256sum | cut -f1 -d' ' | tr -d '\n' > cyberwatch.db.sha256
+	echo "Fake cyberwatch signature file" > cyberwatch.db
+	head -c -1 cyberwatch.db | sha256sum | cut -f1 -d' ' | tr -d '\n' > cyberwatch.db.sha256
 	openssl dgst -sign BadCyberWatchPriv.pem -keyform PEM -sha256 -out cyberwatch.sig cyberwatch.db.sha256
+	echo "" >> cyberwatch.sig
 	zip bad.zip cyberwatch.db cyberwatch.sig
 	rm -f cyberwatch.db cyberwatch.db.sha256 cyberwatch.sig
 
 virus.zip: FakeCyberWatchPriv.pem
 	rm -f cyberwatch.db cyberwatch.db.sha256 cyberwatch.sig
-	# Echo EICAR virus test to file
-	echo "X50!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*" > cyberwatch.db
-	head -c 1 cyberwatch.db | sha256sum | cut -f1 -d' ' | tr -d '\n' > cyberwatch.db.sha256
+	cp ../eicar cyberwatch.db 
+	head -c -1 cyberwatch.db | sha256sum | cut -f1 -d' ' | tr -d '\n' > cyberwatch.db.sha256
 	openssl dgst -sign FakeCyberWatchPriv.pem -keyform PEM -sha256 -out cyberwatch.sig cyberwatch.db.sha256
+	echo "" >> cyberwatch.sig
 	zip virus.zip cyberwatch.db cyberwatch.sig
 	rm -f cyberwatch.db cyberwatch.db.sha256 cyberwatch.sig
 
@@ -91,6 +93,6 @@ install: good.zip bad.zip virus.zip unsigned.zip FakeCyberWatch.pem
 
 clean: 
 	rm -f good.zip bad.zip virus.zip unsigned.zip cyberwatch.db 
-	rm -f cyberwatch.db.sha256 cyberwatch.zip
+	rm -f cyberwatch.db.sha256 cyberwatch.zip temp.sig cyberwatch.sig
 	rm -f FakeCyberWatch.pem FakeCyberWatchPriv.pem BadCyberWatchPriv.pem
 
