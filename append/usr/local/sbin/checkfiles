@@ -263,7 +263,7 @@ verifopenssl(){
     # Verify with the public key
     openssl dgst -verify "$tempdir/pubkey" -signature "$file.sig" -binary "$file"
   fi
-  return 1
+  return $?
 }
 
 verifcyberwatch(){
