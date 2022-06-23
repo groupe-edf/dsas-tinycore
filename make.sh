@@ -500,11 +500,11 @@ EOF
       rm $extract/etc/resolv.conf
 
       # Create the package for next use
-      msg "Creating $packahe.tcz"
+      msg "Creating $package.tcz"
       [ -f "$package" ] && rm "$package"
       tempdir=$(mktemp -d)
       chmod 755 "$tempdir"
-      mkdir $tempdir/usr/local/share/dsas
+      mkdir -p $tempdir/usr/local/share/dsas
       chmod -R 755 $tempdir/usr
       # shellcheck disable=SC2086
       (cd "$extract/home/tc" || exit 1; tar -cf - vendor | tar -C "$tempdir/usr/local/share/dsas" -x -f -) 
@@ -512,12 +512,9 @@ EOF
       rm -fr "$tempdir"
       md5sum "$target" | sed -e "s:  $target$::g" > "$target.md5.txt"
       echo -n "" > "$target.dep"
-    else
-      install_tcz $package
     fi
+    install_tcz $package
 }
-
-
 
 get_unpack_livecd(){
   test -f $livecd0 || msg Downloading $livecd_url
