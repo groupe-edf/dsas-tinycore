@@ -536,13 +536,13 @@ source)
   exit 0
   ;;
 clean)
-  make -C testfiles clean
+  make -C test clean
   rm -fr $image $build $newiso $mnt $dsascd $rootfs64 $dsascd.md5 \
       $docker $dockimage $source $work/dsas_pass.txt
   exit 0
   ;;
 realclean)
-  make -C testfiles clean
+  make -C test clean
   rm -fr $work
   exit 0
   ;;
