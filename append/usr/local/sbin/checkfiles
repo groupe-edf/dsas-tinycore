@@ -280,7 +280,7 @@ verifcyberwatch(){
 
   # Check the signature
   status=0
-  head -c -1 "$zipdir/cyberwatch.sig" > "$tempdir/signature"
+  head -c -1 "$zipdir/cyberwatch.sig" > "$tempdir/signature" 2> /dev/null || return 1
   head -c -1 "$zipdir/cyberwatch.db" | sha256sum | cut -f1 -d' ' | tr -d '\n' > "$tempdir/cyberwatch.db.sha256"
   openssl dgst -sha256 -verify "$tempdir/cert.0" -signature "$tempdir/signature" "$tempdir/cyberwatch.db.sha256" > /dev/null || status=1
 
