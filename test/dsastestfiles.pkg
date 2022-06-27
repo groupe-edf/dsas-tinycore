@@ -4,8 +4,8 @@ _version=<VERSION>
 _uri=https://127.0.0.1/dsastestfiles-<VERSION>.tgz
 # libxml2-bin only for xmllint to examine conf file during build
 # Could be deleted
-_build_dep="compiletc coreutils openssl-1.1.1 gnupg zip-unzip tar lcab osslsigncode libxml2-bin"
-_dep="openssl-1.1.1 gnupg osslsigncode"
+_build_dep="compiletc coreutils openssl-1.1.1 gnupg zip-unzip tar lcab osslsigncode rpm createrepo libxml2-bin"
+_dep="openssl-1.1.1 gnupg osslsigncode rpm"
 _pkg_path=dsastestfiles-<VERSION>
 _conf_cmd=""
 _make_cmd="make all"

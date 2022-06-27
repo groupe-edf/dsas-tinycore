@@ -1,0 +1,8 @@
+%_topdir /home/tc/build/rpm
+%_tmppath /home/tc/build/rpm/tmp
+
+%_signature gpg
+%_gpg_name Repomd User
+%_gpg_path ~/.gnupg
+%distribution DSAS version 1.2
+%vendor EDF
