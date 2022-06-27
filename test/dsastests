@@ -17,7 +17,7 @@ use Facebook\WebDriver\WebDriverSelect;
 use Facebook\WebDriver\WebDriverExpectedCondition;
 
 // Modifiable constants
-$what = "secu" ; // all, verif, secu, login, status, web, net, serv, cert, task, user, backup 
+$what = "verif" ; // all, verif, secu, login, status, web, net, serv, cert, task, user, backup 
 $sshot = true;
 define("_user", "tc");
 define("_pass", "dSaO2021cTf");
@@ -70,7 +70,9 @@ function modal_delay() {
   usleep(500000);
 }
 
-function test(string $_msg, callable $_fn, bool $_fatal = false) {
+function test(string $_msg, callable $_fn, bool $_fatal = false, $sshot = -1) {
+  if ($sshot === -1)
+    $sshot = $GLOBALS["sshot"];
   try {
     msg($_msg);
     if ($_fn())
@@ -79,7 +81,7 @@ function test(string $_msg, callable $_fn, bool $_fatal = false) {
       throw new RuntimeException("The previous error was fatal");
     else {
       fail();
-      if ($GLOBALS["sshot"]) 
+      if ($sshot) 
         screenshot();
     }
   } catch (Throwable $e) {
@@ -89,7 +91,7 @@ function test(string $_msg, callable $_fn, bool $_fatal = false) {
     } else {
       fail();
       echo $e->getMessage() . PHP_EOL;
-      if ($GLOBALS["sshot"])
+      if ($sshot)
         screenshot();
     }
   }
@@ -258,11 +260,13 @@ try {
   // Tests to check that the DSAS verifications function as wanted
   if ($what === "all" || $what === "verif") {
     $dsas = simplexml_load_file("/var/dsas/dsas_conf.xml");
-    foreach ($dsas->tasks->task as $task) {
+    foreach ($dsas->tasks->task as $GLOBALS["task"]) {
       test("Verifying " . $task->type . " tasks function correctly", function () {
+          $task = $GLOBALS["task"];
           exec("runtask -f " . $task->id, $data, $retval);
           if ($retval != 0)
             throw new RuntimeException("Error running task type '" . $task->type . "'");
+          $data = [];
           exec("sudo find /home/dsas/bas/share/" . $task->directory . " -name 'virus*'", $data);
           if (! empty($data))
             throw new RuntimeException("Virus not detected in '" . $task->type . "' verification");
@@ -272,10 +276,13 @@ try {
           exec("sudo find /home/dsas/bas/share/" . $task->directory . " -name 'unsign*'", $data);
           if (! empty($data))
             throw new RuntimeException("Unsigned file not detected in '" . $task->type . "' verification");          
-          // FIXME Should we check that wanted files are passed ? How to do it generically ?
-          // Think about debian repos for example
+          exec("sudo find /home/dsas/bas/share/" . $task->directory . " -name 'good*'", $data);
+          if (empty($data))
+            throw new RuntimeException("No signed files not detected in '" . $task->type . "' verification");          
+          // FIXME Should we check that the right number of wanted files are passed ? 
+          // How to do it generically ? Think about debian repos for example
           return true;
-        });
+        }, false, false);
     }
   }
 
@@ -290,7 +297,7 @@ try {
            if (empty($regex))
              continue;
            if ($regex[1] == "udp")
-              throw new RuntimeException("Unexpected UDP port '" . $regex[3]  "' open on upper machine");
+              throw new RuntimeException("Unexpected UDP port '" . $regex[3]  . "' open on upper machine");
            if ($regex[2] == $ip)
               throw new RuntimeException("Open TCP port '" . $regex[3] . "' on principal interface of upper machine" . PHP_EOL . $regex[0]); 
            // Only port 22 on the interconnection network should be open
@@ -310,7 +317,7 @@ try {
            if (empty($regex))
              continue;
            if ($regex[1] == "udp")
-              throw new RuntimeException("Unexpected UDP port '" . $regex[3]  "' open on lower machine");
+              throw new RuntimeException("Unexpected UDP port '" . $regex[3]  . "' open on lower machine");
            if ($regex[2] != $ip)
               throw new RuntimeException("Open TCP port '" . $regex[3] . "' on interconnection interface of lower machine" . PHP_EOL . $regex[0]);
            // In the default configuration only the adiminstration port 5000
