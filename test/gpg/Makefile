@@ -35,7 +35,7 @@ define cert
     </certificate>
 endef	
 
-all: Gpg.pub sign.gpg clear.asc detach.sig detachclear.asc unsigned bad.gpg virus.asc install
+all: Gpg.pub goodsign.gpg goodclear.asc gooddetach.sig gooddetachclear.asc unsigned bad.gpg virus.asc install
 
 Gpg.pub:
 	mkdir -p ${HOME}/.gnupg
@@ -48,27 +48,27 @@ Gpg.pub:
 	chmod go-rwx passphrase
 	echo "no-allow-external-cache" >> ${HOME}/.gnupg/gpg-agent.conf
 
-sign.gpg:
-	echo "Gpg signed file" > sign
-	rm -f sign.gpg
-	gpg --pinentry-mode loopback --passphrase-file=passphrase --sign sign
-	rm -f sign
+goodsign.gpg:
+	echo "Gpg signed file" > goodsign
+	rm -f goodsign.gpg
+	gpg --pinentry-mode loopback --passphrase-file=passphrase --sign goodsign
+	rm -f goodsign
 
-clear.asc:
-	echo "Gpg clear signed file" > clear
-	rm -f clear.asc
-	gpg --pinentry-mode loopback --passphrase-file=passphrase --clearsign clear
-	rm -f clear
+goodclear.asc:
+	echo "Gpg clear signed file" > goodclear
+	rm -f goodclear.asc
+	gpg --pinentry-mode loopback --passphrase-file=passphrase --clearsign goodclear
+	rm -f goodclear
 
-detach.sig:
-	echo "Gpg detached signed file" > detach
-	rm -f detach.sig
-	gpg --pinentry-mode loopback --passphrase-file=passphrase --detach-sig detach
+gooddetach.sig:
+	echo "Gpg detached signed file" > gooddetach
+	rm -f goddetach.sig
+	gpg --pinentry-mode loopback --passphrase-file=passphrase --detach-sig gooddetach
 
-detachclear.asc:
-	echo "Gpg clear detached signed file" > detachclear
-	rm -f detachclear.asc
-	gpg --pinentry-mode loopback --passphrase-file=passphrase -a --detach-sig detachclear
+gooddetachclear.asc:
+	echo "Gpg clear detached signed file" > gooddetachclear
+	rm -f gooddetachclear.asc
+	gpg --pinentry-mode loopback --passphrase-file=passphrase -a --detach-sig gooddetachclear
 
 unsigned:
 	echo "Usigned file" > unsigned
@@ -86,7 +86,7 @@ virus.asc:
 	cp ../eicar virus
 	gpg --pinentry-mode loopback --passphrase-file=passphrase -a --detach-sig virus
 
-install: Gpg.pub sign.gpg clear.asc detach.sig detachclear.asc unsigned bad.gpg virus.asc	
+install: Gpg.pub goodsign.gpg goodclear.asc gooddetach.sig gooddetachclear.asc unsigned bad.gpg virus.asc	
 	$(eval id:=$(shell < /dev/random tr -dc a-f0-9 | head -c "24"; echo;))	
 	$(eval finger:=$(shell gpg -v Gpg.pub 2> /dev/null | head -2 | tail -1 | xargs))
 	$(eval t:=$(shell echo '$(subst $(newline),\n,$(task))'))
@@ -96,10 +96,10 @@ install: Gpg.pub sign.gpg clear.asc detach.sig detachclear.asc unsigned bad.gpg 
 	awk -i inplace 'BEGIN { while (getline < ARGV[2]) { pemcert = pemcert $$0 "\n" } delete ARGV[2]; } \
 	  { if (/<pem><\/pem>/) { print "      <pem>" pemcert "</pem>"; } else { print $$0; }}' ${XMLFILE} Gpg.pub
 	mkdir -p ${HAUT}/Gpg
-	cp -f sign.gpg clear.asc detach detach.sig detachclear detachclear.asc \
+	cp -f goodsign.gpg goodclear.asc gooddetach gooddetach.sig gooddetachclear gooddetachclear.asc \
 	   unsigned bad.gpg virus virus.asc ${HAUT}/Gpg
 
 clean:
-	rm -f Gpg.pub sign sign.gpg clear clear.asc detach detach.sig
-	rm -f detachclear detachclear.asc unsigned bad bad.gpg
+	rm -f Gpg.pub sign goodsign.gpg goodclear goodclear.asc gooddetach gooddetach.sig
+	rm -f gooddetachclear gooddetachclear.asc unsigned bad bad.gpg
 	rm -f virus virus.asc passphrase 
