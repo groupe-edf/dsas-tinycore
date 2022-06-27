@@ -67,7 +67,9 @@ unsigned.txt:
 
 install: good.txt bad.txt virus.txt unsigned.txt Openssl.pem
 	$(eval id:=$(shell < /dev/random tr -dc a-f0-9 | head -c "24"; echo;))
-	$(eval finger:=$(shell sed -n '2,13p' Openssl.pem | sed -e "s:\s+::g" | base64 -d | sha256sum | cut -f1 -d' '))
+	$(eval len:=$(shell cat Openssl.pem | wc -l))                    
+	$(eval len:=$(shell echo $$(($(len)-1)) )) 
+	$(eval finger:=$(shell sed -n '2,$(len)p' Openssl.pem | sed -e "s:\s+::g" | base64 -d | sha256sum | cut -f1 -d' '))
 	$(eval t:=$(shell echo '$(subst $(newline),\n,$(task))'))
 	$(eval c:=$(shell echo '$(subst $(newline),\n,$(cert))'))
 	sed -i -e 's:<tasks>:<tasks>\n    ${t}:' ${XMLFILE}
