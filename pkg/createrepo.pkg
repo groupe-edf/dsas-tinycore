@@ -1,0 +1,16 @@
+_pkg=createrepo
+_version=0.10.4
+#_uri=https://createrepo.baseurl.org/download/createrepo-0.4.11.tar.gz
+_uri=https://createrepo.baseurl.org/download/createrepo-0.10.4.tar.gz
+_dep="python"
+_build_dep="compiletc python"
+_pkg_path=createrepo-0.10.4
+_pre_config="ln -s /usr/local/bin/python2 /usr/local/bin/python"
+_conf_cmd=\
+"for d in . createrepo docs bin; do 
+  sed -i -e \"s:prefix = /usr:prefix = /usr/local:\" \$d/Makefile; 
+done"
+_make_cmd="make"
+_install_cmd="make install DESTDIR=" 
+_pkgs='main{/usr}'
+_post_install="ln -s /usr/local/bin/python2 /usr/local/bin/python"
