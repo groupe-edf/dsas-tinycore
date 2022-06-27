@@ -1,0 +1,12 @@
+_pkg=lcab
+_version=1.0b12-7
+# Use the debian archive and patches as they seem the most up to date
+_uri=https://salsa.debian.org/debian/lcab/-/archive/debian/1.0b12-7/lcab-debian-1.0b12-7.tar.gz
+_dep=""
+_build_dep="compiletc"
+_pkg_path=lcab-debian-1.0b12-7
+_conf_cmd="setarch linux$arch ./configure"
+_make_cmd="make"
+_install_cmd="make install DESTDIR=" 
+_pkgs='main{/usr}'
+_post_install=""
