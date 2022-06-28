@@ -338,6 +338,7 @@ EOF
         msg "Building $_pkg"
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export HOME=/home/tc
 cd $builddir/$_pkg_path
 $_make_cmd
 exit \$?
@@ -348,6 +349,7 @@ EOF
         cat << EOF > "$extract/tmp/script"
 export DESTDIR=$destdir
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export HOME=/home/tc
 cd $builddir/$_pkg_path
 $_install_cmd$destdir
 exit \$?
