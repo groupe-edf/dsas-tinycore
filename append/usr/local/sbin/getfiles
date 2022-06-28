@@ -278,6 +278,12 @@ getrepo() {
   type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
   opt=$(lftp_ca_options "$id")
 
+  if [ -z "$uri" ]; then
+    # The URI can be empty. gracefully exit
+    myecho "Empty uri for task $name"
+    return
+  fi
+
   case $type in
     repomd|rpm)
        # Create the destination directory if needed
@@ -389,6 +395,12 @@ getdeb() {
   name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" "$CONF")
   type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
   opt=$(lftp_ca_options "$id")
+
+  if [ -z "$uri" ]; then
+    # The URI can be empty. gracefully exit
+    myecho "Empty uri for task $name"
+    return
+  fi
 
   case $type in
     deb)
