@@ -1,0 +1,11 @@
+_pkg=libmodulemd
+_version=2.14.0
+_uri=https://github.com/fedora-modularity/libmodulemd/releases/download/2.14.0/modulemd-2.14.0.tar.xz
+_build_dep="compiletc cmake expat2-dev coreutils meson ninja glib2-dev libssh2-dev libyaml-dev rpm gtk-doc gobject-introspection-dev py3.6gobject-dev"
+_dep="glib2 libyaml rpm gtk-doc gobject-introspection py3.6gobject"
+_pkg_path=modulemd-2.14.0
+_pre_config="ln -s /bin/busybox /bin/bash"
+_conf_cmd="setarch linux$arch meson build -D with_docs=false"
+_make_cmd="cd build; ninja"
+_install_cmd="cd build; ninja install #"
+_pkgs='main{/usr/local/bin,/usr/local/share/gir-1.0,/usr/local/lib/*.so*,/usr/local/lib/python*,/usr/local/lib/girepository-1.0};dev{/usr/local/lib/pkgconfig,/usr/local/include};doc{/usr/local/share/man}'
