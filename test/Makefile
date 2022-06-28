@@ -10,7 +10,7 @@ ifndef TCZ
 TCZ := ../work/tcz
 endif
 
-SUBDIRS := cyberwatch openssl gpg authenticode liveupdate repo
+SUBDIRS := repo cyberwatch openssl gpg authenticode liveupdate
 BASE := $(shell pwd)/work
 VERSION := 0.1
 
@@ -40,6 +40,7 @@ install:
 setup :
 	mkdir -p $(BASE)/share
 	cp dsas_conf.xml  $(BASE)
+	rm -f eicar
 	gunzip -k eicar.gz
 
 clean : $(SUBDIRS)
