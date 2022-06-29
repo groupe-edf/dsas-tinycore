@@ -13,7 +13,7 @@ A simple rpm package, that does nothing
 
 %build
 cat > virus.txt << EOF
-X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*
+X5O!P%@AP[4\PZX54(P^)7CC)7}\$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!\$H+H*
 EOF
 
 %install
