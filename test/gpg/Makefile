@@ -51,24 +51,24 @@ Gpg.pub:
 goodsign.gpg:
 	echo "Gpg signed file" > goodsign
 	rm -f goodsign.gpg
-	gpg --pinentry-mode loopback --passphrase-file=passphrase --sign goodsign
+	gpg --pinentry-mode loopback --passphrase-file=passphrase --local-user test.user@example.com --sign goodsign
 	rm -f goodsign
 
 goodclear.asc:
 	echo "Gpg clear signed file" > goodclear
 	rm -f goodclear.asc
-	gpg --pinentry-mode loopback --passphrase-file=passphrase --clearsign goodclear
+	gpg --pinentry-mode loopback --passphrase-file=passphrase --local-user test.user@example.com --clearsign goodclear
 	rm -f goodclear
 
 gooddetach.sig:
 	echo "Gpg detached signed file" > gooddetach
 	rm -f goddetach.sig
-	gpg --pinentry-mode loopback --passphrase-file=passphrase --detach-sig gooddetach
+	gpg --pinentry-mode loopback --passphrase-file=passphrase --local-user test.user@example.com --detach-sig gooddetach
 
 gooddetachclear.asc:
 	echo "Gpg clear detached signed file" > gooddetachclear
 	rm -f gooddetachclear.asc
-	gpg --pinentry-mode loopback --passphrase-file=passphrase -a --detach-sig gooddetachclear
+	gpg --pinentry-mode loopback --passphrase-file=passphrase --local-user test.user@example.com -a --detach-sig gooddetachclear
 
 unsigned:
 	echo "Usigned file" > unsigned
