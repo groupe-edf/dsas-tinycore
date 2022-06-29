@@ -12,6 +12,8 @@ _pkg_path=rpm-4.16.1.3
 _conf_cmd="setarch linux$arch ./configure --enable-ndb --disable-bdb"
 _make_cmd="make"
 _install_cmd="make install DESTDIR=" 
+# Why did the build leave the default database as Berkley when I explicitly disabled it ? 
+_post_build="sed -i -e \"s/^\\(%_db_backend.*\\)bdb/\\1ndb/\" usr/local/lib/rpm/macros"
 _pkgs='main{/usr}'
 _post_install=\
 "#! /bin/sh
