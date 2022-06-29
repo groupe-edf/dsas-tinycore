@@ -791,7 +791,6 @@ verifdeb(){
   grep -qx "SHA1:" "$DSAS_HAUT/$dir/Release" && hashtyp="SHA1:" && chktyp="sha"
   grep -qx "SHA256:" "$DSAS_HAUT/$dir/Release" && hashtyp="SHA256:" && chktyp="sha256"
 
-
   # Get the desired archiectures to download
   archs=""
   i=1
@@ -868,11 +867,11 @@ EOF
           status=0
           if [ -n "$_hash_sha256"  ]; then
             if check_checksum "$DSAS_HAUT/$pool/$_file" "$_hash_sha256" "sha256"; then
-              status=$?
+              status=2
               msgline "$DSAS_HAUT/$pool/$_file" 2
             fi
           elif check_checksum "$DSAS_HAUT/$pool/$_file" "$_hash_md5" "md5"; then
-            status=$?
+            status=2
             msgline "$DSAS_HAUT/$pool/$_file" 2
           fi
 
