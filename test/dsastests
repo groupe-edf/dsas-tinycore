@@ -126,6 +126,13 @@ function hostip() {
 function readline($prompt = null) {
   if ($prompt)
     echo $prompt;
+  $line = rtrim(fgets(STDIN, 1024));
+  return $line;
+}
+
+function readpassword($prompt = null) {
+  if ($prompt)
+    echo $prompt;
   exec("stty -echo");
   $line = rtrim(fgets(STDIN, 1024));
   exec("stty echo");
@@ -212,9 +219,43 @@ function modalfn($msg, $fld, $value, $modal = true) {
 }
 
 // Read password from console
-$password = readline(_normal . "Enter password of user '" . _user . "' [Return for default]: ");
+$password = readpassword(_normal . "Enter password of user '" . _user . "' [Return for default]: ");
 if (empty($password))
   $password = _pass;
+
+// Ask for testing mode
+while (true) {
+  echo PHP_EOL . "[O] All tests [default]" . PHP_EOL;
+  echo "[1] Package Verification tests" . PHP_EOL;
+  echo "[2] Security tests" . PHP_EOL;
+  echo "[3] Login page tests" . PHP_EOL;
+  echo "[4] Status page tests" . PHP_EOL;
+  echo "[5] Web configuration page tests" . PHP_EOL;
+  echo "[6] Network configuration page tests" . PHP_EOL;
+  echo "[7] Service configuration page tests" . PHP_EOL;
+  echo "[8] Certificate configuration page tests" . PHP_EOL;
+  echo "[9] Task configuration page tests" . PHP_EOL;
+  echo "[A] User configuration page tests" . PHP_EOL;
+  echo "[B] Backup/Restore tests" . PHP_EOL;
+  switch ($x = readline("Select a value : ")) {
+    case"":
+    case "0": $what = "all"; break 2; 
+    case "1": $what = "verif"; break 2; 
+    case "2": $what = "secu"; break 2; 
+    case "3": $what = "login"; break 2; 
+    case "4": $what = "status"; break 2; 
+    case "5": $what = "web"; break 2; 
+    case "6": $what = "net"; break 2; 
+    case "7": $what = "serv"; break 2; 
+    case "8": $what = "cert"; break 2; 
+    case "9": $what = "task"; break 2; 
+    case"a":
+    case "A": $what = "user"; break 2; 
+    case "b":
+    case "B": $what = "backup"; break 2; 
+    default : echo "Unrecognized option '" . $x . "'" . PHP_EOL; break;
+  }
+}
 
 // Main block of test code
 try {
@@ -956,7 +997,7 @@ try {
       }); 
 
     // Change their information 
-    test("Try changing the decsription of the existing user", function () {
+    test("Try changing the description of the existing user", function () {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("description_testuser")));
         $GLOBALS["driver"]->findElement(WebDriverBy::id("description_testuser"))->clear()->sendKeys("Dummy Description");
         save();
