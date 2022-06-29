@@ -129,7 +129,7 @@ install: Repo.pub good-1-1.noarch.rpm bad-1-1.noarch.rpm bad-checksum-1-1.noarch
 	# Now that repodata is created change bad-checksum and unsigned file to the original file
 	cp bad-checksum-1-1.noarch.rpm unsigned-1-1.noarch.rpm ${HAUT}/Repomd/Packages
 	# Sign the repomd.xml file
-	gpg --pinentry-mode loopback --passphrase-file=passphrase --output ${HAUT}/Repomd/repodata/repomd.xml.asc -a --detach-sig ${HAUT}/Repomd/repodata/repomd.xml 
+	gpg --pinentry-mode loopback --passphrase-file=passphrase --local-user=repo@example.com --output ${HAUT}/Repomd/repodata/repomd.xml.asc -a --detach-sig ${HAUT}/Repomd/repodata/repomd.xml 
 
 clean:
 	rm -f Repo.pub Bad.pub good-1.1.noarch.rpm unsigned-1.1.noarch.rpm 

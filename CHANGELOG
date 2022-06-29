@@ -1,6 +1,8 @@
 Log of the principal changes to the DSAS
 
 Version 1.1.2 (XX XXXX XXX)
+- Add testing framework
+- Don't allow unsigned rpm files to pass for "rpm" tasks
 - Problem with downloading ClamAV signatures introduced in version 1.1.0 fixed
 - Problem setting extended SNMPv3 options
 - Fix initial boot failure due to radius issue

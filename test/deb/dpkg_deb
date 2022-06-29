@@ -1,0 +1,31 @@
+#! /bin/sh
+# Simple script to replace dpkg-deb function
+
+pth=$(pwd)
+
+for d in $@; do
+ [ -d "$d" ] || { echo "Directory '$d' doesn't exist"; continue; }
+ [ -f "$d/control" ] || { echo "Control file '$d/control' absent"; continue; }
+ [ -f "$(basename "$d").deb" ] && { echo "Deb file already built"; continue; }
+
+ (
+   # Put in () so that its in a subshell and the cd won't propagate
+   cd $d
+   rm -f hashes files
+   while IFS= read -r -d '' file; do
+     file=${file#./}  # Remove leading "./"
+     [ "$file" = "debian-binary" ] && continue
+     [ "$file" = "hashes" ] && continue
+     [ "$file" = "control" ] && continue
+     [ "$file" = "files" ] && continue
+     md5sum $file >> hashes
+     echo $file >> files
+   done < <(find . -type f -print0)   
+   mv hashes md5sum
+   echo "2.0" > debian-binary
+   tar cJf control.tar.xz control md5sum
+   tar -T files -cJf data.tar.xz
+   ar -rc $pth/$(basename "$d").deb debian-binary control.tar.xz data.tar.xz
+   rm -f md5sum files debian-binary control.tar.xz data.tar.xz
+ )
+done

@@ -10,7 +10,7 @@ ifndef TCZ
 TCZ := ../work/tcz
 endif
 
-SUBDIRS := repo cyberwatch openssl gpg authenticode liveupdate
+SUBDIRS := deb repo cyberwatch openssl gpg authenticode liveupdate
 BASE := $(shell pwd)/work
 VERSION := 0.1
 

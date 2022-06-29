@@ -1,0 +1,32 @@
+#! /bin/sh
+# Simple script to create the Release file
+
+set -e
+
+do_hash() {
+  HASH_NAME=$1
+  HASH_CMD=$2
+  echo "$1:"
+  while IFS= read -r -d '' f; do
+    f=${f#./}
+    [ "$f" = "Release" ] && continue
+    echo " $($2 "$f" | cut -f1 -d' ') $(wc -c "$f")"
+  done < <(find -type f -print0)
+}
+
+cd $1
+
+cat << EOF
+Origin: DSAS Test Repository
+Label: DSAS
+Suite: stable
+Codename: stable
+Version: 1.0
+Architectures: all
+Components: main
+Description: A Simple debian test repository for DSAS testing
+Date: $(date -Ru)
+EOF
+do_hash "MD5Sum" "md5sum"
+do_hash "SHA1" "sha1sum"
+do_hash "SHA256" "sha256sum"

@@ -17,7 +17,6 @@ use Facebook\WebDriver\WebDriverSelect;
 use Facebook\WebDriver\WebDriverExpectedCondition;
 
 // Modifiable constants
-$what = "verif" ; // all, verif, secu, login, status, web, net, serv, cert, task, user, backup 
 $sshot = true;
 define("_user", "tc");
 define("_pass", "dSaO2021cTf");
@@ -304,20 +303,41 @@ try {
     foreach ($dsas->tasks->task as $GLOBALS["task"]) {
       test("Verifying " . $task->type . " tasks function correctly", function () {
           $task = $GLOBALS["task"];
+          $directory = $task->directory;
           exec("runtask -f " . $task->id, $data, $retval);
           if ($retval != 0)
             throw new RuntimeException("Error running task type '" . $task->type . "'");
+          if ($task->type  == "deb") {
+            // For debian tasks the files to check and in the pool directory
+            $have_pool = false;
+            $pool = dirname($directory);
+            while ($pool != $directory) {
+              exec("sudo test -d \"/home/dsas/haut/share/" . $pool . "/pool\"", $data, $retval);
+              if ($retval == 0) {
+                $have_pool = true;
+                $directory = $pool . "/pool";
+                break;
+              }
+              $directory = $pool
+              $pool = dirname($directory);
+            }
+            if (! $have_pool)
+              throw new RuntimeException("Pool directory not found for 'deb' task type");             
+          }
           $data = [];
-          exec("sudo find /home/dsas/bas/share/" . $task->directory . " -name 'virus*'", $data);
+          exec("sudo test -d \"/home/dsas/bas/share/" . $directory . "\"", $data, $retval);
+          if ($retval != 0)
+            throw new RuntimeException("Task directory not created in '" . $task->type . "' verification");
+          exec("sudo find /home/dsas/bas/share/" . $directory . " -name 'virus*'", $data);
           if (! empty($data))
             throw new RuntimeException("Virus not detected in '" . $task->type . "' verification");
-          exec("sudo find /home/dsas/bas/share/" . $task->directory . " -name 'bad*'", $data);
+          exec("sudo find /home/dsas/bas/share/" . $directory . " -name 'bad*'", $data);
           if (! empty($data))
             throw new RuntimeException("Badly signed file not detected in '" . $task->type . "' verification");
-          exec("sudo find /home/dsas/bas/share/" . $task->directory . " -name 'unsign*'", $data);
+          exec("sudo find /home/dsas/bas/share/" . $directory . " -name 'unsign*'", $data);
           if (! empty($data))
             throw new RuntimeException("Unsigned file not detected in '" . $task->type . "' verification");          
-          exec("sudo find /home/dsas/bas/share/" . $task->directory . " -name 'good*'", $data);
+          exec("sudo find /home/dsas/bas/share/" . $directory . " -name 'good*'", $data);
           if (empty($data))
             throw new RuntimeException("No signed files not detected in '" . $task->type . "' verification");          
           // FIXME Should we check that the right number of wanted files are passed ? 

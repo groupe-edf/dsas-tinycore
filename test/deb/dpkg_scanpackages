@@ -1,0 +1,23 @@
+#! /bin/sh
+# Simple script to replace dpkg-scanpackages function
+
+for d in $@; do
+  [ -d "$d" ] || { echo "Directory '$d' doesn't exist"; continue; }
+  while IFS= read -r -d '' f; do
+    file=${f#$(dirname "$d")/}
+    # Extract control file
+    ar p "$f" control.tar.xz | tar xJf - control
+    md5=$(md5sum "$f" | cut -f1 -d' ' | xargs)
+    sha1=$(sha1sum "$f" | cut -f1 -d' ' | xargs)
+    sha256=$(sha256sum "$f" | cut -f1 -d' ' | xargs)
+    size=$(wc "$f" | xargs | cut -f3 -d' ')
+    sed -i -e "s/\(^Architecture:.*\)$/\1\nSHA256: ${sha256}/" control
+    sed -i -e "s/\(^Architecture:.*\)$/\1\nSHA1: ${sha1}/" control
+    sed -i -e "s/\(^Architecture:.*\)$/\1\nMD5sum: ${md5}/" control
+    sed -i -e "s/\(^Architecture:.*\)$/\1\nSize: ${size}/" control
+    sed -i -e "s,\(^Architecture:.*\)$,\1\nFilename: ${file}," control
+    cat control
+    echo ""
+    rm control
+  done < <(find "$d" -name "*.deb" -print0)
+done
