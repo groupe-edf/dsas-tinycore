@@ -18,5 +18,5 @@ _pkgs='main{/usr}'
 _post_install=\
 "#! /bin/sh
 mkdir -p /usr/local/var/lib/rpm
-chgrp verif /usr/local/var/lib/rpm
+chgrp -R 2000 /usr/local/var/lib/rpm
 chmod 775 /usr/local/var/lib/rpm"
