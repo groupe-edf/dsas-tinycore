@@ -574,6 +574,13 @@ verifdirectory() {
 
 }
 
+checkrpm(){
+  # Unsigned RPM files pass the test "rpm -K", so have to explicitly test for them
+  rpm -qi "$1" 2> /dev/null | grep -q "^Signature.*:.*(none)$" && return 1
+  rpm -K "$1" > /dev/null 2>&1 || return 1
+  return 0
+}
+
 verify_packages() {
   local file chktype chksum dir rpm_k
   dir=$1
@@ -597,7 +604,7 @@ verify_packages() {
     if [ -f "$DSAS_HAUT/$dir/$file" ]; then
       if  check_checksum "$DSAS_HAUT/$dir/$file" "$chksum" "$chktype"; then
         msgline "$DSAS_HAUT/$dir/$file" 2
-      elif [ "$rpm_k" == "1" ] && ! rpm -K "$DSAS_HAUT/$dir/$file" 1> /dev/null 2>&1; then
+      elif [ "$rpm_k" == "1" ] && ! checkrpm "$DSAS_HAUT/$dir/$file"; then
         msgline "$DSAS_HAUT/$dir/$file" 5      
       elif [ "$antivirus" == "true" ]; then
         if rpm2cpio "$DSAS_HAUT/$dir/$file" | clamdscan - > /dev/null 2>&1; then
@@ -723,7 +730,7 @@ verifrepo() {
   [ "$type" == "rpm" ] || verify_packages "$dir" 0 $filetable
   
   # Remove all RPM signature keys    
-  [ "$type" == "rpm" ] && rpm -e "$(rpm -qa)"
+  [ "$type" == "rpm" ] && rpm -e "$(rpm -qa)" 2> /dev/null
 
   /bin/rm -fr "$tempdir"
 }
