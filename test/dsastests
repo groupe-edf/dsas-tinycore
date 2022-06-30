@@ -318,7 +318,7 @@ try {
                 $directory = $pool . "/pool";
                 break;
               }
-              $directory = $pool
+              $directory = $pool;
               $pool = dirname($directory);
             }
             if (! $have_pool)
