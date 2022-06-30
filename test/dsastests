@@ -881,10 +881,43 @@ try {
         return ($retval != 0);
       });
         
-    // FIXME Try activating and applying antivirus and see if
-    // clamdscan is running. Needs CVD files pre-installed
+    // Create EICAR virus test file and copy it it /tmp
+    file_put_contents("/tmp/eicar", "X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*");
+    file_put_contents("/tmp/novirus", "This file has no virus signature");
 
-    // FIXME deactivate clamav 
+    // Activate ClamAV via the web interface. Scan files and check infection or not
+    test("Actvating ClamAv and testing for detection of viruses", function() {
+        if (! $GLOBALS["driver"]->findElement(WebDriverBy::id("antivirus"))->isSelected())
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("antivirus"))->click();
+        save();
+        apply();
+        // Need to sleep here to allow clamd to startup. Not long as the database only
+        // contains the EICAR signature. If other signatures are include might need to wait longer
+        sleep(1);
+        exec("clamdscan /tmp/eicar", $data, $retval);
+	if ($retval != 1)
+           throw new RuntimeException("ClamAv failed to detect a virus");
+        exec("clamdscan /tmp/novirus", $data, $retval);
+	if ($retval != 0)
+           throw new RuntimeException("ClamAv failed to detect absence of a virus");
+        return true;
+      });    
+
+    // Deactivate ClamAV via the web interface. Scan files and check for error running clamav
+    test("Deactivating ClamAV", function () {
+        if ($GLOBALS["driver"]->findElement(WebDriverBy::id("antivirus"))->isSelected())
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("antivirus"))->click();
+        save();
+        apply();
+        exec("clamdscan /tmp/eicar", $data, $retval);
+	if ($retval != 2)
+           throw new RuntimeException("ClamAv not stopped via web interface");
+        return true;
+      });
+   
+    // Remove temporary files
+    unlink("/tmp/eicar");
+    unlink("/tmp/novirus");
 
     // Activate repository and check is host on port 443 exists
     test("Activation of HTTPS repository", function () {
