@@ -1,0 +1,36 @@
+**  Bad Sig         0ec22d0907c436f77306b1fab59ca347 20220630163112 tests/LiveUpdate/bad-livetri.zip
+**  Bad Sig         3b37ef69d56c99d04d317f6b2f4bc285 20220630163112 tests/LiveUpdate/unsigned-livetri.zip
+    Ok              2e216d70c3cf08fd229acc5f7abffb13 20220630163113 tests/LiveUpdate/good.txt
+    Ok              4e40243ac570df95e9b1978b0f11ad5e 20220630163113 tests/LiveUpdate/good-livetri.zip
+**  Fail virus chk  ebeb8a378cb9b0bc2a4a83db30af091d 20220630163113 tests/LiveUpdate/virus-livetri.zip
+    Ok              1eeb265b8e50a003ee29ccbffad3f599 20220630163115 tests/Authenticode/good.cab
+**  Bad Sig         454486b9f13f931e6d04114c575b27d6 20220630163115 tests/Authenticode/bad.cab
+**  Fail virus chk  732d9e6b86eb335752b231df93eb6f0f 20220630163115 tests/Authenticode/virus.cab
+**  Bad Sig         9c19e7f0d33727c92e873fc03fffcef4 20220630163115 tests/Authenticode/unsigned.cab
+    Ok              ccbc9d41f8121de99f7c78dee4037080 20220630163117 tests/Gpg/gooddetachclear
+    Ok              ced5fffd6a59cf9447dac2fe8b04e47d 20220630163117 tests/Gpg/goodclear.asc
+**  Bad Sig         70999f536ad59a409b8057810afc9e62 20220630163117 tests/Gpg/unsigned
+    Ok              c6b29fc4d75b6bd131952b7019012512 20220630163117 tests/Gpg/goodsign.gpg
+**  Bad Sig         c1b97d1639c5b81077b32b2aab40da51 20220630163117 tests/Gpg/bad.gpg
+**  Bad Sig         e7e5fa40569514ec442bbdf755d89c2f 20220630163117 tests/Gpg/virus
+    Ok              ed1a8b900c0891d454fbb145eee4f9a9 20220630163117 tests/Gpg/gooddetach
+    Ok              1a18cf13fad7319a435384fa7ff1d2eb 20220630163120 tests/Openssl/good.txt
+**  Bad Sig         7ade42f4a7177919a995dbd521de189f 20220630163120 tests/Openssl/unsigned.txt
+**  Bad Sig         adf38bdcb5b9439dfc87c95e739bf23e 20220630163120 tests/Openssl/bad.txt
+**  Fail virus chk  e7e5fa40569514ec442bbdf755d89c2f 20220630163120 tests/Openssl/virus.txt
+**  Bad Sig         d5d44c675fec6e458e316abea7ff342a 20220630163122 tests/Cyberwatch/bad.zip
+**  Bad Sig         b7447d7207f3f950668fb39393c04989 20220630163122 tests/Cyberwatch/unsigned.zip
+    Ok              ac792f75dd9d1a07b6862b20cc1ec8f9 20220630163122 tests/Cyberwatch/good.zip
+**  Fail virus chk  9c80404d045e3479e94142d16affdfc3 20220630163122 tests/Cyberwatch/virus.zip
+--  Checksum fail   81b6beba0234a16345228a136bbe12d9 20220630163129 tests/Repomd/Packages/bad-checksum-1-1.noarch.rpm
+    Ok              3f90efa7d5eef0cf388b6a19712fd203 20220630163129 tests/Repomd/Packages/good-1-1.noarch.rpm
+**  Fail virus chk  463bc32490ff34a288bdf01062daa316 20220630163129 tests/Repomd/Packages/virus-1-1.noarch.rpm
+**  Bad RPM Sig     906aa3bc5ffa0933b05a29c4ecb5444e 20220630163137 tests/Rpm/Packages/bad-1-1.noarch.rpm
+    Ok              3f90efa7d5eef0cf388b6a19712fd203 20220630163137 tests/Rpm/Packages/good-1-1.noarch.rpm
+**  Bad RPM Sig     b71822f5c925194180c61839c3f92afc 20220630163137 tests/Rpm/Packages/unsigned-1-1.noarch.rpm
+**  Fail virus chk  463bc32490ff34a288bdf01062daa316 20220630163137 tests/Rpm/Packages/virus-1-1.noarch.rpm
+    Ok              08fc0692bf0aeb5bbf722efb53c96a39 20220630163144 tests/Deb/dists/stable/main/binary-all/Packages.gz
+    Ok              d7f8cd9137558f098169774478f0d520 20220630163144 tests/Deb/dists/stable/main/binary-all/Packages
+**  Fail virus chk  00134bc902ffee0dfd93150bed663736 20220630163144 tests/Deb/pool/main/virus_1.0-1_all.deb
+--  Checksum fail   f9dc887f2746416e0b09124f20c66eda 20220630163144 tests/Deb/pool/main/bad_1.0-1_all.deb
+    Ok              e664aa11c51169361f081ef44d48f43c 20220630163145 tests/Deb/pool/main/good_1.0-1_all.deb

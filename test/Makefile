@@ -10,7 +10,7 @@ ifndef TCZ
 TCZ := ../work/tcz
 endif
 
-SUBDIRS := deb repo cyberwatch openssl gpg authenticode liveupdate
+SUBDIRS := deb repo cyberwatch openssl gpg authenticode liveupdate certificates logs
 BASE := $(shell pwd)/work
 VERSION := 0.1
 
@@ -35,6 +35,8 @@ install:
 	cp eicar.ndb tests.tgz $(BASE)/dsas_conf.xml $(DEST)/usr/local/share/dsas
 	mkdir -p $(DEST)/var/dsas
 	cp $(BASE)/dsas_conf.xml $(DEST)/var/dsas
+	cp -r $(BASE)/log $(DEST)/usr/local/share/dsas/log
+	cp -r $(BASE)/Certificates $(DEST)/usr/local/share/dsas/Certificates
 	chown tc.staff $(DEST)/var/dsas/dsas_conf.xml 
 
 setup :

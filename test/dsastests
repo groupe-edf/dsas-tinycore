@@ -11,6 +11,7 @@ use Facebook\WebDriver\Firefox\FirefoxOptions;
 use Facebook\WebDriver\Firefox\FirefoxProfile;
 use Facebook\WebDriver\Exception\TimeoutException;
 use Facebook\WebDriver\Interactions\WebDriverActions;
+use Facebook\WebDriver\WebDriverKeys;
 use Facebook\WebDriver\WebDriverWait;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\WebDriverSelect;
@@ -294,6 +295,9 @@ try {
       exec("ssh tc@haut sudo tar -C /home/dsas/haut/share -xzf " . _share . "/tests.tgz", $data, $retval);
       if ($retval != 0)
         throw new RuntimeException("Error installing test files on upper machine");
+      exec("sudo cp -f " . _share . "/log/* /home/dsas/log", $data, $retval);
+      if ($retval != 0)
+        throw new RuntimeException("Error copying log files on lower machine");
       return true; 
     }, true); 
 
@@ -485,11 +489,28 @@ try {
 
     // FIXME test status progress bars 
 
-    // FIXME test log search function. Need dummy logs
+    // Test log search function. Need dummy logs
+    test("Log search function", function () {
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("logsearch"))->clear()->sendKeys("dummy" . WebDriverKeys::ENTER);
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className("bg-info")));
+        return  (str_contains($GLOBALS["driver"]->findElement(WebDriverBy::className("bg-info"))->getDomProperty("innerHTML"), "dummy-search"));
+      });
 
-    // FIXME test "only errors" button. Search for "Ok" at start of log line and 
-    // test if a line is highlighted. Need dummy logs
-
+    // Test "only errors" button. Search for "Ok" at start of log line and 
+    // test if a line is highlighted. Need dummy logs that don't have "Ok" anywhere
+    // log lines
+    test("Limiting logs to only errors", function () {
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("loghide"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("logpane")));
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("logsearch"))->clear()->sendKeys("Ok" . WebDriverKeys::ENTER);
+        try { 
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className("bg-info")));
+        } catch (Exception $e) {
+          // The keyword "Ok" not found as we wanted
+          return true;
+        }
+        throw new RuntimeException("Error limiting logs to only errors");
+      });
   }
 
   if ($what === "all" || $what === "web") {
@@ -880,10 +901,12 @@ try {
         exec("pgrep ntpd", $data, $retval);
         return ($retval != 0);
       });
-        
+
     // Create EICAR virus test file and copy it it /tmp
-    file_put_contents("/tmp/eicar", "X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*");
+    file_put_contents("/tmp/eicar", "X5O!P%@AP[4\PZX54(P^)7CC)7}\$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!\$H+H*");
+    chmod("/tmp/eicar", 0644);
     file_put_contents("/tmp/novirus", "This file has no virus signature");
+    chmod("/tmp/novirus", 0644);
 
     // Activate ClamAV via the web interface. Scan files and check infection or not
     test("Actvating ClamAv and testing for detection of viruses", function() {
@@ -909,7 +932,7 @@ try {
           $GLOBALS["driver"]->findElement(WebDriverBy::id("antivirus"))->click();
         save();
         apply();
-        exec("clamdscan /tmp/eicar", $data, $retval);
+        exec("clamdscan /tmp/eicar 2> /dev/null", $data, $retval);
 	if ($retval != 2)
            throw new RuntimeException("ClamAv not stopped via web interface");
         return true;
