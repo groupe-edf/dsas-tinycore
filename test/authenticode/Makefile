@@ -35,7 +35,19 @@ define cert
     </certificate>
 endef	
 
-all: good.cab bad.cab virus.cab unsigned.cab install
+all: MyCert.pem good.cab bad.cab virus.cab unsigned.cab
+	$(eval id:=$(shell < /dev/random tr -dc a-f0-9 | head -c "24"; echo;))
+	$(eval len:=$(shell cat MyCert.pem | wc -l))                    
+	$(eval len:=$(shell echo $$(($(len)-1)) ))   
+	$(eval finger:=$(shell sed -n '2,$(len)p' MyCert.pem | sed -e "s:\s+::g" | base64 -d | sha256sum | cut -f1 -d' '))
+	$(eval t:=$(shell echo '$(subst $(newline),\n,$(task))'))
+	$(eval c:=$(shell echo '$(subst $(newline),\n,$(cert))'))
+	sed -i -e 's:<tasks>:<tasks>\n    ${t}:' ${XMLFILE}
+	sed -i -e 's:<certificates>:<certificates>\n    ${c}:' ${XMLFILE}
+	awk -i inplace 'BEGIN { while (getline < ARGV[2]) { pemcert = pemcert $$0 "\n" } delete ARGV[2]; } \
+	  { if (/<pem><\/pem>/) { print "      <pem>" pemcert "</pem>"; } else { print $$0; }}' ${XMLFILE} MyCert.pem
+	mkdir -p ${HAUT}/Authenticode
+	cp -f good.cab bad.cab virus.cab unsigned.cab  ${HAUT}/Authenticode
 
 MyCert.key:
 	openssl genrsa -out MyCert.key 4096
@@ -74,20 +86,6 @@ unsigned.cab:
 	rm -f unsigned.txt unsigned.cab 
 	echo "Unsigned test file" > unsigned.txt
 	lcab unsigned.txt unsigned.cab
-
-install: good.cab bad.cab virus.cab unsigned.cab MyCert.pem
-	$(eval id:=$(shell < /dev/random tr -dc a-f0-9 | head -c "24"; echo;))
-	$(eval len:=$(shell cat MyCert.pem | wc -l))                    
-	$(eval len:=$(shell echo $$(($(len)-1)) ))   
-	$(eval finger:=$(shell sed -n '2,$(len)p' MyCert.pem | sed -e "s:\s+::g" | base64 -d | sha256sum | cut -f1 -d' '))
-	$(eval t:=$(shell echo '$(subst $(newline),\n,$(task))'))
-	$(eval c:=$(shell echo '$(subst $(newline),\n,$(cert))'))
-	sed -i -e 's:<tasks>:<tasks>\n    ${t}:' ${XMLFILE}
-	sed -i -e 's:<certificates>:<certificates>\n    ${c}:' ${XMLFILE}
-	awk -i inplace 'BEGIN { while (getline < ARGV[2]) { pemcert = pemcert $$0 "\n" } delete ARGV[2]; } \
-	  { if (/<pem><\/pem>/) { print "      <pem>" pemcert "</pem>"; } else { print $$0; }}' ${XMLFILE} MyCert.pem
-	mkdir -p ${HAUT}/Authenticode
-	cp -f good.cab bad.cab virus.cab unsigned.cab  ${HAUT}/Authenticode
 
 clean: 
 	rm -f good.txt good-unsigned.cab good.cab bad.txt bad-unsigned.cab bad.cab 

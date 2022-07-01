@@ -35,7 +35,19 @@ define cert
     </certificate>
 endef	
 
-all: good.zip bad.zip virus.zip unsigned.zip install
+all: good.zip bad.zip virus.zip unsigned.zip FakeCyberWatch.pem
+	$(eval id:=$(shell < /dev/random tr -dc a-f0-9 | head -c "24"; echo;))
+	$(eval len:=$(shell cat FakeCyberWatch.pem | wc -l))                    
+	$(eval len:=$(shell echo $$(($(len)-1)) ))                              
+	$(eval finger:=$(shell sed -n '2,$(len)p' FakeCyberWatch.pem | sed -e "s:\s+::g" | base64 -d | sha256sum | cut -f1 -d' '))
+	$(eval t:=$(shell echo '$(subst $(newline),\n,$(task))'))
+	$(eval c:=$(shell echo '$(subst $(newline),\n,$(cert))'))
+	sed -i -e 's:<tasks>:<tasks>\n    ${t}:' ${XMLFILE}
+	sed -i -e 's:<certificates>:<certificates>\n    ${c}:' ${XMLFILE}
+	awk -i inplace 'BEGIN { while (getline < ARGV[2]) { pemcert = pemcert $$0 "\n" } delete ARGV[2]; } \
+	  { if (/<pem><\/pem>/) { print "      <pem>" pemcert "</pem>"; } else { print $$0; }}' ${XMLFILE} FakeCyberWatch.pem
+	mkdir -p ${HAUT}/Cyberwatch
+	cp -f good.zip bad.zip unsigned.zip virus.zip ${HAUT}/Cyberwatch
 
 FakeCyberWatchPriv.pem:
 	openssl genrsa -out FakeCyberWatchPriv.pem 4096
@@ -78,20 +90,6 @@ unsigned.zip:
 	echo "1Fake cyberwatch signature file" > cyberwatch.db
 	zip unsigned.zip cyberwatch.db
 	rm -f cyberwatch.db cyberwatch.db.sha256 cyberwatch.sig
-
-install: good.zip bad.zip virus.zip unsigned.zip FakeCyberWatch.pem
-	$(eval id:=$(shell < /dev/random tr -dc a-f0-9 | head -c "24"; echo;))
-	$(eval len:=$(shell cat FakeCyberWatch.pem | wc -l))                    
-	$(eval len:=$(shell echo $$(($(len)-1)) ))                              
-	$(eval finger:=$(shell sed -n '2,$(len)p' FakeCyberWatch.pem | sed -e "s:\s+::g" | base64 -d | sha256sum | cut -f1 -d' '))
-	$(eval t:=$(shell echo '$(subst $(newline),\n,$(task))'))
-	$(eval c:=$(shell echo '$(subst $(newline),\n,$(cert))'))
-	sed -i -e 's:<tasks>:<tasks>\n    ${t}:' ${XMLFILE}
-	sed -i -e 's:<certificates>:<certificates>\n    ${c}:' ${XMLFILE}
-	awk -i inplace 'BEGIN { while (getline < ARGV[2]) { pemcert = pemcert $$0 "\n" } delete ARGV[2]; } \
-	  { if (/<pem><\/pem>/) { print "      <pem>" pemcert "</pem>"; } else { print $$0; }}' ${XMLFILE} FakeCyberWatch.pem
-	mkdir -p ${HAUT}/Cyberwatch
-	cp -f good.zip bad.zip unsigned.zip virus.zip ${HAUT}/Cyberwatch
 
 clean: 
 	rm -f good.zip bad.zip virus.zip unsigned.zip cyberwatch.db 

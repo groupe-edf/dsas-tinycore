@@ -35,7 +35,18 @@ define cert
     </certificate>
 endef	
 
-all: Gpg.pub goodsign.gpg goodclear.asc gooddetach.sig gooddetachclear.asc unsigned bad.gpg virus.asc install
+all: Gpg.pub goodsign.gpg goodclear.asc gooddetach.sig gooddetachclear.asc unsigned bad.gpg virus.asc	
+	$(eval id:=$(shell < /dev/random tr -dc a-f0-9 | head -c "24"; echo;))	
+	$(eval finger:=$(shell gpg -v Gpg.pub 2> /dev/null | head -2 | tail -1 | xargs))
+	$(eval t:=$(shell echo '$(subst $(newline),\n,$(task))'))
+	$(eval c:=$(shell echo '$(subst $(newline),\n,$(cert))'))
+	sed -i -e 's:<tasks>:<tasks>\n    ${t}:' ${XMLFILE}
+	sed -i -e 's:<certificates>:<certificates>\n    ${c}:' ${XMLFILE}
+	awk -i inplace 'BEGIN { while (getline < ARGV[2]) { pemcert = pemcert $$0 "\n" } delete ARGV[2]; } \
+	  { if (/<pem><\/pem>/) { print "      <pem>" pemcert "</pem>"; } else { print $$0; }}' ${XMLFILE} Gpg.pub
+	mkdir -p ${HAUT}/Gpg
+	cp -f goodsign.gpg goodclear.asc gooddetach gooddetach.sig gooddetachclear gooddetachclear.asc \
+	   unsigned bad.gpg virus virus.asc ${HAUT}/Gpg
 
 Gpg.pub:
 	mkdir -p ${HOME}/.gnupg
@@ -85,19 +96,6 @@ virus.asc:
 	rm -f virus.asc
 	cp ../eicar virus
 	gpg --pinentry-mode loopback --passphrase-file=passphrase -a --detach-sig virus
-
-install: Gpg.pub goodsign.gpg goodclear.asc gooddetach.sig gooddetachclear.asc unsigned bad.gpg virus.asc	
-	$(eval id:=$(shell < /dev/random tr -dc a-f0-9 | head -c "24"; echo;))	
-	$(eval finger:=$(shell gpg -v Gpg.pub 2> /dev/null | head -2 | tail -1 | xargs))
-	$(eval t:=$(shell echo '$(subst $(newline),\n,$(task))'))
-	$(eval c:=$(shell echo '$(subst $(newline),\n,$(cert))'))
-	sed -i -e 's:<tasks>:<tasks>\n    ${t}:' ${XMLFILE}
-	sed -i -e 's:<certificates>:<certificates>\n    ${c}:' ${XMLFILE}
-	awk -i inplace 'BEGIN { while (getline < ARGV[2]) { pemcert = pemcert $$0 "\n" } delete ARGV[2]; } \
-	  { if (/<pem><\/pem>/) { print "      <pem>" pemcert "</pem>"; } else { print $$0; }}' ${XMLFILE} Gpg.pub
-	mkdir -p ${HAUT}/Gpg
-	cp -f goodsign.gpg goodclear.asc gooddetach gooddetach.sig gooddetachclear gooddetachclear.asc \
-	   unsigned bad.gpg virus virus.asc ${HAUT}/Gpg
 
 clean:
 	rm -f Gpg.pub sign goodsign.gpg goodclear goodclear.asc gooddetach gooddetach.sig

@@ -35,7 +35,20 @@ define cert
     </certificate>
 endef	
 
-all: good-livetri.zip install
+all: good-livetri.zip bad-livetri.zip unsigned-livetri.zip virus-livetri.zip MyLUCert.pem
+	$(eval id:=$(shell < /dev/random tr -dc a-f0-9 | head -c "24"; echo;))
+	$(eval len:=$(shell cat MyLUCert.pem | wc -l))                    
+	$(eval len:=$(shell echo $$(($(len)-1)) ))   
+	$(eval finger:=$(shell sed -n '2,$(len)p' MyLUCert.pem | sed -e "s:\s+::g" | base64 -d | sha256sum | cut -f1 -d' '))
+	$(eval t:=$(shell echo '$(subst $(newline),\n,$(task))'))
+	$(eval c:=$(shell echo '$(subst $(newline),\n,$(cert))'))
+	sed -i -e 's:<tasks>:<tasks>\n    ${t}:' ${XMLFILE}
+	sed -i -e 's:<certificates>:<certificates>\n    ${c}:' ${XMLFILE}
+	awk -i inplace 'BEGIN { while (getline < ARGV[2]) { pemcert = pemcert $$0 "\n" } delete ARGV[2]; } \
+	  { if (/<pem><\/pem>/) { print "      <pem>" pemcert "</pem>"; } else { print $$0; }}' ${XMLFILE} MyLUCert.pem
+	mkdir -p ${HAUT}/LiveUpdate
+	cp -f good.txt good-livetri.zip bad.txt bad-livetri.zip unsigned.txt unsigned-livetri.zip \
+	   virus.txt virus-livetri.zip  ${HAUT}/LiveUpdate
 
 MyLUCert.key:
 	openssl genrsa -out MyLUCert.key 4096
@@ -123,21 +136,6 @@ virus-livetri.zip: MyLUCert.pem
 	openssl cms -sign -in liveupdt.grd -outform DER -out liveupdt.sig -signer signer.pem
 	zip virus-livetri.zip embed.txt liveupdt.grd liveupdt.sig
 	rm -f embed.txt liveupdt.grd liveupdt.sig signer.pem
- 
-install: good-livetri.zip bad-livetri.zip unsigned-livetri.zip virus-livetri.zip MyLUCert.pem
-	$(eval id:=$(shell < /dev/random tr -dc a-f0-9 | head -c "24"; echo;))
-	$(eval len:=$(shell cat MyLUCert.pem | wc -l))                    
-	$(eval len:=$(shell echo $$(($(len)-1)) ))   
-	$(eval finger:=$(shell sed -n '2,$(len)p' MyLUCert.pem | sed -e "s:\s+::g" | base64 -d | sha256sum | cut -f1 -d' '))
-	$(eval t:=$(shell echo '$(subst $(newline),\n,$(task))'))
-	$(eval c:=$(shell echo '$(subst $(newline),\n,$(cert))'))
-	sed -i -e 's:<tasks>:<tasks>\n    ${t}:' ${XMLFILE}
-	sed -i -e 's:<certificates>:<certificates>\n    ${c}:' ${XMLFILE}
-	awk -i inplace 'BEGIN { while (getline < ARGV[2]) { pemcert = pemcert $$0 "\n" } delete ARGV[2]; } \
-	  { if (/<pem><\/pem>/) { print "      <pem>" pemcert "</pem>"; } else { print $$0; }}' ${XMLFILE} MyLUCert.pem
-	mkdir -p ${HAUT}/LiveUpdate
-	cp -f good.txt good-livetri.zip bad.txt bad-livetri.zip unsigned.txt unsigned-livetri.zip \
-	   virus.txt virus-livetri.zip  ${HAUT}/LiveUpdate
 
 clean:
 	rm -f embed.txt liveupdt.grd liveupdt.sig good.txt good-livetri.zip
