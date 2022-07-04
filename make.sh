@@ -692,10 +692,18 @@ docker)
       make -C test clean
       make -C test pkg
       install_tcz dsastestfiles
-      rm -f $pkg_dir/dsastestfiles.pkg 
     else
+      t0=$(stat -c '%Y' "$tcz_dir/dsastestfiles.tcz")
+      t1=$(find test -type f -exec stat -c '%Y' "{}" \; | sort -nr  | head -1)
+      if [ $t1 -gt $t0 ] ; then
+        // The test files are newer than the existing version. Rebuild
+        rm -f "$tcz_dir/dsastestfiles.tcz"
+        make -C test clean
+        make -C test pkg
+      fi
       install_tcz dsastestfiles
     fi
+    rm -f $pkg_dir/dsastestfiles.pkg 
 
     # Install packages to allow testing of rsyslog and radius
     install_tcz freeradius
