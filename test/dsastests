@@ -1435,6 +1435,21 @@ try {
         return ($GLOBALS["driver"]->getTitle() === "Certificates");
       }, true);
 
+    // Toggle visiblity of certificates
+    test("Toggle visibility of certificates", function() {
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#gpg']")));
+        $el = $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#cert']"));
+        if ($el->getAttribute("aria-expanded") == "false")
+          $el->click();
+        $el = $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#pubkey']"));
+        if ($el->getAttribute("aria-expanded") == "false")
+          $el->click();
+        $el = $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#gpg']"));
+        if ($el->getAttribute("aria-expanded") == "false")
+          $el->click();
+        return true;
+      });
+
     // Upload X509 certifate. Can't do this via the navbar as no easy
     // way to select file to upload. So we cheat and use the javascript
     // certifcate upload function directly 
@@ -1457,8 +1472,6 @@ try {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
         // Toggle visbility of details on page
-        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#cert']")));
-        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#cert']"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#add0']")));
 	modal_delay();
         // Search for added fingerprint
@@ -1541,29 +1554,38 @@ try {
         $fp = fopen(_share . "/Certificates/Openssl.pem", "r");
         $contents = fread($fp, filesize(_share . "/Certificates/Openssl.pem"));
         fclose($fp);
-        $finger = hash("sha256" base64_decode($contents));
+        $contents_nowrap = preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $contents);
+        $finger = hash("sha256", base64_decode($contents_nowrap));
         if ($finger == "")
           throw new RuntimeException("Can not fingerprint Openssl key");
         $GLOBALS["finger"] = $finger;
         $contents = base64_encode($contents);
-        $GLOBALS["driver"]->executeScript("dsas_upload_cert_core(b64toBlob(arguments[0], \"application/x-pem-file\"), \"pubkey\", \"\");", [$contents]);
+        $GLOBALS["driver"]->executeScript("dsas_upload_cert_core(b64toBlob(arguments[0], \"application/x-pem-file\"), \"pubkey\", \"Openssl Test Certificate\");", [$contents]);
         // Applying, wait for okDSAS to become Clickable.
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
         modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
         // Toggle visbility of details on page
-        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#pubkey']")));
-        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#cert']"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#pubkey0']")));
 	modal_delay();
         // Search for added fingerprint
-        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@href, '#add')]")) as $card)
-          $card->click();
+        $first = true;
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@href, '#pubkey')]")) as $card) {
+          if ($first)
+            $first = false;
+          else
+            $card->click();
+        }
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//div[@id='pubkey0']")));
 	modal_delay();
         $found = false;
+        $first = true;
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'pubkey')]")) as $card) {
+          if ($first) {
+            $first = false;
+            continue;
+          }
           if (str_contains($card->getDomProperty("innerHTML"), $finger)) {
             $GLOBALS["card"] = "#" . $card->getAttribute("id"); 
             $found = true;
@@ -1590,7 +1612,8 @@ try {
         // The desired download link is the next one
         $_uri = $links[$i + 1]->getAttribute("href");
         $_str = $GLOBALS["driver"]->executeScript("async function asyncfetch(uri) { const reponse = await fetch (uri); return reponse.text();}; return asyncfetch(\"" . $_uri ."\");");
-        $finger = hash("sha256" base64_decode($contents));
+        $_str_nowrap = preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $_str);
+        $finger = hash("sha256", base64_decode($_str_nowrap));
         if ($finger != $GLOBALS["finger"])
           throw new RuntimeException("Downloaded key does not match uploaded key");
         return true;
@@ -1634,10 +1657,10 @@ try {
 
     // Upload GPG certifate.
     test("Uploading GPG certificate", function () {
-        $fp = fopen(_share . "/Certificates/Gpg.pem", "r");
-        $contents = fread($fp, filesize(_share . "/Certificates/Gpg.pem"));
+        $fp = fopen(_share . "/Certificates/Gpg.pub", "r");
+        $contents = fread($fp, filesize(_share . "/Certificates/Gpg.pub"));
         fclose($fp);
-        if (exec("/usr/local/bin/gpg -no-default-keyring -vv " . _share . "Certificates/Gpg.pem 2>&1", $text, $retval)) {
+        if (exec("/usr/local/bin/gpg -no-default-keyring -vv " . _share . "/Certificates/Gpg.pub 2>&1", $text, $retval)) {
           $text = implode(PHP_EOL, $text);
           preg_match("/" . PHP_EOL . "pub.*" . PHP_EOL . "\s+([^\s]+)/", $text, $matches);
           $finger = $matches[1];
@@ -1646,24 +1669,32 @@ try {
           throw new RuntimeException ("Can not read Gpg certificate");
         
         $contents = base64_encode($contents);
-        $GLOBALS["driver"]->executeScript("dsas_upload_cert_core(b64toBlob(arguments[0], \"application/pgp_keys\"), \"x509\", \"\");", [$contents]);
+        $GLOBALS["driver"]->executeScript("dsas_upload_cert_core(b64toBlob(arguments[0], \"application/pgp_keys\"), \"gpg\", \"\");", [$contents]);
         // Applying, wait for okDSAS to become Clickable.
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
         modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
         // Toggle visbility of details on page
-        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#gpg']")));
-        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#cert']"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#gpg0']")));
 	modal_delay();
         // Search for added fingerprint
-        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@href, '#gpg')]")) as $card)
-          $card->click();
+        $first = true;
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@href, '#gpg')]")) as $card) {
+          if ($first)
+            $first = false;
+          else
+            $card->click();
+        }
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//div[@id='gpg0']")));
 	modal_delay();
         $found = false;
+        $first = true;
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'gpg')]")) as $card) {
+          if ($first) {
+            $first = false;
+            continue;
+          }
           if (str_contains($card->getDomProperty("innerHTML"), $finger)) {
             $GLOBALS["card"] = "#" . $card->getAttribute("id"); 
             $found = true;
