@@ -1532,11 +1532,15 @@ function dsas_pubkey_name(){
     modalDSAS.setAttribute("body", body);
 }
 
-function dsas_upload_cert(type = "x509", name ="") {
+function dsas_upload_cert(type = "x509", name = "") {
     var cert = document.getElementById(type + "upload");
+    dsas_upload_cert_core(cert[0].files[0], type, name);
+}
+
+function dsas_upload_cert_core(file, type, name) {
     var formData = new FormData();
     formData.append("op", type + "_upload");
-    formData.append("file", cert[0].files[0]);
+    formData.append("file", file);
     formData.append("name", name);
 
     fetch("api/dsas-cert.php", {
@@ -2182,6 +2186,10 @@ function dsas_passwd_restore(){
 function dsas_real_restore() {
     var passwd = document.getElementById("RestorePassword").value;
     var file = document.getElementById("RestoreSelectFile").files[0];
+    dsas_restore-core(file, passwd);
+}
+
+function dsas_restore_core(file, passwd="") {
     var formData = new FormData();
     formData.append("file", file);
     formData.append("passwd", passwd);
