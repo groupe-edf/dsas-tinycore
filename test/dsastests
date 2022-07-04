@@ -1384,52 +1384,13 @@ try {
 
     // Restore the configuration. Can't do this via the navbar as no
     // easy way to select file to upload. So we cheat ;-)
-    // Call the equivalent of the dsas_real_restore function here !! 
+    // Call the dsas_restore_core function here !! 
     test("Restoring the configuration", function () {
         $fp = fopen("/home/tc/dsas_backup.tgz", "r");
         $contents = fread($fp, filesize("/home/tc/dsas_backup.tgz"));
         fclose($fp);
         $contents = base64_encode($contents);
-        $GLOBALS["driver"]->executeScript("
-                function dummy_restore(file, passwd=\"\") {
-                    var formData = new FormData();
-                    formData.append(\"file\", file);
-                    formData.append(\"passwd\", passwd);
-
-                    fetch(\"api/backup.php\", {
-                        method: \"POST\",
-                        body: formData}).then(response => {
-                        if (response.ok) 
-                            return response.text();
-                        else
-                            return Promise.reject({status: response.status, 
-                                statusText: response.statusText});
-                    }).then(text => {
-                        try {
-                            const errors = JSON.parse(text);
-                            modal_errors(errors);
-                        } catch (e) {
-                        // Can not apply directly from the restore script as the application
-                        // might restart the web server. Need to use use apply JS function
-                        // dsas_apply with a pre setup modal
-                            var modalDSAS = document.getElementById(\"modalDSAS\");
-                            modalDSAS.removeAttribute(\"disable\");
-                            modalDSAS.removeAttribute(\"body\");
-                            modalDSAS.removeAttribute(\"size\");
-                            modalDSAS.removeAttribute(\"hideonclick\");
-                            modalDSAS.setAttribute(\"action\", \"\");
-                            modalDSAS.setAttribute(\"title\", _(\"Apply the configuration\"));
-                            modalDSAS.setAttribute(\"type\", \"Ok\");
-                            modalDSAS.show();
-                            dsas_apply();
-                        } 
-                    }).catch(error => {
-                        if (!fail_loggedin(error.statusText))
-                            modal_message(_(\"Error : {0}\", (error.statusText ? error.statusText : error)));
-                    });
-                }
-                dummy_restore(b64toBlob(arguments[0], \"application/gzip\"));", [$contents]);
-
+        $GLOBALS["driver"]->executeScript("dsas_restore_core(b64toBlob(arguments[0], \"application/gzip\"));", [$contents]);
         // Applying, wait for okDSAS to become Clickable. Long wait due to apply
         $GLOBALS["driver"]->wait(4 * _delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
         modal_delay();
@@ -1466,7 +1427,116 @@ try {
   }
 
   if ($what === "all" || $what === "cert") {
-    //FIXME
+    // Navigate to /cert.html via navbar 
+    test("Navigating to /cert.html via navbar", function () {
+        $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[0]->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='cert.html']"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Certificates"));
+        return ($GLOBALS["driver"]->getTitle() === "Certificates");
+      }, true);
+
+    // Upload X509 certifate. Can't do this via the navbar as no easy
+    // way to select file to upload. So we cheat and use the javascript
+    // certifcate upload function directly 
+    test("Uploading X509 certificate", function () {
+        $fp = fopen(_share . "/Certificates/X509.pem", "r");
+        $contents = fread($fp, filesize(_share . "/Certificates/X509.pem"));
+        fclose($fp);
+        $tmp = openssl_x509_parse($contents);
+        if ($tmp === false)
+          throw new RuntimeException("Can not read X509 certificate");
+        $finger = openssl_x509_fingerprint($contents, "sha256");
+        if ($finger === false)
+          throw new RuntimeException("Can not fingerprint X509 certificate");
+        $GLOBALS["finger"] = $finger;
+        $contents = base64_encode($contents);
+        $GLOBALS["driver"]->executeScript("dsas_upload_cert_core(b64toBlob(arguments[0], \"application/x-x509-user-cert\"), \"x509\", \"\");", [$contents]);
+        // Applying, wait for okDSAS to become Clickable.
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
+        modal_delay();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+        // Toggle visbility of details on page
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#cert']")));
+        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#cert']"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#add0']")));
+	modal_delay();
+        // Search for added fingerprint
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@href, '#add')]")) as $card)
+          $card->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//div[@id='add0']")));
+	modal_delay();
+        $found = false;
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'add')]")) as $card) {
+          if (str_contains($card->getDomProperty("innerHTML"), $finger)) {
+            $GLOBALS["card"] = "#" . $card->getAttribute("id"); 
+            $found = true;
+            break;
+          }
+        }
+        return ($found);
+      });
+
+    // Download added X509 certificate and compare with uploaded certificate
+    test("Downloading X509 certificate", function () {
+        $links = $GLOBALS["driver"]->findElements(WebDriverBy:name("a"));
+        $i = 0;
+        foreach ($links as $link) {
+          if ($link->getAttribute("href") == $GLOBALS["card"])
+            break;
+          $i++;
+        }
+        // The desired download link is the next one
+        $_uri = $links[$i + 1]->getAttribute("href");
+        $_str = $GLOBALS["driver"]->executeScript("async function asyncfetch(uri) { const reponse = await fetch (uri); return reponse.text();}; return asyncfetch(\"" . $_uri ."\");");
+        $finger = openssl_x509_fingerprint($_str, "sha256");
+        if ($finger != $GLOBALS["finger"])
+          throw new RuntimeException("Donwloaded certificate does not match uploaded certificate");
+        return true;
+      });
+
+    // FIXME Delete uploaded X509 certificate
+    test("Delete X509 certificate", function () {
+        $links = $GLOBALS["driver"]->findElements(WebDriverBy:name("a"));
+        $i = 0;
+        foreach ($links as $link) {
+          if ($link->getAttribute("href") == $GLOBALS["card"])
+            break;
+          $i++;
+        }
+        // The desired detee link is two links later
+        $_uri = $links[$i + 2]->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
+        modal_delay();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+        $found = false;
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy:name("a")) as $link) {
+          if ($link->getAttribute("href") == $GLOBALS["card"]) {
+            $found = true;
+            break;
+          }
+        }
+        if ($found)
+          throw new RuntimeException("Certificate not deleted");
+        return true;
+      });
+
+    // Toggle to invisible the X509 certificates 
+    $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#cert']"))->click();
+
+
+    // FIXME Upload an Openssl certificate
+
+    // FIXME Download the added Openssl certificate
+
+    // FIXME Delete the uploaded Openssl certifcate
+
+    // FIXME Upload a GPG certificate
+
+    // FIXME Download the added GPG certificate
+
+    // FIXME Delete the uploaded GPG certifcate
   }
 
   if ($what === "all" || $what === "task") {
