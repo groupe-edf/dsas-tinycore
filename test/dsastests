@@ -431,7 +431,17 @@ try {
 
   if ($what === "all" || $what === "login") {
 
-    // FIXME Check CapsLock message is correctly displayed
+    // Check CapsLock message is correctly displayed
+    test("Testing CapLocks Warning message", function () {
+        $GLOBALS["driver"]->executeScript("for (feed of document.getElementsByClassName(\"form-control\")) feed.setAttribute(\"class\", \"form-control\");");
+	modal_delay();
+        // No function to set CapsLock in Webdriver
+        $GLOBALS["driver"]->executeScript("java.awt.Toolkit.getDefaultToolkit().setLockingState(KeyEvent.VK_CAPS_LOCK, true");
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className("is-invalid")));
+        $GLOBALS["driver"]->executeScript("java.awt.Toolkit.getDefaultToolkit().setLockingState(KeyEvent.VK_CAPS_LOCK, false");
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("is-invalid")));
+        return true;
+      });
 
     // Enter no values and check error condition
     test("Empty username and password", function () {
@@ -1669,7 +1679,7 @@ try {
           throw new RuntimeException ("Can not read Gpg certificate");
         
         $contents = base64_encode($contents);
-        $GLOBALS["driver"]->executeScript("dsas_upload_cert_core(b64toBlob(arguments[0], \"application/pgp_keys\"), \"gpg\", \"\");", [$contents]);
+        $GLOBALS["driver"]->executeScript("dsas_upload_cert_core(b64toBlob(arguments[0], \"application/pgp-keys\"), \"gpg\", \"\");", [$contents]);
         // Applying, wait for okDSAS to become Clickable.
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
         modal_delay();
@@ -1737,7 +1747,7 @@ try {
         return true;
       });
 
-    // Delete uploaded X509 certificate
+    // Delete uploaded GPG certificate
     test("Delete GPG certificate", function () {
         $links = $GLOBALS["driver"]->findElements(WebDriverBy::tagName("a"));
         $i = 0;
@@ -1770,12 +1780,92 @@ try {
         return true;
       });
 
+    // Try uploading the wrong certificate type to X509
+    test("Uploading invalid X509 certificate", function () {
+        $fp = fopen(_share . "/Certificates/Openssl.pem", "r");
+        $contents = fread($fp, filesize(_share . "/Certificates/Openssl.pem"));
+        fclose($fp);
+        $ncert = count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'add')]")));
+        $contents = base64_encode($contents);
+        $GLOBALS["driver"]->executeScript("dsas_upload_cert_core(b64toBlob(arguments[0], \"application/x-x509-user-cert\"), \"x509\", \"\");", [$contents]);
+        // Applying, wait for okDSAS to become Clickable. This will be an error this time
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
+        modal_delay();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+        // Toggle visbility of details on page
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#add0']")));
+	modal_delay();
+        return ($ncount == count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'add')]"))));
+      });
+
+    // Try uploading the wrong certificate type to Openssl
+    test("Uploading invalid Openssl key", function () {
+        $fp = fopen(_share . "/Certificates/X509.pem", "r");
+        $contents = fread($fp, filesize(_share . "/Certificates/X509.pem"));
+        fclose($fp);
+        $ncert = count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'pubkey')]")));
+        $contents = base64_encode($contents);
+        $GLOBALS["driver"]->executeScript("dsas_upload_cert_core(b64toBlob(arguments[0], \"application/x-pem-file\"), \"pubkey\", \"\");", [$contents]);
+        // Applying, wait for okDSAS to become Clickable. This will be an error this time
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
+        modal_delay();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+        // Toggle visbility of details on page
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#add0']")));
+	modal_delay();
+        return ($ncount == count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'pubkey')]"))));
+      });
+
+    // Try uploading the wrong certificate type to GPG
+    test("Uploading invalid GPG certificate", function () {
+        $fp = fopen(_share . "/Certificates/X509.pem", "r");
+        $contents = fread($fp, filesize(_share . "/Certificates/X509.pem"));
+        fclose($fp);
+        $ncert = count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'gpg')]")));
+        $contents = base64_encode($contents);
+        $GLOBALS["driver"]->executeScript("dsas_upload_cert_core(b64toBlob(arguments[0], \"application/pgp-keys\"), \"gpg\", \"\");", [$contents]);
+        // Applying, wait for okDSAS to become Clickable. This will be an error this time
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
+        modal_delay();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+        // Toggle visbility of details on page
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#add0']")));
+	modal_delay();
+        return ($ncount == count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'gpg')]"))));
+      });
+
     // Toggle to invisible the GPG certificates 
     $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#gpg']"))->click();
   }
 
   if ($what === "all" || $what === "task") {
-    //FIXME
+    // FIXME Test add task rpm 
+
+    // FIXME Add Debian task with selected architectures
+
+    // FIXME Add RPM task with wrong certificate type
+
+    // FIXME Trying adding a task with an XSS in the task name
+
+    // FIXME Modify an existing Task directory and see that file smove correctly
+
+    // FIXME Delete an existing task without removing its files and see that the files remain
+
+    // FIXME Delete an existing task removing its files and test that everything is gone
+
+    // FIXME Examine log of existing task. Careful log needs to exist
+
+    // FIXME Run a task and test that its running
+
+    // FIXME examine log of running task. THIS MIGHT BE HARD TO DO with short running tasks.
+
+    // FIXME Kill a running tasks. Also hard to do.
+
+    // FIXME Cleanup. Remove added tasks and files
+
   }
 
 
