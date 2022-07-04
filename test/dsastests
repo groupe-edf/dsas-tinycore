@@ -1479,39 +1479,50 @@ try {
 
     // Download added X509 certificate and compare with uploaded certificate
     test("Downloading X509 certificate", function () {
-        $links = $GLOBALS["driver"]->findElements(WebDriverBy:name("a"));
+        $links = $GLOBALS["driver"]->findElements(WebDriverBy::tagName("a"));
         $i = 0;
+        $found = false;
         foreach ($links as $link) {
-          if ($link->getAttribute("href") == $GLOBALS["card"])
+          if ($link->getAttribute("href") == $GLOBALS["card"]) {
+            $found = true;
             break;
+          }
           $i++;
         }
+        if (! $found)
+          throw new RuntimeException("Can not find certificate to download");
         // The desired download link is the next one
         $_uri = $links[$i + 1]->getAttribute("href");
         $_str = $GLOBALS["driver"]->executeScript("async function asyncfetch(uri) { const reponse = await fetch (uri); return reponse.text();}; return asyncfetch(\"" . $_uri ."\");");
         $finger = openssl_x509_fingerprint($_str, "sha256");
         if ($finger != $GLOBALS["finger"])
-          throw new RuntimeException("Donwloaded certificate does not match uploaded certificate");
+          throw new RuntimeException("Downloaded certificate does not match uploaded certificate");
         return true;
       });
 
-    // FIXME Delete uploaded X509 certificate
+    // Delete uploaded X509 certificate
     test("Delete X509 certificate", function () {
-        $links = $GLOBALS["driver"]->findElements(WebDriverBy:name("a"));
+        $links = $GLOBALS["driver"]->findElements(WebDriverBy::tagName("a"));
         $i = 0;
+        $found = false;
         foreach ($links as $link) {
-          if ($link->getAttribute("href") == $GLOBALS["card"])
+          if ($link->getAttribute("href") == $GLOBALS["card"]) {
+            $found = true;
             break;
+          }
           $i++;
         }
-        // The desired detee link is two links later
-        $_uri = $links[$i + 2]->click();
+        if (! $found)
+          throw new RuntimeException("Can not find certificate to delete");
+        // The desired delete link is two links later
+        $links[$i + 2]->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
         modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+        modal_delay();
         $found = false;
-        foreach ($GLOBALS["driver"]->findElements(WebDriverBy:name("a")) as $link) {
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::tagName("a")) as $link) {
           if ($link->getAttribute("href") == $GLOBALS["card"]) {
             $found = true;
             break;
@@ -1525,18 +1536,211 @@ try {
     // Toggle to invisible the X509 certificates 
     $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#cert']"))->click();
 
+    // Upload an Openssl certificate
+    test("Uploading Openssl key", function () {
+        $fp = fopen(_share . "/Certificates/Openssl.pem", "r");
+        $contents = fread($fp, filesize(_share . "/Certificates/Openssl.pem"));
+        fclose($fp);
+        $finger = hash("sha256" base64_decode($contents));
+        if ($finger == "")
+          throw new RuntimeException("Can not fingerprint Openssl key");
+        $GLOBALS["finger"] = $finger;
+        $contents = base64_encode($contents);
+        $GLOBALS["driver"]->executeScript("dsas_upload_cert_core(b64toBlob(arguments[0], \"application/x-pem-file\"), \"pubkey\", \"\");", [$contents]);
+        // Applying, wait for okDSAS to become Clickable.
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
+        modal_delay();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+        // Toggle visbility of details on page
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#pubkey']")));
+        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#cert']"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#pubkey0']")));
+	modal_delay();
+        // Search for added fingerprint
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@href, '#add')]")) as $card)
+          $card->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//div[@id='pubkey0']")));
+	modal_delay();
+        $found = false;
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'pubkey')]")) as $card) {
+          if (str_contains($card->getDomProperty("innerHTML"), $finger)) {
+            $GLOBALS["card"] = "#" . $card->getAttribute("id"); 
+            $found = true;
+            break;
+          }
+        }
+        return ($found);
+      });
 
-    // FIXME Upload an Openssl certificate
+    // Download added Openssl key and compare with uploaded key
+    test("Downloading Openssl key", function () {
+        $links = $GLOBALS["driver"]->findElements(WebDriverBy::tagName("a"));
+        $i = 0;
+        $found = false;
+        foreach ($links as $link) {
+          if ($link->getAttribute("href") == $GLOBALS["card"]) {
+            $found = true;
+            break;
+          }
+          $i++;
+        }
+        if (! $found)
+          throw new RuntimeException("Can not find key to download");
+        // The desired download link is the next one
+        $_uri = $links[$i + 1]->getAttribute("href");
+        $_str = $GLOBALS["driver"]->executeScript("async function asyncfetch(uri) { const reponse = await fetch (uri); return reponse.text();}; return asyncfetch(\"" . $_uri ."\");");
+        $finger = hash("sha256" base64_decode($contents));
+        if ($finger != $GLOBALS["finger"])
+          throw new RuntimeException("Downloaded key does not match uploaded key");
+        return true;
+      });
 
-    // FIXME Download the added Openssl certificate
+    // Delete uploaded Openssl key
+    test("Delete Openssl key", function () {
+        $links = $GLOBALS["driver"]->findElements(WebDriverBy::tagName("a"));
+        $i = 0;
+        $found = false;
+        foreach ($links as $link) {
+          if ($link->getAttribute("href") == $GLOBALS["card"]) {
+            $found = true;
+            break;
+          }
+          $i++;
+        }
+        if (! $found)
+          throw new RuntimeException("Can not find key to delete");
+        // The desired delete link is two links later
+        $links[$i + 2]->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
+        modal_delay();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+        modal_delay();
+        $found = false;
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::tagName("a")) as $link) {
+          if ($link->getAttribute("href") == $GLOBALS["card"]) {
+            $found = true;
+            break;
+          }
+        }
+        if ($found)
+          throw new RuntimeException("Certificate not deleted");
+        return true;
+      });
 
-    // FIXME Delete the uploaded Openssl certifcate
+    // Toggle to invisible the Openssl keys 
+    $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#pubkey']"))->click();
 
-    // FIXME Upload a GPG certificate
+    // Upload GPG certifate.
+    test("Uploading GPG certificate", function () {
+        $fp = fopen(_share . "/Certificates/Gpg.pem", "r");
+        $contents = fread($fp, filesize(_share . "/Certificates/Gpg.pem"));
+        fclose($fp);
+        if (exec("/usr/local/bin/gpg -no-default-keyring -vv " . _share . "Certificates/Gpg.pem 2>&1", $text, $retval)) {
+          $text = implode(PHP_EOL, $text);
+          preg_match("/" . PHP_EOL . "pub.*" . PHP_EOL . "\s+([^\s]+)/", $text, $matches);
+          $finger = $matches[1];
+          $GLOBALS["finger"] = $finger;
+        } else
+          throw new RuntimeException ("Can not read Gpg certificate");
+        
+        $contents = base64_encode($contents);
+        $GLOBALS["driver"]->executeScript("dsas_upload_cert_core(b64toBlob(arguments[0], \"application/pgp_keys\"), \"x509\", \"\");", [$contents]);
+        // Applying, wait for okDSAS to become Clickable.
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
+        modal_delay();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+        // Toggle visbility of details on page
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#gpg']")));
+        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#cert']"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#gpg0']")));
+	modal_delay();
+        // Search for added fingerprint
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@href, '#gpg')]")) as $card)
+          $card->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//div[@id='gpg0']")));
+	modal_delay();
+        $found = false;
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'gpg')]")) as $card) {
+          if (str_contains($card->getDomProperty("innerHTML"), $finger)) {
+            $GLOBALS["card"] = "#" . $card->getAttribute("id"); 
+            $found = true;
+            break;
+          }
+        }
+        return ($found);
+      });
 
-    // FIXME Download the added GPG certificate
+    // Download added GPG certificate and compare with uploaded certificate
+    test("Downloading GPG certificate", function () {
+        $links = $GLOBALS["driver"]->findElements(WebDriverBy::tagName("a"));
+        $i = 0;
+        $found = false;
+        foreach ($links as $link) {
+          if ($link->getAttribute("href") == $GLOBALS["card"]) {
+            $found = true;
+            break;
+          }
+          $i++;
+        }
+        if (! $found)
+          throw new RuntimeException("Can not find certificate to download");
+        // The desired download link is the next one
+        $_uri = $links[$i + 1]->getAttribute("href");
+        $_str = $GLOBALS["driver"]->executeScript("async function asyncfetch(uri) { const reponse = await fetch (uri); return reponse.text();}; return asyncfetch(\"" . $_uri ."\");");
+        if ($tmp = tempnam("/tmp", "dsas_")) {
+          file_put_contents($tmp, $_str);
+          if (exec("/usr/local/bin/gpg -no-default-keyring -vv " . $tmp . " 2>&1", $text, $retval)) {
+            $text = implode(PHP_EOL, $text);
+            preg_match("/" . PHP_EOL . "pub.*" . PHP_EOL . "\s+([^\s]+)/", $text, $matches);
+            $finger = $matches[1];
+          } else
+            throw new RuntimeException ("Can not read Gpg certificate");
+        } else
+          throw new RuntimeException("Can not save download GPG certificate");
+        unlink($tmp);
+        if ($finger != $GLOBALS["finger"])
+          throw new RuntimeException("Downloaded certificate does not match uploaded certificate");
+        return true;
+      });
 
-    // FIXME Delete the uploaded GPG certifcate
+    // Delete uploaded X509 certificate
+    test("Delete GPG certificate", function () {
+        $links = $GLOBALS["driver"]->findElements(WebDriverBy::tagName("a"));
+        $i = 0;
+        $found = false;
+        foreach ($links as $link) {
+          if ($link->getAttribute("href") == $GLOBALS["card"]) {
+            $found = true;
+            break;
+          }
+          $i++;
+        }
+        if (! $found)
+          throw new RuntimeException("Can not find certificate to delete");
+        // The desired delete link is two links later
+        $links[$i + 2]->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
+        modal_delay();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+        modal_delay();
+        $found = false;
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::tagName("a")) as $link) {
+          if ($link->getAttribute("href") == $GLOBALS["card"]) {
+            $found = true;
+            break;
+          }
+        }
+        if ($found)
+          throw new RuntimeException("Certificate not deleted");
+        return true;
+      });
+
+    // Toggle to invisible the GPG certificates 
+    $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#gpg']"))->click();
   }
 
   if ($what === "all" || $what === "task") {
