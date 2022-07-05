@@ -2,9 +2,7 @@ _pkg=dsastestfiles
 _version=<VERSION>
 # Fake URI. The file must be put in place manually
 _uri=https://127.0.0.1/dsastestfiles-<VERSION>.tgz
-# libxml2-bin only for xmllint to examine conf file during build
-# Could be deleted
-_build_dep="compiletc coreutils xz openssl-1.1.1 gnupg zip-unzip tar lcab osslsigncode rpm createrepo_c libxml2-bin"
+_build_dep="compiletc coreutils xz openssl-1.1.1 gnupg zip-unzip tar lcab osslsigncode rpm createrepo_c"
 _dep="openssl-1.1.1 gnupg osslsigncode rpm"
 _pkg_path=dsastestfiles-<VERSION>
 _pre_config="chgrp staff usr/local/var/lib/rpm"
