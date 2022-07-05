@@ -152,7 +152,8 @@ get_tcz() {
     dep=$target.dep
     if test ! -f "$target"; then
       if test -f "$pkg_dir/$package.pkg"; then
-        { _old="$extract"; extract="$build"; build_pkg "$package"; extract="$_old"; }
+        # In a new shell so that build doesn't modify local variables
+        ( extract="$build"; build_pkg "$package"; )
       elif test -f "$tce_dir/$package.tcz"; then
         msg "fetching package $package ..."
         cp "$tce_dir/$package.tcz" "$target"
@@ -683,10 +684,6 @@ docker)
   chmod 755 "$extract/home"
 
   if [ "$testcode" = "1" ]; then
-    # Install test specific DSAS files
-    msg Append test specific DSAS files
-    rsync -rlptv "$testdir/" "$extract/"
-
     # Install test files. Force remove temporary PKG file
     if test ! -f "$tcz_dir/dsastestfiles.tcz"; then
       make -C test clean
@@ -703,7 +700,7 @@ docker)
       fi
       install_tcz dsastestfiles
     fi
-    rm -f $pkg_dir/dsastestfiles.pkg 
+    rm -f $pkg_dir/dsastestfiles.pkg
 
     # Install packages to allow testing of rsyslog and radius
     install_tcz freeradius
