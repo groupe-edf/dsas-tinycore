@@ -1586,7 +1586,7 @@ function dsas_display_tasks(what = "all") {
               "<p class=\"my-0 " + cls + "\"><a class=\"text-toggle\" data-bs-toggle=\"collapse\" href=\"#task" + i + "\" role=\"button\"" +
               "aria-controls=\"task" + i + "\" aria-expanded=\"" + (tid && what === "status" ? (tid.className.includes("show") ? "true" : "false" ) : "false") +"\">" +
               "<i class=\"text-collapsed\"><img src=\"caret-right.svg\"/></i>" +
-              "<i class=\"text-expanded\"><img src=\"caret-down.svg\"/></i></a>" + task.name +
+              "<i class=\"text-expanded\"><img src=\"caret-down.svg\"/></i></a><span id=\"taskname" + i + "\">" + task.name + "</span>" +
               "&nbsp;<a data-toggle=\"tooltip\" title=\"" + _("Edit") +"\" onclick=\"dsas_task_modify('" + task.id + "');\">" +
               "<img src=\"pencil-square.svg\"></a>";
                     body = body + "&nbsp;<a data-toggle=\"tooltip\" title=\"" + _("Delete") + "\" onclick=\"dsas_task_delete('" + task.id +

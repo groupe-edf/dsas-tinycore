@@ -431,17 +431,11 @@ try {
 
   if ($what === "all" || $what === "login") {
 
-    // Check CapsLock message is correctly displayed
-    test("Testing CapLocks Warning message", function () {
-        $GLOBALS["driver"]->executeScript("for (feed of document.getElementsByClassName(\"form-control\")) feed.setAttribute(\"class\", \"form-control\");");
-	modal_delay();
-        // No function to set CapsLock in Webdriver
-        $GLOBALS["driver"]->executeScript("java.awt.Toolkit.getDefaultToolkit().setLockingState(KeyEvent.VK_CAPS_LOCK, true");
-        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className("is-invalid")));
-        $GLOBALS["driver"]->executeScript("java.awt.Toolkit.getDefaultToolkit().setLockingState(KeyEvent.VK_CAPS_LOCK, false");
-        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("is-invalid")));
-        return true;
-      });
+    // FIXME Check CapsLock message is correctly displayed
+    // The CapsLock isn't a keypress but rather a keyboard modifier. We can't just send a keypress
+    // Can't use javascript to simulate the keyboard as this is a major security risk. The only solution
+    // I've found is to install selenium and use the Robot class to simulate a native keypress. This
+    // is overkill for this simple test. So can't test this for now.
 
     // Enter no values and check error condition
     test("Empty username and password", function () {
@@ -1786,6 +1780,7 @@ try {
         $contents = fread($fp, filesize(_share . "/Certificates/Openssl.pem"));
         fclose($fp);
         $ncert = count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'add')]")));
+        echo $ncert . "  "  . PHP_EOL;
         $contents = base64_encode($contents);
         $GLOBALS["driver"]->executeScript("dsas_upload_cert_core(b64toBlob(arguments[0], \"application/x-x509-user-cert\"), \"x509\", \"\");", [$contents]);
         // Applying, wait for okDSAS to become Clickable. This will be an error this time
@@ -1793,10 +1788,8 @@ try {
         modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-        // Toggle visbility of details on page
-        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#add0']")));
 	modal_delay();
-        return ($ncount == count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'add')]"))));
+        return ($ncert == count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'add')]"))));
       });
 
     // Try uploading the wrong certificate type to Openssl
@@ -1812,10 +1805,8 @@ try {
         modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-        // Toggle visbility of details on page
-        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#add0']")));
 	modal_delay();
-        return ($ncount == count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'pubkey')]"))));
+        return ($ncert == count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'pubkey')]"))));
       });
 
     // Try uploading the wrong certificate type to GPG
@@ -1831,10 +1822,8 @@ try {
         modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-        // Toggle visbility of details on page
-        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#add0']")));
 	modal_delay();
-        return ($ncount == count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'gpg')]"))));
+        return ($ncert == count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'gpg')]"))));
       });
 
     // Toggle to invisible the GPG certificates 
@@ -1842,13 +1831,130 @@ try {
   }
 
   if ($what === "all" || $what === "task") {
-    // FIXME Test add task rpm 
+    // Navigate to /tasks.html via navbar 
+    test("Navigating to /task.html via navbar", function () {
+        $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[0]->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='tasks.html']"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Tasks"));
+        return ($GLOBALS["driver"]->getTitle() === "Tasks");
+      }, true);
+
+    // Toggle visibility of Tasks
+    $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#Tasks']"))->click();
+
+    // Get a set valid uploaded certificates to use for the tasks
+    $_uri = "https://" . hostip() .":" . _adminport . "/api/dsas-cert.php";
+    $_str = $GLOBALS["driver"]->executeScript("async function asyncfetch(uri) { const reponse = await fetch (uri); return reponse.text();}; return asyncfetch(\"" . $_uri ."\");");
+    $_json = json_decode($_str);
+
+    // Test add task rpm 
+    $GLOBALS["finger"] = $_json[0]->dsas->gpg[0]->fingerprint;
+    test("Add RPM Task", function () {
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("AddTask")));
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("AddTask"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("TaskName")));
+        modal_delay();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskName"))->clear()->sendKeys("Added RPM Task");
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskDirectory"))->clear()->sendKeys("tests/dummyRPM");
+        $tmp = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("TaskRun")));
+        $tmp->selectByValue("never");
+        $tmp = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("TaskType")));
+        $tmp->selectByValue("rpm");
+        $tmp = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("TaskAddCert")));
+        $tmp->selectByValue($GLOBALS["finger"]);
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+	modal_delay();
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//span[starts-with(@id, 'taskname')]")) as $name) {
+          if ($name->getDomProperty("innerHTML") == "Added RPM Task")
+            return true;
+        }
+        return false;
+      });
 
     // FIXME Add Debian task with selected architectures
+    $GLOBALS["finger"] = $_json[0]->dsas->gpg[0]->fingerprint;
+    test("Add Deb Task", function () { 
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("AddTask")));
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("AddTask"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("TaskName")));
+        modal_delay();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskName"))->clear()->sendKeys("Added Deb Task");
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskDirectory"))->clear()->sendKeys("tests/dummyDeb");
+        $tmp = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("TaskRun")));
+        $tmp->selectByValue("never");
+        $tmp = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("TaskType")));
+        $tmp->selectByValue("deb");
+        $tmp = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("TaskAddCert")));
+        $tmp->selectByValue($GLOBALS["finger"]);
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskArchAll"))->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskArchAmd64"))->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+	modal_delay();
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//span[starts-with(@id, 'taskname')]")) as $name) {
+          if ($name->getDomProperty("innerHTML") == "Added Deb Task")
+            return true;
+        }
+        return false;
+      });
 
-    // FIXME Add RPM task with wrong certificate type
+    // Add RPM task with wrong certificate type
+    $GLOBALS["finger"] = $_json[0]->dsas->pubkey[0]->fingerprint;
+    test("Add RPM Task with bad certificate", function () {
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("AddTask")));
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("AddTask"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("TaskName")));
+        modal_delay();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskName"))->clear()->sendKeys("Bad RPM Task");
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskDirectory"))->clear()->sendKeys("tests/BadRPM");
+        $tmp = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("TaskRun")));
+        $tmp->selectByValue("never");
+        $tmp = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("TaskType")));
+        $tmp->selectByValue("rpm");
+        $tmp = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("TaskAddCert")));
+        $tmp->selectByValue($GLOBALS["finger"]);
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("cancelDSAS")));
+        try {
+          // This is going to be a wanted error modal
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
+          modal_delay();
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click(); // Click Ok to confirm
+        } catch (Exception $e) {
+          throw new RuntimeException("No error detected with bad certificate");
+        }
+        return true;
+      });
 
-    // FIXME Trying adding a task with an XSS in the task name
+    // Trying adding a task with an XSS in the task name
+    $GLOBALS["finger"] = $_json[0]->dsas->gpg[0]->fingerprint;
+    test("Add RPM Task with XSS attack", function () {
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("AddTask")));
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("AddTask"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("TaskName")));
+        modal_delay();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskName"))->clear()->sendKeys("<script>alert(\"Bad RPM Task\");</script>");
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskDirectory"))->clear()->sendKeys("tests/BadRPM");
+        $tmp = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("TaskRun")));
+        $tmp->selectByValue("never");
+        $tmp = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("TaskType")));
+        $tmp->selectByValue("rpm");
+        $tmp = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("TaskAddCert")));
+        $tmp->selectByValue($GLOBALS["finger"]);
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("cancelDSAS")));
+        try {
+          // This is going to be a wanted error modal
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
+          modal_delay();
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click(); // Click Ok to confirm
+        } catch (Exception $e) {
+          throw new RuntimeException("No error detected with bad certificate");
+        }
+        return true;
+      });
+
 
     // FIXME Modify an existing Task directory and see that file smove correctly
 
