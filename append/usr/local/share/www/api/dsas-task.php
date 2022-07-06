@@ -25,13 +25,19 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           * certs: array{array{name: string, fingerprint: string}}} $data */
         $data = json_decode($_POST["data"], true);
         $name = htmlspecialchars($data["name"]);
+        if ($name != $data["name"])
+          $errors[] = ["error" => "Illegal task name"];
         if (trim($name) == "")
           $errors[] = ["error" => "The name can not be empty"];
         $id = $data["id"];
         $directory = htmlspecialchars($data["directory"]);
+        if ($directory != $data["directory"])
+          $errors[] = ["error" => "Illegal directory name"];
         if (trim($directory) == "")
           $errors[] = ["error" => "The directory name can not be empty"];
         $uri =  htmlspecialchars($data["uri"]);
+        if ($uri != $data["uri"])
+          $errors[] = ["error" => "Illegal uri"];
         $type = $data["type"];
         if ($type !== "rpm" && $type !== "repomd" && $type !== "deb" && $type !== "authenticode" &&
             $type !== "openssl" && $type !== "gpg" && $type !== "liveupdate" && $type !== "cyberwatch")
@@ -73,12 +79,14 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
               case "ppc64el":
               case "s390x":
                 // Architecture ok
-                if ($arch["active"] !== "true" && $arch["active"] !== "false")
+                if ($arch["active"] !== "true" && $arch["active"] !== "false") {
                   $errors[] = ["error" => "Invalid debian architecture"];
+                  break 2;
+                }
                 break;
               default:
                 $errors[] = ["error" => "Invalid debian architecture"];
-                break;
+                break 2;
             }
           }
         }

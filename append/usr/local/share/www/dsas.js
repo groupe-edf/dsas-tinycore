@@ -2057,7 +2057,7 @@ function dsas_add_task(oldid = "") {
     if (type === "deb") {
         for (const inp of document.getElementsByTagName("input")) {
             if (inp.id.substr(0,8) === "TaskArch") {
-                archs.push({arch : inp.value, active : inp.checked});
+                archs.push({arch : inp.value, active : (inp.checked ? "true" : "false")});
             }
         }
     }
