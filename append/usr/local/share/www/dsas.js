@@ -1587,7 +1587,7 @@ function dsas_display_tasks(what = "all") {
               "aria-controls=\"task" + i + "\" aria-expanded=\"" + (tid && what === "status" ? (tid.className.includes("show") ? "true" : "false" ) : "false") +"\">" +
               "<i class=\"text-collapsed\"><img src=\"caret-right.svg\"/></i>" +
               "<i class=\"text-expanded\"><img src=\"caret-down.svg\"/></i></a><span id=\"taskname" + i + "\">" + task.name + "</span>" +
-              "&nbsp;<a data-toggle=\"tooltip\" title=\"" + _("Edit") +"\" onclick=\"dsas_task_modify('" + task.id + "');\">" +
+              "&nbsp;<a data-toggle=\"tooltip\" title=\"" + _("Edit") +"\" onclick=\"dsas_task_modify('" + task.id + "', '" + task.name + "');\">" +
               "<img src=\"pencil-square.svg\"></a>";
                     body = body + "&nbsp;<a data-toggle=\"tooltip\" title=\"" + _("Delete") + "\" onclick=\"dsas_task_delete('" + task.id +
               "', '" + task.name + "');\"><img src=\"x-lg.svg\"></a>";
@@ -1762,7 +1762,7 @@ function dsas_task_new() {
     document.getElementById("TaskCert").innerHTML = "";
 }
 
-function dsas_task_modify(id) {
+function dsas_task_modify(id, name) {
     fetch("api/dsas-task.php").then(response => {
         if (response.ok) 
             return response.json();

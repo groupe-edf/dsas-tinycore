@@ -295,6 +295,21 @@ try {
       exec("ssh tc@haut sudo tar -C /home/dsas/haut/share -xzf " . _share . "/tests.tgz", $data, $retval);
       if ($retval != 0)
         throw new RuntimeException("Error installing test files on upper machine");
+      exec("ssh tc@haut sudo sudo -u verif mkdir -p /home/dsas/bas/share/tests", $data, $retval);
+      exec("ssh tc@haut sudo sudo -u verif chmod 770 /home/dsas/bas/share/tests", $data, $retval);
+      exec("ssh tc@haut sudo sudo -u verif chgrp share /home/dsas/bas/share/tests", $data, $retval);
+      if ($retval != 0)
+        throw new RuntimeException("Error installing test files on upper machine");
+      exec("sudo sudo -u haut mkdir -p /home/dsas/haut/share/tests", $data, $retval);
+      exec("sudo sudo -u haut chmod 770 /home/dsas/haut/share/tests", $data, $retval);
+      exec("sudo sudo -u haut chgrp haut /home/dsas/haut/share/tests", $data, $retval);
+      if ($retval != 0)
+        throw new RuntimeException("Error installing test files on lower machine");
+      exec("sudo sudo -u verif mkdir -p /home/dsas/bas/share/tests", $data, $retval);
+      exec("sudo sudo -u verif chmod 770 /home/dsas/bas/share/tests", $data, $retval);
+      exec("sudo sudo -u verif chgrp share /home/dsas/bas/share/tests", $data, $retval);
+      if ($retval != 0)
+        throw new RuntimeException("Error installing test files on lower machine");
       exec("sudo cp -f " . _share . "/log/* /home/dsas/log", $data, $retval);
       if ($retval != 0)
         throw new RuntimeException("Error copying log files on lower machine");
@@ -312,7 +327,7 @@ try {
           if ($retval != 0)
             throw new RuntimeException("Error running task type '" . $task->type . "'");
           if ($task->type  == "deb") {
-            // For debian tasks the files to check and in the pool directory
+            // For debian tasks the files to check are in the pool directory
             $have_pool = false;
             $pool = dirname($directory);
             while ($pool != $directory) {
@@ -1872,7 +1887,7 @@ try {
         return false;
       });
 
-    // FIXME Add Debian task with selected architectures
+    // Add Debian task with selected architectures
     $GLOBALS["finger"] = $_json[0]->dsas->gpg[0]->fingerprint;
     test("Add Deb Task", function () { 
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("AddTask")));
@@ -1899,10 +1914,37 @@ try {
         return false;
       });
 
+    // Add Opsnssl task
+    $GLOBALS["finger"] = $_json[0]->dsas->pubkey[0]->fingerprint;
+    test("Add Openssl Task", function () { 
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("AddTask")));
+	modal_delay();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("AddTask"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("TaskName")));
+        modal_delay();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskName"))->clear()->sendKeys("Added Openssl Task");
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskDirectory"))->clear()->sendKeys("tests/dummyOpenssl");
+        $tmp = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("TaskRun")));
+        $tmp->selectByValue("never");
+        $tmp = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("TaskType")));
+        $tmp->selectByValue("openssl");
+        $tmp = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("TaskAddCert")));
+        $tmp->selectByValue($GLOBALS["finger"]);
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+	modal_delay();
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//span[starts-with(@id, 'taskname')]")) as $name) {
+          if ($name->getDomProperty("innerHTML") == "Added Openssl Task")
+            return true;
+        }
+        return false;
+      });
+
     // Add RPM task with wrong certificate type
     $GLOBALS["finger"] = $_json[0]->dsas->pubkey[0]->fingerprint;
     test("Add RPM Task with bad certificate", function () {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("AddTask")));
+	modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("AddTask"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("TaskName")));
         modal_delay();
@@ -1921,6 +1963,7 @@ try {
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
           modal_delay();
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click(); // Click Ok to confirm
+          modal_delay();
         } catch (Exception $e) {
           throw new RuntimeException("No error detected with bad certificate");
         }
@@ -1931,6 +1974,7 @@ try {
     $GLOBALS["finger"] = $_json[0]->dsas->gpg[0]->fingerprint;
     test("Add RPM Task with XSS attack", function () {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("AddTask")));
+	modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("AddTask"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("TaskName")));
         modal_delay();
@@ -1949,30 +1993,193 @@ try {
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
           modal_delay();
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click(); // Click Ok to confirm
+          modal_delay();
         } catch (Exception $e) {
           throw new RuntimeException("No error detected with bad certificate");
         }
         return true;
       });
 
-    // FIXME Modify an existing Task directory and see that file smove correctly
+    // Run a task and test that its running
+    // Don't delete this task as next test as it might still be running. delay till th ened
+    $GLOBALS["finger"] = $_json[0]->dsas->pubkey[0]->fingerprint;
+    test("Run Openssl task", function () {
+        apply();  // Apply the configuration to make the tasks available to run
+        // The created task has no files in it. Copy them from the default setup
+        exec("ssh tc@haut sudo cp -fpr /home/dsas/haut/share/tests/Openssl /home/dsas/haut/share/tests/dummyOpenssl", $data, $retval);
+        if ($retval != 0)
+          throw new RuntimeException("Error installing test files on upper machine");
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@onclick, 'dsas_task_run')]")) as $run) {
+          if (! str_contains($run->getAttribute("onclick"), "Added Openssl Task"))
+            continue;
+          $run->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
+          modal_delay();
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+          usleep(10000);  // Short delay for task to start;
+          exec("ps auwx | grep runtask | grep " . $GLOBALS["finger"], $data, $retval);
+          if (empty($data))
+            throw new RuntimeException("Task failed to start");
+          modal_delay();
+          return true;
+        }
+        throw new RuntimeException("Task to run not found");
+      });
 
-    // FIXME Delete an existing task without removing its files and see that the files remain
+    // Examine log of existing task. Careful log needs to exist
+    test("Examining log of Openssl task", function() {
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@onclick, 'dsas_task_info')]")) as $info) {
+          if (! str_contains($info->getAttribute("onclick"), "Added Openssl Task"))
+            continue;
+          $info->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
+          modal_delay();
+          if ($GLOBALS["driver"]->findElement(WebDriverBy::className("modal-title"))->getDomProperty("innerHTML") != "Info : Added Openssl Task")
+            throw new RuntimeException("Task logs not visible");
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("cancelDSAS")));
+          modal_delay();
+          return true;
+        }
+        throw new RuntimeException("Task not found");
+      });
+
+    test("Modify RPM task directory", function() {
+        // Create the task directory to be kept, as the task hasn't run
+        exec("ssh tc@haut sudo mkdir -p /home/dsas/haut/share/tests/dummyRPM /home/dsas/bas/share/tests/dummyRPM", $data, $retval);
+        if ($retval == 0) 
+          exec("ssh tc@haut sudo chown haut.haut /home/dsas/haut/share/tests/dummyRPM", $data, $retval);
+        if ($retval == 0) 
+          exec("ssh tc@haut sudo chown verif.share /home/dsas/bas/share/tests/dummyRPM", $data, $retval);
+        if ($retval == 0)
+          exec("sudo mkdir -p /home/dsas/haut/share/tests/dummyRPM /home/dsas/bas/share/tests/dummyRPM", $data, $retval);
+        if ($retval == 0) 
+          exec("sudo chown haut.haut /home/dsas/haut/share/tests/dummyRPM", $data, $retval);
+        if ($retval == 0) 
+          exec("sudo chown verif.share /home/dsas/bas/share/tests/dummyRPM", $data, $retval);
+        if ($retval != 0)
+          throw new RuntimeException("Error creating test directories");
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@onclick, 'dsas_task_modify')]")) as $mod) {
+          if (! str_contains($mod->getAttribute("onclick"), "Added RPM Task"))
+            continue;
+          $mod->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
+          modal_delay();
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskDirectory"))->clear()->sendKeys("tests/dummyRPM2");
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("cancelDSAS")));
+          modal_delay();
+          exec("ssh tc@haut sudo test -d /home/dsas/haut/share/tests/dummyRPM2", $data, $retval);
+          if ($retval == 0)
+            exec("ssh tc@haut sudo test -d /home/dsas/bas/share/tests/dummyRPM2", $data, $retval);
+          if ($retval == 0)
+            exec("sudo test -d /home/dsas/haut/share/tests/dummyRPM2", $data, $retval);
+          if ($retval == 0)
+            exec("sudo test -d /home/dsas/bas/share/tests/dummyRPM2", $data, $retval);
+          if ($retval != 0)
+            throw new RuntimeException("Task directory unexceptedly deleted");
+          return true;
+        }
+        throw new RuntimeException("Task not found");
+      });
+
+    // Delete an existing task without removing its files and see that the files remain
+    test("Delete RPM task leaving files in place", function() {
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@onclick, 'dsas_task_delete')]")) as $del) {
+          if (! str_contains($del->getAttribute("onclick"), "Added RPM Task"))
+            continue;
+          $del->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
+          modal_delay();
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskDeleteFiles"))->click();
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("cancelDSAS")));
+          modal_delay();
+          exec("ssh tc@haut sudo test -d /home/dsas/haut/share/tests/dummyRPM2", $data, $retval);
+          if ($retval == 0)
+            exec("ssh tc@haut sudo test -d /home/dsas/bas/share/tests/dummyRPM2", $data, $retval);
+          if ($retval == 0)
+            exec("sudo test -d /home/dsas/haut/share/tests/dummyRPM2", $data, $retval);
+          if ($retval == 0)
+            exec("sudo test -d /home/dsas/bas/share/tests/dummyRPM2", $data, $retval);
+          if ($retval != 0)
+            throw new RuntimeException("Task directory unexceptedly deleted");
+          // Remove the directory now that we know it wasn't removed
+          exec("ssh tc@haut sudo rm -fr /home/dsas/haut/share/tests/dummyRPM2 /home/dsas/bas/share/tests/dummyRPM2", $data, $retval);
+          exec("sudo rm -fr /home/dsas/haut/share/tests/dummyRPM2 /home/dsas/bas/share/tests/dummyRPM2", $data, $retval);
+          return true;
+        }
+        throw new RuntimeException("Task not found");
+      });
 
     // FIXME Delete an existing task removing its files and test that everything is gone
-
-    // FIXME Examine log of existing task. Careful log needs to exist
-
-    // FIXME Run a task and test that its running
+    test("Delete Deb task removing files", function() {
+        // Create the task directory to be kept, as the task hasn't run
+        exec("ssh tc@haut sudo mkdir /home/dsas/haut/share/tests/dummyDeb /home/dsas/bas/share/tests/dummyDeb", $data, $retval);
+        if ($retval == 0) 
+          exec("ssh tc@haut sudo chown haut.haut /home/dsas/haut/share/tests/dummyDeb", $data, $retval);
+        if ($retval == 0) 
+          exec("ssh tc@haut sudo chown verif.share /home/dsas/bas/share/tests/dummyDeb", $data, $retval);
+        if ($retval == 0)
+          exec("sudo mkdir /home/dsas/haut/share/tests/dummyDeb /home/dsas/bas/share/tests/dummyDeb", $data, $retval);
+        if ($retval == 0) 
+          exec("sudo chown haut.haut /home/dsas/haut/share/tests/dummyDeb", $data, $retval);
+        if ($retval == 0) 
+          exec("sudo chown verif.share /home/dsas/bas/share/tests/dummyDeb", $data, $retval);
+        if ($retval != 0)
+          throw new RuntimeException("Error creating test directories");
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@onclick, 'dsas_task_delete')]")) as $del) {
+          if (! str_contains($del->getAttribute("onclick"), "Added Deb Task"))
+            continue;
+          $del->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
+          modal_delay();
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("cancelDSAS")));
+          modal_delay();
+          exec("ssh tc@haut sudo test -d home/dsas/haut/share/tests/dummyRPM", $data, $retval);
+          if ($retval != 0)
+            exec("ssh tc@haut sudo test -d home/dsas/bas/share/tests/dummyRPM", $data, $retval);
+          if ($retval != 0)
+            exec("sudo test -d home/dsas/haut/share/tests/dummyRPM", $data, $retval);
+          if ($retval != 0)
+            exec("sudo test -d home/dsas/bas/share/tests/dummyRPM", $data, $retval);
+          if ($retval == 0)
+            throw new RuntimeException("Task directory not deleted");
+          return true;
+        }
+        throw new RuntimeException("Task not found");
+      });   
 
     // FIXME examine log of running task. THIS MIGHT BE HARD TO DO with short running tasks.
 
     // FIXME Kill a running tasks. Also hard to do.
 
-    // FIXME Cleanup. Remove added tasks and files
-
+    // Delete the Openssl task that should now be finished running
+    test("Delete Openssl task removing files", function() {
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@onclick, 'dsas_task_delete')]")) as $del) {
+          if (! str_contains($del->getAttribute("onclick"), "Added Openssl Task"))
+            continue;
+          $del->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
+          modal_delay();
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("cancelDSAS")));
+          modal_delay();
+          exec("ssh tc@haut sudo test -d home/dsas/haut/share/tests/dummyOpenssl", $data, $retval);
+          if ($retval != 0)
+            exec("ssh tc@haut sudo test -d home/dsas/bas/share/tests/dummyOpenssl", $data, $retval);
+          if ($retval != 0)
+            exec("sudo test -d home/dsas/haut/share/tests/dummyOpenssl", $data, $retval);
+          if ($retval != 0)
+            exec("sudo test -d home/dsas/bas/share/tests/dummyOpenssl", $data, $retval);
+          if ($retval == 0)
+            throw new RuntimeException("Task directory not deleted");
+          return true;
+        }
+        throw new RuntimeException("Task not found");
+      });   
   }
-
 
 } catch (Exception $e) {
   // Catch other errors here so that firefox is shut down cleanly
