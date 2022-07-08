@@ -8,6 +8,7 @@ Version 1.1.2 (XX XXXX XXX)
 - Problem setting extended SNMPv3 options
 - Fix initial boot failure due to radius issue
 - Allow empty SNMP passwords if SNMP inactive
+- Allow trailing / in task directory names
 
 Version 1.1.1 (10 June 2022)
 - Checking if task is running before deleting or running it
