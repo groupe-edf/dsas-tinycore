@@ -1145,8 +1145,21 @@ les certificats racines utilisés pour ces signatures ne sont pas incluent dans 
 mais intégrés directement dans SEP, voir [discuté ci-dessus](#vérification-symantec-liveupdate).
 
 Afin de faciliter l'utilisation de Symantec LiveUpdate, et les autres éditeur de logiciel
-typiquement utilisé avec le DSAS, les 10 certificats à installer sur le DSAS sont disponible
+typiquement utilisé avec le DSAS, les certificats à installer sur le DSAS sont disponible
 dans [le bundle de certificats ci-jointe](Certificates.zip).
+
+#### Cas spécial des certificats Trend Micro
+
+Les fichiers de Trend Micro sont de deux type; des fichier JAR ou des fichiers signés en SMIME.
+Les certificat utilisé pour les signatures en SMIME pourrait être récuperé de même manière que 
+pour Symantec LiveUpdate. Pour les fichier JAR, il faut premierement désarchiver le JAR afin
+de trouver les certificats comme
+
+
+```shell
+$ unzip file.zip
+$ openssl pkcs7 -inform der -in JAVA.RSA -outform pem -print_certs | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if(length($0) > 0) print > "cert" n ".pem"}
+```
 
 ### Gestion des clefs publiques SSL
 
@@ -1762,6 +1775,7 @@ Il y a cinq autres types de vérification
 * cyberwatch - CyberWatch fichiers de signature
 * gpg - Signature d'un fichier avec gpg
 * openssl - Signature d'un fichier avec openssl
+* trend - Trend Micro DSP et fichier Packages 
 
 ### Vérification - rpm
 
@@ -2008,6 +2022,82 @@ type `-certfile`, donc les deux certificats doit être remise dans un seul fichi
 $ cat cert.pem cert1.pem > certs.pem
 $ openssl cms -verify -CAfile SymantecRoot2005CA.pem -certfile certs.pem -nointern -inform der -in v.sig -content v.grd
 ```
+
+### Vérification - trend
+
+Il y a deux type de verification fait pour des fichiers de Trend Micro
+
+- Des vérifications des fichier JAR signés
+- Des vérifications des ficheire `*.7z` signés en SMIME.
+
+Les chaines de certification utilisé pour ces deux moyen de vérifications sont independant, mais afin
+de simplifier des choses, ils sont traité par le DSAS comme un seul tache. Il est alors possibles 
+d'inclure l'ensemble des cerificats pour les deux tye de vérification dans une tâche de type `trend`
+et les deux type de vérification seriat testés.
+
+Le choix de type de vérification est fait comme suivant
+
+- Seulement les fichiers `*.jar`, `*.zip` et `*.7z` sont directement testé, d'autre fichier pourrait
+afin traité par le DSAS seulement si leurs hash est dans un fichier manifest d'un jar
+- Si un fichier `*.sig` existe correspondant au fichier `*.zip` ou `*.7z`, le fichier est
+considéré d'être signé en SMIME
+- Sinon le fichier est considèré d'être en format JAR. 
+
+#### Signature des fichier SMIME
+
+Comme pour des fichiers de LiveUpdate, plusieurs des certificats à utilisé pourrait être récuperé des
+signature des fichiers. Par exemple pour le fichier `file.sig`, nous pourrions récuperer les certificats
+utilisé pour la signature avec la commande
+
+```shell
+$ openssl pkcs7 -inform der -in file.sig -outform pem -print_certs | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if(length($0) > 0) print > "cert" n ".pem"}
+```
+
+Malheureusement, les certificats récuperé ne sont que des certificats intermediat ou feuille. Aucun 
+certificat raçine semble être contenu dans les signatures SMIME de Trend Micro, et le certificat
+raçine est auto generé par Trend Micro est n'est pas publiquement disponible
+
+FIXME: Comment recuperer le certificat racine ????
+
+Après que nous nous avons récuperé le certificat raçine, un fichier comme `file.7z` pourrait être
+vérifier comme
+
+```
+openssl cms -verify -inform DER -in file.sig -content file.7Z -purpose any -CAfile cert.0 -nointern -certfile cert.1
+```
+
+Le certificat raçine est dans le fichier `cert.0` et l'ensemble des certificats intermediat ou feuille
+désiré sont dans le fichier `cert.1`
+
+#### Signature des fichiers JAR
+
+[Le format des fichiers JAR](https://docs.oracle.com/javase/7/docs/technotes/guides/jar/jar.html#Manifest-Overview) 
+est publiquement disponible, et les JAR pourrait être verifier avec openssl sans besoin 
+d'installer java sur le DSAS. Notamment les JAR fornient par Trend Micro contient 3 fichiers
+important pour les signature
+
+MANIFEST.MF - Un fichier contenant les noms et hashes de l'ensemble des fichiers dans (ou à côté) le JAR
+JAVA.SF - Un fichier avec le hash des fichiers et manifest
+JAVA.RSA - Un fichier de signature SMIME du fichier JAVA.SF
+
+L'ensemble des certificats utilisé pour la signature des JAR pourrait être trouvés comme 
+
+```shell
+$ openssl pkcs7 -inform der -in file.sig -outform pem -print_certs | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if(length($0) > 0) print > "cert" n ".pem"}
+$ cat cert.pem >> cert.0
+$ cat cert[1-9].pem >> cert.1
+```
+
+A noté que le certificate raçine des signature JAR de Trend Micro est "Digicert Trusted Root G4",
+un publique CA disponible dans la plupart de store de certificat. 
+
+La verification de signature est après fait comme
+
+```
+openssl cms -verify -inform DER -in JAVA.RSA -content JAVA.SF -purpose any -CAfile cert.0 -nointern -certfile cert.1
+```
+
+Et les autres fichiers sont verifiés via leur hash.
 
 ### Vérification - debian
 

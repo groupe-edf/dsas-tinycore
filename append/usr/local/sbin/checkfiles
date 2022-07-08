@@ -435,6 +435,160 @@ verifliveupdate(){
   return 0
 }
 
+verifsmime() {
+  local id tempdir file sig
+  id=$1
+  tempdir="$2"
+  file="$3"
+  sig="${file%.*}.sig"
+
+  # Assumes all of the CA are in $tempdir/cert.0 and the other certificates in $tempdir/cert.1
+  args="-purpose any"
+  [ -f "$tempdir/cert.0" ] && args="$args -CAfile $tempdir/cert.0"
+  [ -f "$tempdir/cert.1" ] && args="$args -nointern -certfile $tempdir/cert.1"
+
+  [ -f "$_sig" ] && { openssl cms -verify -inform DER -in "$sig" -content "$file" $args > /dev/null 2>&1 || \
+          { 1>&2 myecho "Verification failure of the file $file"; return 1; }; }
+
+  return 0
+}
+
+verifjar() {
+  local id tempdir src file zipdir dest sf _hash _sig s1 s256 _file basedir filedir
+  id=$1
+  tempdir=$2
+  src=$3
+  file=$4
+  zipdir=$5
+  dest=$6
+
+  unzip -d "$zipdir" "$src/$file" >& /dev/null || { 1>&2 myecho "Failed to unzip archive"; return 1; }
+
+  # Check that there is only one Manifest file and that each SF file corresponds to 
+  # a *.RSA, *.DSA ou SIG-* file and that all other files are listed in the manifest
+  manifest="";
+  while IFS= read -r -d '' _file; do
+    [ -z "$manifest" ] || { 1>&2 myecho "Two manifests in JAR file"; return 1; }
+    manifest=$_file
+    continue
+  done < <(find "$zipdir" -name "MANIFEST.MF" -print0)
+  [ -z "$manifest" ] && { 1>&2 myecho "No manifest in JAR file"; return 1; }
+  basedir=$(dirname $manifest)
+
+  while IFS= read -r -d '' _file; do
+    [[ "$_file" =~ MANIFEST.MF$ ]] && continue
+    [[ "$_file" =~ \.SF$ ]] && continue
+    if [[ "$_file" =~ \.RSA$ ]]; then
+      [ ! -f "${_file%.RSA}.SF" ] && { 1>&2 myecho "Orphan signature file $_file"; return 1; }
+      continue
+    fi
+    if [[ "$_file" =~ \.DSA$ ]]; then
+      [ ! -f "${_file%.DSA}.SF" ] && { 1>&2 myecho "Orphan signature file $_file"; return 1; }
+      continue;
+    fi
+    if [[ "$_file" =~ ^SIG- ]]; then
+      [ ! -f "${_file#SIG-}.SF" ] && { 1>&2 myecho "Orphan signature file $_file"; return 1; }
+      contine;
+    fi
+    echo ${_file#$zipdir/}
+    cat $manifest | dos2unix | grep "^Name: \s*${_file#$zipdir/}$" 
+    cat $manifest | dos2unix | grep -q "^Name: \s*${_file#$zipdir/}$" || { 1>&2 myecho "Unsigned file ${_file#$zipdir/} in jar"; return 1; }
+  done < <(find "$zipdir" -type f -print0)
+
+  # Assumes all of the CA are in $tempdir/cert.0 and the other certificates in $tempdir/cert.1
+  args="-purpose any"
+  [ -f "$tempdir/cert.0" ] && args="$args -CAfile $tempdir/cert.0"
+  [ -f "$tempdir/cert.1" ] && args="$args -nointern -certfile $tempdir/cert.1"
+
+  # Several signers are possible with a different *.SF per signer
+  while IFS= read -r -d '' sf; do
+    # Check hash of manifest.
+    _hash=$(grep "\-Digest\-Manifest: " "$sf" | dos2unix | cut -d: -f2 | xargs | base64 -d | hexdump -e '16/1 "%02x"')
+    if [ ${#_hash} -ge 64 ]; then
+      [ "$(sha256sum $zipdir/MANIFEST.MF | cut -f1 -d' ')" == $_hash ] || return 1
+    elif [ ${#_hash} -ge 40 ]; then
+      [ "$(sha1sum $zipdir/MANIFEST.MF | cut -f1 -d' ')" == $_hash ] || return 1
+    else 
+      [ "$(md5sum $zipdir/MANIFEST.MF | cut -f1 -d' ')" == $_hash ] || return 1
+    fi
+
+    # Treat *.RSA signatures
+    _sig="${sf#.SF}.RSA"
+    # shellcheck disable=SC2086 
+    [ -f "$_sig" ] && { openssl cms -verify -inform DER -in "$_sig" -content "$sf" $args > /dev/null 2>&1 || \
+          { 1>&2 myecho "Verification failure of the file $t from the archive $(basename "$file") "; return 1; }; }
+
+    # Treat *.DSA signatures.  Not sure this is the right thing to do. 
+    # Needs testing if I had a JAR with a DSA signature
+    _sig="${sf#.SF}.DSA"
+    # shellcheck disable=SC2086 
+    [ -f "$_sig" ] && { openssl cms -verify -inform DER -in "$_sig" -content "$sf" $args > /dev/null 2>&1 || \
+          { 1>&2 myecho "Verification failure of the file $t from the archive $(basename "$file") "; return 1; }; }
+
+    # Don't treat SIG-* files. Trend doesn't use them and the format is too generic
+    _sig="SIG-${sf#.SF}"
+    [ -f "$_sig" ] && { 1>&2 myecho "Don't know how to treat $_sig file"; return 1; }
+  done < <(find $zipdir -name "*.SF" -print0)
+
+  # Now that the manifest is verified, check the hash of each file in the manifest
+  filedir=$(dirname $file)
+  last=""
+  _name=""
+  s256=""
+  s1=""
+  while :; do
+    IFS= read -r line || last=true   
+    # shellcheck disable=SC2076
+    if [ -n "$last" ] || [[ "$line" =~ "^Name:" ]]; then  
+      [ -z "$last" ] && [ -z "$_file" ] && { _file=$(echo "$line" | dos2unix | sed -e "s/^Name: \(.*\)\s*$/\1/g"); continue; }
+      if [ -f "$src/$f" ]; then
+        [ -z "$s256" ] || sha256sum "$basedir/$_file" | grep -q "$s256" || \
+            { 1>&2 myecho "Verification of checksum failed for $_file from the archive $(basename "$file")"; return 2; }
+        [ -z "$s1" ] || sha1sum "$basedir/$_file" | grep -q "$s1" || \
+            { 1>&2 myecho "Verification of checksum failed for $_file from the archive $(basename "$file")"; return 2; }
+        [ -z "$s256" ] && [ -z "$s1" ] && { 1>&2 myecho "File $_file from the archive $(basename "$file") has no checksum"; return 2; }
+      elif [ -f "$src/$filedir/$_file" ]; then
+        # Only reverify the hash if its not already done.
+        if [ ! "$src/$filedir/$_file" -ef "$dest/$filedir/$_file" ]; then
+          [ -z "$s256" ] || sha256sum "$src/$filedir/$_file" | grep -q "$s256" || \
+              { 1>&2 myecho "Verification of checksum failed for $_file from the archive $(basename "$file")"; return 2; }
+          [ -z "$s1" ] || sha1sum "$src/$filedir/$_file" | grep -q "$s1" || \
+              { 1>&2 myecho "Verification of checksum failed for $_file from the archive $(basename "$file")"; return 2; }
+          [ -z "$s256" ] && [ -z "$s1" ] && { 1>&2 myecho "File $_file from the archive $(basename "$file") has no checksum"; return 2; }
+          if [ "$antivirus" == "true" ]; then
+            # Antivirus test
+            clamdscan "$src/$filedir/$_file" >& /dev/null || { 1>&2 myecho "File $_file from the archive $(basename "$file") failed anti-virus check";  return 4; }
+          fi
+          msgline "$src/$filedir/$_file" 0
+          ln "$src/$filedir/$_file" "$dest/$filedir/$_file"
+        fi
+      else
+        1>&2 echo "File $_file not found. skipping"
+      fi
+
+      [ -z "$last" ] || break;
+      _file=$(echo "$line" | dos2unix | sed -e "s/^Name: \(.*\)\s*$/\1/g")
+      s1=""
+      s256=""
+    elif [[ "$line" =~ ^SHA-1-.* ]]; then
+      s1=$(echo $line | dos2unix | cut -d: -f2 | xargs | base64 -d | hexdump -e '16/1 "%02x"')
+    elif [[ "$line" =~ ^SHA-256-.* ]]; then
+      s256=$(echo $line | dos2unix | cut -d: -f2 | xargs | base64 -d | hexdump -e '16/1 "%02x"')
+    fi
+  done < "$manifest"
+
+  # Repack the zip file before returning to avoid potential hidden files
+  if [ "$dryrun" == "0" ]; then
+    (cd "$zipdir"|| { 2>&1 echo "Failed to create temporary directory"; return 254; }; \
+         zip -q "$src/$file.$$" ./* >& /dev/null)
+    /bin/mv -f "$src/$file.$$" "$src/$file"
+  else
+    echo "[DryRun] : cd \"$zipdir\"; zip -q \"$src/$file.$$\" \*"
+  fi
+
+  return 0
+}
+
 verifdirectory() {
   local file status i j fprint tempdir idx auth id dir type
   id=$1
@@ -443,7 +597,7 @@ verifdirectory() {
   
   # Validate check type
   case $type in
-    authenticode|openssl|gpg|liveupdate|cyberwatch) : ;;
+    authenticode|openssl|gpg|liveupdate|cyberwatch|trend) : ;;
     *) 1>&2 echo "Unknown file checking type"; exit 1 ;;
   esac
 
@@ -456,7 +610,7 @@ verifdirectory() {
     idx=$($getcert "$fprint" $$)
     [ -z "$idx" ] && { 1>&2 echo "Certificate used by task($id) not found !!"; cleanup_and_exit 1 "$tempdir"; }
     if [ "$idx" -eq 0 ]; then
-      if [ "$type" == "liveupdate" ]; then
+      if [ "$type" == "liveupdate" ] || [ "$type" == "trend" ]; then
         cat /tmp/cert.$$ >> "$tempdir/cert.0"
       else
         [ -f "$tempdir/cert.0" ] && 1>&2 myecho "Multiple authority certificates defined" 
@@ -465,14 +619,14 @@ verifdirectory() {
     else
       auth=$(xmllint --xpath "string(dsas/certificates/certificate[$idx]/authority)" "$CONF")
       if [ "$auth" == "true" ]; then
-        if [ "$type" == "liveupdate" ]; then
+        if [ "$type" == "liveupdate" ] || [ "$type" == "trend" ]; then
           cat "/tmp/cert.$$" >> "$tempdir/cert.0"
         else
           [ -f "$tempdir/cert.0" ] && 1>&2 myecho "Multiple authority certificates defined"
           /bin/mv "/tmp/cert.$$" "$tempdir/cert.0"
         fi
       else
-        if [ "$type" == "liveupdate" ]; then
+        if [ "$type" == "liveupdate" ] || [ "$type" == "trend" ]; then
           cat "/tmp/cert.$$" >> "$tempdir/cert.1"
         else
           /bin/mv -f "/tmp/cert.$$" "$tempdir/cert.$i"
@@ -524,6 +678,37 @@ verifdirectory() {
       /bin/rm -fr "$zipdir"
     done < <(find "$DSAS_HAUT/$dir" -type f \( -name "*livetri.zip" -o -name "minitri.flg" \
         -o -name "SymantecProductCatalog.zip" -o -name "*.jdb" \) -print0)
+  elif [ "$type" == "trend" ]; then
+   while IFS= read -r -d '' file; do
+      file=${file#"$DSAS_HAUT/"}    
+    
+      # If file exists in bas skip. Hardlinked, so test is fast
+      [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
+
+      if [ -f "$DSAS_HAUT/${file%.*}.sig" ]; then
+        # SMIME signed files
+        if verifsmime "$id" "$tempdir" "$file"; then
+          if [ "$antivirus" == "true" ]; then
+            clamdscan "$DSAS_HAUT/$file" >& /dev/null || status=4
+          else
+            status=0
+          fi
+        else
+          status=$?
+        fi
+      else
+        # JAR file 
+        zipdir=$(mktemp -d)
+        verifjar "$id" "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS"
+        status=$?
+        if [ "$status" == "0" ] && [ "$antivirus" == "true" ]; then
+          clamdscan "$DSAS_HAUT/$file" >& /dev/null || status=4
+        fi
+        /bin/rm -fr "$zipdir"
+      fi
+      [ $status -eq 0 ] && ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
+      msgline "$DSAS_HAUT/$file" $status
+    done < <(find "$DSAS_HAUT/$dir" -type f \( -name "*.7z" -o -name "*.zip" -o -name "*.jar" \) -print0)
   else
     while IFS= read -r -d '' file; do
       file=${file#"$DSAS_HAUT/"}    
@@ -1069,7 +1254,7 @@ for _id in $idx; do
     case $type in
       rpm|repomd) verifrepo "$_id"; ;;
       deb) verifdeb "$_id"; ;;
-      authenticode|openssl|gpg|liveupdate|cyberwatch) verifdirectory "$_id"; ;; 
+      authenticode|openssl|gpg|liveupdate|cyberwatch|trend) verifdirectory "$_id"; ;; 
       *) 1>&2 echo "Unknown task type : $type"; exit 1 ;;
     esac
   fi

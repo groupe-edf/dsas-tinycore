@@ -628,7 +628,7 @@ for _idx in $idx; do
   case $type in
     rpm|repomd) getrepo "$_idx"; ;;
     deb) getdeb "$_idx"; ;;
-    authenticode|openssl|gpg|liveupdate|cyberwatch) getdirectory "$_idx"; ;;
+    authenticode|openssl|gpg|liveupdate|cyberwatch|trend) getdirectory "$_idx"; ;;
     *) 1>&2 echo "Unknown task type : $type"; exit 1; ;;
   esac
 done

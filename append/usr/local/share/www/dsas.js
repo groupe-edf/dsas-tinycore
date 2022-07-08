@@ -190,6 +190,7 @@ function modal_task(action = "dsas_add_task();", ca = "", taskchange = "dsas_add
 "        <option id=\"TaskTypeCyber\" value=\"cyberwatch\">cyberwatch</option>\n" +
 "        <option id=\"TaskTypeSsl\" value=\"openssl\">openssl</option>\n" +
 "        <option id=\"TaskTypeGpg\" value=\"gpg\">gpg</option>\n" +
+"        <option id=\"TaskTypeTrend\" value=\"trend\">trend</option>\n" +
 "      </select>\n" +
 "    </div>\n" +
 "    <div class=\"col-6\">\n" +
