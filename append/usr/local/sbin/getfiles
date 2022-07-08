@@ -189,6 +189,7 @@ getdirectory() {
   id=$1
   uri=$(get_uri "$id")
   dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
+  dir=${dir%/}
   name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" "$CONF")
   opt=$(lftp_ca_options "$id")
 
@@ -274,6 +275,7 @@ getrepo() {
   id=$1
   uri=$(get_uri "$id")
   dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
+  dir=${dir%/}
   name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" "$CONF")
   type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
   opt=$(lftp_ca_options "$id")
@@ -392,6 +394,7 @@ getdeb() {
   id=$1
   uri=$(get_uri "$id")
   dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
+  dir=${dir%/}
   name=$(xmllint --xpath "string(dsas/tasks/task[$id]/name)" "$CONF")
   type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
   opt=$(lftp_ca_options "$id")

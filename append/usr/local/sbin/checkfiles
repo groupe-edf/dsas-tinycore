@@ -462,7 +462,8 @@ verifjar() {
   zipdir=$5
   dest=$6
 
-  unzip -d "$zipdir" "$src/$file" >& /dev/null || { 1>&2 myecho "Failed to unzip archive"; return 1; }
+  unzip -d "$zipdir" "$src/$file" >& /dev/null  || 7z -o"$zipdir" x "$src/$file" >& /dev/null \
+      || { 1>&2 myecho "Failed to unzip archive"; return 1; }
 
   # Check that there is only one Manifest file and that each SF file corresponds to 
   # a *.RSA, *.DSA ou SIG-* file and that all other files are listed in the manifest
@@ -577,13 +578,20 @@ verifjar() {
     fi
   done < "$manifest"
 
-  # Repack the zip file before returning to avoid potential hidden files
-  if [ "$dryrun" == "0" ]; then
-    (cd "$zipdir"|| { 2>&1 echo "Failed to create temporary directory"; return 254; }; \
-         zip -q "$src/$file.$$" ./* >& /dev/null)
-    /bin/mv -f "$src/$file.$$" "$src/$file"
+  if [[ "${file##*.}" == "7z" ]]; then 
+    if [ "$dryrun" == "0" ]; then
+      (cd "$zipdir" || { 2>&1 echo "Failed to create temporary directory"; return 254; }; 7z a "$src/$file.$$" ./*)
+      /bin/mv "$src/$file.$$" "$src/$file"
+    else
+      echo "[DryRun] : cd \"$zipdir\"; 7z a \"$src/$file.$$\" \*"
+    fi
   else
-    echo "[DryRun] : cd \"$zipdir\"; zip -q \"$src/$file.$$\" \*"
+    if [ "$dryrun" == "0" ]; then
+      (cd "$zipdir"|| { 2>&1 echo "Failed to create temporary directory"; return 254; }; zip -q "$src/$file.$$" ./* >& /dev/null)
+      /bin/mv -f "$src/$file.$$" "$src/$file"
+    else
+      echo "[DryRun] : cd \"$zipdir\"; zip -q \"$src/$file.$$\" \*"
+    fi
   fi
 
   return 0
@@ -593,6 +601,7 @@ verifdirectory() {
   local file status i j fprint tempdir idx auth id dir type
   id=$1
   dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
+  dir=${dir%/}
   type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
   
   # Validate check type
@@ -810,6 +819,7 @@ verifrepo() {
   local tempdir fprint idx filelist chksum chktype filetable id dir type
   id=$1
   dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
+  dir=${dir%/}
   type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
 
   tempdir=$(mktemp -d)
@@ -925,6 +935,7 @@ verifdeb(){
   local j pool have_pool packages tempdir archs i _f package id dir type
   id=$1
   dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
+  dir=${dir%/}
   type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
 
   pool=$(dirname "$dir")
@@ -1096,6 +1107,7 @@ passdirectory(){
   local file status i j fprint tempdir idx auth pool have_pool id dir
   id=$1
   dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
+  dir=${dir%/}
 
   if [ "$2" == "deb" ]; then
     pool=$(dirname "$dir")
