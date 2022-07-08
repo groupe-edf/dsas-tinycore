@@ -2187,7 +2187,7 @@ function dsas_passwd_restore(){
 function dsas_real_restore() {
     var passwd = document.getElementById("RestorePassword").value;
     var file = document.getElementById("RestoreSelectFile").files[0];
-    dsas_restore-core(file, passwd);
+    dsas_restore_core(file, passwd);
 }
 
 function dsas_restore_core(file, passwd="") {
