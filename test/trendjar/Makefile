@@ -64,7 +64,7 @@ define cert2
     </certificate>
 endef
 
-all: CertTrend.pem CertJar.pem good.jar unsigned.jar bad.jar virus.jar smime.7z
+all: CertTrend.pem CertJar.pem good.jar unsigned.jar bad.jar virus.jar good.7z bad.7z unsigned.7z virus.7z
 	$(eval id1:=$(shell < /dev/random tr -dc a-f0-9 | head -c "24"; echo;))
 	$(eval len1:=$(shell cat CertTrend.pem | wc -l))                    
 	$(eval len1:=$(shell echo $$(($(len1)-1)) ))   
@@ -87,7 +87,7 @@ all: CertTrend.pem CertJar.pem good.jar unsigned.jar bad.jar virus.jar smime.7z
 	  { if (/<pem><\/pem>/) { print "      <pem>" pemcert "</pem>"; } else { print $$0; }}' ${XMLFILE} CertJar.pem
 	mkdir -p ${HAUT}/Trend/Unpack
 	cp -f good.jar bad.jar unsigned.jar virus.jar good.7z bad.7z unsigned.7z virus.7z  good.sig bad.sig virus.sig ${HAUT}/Trend
-	cd ${HAUT}/Trend/Unpack; unzip ../good.jar; cd META-INF; zip -q ../META-INF.zip *; cd ..; rm META-INF
+	cd ${HAUT}/Trend/Unpack; unzip ../good.jar; cd META-INF; zip -q ../META-INF.zip *; cd ..; rm -fr META-INF
 	mkdir -p ${HAUT}/Jar
 	cp -f good.jar bad.jar unsigned.jar virus.jar  ${HAUT}/Jar
 
@@ -112,45 +112,45 @@ BadCert.pem: BadCert.key
 good.jar: CertJar.pem 
 	rm -f good.txt good.jar
 	echo "Jar test file" > good.txt
-	makejar good.jar CertJar.key CertJar.pem good.txt
+	./makejar good.jar CertJar.key CertJar.pem good.txt
 
 unsigned.jar: 
 	rm -f unsigned.txt unsigned.jar
 	echo "Unsigned Jar test file" > unsigned.txt
-	makejar -n unsigned.jar unsigned.txt
+	./makejar -n unsigned.jar unsigned.txt
 
 bad.jar: BadCert.pem 
 	rm -f bad.txt bad.jar
 	echo "Bad Jar test file" > bad.txt
-	makejar bad.jar BadCert.key BadCert.pem bad.txt
+	./makejar bad.jar BadCert.key BadCert.pem bad.txt
 
 virus.jar: CertJar.pem
 	rm -f virus.txt virus.jar
 	cp ../eicar virus.txt
-	makejar virus.jar CertJar.key CertJar.pem virus.txt
+	./makejar virus.jar CertJar.key CertJar.pem virus.txt
 
 good.7z: CertTrend.pem
-	rm good.txt good.7z good.sig 
+	rm -f good.txt good.7z good.sig 
 	echo "Trend Micro good smime test file" > good.txt
 	7z a good.7z good.txt
-	openssl cms -sign -in "good.7z" -outform der -out "good.sig -inkey "CertTrend.key" -signer "CertTrend.pem" -md sha256
+	openssl cms -sign -in "good.7z" -outform der -out "good.sig" -inkey "CertTrend.key" -signer "CertTrend.pem" -md sha256
 
 bad.7z: BadCert.pem
-	rm bad.txt bad.7z bad.sig 
+	rm -f bad.txt bad.7z bad.sig 
 	echo "Trend Micro bad smime test file" > bad.txt
 	7z a bad.7z bad.txt
-	openssl cms -sign -in "bad.7z" -outform der -out "bad.sig -inkey "BadCert.key" -signer "BadCert.pem" -md sha256
+	openssl cms -sign -in "bad.7z" -outform der -out "bad.sig" -inkey "BadCert.key" -signer "BadCert.pem" -md sha256
 
 unsigned.7z:
-	rm unsigned.txt unsigned.7z 
-	echo "Trend Micro unsigned smime test file" > bad.txt
+	rm -f unsigned.txt unsigned.7z 
+	echo "Trend Micro unsigned smime test file" > unsigned.txt
 	7z a unsigned.7z unsigned.txt
 
 virus.7z: CertTrend.pem
-	rm virus.txt virus.7z virus.sig 
+	rm -f virus.txt virus.7z virus.sig 
 	cp ../eicar virus.txt
 	7z a virus.7z virus.txt
-	openssl cms -sign -in "virus.7z" -outform der -out "virus.sig -inkey "CertTrend.key" -signer "CertTrend.pem" -md sha256
+	openssl cms -sign -in "virus.7z" -outform der -out "virus.sig" -inkey "CertTrend.key" -signer "CertTrend.pem" -md sha256
 
 clean: 
 	rm -f good.txt good.jar bad.txt bad.jar unsigned.txt unsigned.jar virus.tct virus.jar 
