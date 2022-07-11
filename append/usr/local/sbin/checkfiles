@@ -606,7 +606,7 @@ verifdirectory() {
   
   # Validate check type
   case $type in
-    authenticode|openssl|gpg|liveupdate|cyberwatch|trend) : ;;
+    authenticode|openssl|gpg|liveupdate|cyberwatch|jar|trend) : ;;
     *) 1>&2 echo "Unknown file checking type"; exit 1 ;;
   esac
 
@@ -687,14 +687,14 @@ verifdirectory() {
       /bin/rm -fr "$zipdir"
     done < <(find "$DSAS_HAUT/$dir" -type f \( -name "*livetri.zip" -o -name "minitri.flg" \
         -o -name "SymantecProductCatalog.zip" -o -name "*.jdb" \) -print0)
-  elif [ "$type" == "trend" ]; then
+  elif [ "$type" == "trend" ] || [ "$type" == "jar" ]; then
    while IFS= read -r -d '' file; do
       file=${file#"$DSAS_HAUT/"}    
     
       # If file exists in bas skip. Hardlinked, so test is fast
       [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
 
-      if [ -f "$DSAS_HAUT/${file%.*}.sig" ]; then
+      if [ "$type" == "trend" ] && [ -f "$DSAS_HAUT/${file%.*}.sig" ]; then
         # SMIME signed files
         if verifsmime "$id" "$tempdir" "$file"; then
           if [ "$antivirus" == "true" ]; then

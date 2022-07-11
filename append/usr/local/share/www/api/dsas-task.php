@@ -41,7 +41,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         $type = $data["type"];
         if ($type !== "rpm" && $type !== "repomd" && $type !== "deb" && $type !== "authenticode" &&
             $type !== "openssl" && $type !== "gpg" && $type !== "liveupdate" && $type !== "cyberwatch" &&
-            $type !== "trend")
+            && $type != "jar" && $type !== "trend")
           $errors[] = ["error" => "The task type is illegal"];
         $run = $data["run"];
         if ($run !== "never" && $run !== "quarterhourly" && $run !== "hourly" && $run !== "daily" && $run !== "weekly" && $run !== "monthly")
@@ -140,7 +140,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             if ($certificate->type == "gpg") {
               $gpg_cert =  parse_gpg(trim($certificate->pem));
               if ($gpg_cert["fingerprint"] == $cert["fingerprint"]) {
-                if ($type === "authenticode" || $type === "openssl" || $type === "liveupdate" || $type === "trend") {
+                if ($type === "authenticode" || $type === "openssl" || $type === "liveupdate" || $type === "jar" || $type === "trend") {
                   $errors[] = ["error" => ["The task type '{0}' does not support {1} certificates", $type, "GPG"]];
                   break 2;
                 }
@@ -161,7 +161,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
               $pemnowrap = (string)preg_replace('/\\s+/', '', $pemnowrap);
               if (hash("sha256", base64_decode($pemnowrap)) == $cert["fingerprint"]) {
                 if ($type === "rpm" || $type === "repomd" || $type === "deb" || 
-                    $type === "authenticode" || $type === "gpg" || $type === "liveupdate" || $type === "trend") {
+                    $type === "authenticode" || $type === "gpg" || $type === "liveupdate" || $type = "jar" || $type === "trend") {
                   $errors[] = ["error" => ["The task type '{0}' does not support public keys", $type]];
                   break 2;
                 }

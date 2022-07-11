@@ -1216,6 +1216,8 @@ Symantec LiveUpdate.
   [CyberWatch](https://docs.cyberwatch.fr/fr/9_advanced_administration_guides/offline_administration/swarm/import_securitydb.html)
   * `openssl` - Task allowing the transfer of files signed by openssl
   * `gpg` - Task allowing the transfer of files signed by gpg.
+  * `jar` - Task for the verification of signed JAR files
+  * `trend` - Task for the verification of Trend Micro DSP and Package files.
 - `Periodicity of the task` - How often is the task executed
   * `never` - The task is never executed automatically, but can be executed manually
   * `per hour` - The task is executed once per hour
@@ -1726,13 +1728,14 @@ There are 3 types of linux repository verificatop,
 * repomd - The repomd.xml file is verified and only the hashes of each file are checked
 * deb - The Release file is verified and only the hashes of each file are checked
 
-There are five other types of verification
+There are seven other types of verification
 
 * authenticode - Check with Microsoft Authenticode signatures.
 * liveupdate - Symantec LiveUpdate signatures
 * cyberwatch - CyberWatch signature files
 * gpg - Signature of a file with gpg
 * openssl - Signature of a file with openssl
+* jar - Signature of signed JAR files
 * trend - Trend Micro DSP and Packages files
 
 ### Verification - rpm
@@ -1979,7 +1982,7 @@ $ cat cert.pem cert1.pem > certs.pem
 $ openssl cms -verify -CAfile SymantecRoot2005CA.pem -certfile certs.pem -nointern -inform der -in v.sig -content v.grd
 ```
 
-### Verification - trend
+### Verification - trend and jar
 
 There are two types of verification for the files of Trend Micro
 
@@ -2023,7 +2026,6 @@ The root certificate is in the file `cert.0` and all of the other intermediate a
 in the file `cert.1`. 
 
 #### Jar File Signatures
-
 
 [The format of JAR files](https://docs.oracle.com/javase/7/docs/technotes/guides/jar/jar.html#Manifest-Overview)
 is publicly available, and the JAR files can be verified with openssl without the need to

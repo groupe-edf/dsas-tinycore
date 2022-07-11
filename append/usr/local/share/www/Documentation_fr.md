@@ -1255,6 +1255,8 @@ Symantec LiveUpdate.
   [CyberWatch](https://docs.cyberwatch.fr/fr/9_advanced_administration_guides/offline_administration/swarm/import_securitydb.html)
   * `openssl` - Tache permettant le transfert des fichiers signé par openssl
   * `gpg` - Tache permettant le transfert des fichiers signé par gpg.
+  * `jar` _ Tâche permettant le transfert de fichier JAR signés
+  * `trend` - Tâche permettant le transfert de fichier DSP and PAckage de Trend Micro
 - `Périodicité de la tâche` - A quel rythme est-ce que la tâche est exécuté
   * `jamais` - La tâche n'est jamais exécuté automatique, mais peut-être exécuté manuellement
   * `par heure` - La tâche est exécuté un fois par heure
@@ -1768,13 +1770,14 @@ Il y a 3 types de vérification des dépôts linux
 * repomd - Le fichier repomd.xml est vérifié et seulement les haches de chaque fichier est vérifié
 * deb - Le fichier Release est vérifié et seuelement les haches de chaque fichier est vérifié
 
-Il y a cinq autres types de vérification 
+Il y a sept autres types de vérification 
 
 * authenticode - Vérifier avec Microsoft Authenticode signatures. 
 * liveupdate - Symantec LiveUpdate signatures
 * cyberwatch - CyberWatch fichiers de signature
 * gpg - Signature d'un fichier avec gpg
 * openssl - Signature d'un fichier avec openssl
+* jar - Signature d'un ficher JAR
 * trend - Trend Micro DSP et fichier Packages 
 
 ### Vérification - rpm
@@ -2023,7 +2026,7 @@ $ cat cert.pem cert1.pem > certs.pem
 $ openssl cms -verify -CAfile SymantecRoot2005CA.pem -certfile certs.pem -nointern -inform der -in v.sig -content v.grd
 ```
 
-### Vérification - trend
+### Vérification - trend et jar
 
 Il y a deux type de verification fait pour des fichiers de Trend Micro
 
