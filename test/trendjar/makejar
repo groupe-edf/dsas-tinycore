@@ -1,0 +1,72 @@
+#! /bin/sh
+
+sigbase="JAVA"
+
+manifest() {
+  manif="$1/META-INF/MANIFEST.MF"
+  echo "Manifest-Version: 1.0" | unix2dos > $manif
+  echo "Created-By: makejar" | unix2dos >> $manif
+  echo "" | unix2dos >> $manif
+
+  while IFS= read -r -d '' file; do
+    _file=${file#$1/}
+    dir=$(dirname "$file")
+    hash=$(echo -ne "$(sha256sum -b "$file" | cut -d' ' -f1 | sed -e 's/../\\x&/g')" | base64)
+    [ "$dir" == "META-INF" ] && continue
+    echo "Name: $_file" | unix2dos >> $manif
+    echo "SHA-256-Digest: $hash" | unix2dos >> $manif
+    echo "" | unix2dos >> $manif
+  done < <(find $1 -type f -print0)
+}
+
+sigfile() {
+  sig="$1/META-INF/${sigbase}.SF"
+  echo "Signature-Version: 1.0" | unix2dos > $sig
+  echo "Created-By: makejar" | unix2dos >> $sig
+  hash=$(echo -ne "$(sha256sum -b "$1/META-INF/MANIFEST.MF" | cut -d' ' -f1 | sed -e 's/../\\x&/g')" | base64)
+  echo "SHA-256-Digest-Manifest: $hash" | unix2dos >> $sig
+  hash=$(echo -ne "$(head -3 "$1/META-INF/MANIFEST.MF" | sha256sum | cut -d' ' -f1 | sed -e 's/../\\x&/g')" | base64)
+  echo "SHA-256-Digest-Manifest-Main-Attributes: $hash" | unix2dos >> $sig
+  echo "" | unix2dos >> $sig
+
+  buf="";
+  first="true"
+  i=0
+  while :; do
+    IFS= read -r line || last="true"
+    if [ -n "$last" ] || [[ "$line" =~ "^Name: " ]]; then
+      if [ -z "$first" ] && [ -n "$buf" ]; then
+        hash=$(echo -ne "$(head -$i "$1/META-INF/MANIFEST.MF" | tail -3 | sha256sum | cut -d' ' -f1 | sed -e 's/../\\x&/g')" | base64)
+        echo "SHA-256-Digest: $hash" | unix2dos >> $sig
+        echo "" | unix2dos >> $sig
+      fi
+      [ -n "$last" ] && break
+      echo $line >> $sig
+      buf="$line"
+      first=""
+    fi
+    i=$((i + 1))
+  done < "$1/META-INF/MANIFEST.MF"
+}
+
+
+tmpdir=$(mktemp -d)
+mkdir -p "$tmpdir/META-INF"
+nosign=""
+[ "$1" == "-n" ] && { shift; nosign="true"; }
+name=$1
+shift
+if [ -z "$nosign" ]; then
+  key=$1
+  cert=$2
+  shift 2
+fi
+cp "$@" "$tmpdir"
+manifest $tmpdir
+if [ -z "$nosign" ]; then
+  sigfile $tmpdir
+  openssl cms -sign -in "$tmpdir/META-INF/${sigbase}.SF" -outform der -out "$tmpdir/META-INF/${sigbase}.RSA" -inkey "$key" -signer "$cert" -md sha256
+fi
+zipfile="$(pwd)/$name"
+(cd $tmpdir ; zip -q -r "$zipfile" ./*)
+rm -fr $tmpdir

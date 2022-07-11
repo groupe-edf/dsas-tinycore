@@ -10,9 +10,9 @@ ifndef TCZ
 TCZ := ../work/tcz
 endif
 
-SUBDIRS := deb repo cyberwatch openssl gpg authenticode liveupdate certificates logs
+SUBDIRS := trendjar deb repo cyberwatch openssl gpg authenticode liveupdate certificates logs
 BASE := $(shell pwd)/work
-VERSION := 0.1
+VERSION := 0.2
 
 pkg:
 	sed -e "s/<VERSION>/$(VERSION)/g" dsastestfiles.pkg > $(PKG)/dsastestfiles.pkg
