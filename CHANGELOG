@@ -1,7 +1,7 @@
 Log of the principal changes to the DSAS
 
 Version 1.1.2 (XX XXXX XXX)
-- Update openssl (1.1.1n -> 1.1.1p)
+- Update openssl (1.1.1n -> 1.1.1q)
 - Add testing framework
 - Don't allow unsigned rpm files to pass for "rpm" tasks
 - Problem with downloading ClamAV signatures introduced in version 1.1.0 fixed
