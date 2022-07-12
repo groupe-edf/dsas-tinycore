@@ -152,6 +152,8 @@ get_tcz() {
     dep=$target.dep
     # If the PKG file exists and is newer than the TCZ file, rebuild 
     if test -f "$target" && test -f "$pkg_dir/$package.pkg"; then
+      [ $(stat -c '%Y' "$pkg_dir/$package.pkg") -gt $(stat -c '%Y' "$target") ] && { echo "Target : $target"; exit -1; }
+
       [ $(stat -c '%Y' "$pkg_dir/$package.pkg") -gt $(stat -c '%Y' "$target") ] && rm -f "$target"
     fi
     if test ! -f "$target"; then
@@ -274,6 +276,14 @@ unpack() {
 build_pkg() {
   for pkg in $1; do
     pkg_file=$pkg_dir/${pkg%%-dev}.pkg
+
+    # Remove old TCZ if PKG is newer
+    [ -f "$pkg_file" ] && [ -f "$tcz_dir/$pkg.tcz" ] \
+        && [ $(stat -c '%Y' "$pkg_file") -gt $(stat -c '%Y' "$tcz_dir/$pkg.tcz") ] \
+        && rm -f "$tcz_dir/$pkg.tcz"
+
+    # Don't rebuild if forced rebuild and TCZ date is later than the start time of the
+    # build script. Prevent mutliple builds of the same package
     if [ ! -f "$tcz_dir/$pkg.tcz" ] || { [ $rebuild -eq "1" ]  &&  \
         [ "$startdate" -gt "$(date -r "$tcz_dir/$pkg.tcz" +%s)" ]; } then
       if [ -f "$pkg_file" ]; then
