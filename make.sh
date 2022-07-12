@@ -150,6 +150,10 @@ get_tcz() {
   for package; do
     target=$tcz_dir/$package.tcz
     dep=$target.dep
+    # If the PKG file exists and is newer than the TCZ file, rebuild 
+    if test -f "$target" && test -f "$pkg_dir/$package.pkg"; then
+      [ $(stat -c '%Y' "$pkg_dir/$package.pkg") -gt $(stat -c '%Y' "$target") ] && rm -f "$target"
+    fi
     if test ! -f "$target"; then
       if test -f "$pkg_dir/$package.pkg"; then
         # In a new shell so that build doesn't modify local variables
