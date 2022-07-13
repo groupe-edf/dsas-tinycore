@@ -64,7 +64,7 @@ define cert2
     </certificate>
 endef
 
-all: CertTrend.pem CertJar.pem good.jar unsigned.jar bad.jar virus.jar good.7z bad.7z unsigned.7z virus.7z
+all: CertTrend.pem CertJar.pem good.jar unsigned.jar bad.jar badextra.jar virus.jar good.7z bad.7z unsigned.7z virus.7z
 	$(eval id1:=$(shell < /dev/random tr -dc a-f0-9 | head -c "24"; echo;))
 	$(eval len1:=$(shell cat CertTrend.pem | wc -l))                    
 	$(eval len1:=$(shell echo $$(($(len1)-1)) ))   
@@ -86,10 +86,10 @@ all: CertTrend.pem CertJar.pem good.jar unsigned.jar bad.jar virus.jar good.7z b
 	awk -i inplace 'BEGIN { while (getline < ARGV[2]) { pemcert = pemcert $$0 "\n" } delete ARGV[2]; } \
 	  { if (/<pem><\/pem>/) { print "      <pem>" pemcert "</pem>"; } else { print $$0; }}' ${XMLFILE} CertJar.pem
 	mkdir -p ${HAUT}/Trend/Unpack
-	cp -f good.jar bad.jar unsigned.jar virus.jar good.7z bad.7z unsigned.7z virus.7z  good.sig bad.sig virus.sig ${HAUT}/Trend
+	cp -f good.jar bad.jar badextra.jar unsigned.jar virus.jar good.7z bad.7z unsigned.7z virus.7z  good.sig bad.sig virus.sig ${HAUT}/Trend
 	cd ${HAUT}/Trend/Unpack; unzip ../good.jar; cd META-INF; zip -q ../META-INF.zip *; cd ..; rm -fr META-INF
 	mkdir -p ${HAUT}/Jar
-	cp -f good.jar bad.jar unsigned.jar virus.jar  ${HAUT}/Jar
+	cp -f good.jar bad.jar badextra.jar unsigned.jar virus.jar  ${HAUT}/Jar
 
 CertTrend.key:
 	openssl genrsa -out CertTrend.key 4096
@@ -124,6 +124,13 @@ bad.jar: BadCert.pem
 	echo "Bad Jar test file" > bad.txt
 	./makejar bad.jar BadCert.key BadCert.pem bad.txt
 
+badextra.jar: CertJar.pem
+	rm -f good.txt bad.txt badextra.jar
+	echo "Jar test file" > good.txt
+	./makejar badextra.jar CertJar.key CertJar.pem good.txt
+	echo "Bad Jar test file" > bad.txt
+	zip -u badextra.jar bad.txt
+
 virus.jar: CertJar.pem
 	rm -f virus.txt virus.jar
 	cp ../eicar virus.txt
@@ -153,6 +160,6 @@ virus.7z: CertTrend.pem
 	openssl cms -sign -in "virus.7z" -outform der -out "virus.sig" -inkey "CertTrend.key" -signer "CertTrend.pem" -md sha256
 
 clean: 
-	rm -f good.txt good.jar bad.txt bad.jar unsigned.txt unsigned.jar virus.tct virus.jar 
+	rm -f good.txt good.jar bad.txt bad.jar badextra.jar unsigned.txt unsigned.jar virus.txt virus.jar
 	rm -f good.7z good.sig bad.7z bad.sig unsigned.7z virus.7z virus.sig
 	rm -f CertJar.key CertJar.pem CertTrend.key CertTrend.pem BadCert.key BadCert.pem

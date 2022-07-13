@@ -12,7 +12,7 @@ manifest() {
     _file=${file#$1/}
     dir=$(dirname "$file")
     hash=$(echo -ne "$(sha256sum -b "$file" | cut -d' ' -f1 | sed -e 's/../\\x&/g')" | base64)
-    [ "$dir" == "META-INF" ] && continue
+    [[ "$dir" =~ META-INF$ ]] && continue
     echo "Name: $_file" | unix2dos >> $manif
     echo "SHA-256-Digest: $hash" | unix2dos >> $manif
     echo "" | unix2dos >> $manif

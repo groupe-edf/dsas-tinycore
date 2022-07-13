@@ -442,19 +442,19 @@ verifsmime() {
   file="$3"
   sig="${file%.*}.sig"
 
+  [ -f "$sig" ] || { 1>&2 myecho "Unsigned file"; return 255; }
   # Assumes all of the CA are in $tempdir/cert.0 and the other certificates in $tempdir/cert.1
   args="-purpose any"
   [ -f "$tempdir/cert.0" ] && args="$args -CAfile $tempdir/cert.0"
   [ -f "$tempdir/cert.1" ] && args="$args -nointern -certfile $tempdir/cert.1"
-
-  [ -f "$_sig" ] && { openssl cms -verify -inform DER -in "$sig" -content "$file" $args > /dev/null 2>&1 || \
+  [ -f "$sig" ] && { openssl cms -verify -inform DER -in "$sig" -content "$file" $args > /dev/null 2>&1 || \
           { 1>&2 myecho "Verification failure of the file $file"; return 1; }; }
 
   return 0
 }
 
 verifjar() {
-  local id tempdir src file zipdir dest sf _hash _sig s1 s256 _file basedir filedir
+  local id tempdir src file zipdir dest sf _hash _sig md5 s1 s256 _file basedir filedir
   id=$1
   tempdir=$2
   src=$3
@@ -474,27 +474,31 @@ verifjar() {
     continue
   done < <(find "$zipdir" -name "MANIFEST.MF" -print0)
   [ -z "$manifest" ] && { 1>&2 myecho "No manifest in JAR file"; return 1; }
-  basedir=$(dirname $manifest)
 
+  hassign="false"
   while IFS= read -r -d '' _file; do
     [[ "$_file" =~ MANIFEST.MF$ ]] && continue
     [[ "$_file" =~ \.SF$ ]] && continue
     if [[ "$_file" =~ \.RSA$ ]]; then
       [ ! -f "${_file%.RSA}.SF" ] && { 1>&2 myecho "Orphan signature file $_file"; return 1; }
+      hassign="true"
       continue
     fi
     if [[ "$_file" =~ \.DSA$ ]]; then
       [ ! -f "${_file%.DSA}.SF" ] && { 1>&2 myecho "Orphan signature file $_file"; return 1; }
+      hassign="true"
       continue;
     fi
     if [[ "$_file" =~ ^SIG- ]]; then
       [ ! -f "${_file#SIG-}.SF" ] && { 1>&2 myecho "Orphan signature file $_file"; return 1; }
+      hassign="true"
       contine;
     fi
-    echo ${_file#$zipdir/}
-    cat $manifest | dos2unix | grep "^Name: \s*${_file#$zipdir/}$" 
+    cat $manifest | dos2unix | grep -q "^Name: \s*${_file#$zipdir/}$"
     cat $manifest | dos2unix | grep -q "^Name: \s*${_file#$zipdir/}$" || { 1>&2 myecho "Unsigned file ${_file#$zipdir/} in jar"; return 1; }
   done < <(find "$zipdir" -type f -print0)
+
+  [ "$hassign" == "true" ] || { 1>&2 myecho "Unsigned jar file"; return 255; }
 
   # Assumes all of the CA are in $tempdir/cert.0 and the other certificates in $tempdir/cert.1
   args="-purpose any"
@@ -506,28 +510,28 @@ verifjar() {
     # Check hash of manifest.
     _hash=$(grep "\-Digest\-Manifest: " "$sf" | dos2unix | cut -d: -f2 | xargs | base64 -d | hexdump -e '16/1 "%02x"')
     if [ ${#_hash} -ge 64 ]; then
-      [ "$(sha256sum $zipdir/MANIFEST.MF | cut -f1 -d' ')" == $_hash ] || return 1
+      [ "$(sha256sum $manifest | cut -f1 -d' ')" == $_hash ] || return 1
     elif [ ${#_hash} -ge 40 ]; then
-      [ "$(sha1sum $zipdir/MANIFEST.MF | cut -f1 -d' ')" == $_hash ] || return 1
+      [ "$(sha1sum $manifest | cut -f1 -d' ')" == $_hash ] || return 1
     else 
-      [ "$(md5sum $zipdir/MANIFEST.MF | cut -f1 -d' ')" == $_hash ] || return 1
+      [ "$(md5sum $manifest | cut -f1 -d' ')" == $_hash ] || return 1
     fi
 
     # Treat *.RSA signatures
-    _sig="${sf#.SF}.RSA"
+    _sig="${sf%.SF}.RSA"
     # shellcheck disable=SC2086 
     [ -f "$_sig" ] && { openssl cms -verify -inform DER -in "$_sig" -content "$sf" $args > /dev/null 2>&1 || \
-          { 1>&2 myecho "Verification failure of the file $t from the archive $(basename "$file") "; return 1; }; }
+          { 1>&2 myecho "Verification failure of the file ${sf#$zipdir/} from the archive $(basename "$file") "; return 1; }; }
 
     # Treat *.DSA signatures.  Not sure this is the right thing to do. 
     # Needs testing if I had a JAR with a DSA signature
-    _sig="${sf#.SF}.DSA"
+    _sig="${sf%.SF}.DSA"
     # shellcheck disable=SC2086 
     [ -f "$_sig" ] && { openssl cms -verify -inform DER -in "$_sig" -content "$sf" $args > /dev/null 2>&1 || \
-          { 1>&2 myecho "Verification failure of the file $t from the archive $(basename "$file") "; return 1; }; }
+          { 1>&2 myecho "Verification failure of the file ${sf#$zipdir/} from the archive $(basename "$file") "; return 1; }; }
 
     # Don't treat SIG-* files. Trend doesn't use them and the format is too generic
-    _sig="SIG-${sf#.SF}"
+    _sig="SIG-${sf%.SF}"
     [ -f "$_sig" ] && { 1>&2 myecho "Don't know how to treat $_sig file"; return 1; }
   done < <(find $zipdir -name "*.SF" -print0)
 
@@ -537,17 +541,20 @@ verifjar() {
   _name=""
   s256=""
   s1=""
+  md5=""
   while :; do
     IFS= read -r line || last=true   
     # shellcheck disable=SC2076
     if [ -n "$last" ] || [[ "$line" =~ "^Name:" ]]; then  
       [ -z "$last" ] && [ -z "$_file" ] && { _file=$(echo "$line" | dos2unix | sed -e "s/^Name: \(.*\)\s*$/\1/g"); continue; }
-      if [ -f "$src/$f" ]; then
-        [ -z "$s256" ] || sha256sum "$basedir/$_file" | grep -q "$s256" || \
+      if [ -f "$zipdir/$_file" ]; then
+        [ -z "$s256" ] || sha256sum "$zipdir/$_file" | grep -q "$s256" || \
             { 1>&2 myecho "Verification of checksum failed for $_file from the archive $(basename "$file")"; return 2; }
-        [ -z "$s1" ] || sha1sum "$basedir/$_file" | grep -q "$s1" || \
+        [ -z "$s1" ] || sha1sum "$zipdir/$_file" | grep -q "$s1" || \
             { 1>&2 myecho "Verification of checksum failed for $_file from the archive $(basename "$file")"; return 2; }
-        [ -z "$s256" ] && [ -z "$s1" ] && { 1>&2 myecho "File $_file from the archive $(basename "$file") has no checksum"; return 2; }
+        [ -z "$md5" ] || md5sum "$zipdir/$_file" | grep -q "$md5" || \
+            { 1>&2 myecho "Verification of checksum failed for $_file from the archive $(basename "$file")"; return 2; }
+        [ -z "$s256" ] && [ -z "$s1" ] && [ -z "$md5" ] && { 1>&2 myecho "File $_file from the archive $(basename "$file") has no checksum"; return 2; }
       elif [ -f "$src/$filedir/$_file" ]; then
         # Only reverify the hash if its not already done.
         if [ ! "$src/$filedir/$_file" -ef "$dest/$filedir/$_file" ]; then
@@ -555,7 +562,9 @@ verifjar() {
               { 1>&2 myecho "Verification of checksum failed for $_file from the archive $(basename "$file")"; return 2; }
           [ -z "$s1" ] || sha1sum "$src/$filedir/$_file" | grep -q "$s1" || \
               { 1>&2 myecho "Verification of checksum failed for $_file from the archive $(basename "$file")"; return 2; }
-          [ -z "$s256" ] && [ -z "$s1" ] && { 1>&2 myecho "File $_file from the archive $(basename "$file") has no checksum"; return 2; }
+          [ -z "$md5" ] || md5sum "$src/$filedir/$_file" | grep -q "$md5" || \
+              { 1>&2 myecho "Verification of checksum failed for $_file from the archive $(basename "$file")"; return 2; }
+          [ -z "$s256" ] && [ -z "$s1" ] && [ -z "$md5" ] && { 1>&2 myecho "File $_file from the archive $(basename "$file") has no checksum"; return 2; }
           if [ "$antivirus" == "true" ]; then
             # Antivirus test
             clamdscan "$src/$filedir/$_file" >& /dev/null || { 1>&2 myecho "File $_file from the archive $(basename "$file") failed anti-virus check";  return 4; }
@@ -569,12 +578,15 @@ verifjar() {
 
       [ -z "$last" ] || break;
       _file=$(echo "$line" | dos2unix | sed -e "s/^Name: \(.*\)\s*$/\1/g")
+      md5=""
       s1=""
       s256=""
     elif [[ "$line" =~ ^SHA-1-.* ]]; then
       s1=$(echo $line | dos2unix | cut -d: -f2 | xargs | base64 -d | hexdump -e '16/1 "%02x"')
     elif [[ "$line" =~ ^SHA-256-.* ]]; then
       s256=$(echo $line | dos2unix | cut -d: -f2 | xargs | base64 -d | hexdump -e '16/1 "%02x"')
+    elif [[ "$line" =~ ^MD5-.* ]]; then
+      md5=$(echo $line | dos2unix | cut -d: -f2 | xargs | base64 -d | hexdump -e '16/1 "%02x"')
     fi
   done < "$manifest"
 
@@ -694,13 +706,12 @@ verifdirectory() {
       # If file exists in bas skip. Hardlinked, so test is fast
       [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
 
-      if [ "$type" == "trend" ] && [ -f "$DSAS_HAUT/${file%.*}.sig" ]; then
+      if [ "$type" == "trend" ] && [ -z "$(zipinfo "$DSAS_HAUT/$file" 2> /dev/null | grep -q MANIFEST.MF && echo "1")" ] ; then
         # SMIME signed files
         if verifsmime "$id" "$tempdir" "$file"; then
+          status=0
           if [ "$antivirus" == "true" ]; then
             clamdscan "$DSAS_HAUT/$file" >& /dev/null || status=4
-          else
-            status=0
           fi
         else
           status=$?
@@ -716,6 +727,8 @@ verifdirectory() {
         /bin/rm -fr "$zipdir"
       fi
       [ $status -eq 0 ] && ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
+      [ $status -eq 0 ] && [ "$type" == "trend" ] && [ -f "$DSAS_HAUT/${file%.*}.sig" ] \
+          && ln "$DSAS_HAUT/${file%.*}.sig" "$DSAS_BAS/${file%.*}.sig"
       msgline "$DSAS_HAUT/$file" $status
     done < <(find "$DSAS_HAUT/$dir" -type f \( -name "*.7z" -o -name "*.zip" -o -name "*.jar" \) -print0)
   else
@@ -1266,7 +1279,7 @@ for _id in $idx; do
     case $type in
       rpm|repomd) verifrepo "$_id"; ;;
       deb) verifdeb "$_id"; ;;
-      authenticode|openssl|gpg|liveupdate|cyberwatch|trend) verifdirectory "$_id"; ;; 
+      authenticode|openssl|gpg|liveupdate|cyberwatch|trend|jar) verifdirectory "$_id"; ;; 
       *) 1>&2 echo "Unknown task type : $type"; exit 1 ;;
     esac
   fi
