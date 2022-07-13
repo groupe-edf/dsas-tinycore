@@ -771,6 +771,7 @@ start_syslog(){
 
   if [ "$syslog" == "true" ]; then
     [ "$TYP" == "bas" ] && [ -n "$server" ] && sopts=" -R $server -L "
+    sopts=" -l 5 $sopts"
     echo "${sopts}" | xargs /sbin/syslogd && echo "${GREEN}syslogd started.${NORMAL}"
     /sbin/klogd && echo "${GREEN}klogd started.${NORMAL}"
   fi
@@ -918,6 +919,15 @@ reboot_required(){
     echo -n " ."
   done
   /sbin/reboot
+}
+
+start_cron(){
+  # Don't log cron messages, as too verbose
+  crond -l 9
+}
+
+stop_cron(){
+  pkill crond 
 }
 
 save_config(){
@@ -1070,6 +1080,7 @@ case "${1}" in
       /bin/cp $VAR/crontab.dsas /var/spool/cron/crontabs/root
       chown root.root /var/spool/cron/crontabs/root
       chmod 600 /var/spool/cron/crontabs/root
+      start_cron
     fi
 
     start_chroot
@@ -1084,6 +1095,7 @@ case "${1}" in
     fi
     stop_chroot
     if [ "$TYP" == "bas" ]; then
+      stop_cron
       stop_snmp
       stop_antivirus
       stop_radius

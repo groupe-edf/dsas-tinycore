@@ -809,6 +809,7 @@ addgroup -g 51 users
 # Hardening
 # Fix directory and file permissions
 chmod 440 /etc/sudoers
+chown root.root /etc/sudoers
 chmod 700 /root
 chmod -R g-s /home
 chown -R tc.staff /home/tc
