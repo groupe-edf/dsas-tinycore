@@ -554,6 +554,8 @@ source)
   ;;
 clean)
   make -C test clean
+  [ -d "$extract/proc" ] && umount "$extract/proc"
+  [ -d "$build/proc" ] && umount "$build/proc"
   rm -fr $image $build $newiso $mnt $dsascd $rootfs64 $dsascd.md5 \
       $docker $dockimage $source $work/dsas_pass.txt
   exit 0
