@@ -30,7 +30,7 @@ pkgs=""
 while [ "$#" -gt 0 ]; do
   case $1 in
 
-    -r|--rebuild) rebuild=1;  ;;
+    -r|--rebuild) rebuild=1; ;;
     -f|--download) forcedownload=1; ;;
     -k|--keep) keep=1; ;;
     -t|--test) testcode=1; ;;
@@ -153,14 +153,15 @@ get_tcz() {
     dep=$target.dep
     # If the PKG file exists and is newer than the TCZ file, rebuild 
     if test -f "$target" && test -f "$pkg_dir/$package.pkg"; then
-      [ $(stat -c '%Y' "$pkg_dir/$package.pkg") -gt $(stat -c '%Y' "$target") ] && { echo "Target : $target"; exit -1; }
-
-      [ $(stat -c '%Y' "$pkg_dir/$package.pkg") -gt $(stat -c '%Y' "$target") ] && rm -f "$target"
+      [ "$(stat -c '%Y' "$pkg_dir/$package.pkg")" -gt "$(stat -c '%Y' "$target")" ] && rm -f "$target"
     fi
     if test ! -f "$target"; then
       if test -f "$pkg_dir/$package.pkg"; then
         # In a new shell so that build doesn't modify local variables
-        ( extract="$build"; build_pkg "$package"; )
+        _old=$extract
+        extract="$build"
+        ( build_pkg "$package"; )
+        extract="$_old"
       elif test -f "$tce_dir/$package.tcz"; then
         msg "fetching package $package ..."
         cp "$tce_dir/$package.tcz" "$target"
@@ -288,7 +289,7 @@ build_pkg() {
 
     # Remove old TCZ if PKG is newer
     [ -f "$pkg_file" ] && [ -f "$tcz_dir/$pkg.tcz" ] \
-        && [ $(stat -c '%Y' "$pkg_file") -gt $(stat -c '%Y' "$tcz_dir/$pkg.tcz") ] \
+        && [ "$(stat -c '%Y' "$pkg_file")" -gt "$(stat -c '%Y' "$tcz_dir/$pkg.tcz")" ] \
         && rm -f "$tcz_dir/$pkg.tcz"
 
     # Don't rebuild if forced rebuild and TCZ date is later than the start time of the
@@ -496,7 +497,7 @@ install_webdriver(){
       cp "$src_dir/installer" "$extract/home/tc"
       chmod a+rx "$extract/home/tc/installer"
       chroot "$extract" chown -R tc.staff "/home/tc/"
-      cp /etc/resolv.conf $extract/etc/resolv.conf && msg "copy resolv.conf"
+      cp /etc/resolv.conf "$extract/etc/resolv.conf" && msg "copy resolv.conf"
       # http_proxy is imported (or not) from the environment 
       # shellcheck disable=SC2154
       cat << EOF > "$extract/tmp/script"
@@ -523,15 +524,15 @@ EOF
       chmod a+x "$extract/tmp/script"
       msg "Install PHP Web driver"  
       chroot --userspec=tc "$extract" /tmp/script
-      rm $extract/etc/resolv.conf
+      rm "$extract/etc/resolv.conf"
 
       # Create the package for next use
       msg "Creating $package.tcz"
       [ -f "$package" ] && rm "$package"
       tempdir=$(mktemp -d)
       chmod 755 "$tempdir"
-      mkdir -p $tempdir/usr/local/share/dsas
-      chmod -R 755 $tempdir/usr
+      mkdir -p "$tempdir/usr/local/share/dsas"
+      chmod -R 755 "$tempdir/usr"
       # shellcheck disable=SC2086
       (cd "$extract/home/tc" || exit 1; tar -cf - vendor | tar -C "$tempdir/usr/local/share/dsas" -x -f -) 
       mksquashfs "$tempdir" "$target"
@@ -562,7 +563,7 @@ source)
   exit 0
   ;;
 clean)
-  make -C test clean
+  make -C "$testdir" clean
   [ -d "$extract/proc" ] && umount "$extract/proc"
   [ -d "$build/proc" ] && umount "$build/proc"
   rm -fr $image $build $newiso $mnt $dsascd $rootfs64 $dsascd.md5 \
@@ -570,7 +571,7 @@ clean)
   exit 0
   ;;
 realclean)
-  make -C test clean
+  make -C "$testdir" clean
   rm -fr $work
   exit 0
   ;;
@@ -589,12 +590,12 @@ upgrade)
     pkg_file=${pkg_file%-doc}.pkg
     [ -f "$pkg_file" ] && continue   # Locally built package
     [ "$_file" == "dsastestfiles.tcz" ] && continue  # Locally built file
-    [ "$_file" == "dsaswebdriver.tcz" ] && { msg Removing $_file; rm -f $file; continue; } # Remove to force rebuild
-    [ "$_file" == "firefox.tcz" ] && { msg Removing $_file; rm -f "$file"; continue; } # Remove to force a rebuild
+    [ "$_file" == "dsaswebdriver.tcz" ] && { msg "Removing $_file"; rm -f "$file"; continue; } # Remove to force rebuild
+    [ "$_file" == "firefox.tcz" ] && { msg "Removing $_file"; rm -f "$file"; continue; } # Remove to force a rebuild
     read -r hash < "$file.md5.txt"
     if ! grep -q "^$hash  $_file" $tcz_dir/md5.db; then
       # Don't use get_tcz as don't want to use local TCZ files
-      rm -f $file
+      rm -f "$file"
       msg "Fetching package $_file ..."
       $curl_cmd -o "$file" "$tcz_url/$_file" || exit 1
       md5sum "$file" | sed -e "s:  $file$::g" > "$file.tcz.md5.txt"
@@ -735,17 +736,17 @@ docker)
   if [ "$testcode" = "1" ]; then
     # Install test files. Force remove temporary PKG file
     if test ! -f "$tcz_dir/dsastestfiles.tcz"; then
-      make -C test clean
-      make -C test pkg
+      make -C "$testdir" clean
+      make -C "$testdir" pkg
       install_tcz dsastestfiles
     else
       t0=$(stat -c '%Y' "$tcz_dir/dsastestfiles.tcz")
-      t1=$(find test -type f -exec stat -c '%Y' "{}" \; | sort -nr  | head -1)
-      if [ $t1 -gt $t0 ] ; then
-        // The test files are newer than the existing version. Rebuild
+      t1=$(find "$testdir" -type f -exec stat -c '%Y' "{}" \; | sort -nr  | head -1)
+      if [ "$t1" -gt "$t0" ] ; then
+        # The test files are newer than the existing version. Rebuild
         rm -f "$tcz_dir/dsastestfiles.tcz"
-        make -C test clean
-        make -C test pkg
+        make -C "$testdir" clean
+        make -C "$testdir" pkg
       fi
       install_tcz dsastestfiles
     fi

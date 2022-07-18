@@ -1764,6 +1764,9 @@ function dsas_task_new() {
     document.getElementById("TaskCert").innerHTML = "";
 }
 
+// The argument name to this function is not used but added to be consistent
+// with the other dsas_task_* functions to make other code easier to use
+// eslint-disable-next-line no-unused-vars
 function dsas_task_modify(id, name) {
     fetch("api/dsas-task.php").then(response => {
         if (response.ok) 
