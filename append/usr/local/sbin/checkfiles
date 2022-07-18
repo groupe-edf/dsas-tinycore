@@ -469,7 +469,7 @@ verifjar() {
   # a *.RSA, *.DSA ou SIG-* file and that all other files are listed in the manifest
   manifest="";
   while IFS= read -r -d '' _file; do
-    [ -z "$manifest" ] || { 1>&2 myecho "Two manifests in JAR file"; return 1; }
+    [ -z "$manifest" ] || { 1>&2 myecho "Two or more manifests in JAR file"; return 1; }
     manifest=$_file
     continue
   done < <(find "$zipdir" -name "MANIFEST.MF" -print0)
@@ -492,10 +492,11 @@ verifjar() {
     if [[ "$_file" =~ ^SIG- ]]; then
       [ ! -f "${_file#SIG-}.SF" ] && { 1>&2 myecho "Orphan signature file $_file"; return 1; }
       hassign="true"
-      contine;
+      continue;
     fi
-    cat $manifest | dos2unix | grep -q "^Name: \s*${_file#$zipdir/}$"
-    cat $manifest | dos2unix | grep -q "^Name: \s*${_file#$zipdir/}$" || { 1>&2 myecho "Unsigned file ${_file#$zipdir/} in jar"; return 1; }
+    # The filename might be split over several lines and the Manifest might be in dos format
+    cat "$manifest" | dos2unix | sed -z 's/\n //g' | grep -q "^Name: \s*${_file#$zipdir/}$" || \
+        { 1>&2 myecho "Unsigned file ${_file#$zipdir/} in jar"; return 1; }
   done < <(find "$zipdir" -type f -print0)
 
   [ "$hassign" == "true" ] || { 1>&2 myecho "Unsigned jar file"; return 255; }
@@ -544,6 +545,7 @@ verifjar() {
   md5=""
   while :; do
     IFS= read -r line || last=true   
+
     # shellcheck disable=SC2076
     if [ -n "$last" ] || [[ "$line" =~ "^Name:" ]]; then  
       [ -z "$last" ] && [ -z "$_file" ] && { _file=$(echo "$line" | dos2unix | sed -e "s/^Name: \(.*\)\s*$/\1/g"); continue; }
@@ -588,21 +590,21 @@ verifjar() {
     elif [[ "$line" =~ ^MD5-.* ]]; then
       md5=$(echo $line | dos2unix | cut -d: -f2 | xargs | base64 -d | hexdump -e '16/1 "%02x"')
     fi
-  done < "$manifest"
+  done <  <(sed -z 's/\n //g ' "$manifest")
 
   if [[ "${file##*.}" == "7z" ]]; then 
     if [ "$dryrun" == "0" ]; then
-      (cd "$zipdir" || { 2>&1 echo "Failed to create temporary directory"; return 254; }; 7z a "$src/$file.$$" ./*)
+      (cd "$zipdir" || { 2>&1 echo "Failed to create temporary directory"; return 254; }; 7z -r a "$src/$file.$$" ./*)
       /bin/mv "$src/$file.$$" "$src/$file"
     else
-      echo "[DryRun] : cd \"$zipdir\"; 7z a \"$src/$file.$$\" \*"
+      echo "[DryRun] : cd \"$zipdir\"; 7z -r a \"$src/$file.$$\" \*"
     fi
   else
     if [ "$dryrun" == "0" ]; then
-      (cd "$zipdir"|| { 2>&1 echo "Failed to create temporary directory"; return 254; }; zip -q "$src/$file.$$" ./* >& /dev/null)
+      (cd "$zipdir"|| { 2>&1 echo "Failed to create temporary directory"; return 254; }; zip -qr "$src/$file.$$" ./* >& /dev/null)
       /bin/mv -f "$src/$file.$$" "$src/$file"
     else
-      echo "[DryRun] : cd \"$zipdir\"; zip -q \"$src/$file.$$\" \*"
+      echo "[DryRun] : cd \"$zipdir\"; zip -qr \"$src/$file.$$\" \*"
     fi
   fi
 
