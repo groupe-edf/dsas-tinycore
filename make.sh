@@ -689,6 +689,7 @@ docker)
   install_tcz net-snmp
   install_tcz lftp
   install_tcz libpam-radius-auth
+  install_tcz sed           # Needed for 'sed -z'
 
   # Copy the pre-extracted packages to work dir. This must be after packages
   # are installed to allow for files to be overwritten. Run as root 
