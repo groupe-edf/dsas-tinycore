@@ -41,7 +41,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         $type = $data["type"];
         if ($type !== "rpm" && $type !== "repomd" && $type !== "deb" && $type !== "authenticode" &&
             $type !== "openssl" && $type !== "gpg" && $type !== "liveupdate" && $type !== "cyberwatch" &&
-            && $type != "jar" && $type !== "trend")
+            $type != "jar" && $type !== "trend")
           $errors[] = ["error" => "The task type is illegal"];
         $run = $data["run"];
         if ($run !== "never" && $run !== "quarterhourly" && $run !== "hourly" && $run !== "daily" && $run !== "weekly" && $run !== "monthly")
