@@ -161,7 +161,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
               $pemnowrap = (string)preg_replace('/\\s+/', '', $pemnowrap);
               if (hash("sha256", base64_decode($pemnowrap)) == $cert["fingerprint"]) {
                 if ($type === "rpm" || $type === "repomd" || $type === "deb" || 
-                    $type === "authenticode" || $type === "gpg" || $type === "liveupdate" || $type = "jar" || $type === "trend") {
+                    $type === "authenticode" || $type === "gpg" || $type === "liveupdate" ||
+                    $type === "jar" || $type === "trend") {
                   $errors[] = ["error" => ["The task type '{0}' does not support public keys", $type]];
                   break 2;
                 }

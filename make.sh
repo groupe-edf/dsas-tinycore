@@ -558,7 +558,7 @@ startdate=$(date +%s)
 
 case $cmd in
 source)
-  tar cvzf $source --exclude=work --exclude=.git .
+  tar cvzf $source --exclude=tmp --exclude=work --exclude=.git .
   exit 0
   ;;
 clean)
@@ -593,6 +593,7 @@ upgrade)
     [ "$_file" == "firefox.tcz" ] && { msg Removing $_file; rm -f "$file"; continue; } # Remove to force a rebuild
     read -r hash < "$file.md5.txt"
     if ! grep -q "^$hash  $_file" $tcz_dir/md5.db; then
+      # Don't use get_tcz as don't want to use local TCZ files
       rm -f $file
       msg "Fetching package $_file ..."
       $curl_cmd -o "$file" "$tcz_url/$_file" || exit 1
