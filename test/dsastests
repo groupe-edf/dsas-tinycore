@@ -928,7 +928,7 @@ try {
     chmod("/tmp/novirus", 0644);
 
     // Activate ClamAV via the web interface. Scan files and check infection or not
-    test("Actvating ClamAv and testing for detection of viruses", function() {
+    test("Activating ClamAv and testing for detection of viruses", function() {
         if (! $GLOBALS["driver"]->findElement(WebDriverBy::id("antivirus"))->isSelected())
           $GLOBALS["driver"]->findElement(WebDriverBy::id("antivirus"))->click();
         save();
@@ -1795,7 +1795,6 @@ try {
         $contents = fread($fp, filesize(_share . "/Certificates/Openssl.pem"));
         fclose($fp);
         $ncert = count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'add')]")));
-        echo $ncert . "  "  . PHP_EOL;
         $contents = base64_encode($contents);
         $GLOBALS["driver"]->executeScript("dsas_upload_cert_core(b64toBlob(arguments[0], \"application/x-x509-user-cert\"), \"x509\", \"\");", [$contents]);
         // Applying, wait for okDSAS to become Clickable. This will be an error this time
