@@ -486,7 +486,6 @@ install_firefox(){
   install_tcz $package
 }
 
-
 install_webdriver(){
    package=dsaswebdriver
    target=$tcz_dir/$package.tcz
@@ -512,7 +511,7 @@ EOF
       msg "Install PHP Composer $extract"
       HOME=/home/tc chroot --userspec=tc "$extract" /tmp/script || error composer installation failed
 
-    # Install Facebook Webdriver
+      # Install Facebook Webdriver
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 # shellcheck disable=SC2154
@@ -524,6 +523,8 @@ EOF
       chmod a+x "$extract/tmp/script"
       msg "Install PHP Web driver"  
       chroot --userspec=tc "$extract" /tmp/script
+
+      # Remove temporary resolv.conf
       rm "$extract/etc/resolv.conf"
 
       # Create the package for next use
@@ -535,6 +536,64 @@ EOF
       chmod -R 755 "$tempdir/usr"
       # shellcheck disable=SC2086
       (cd "$extract/home/tc" || exit 1; tar -cf - vendor | tar -C "$tempdir/usr/local/share/dsas" -x -f -) 
+      mksquashfs "$tempdir" "$target"
+      rm -fr "$tempdir"
+      md5sum "$target" | sed -e "s:  $target$::g" > "$target.md5.txt"
+      echo -n "" > "$target.dep"
+    fi
+    install_tcz $package
+}
+
+install_phpstan(){
+   package=dsasphpstan
+   target=$tcz_dir/$package.tcz
+   dep=$target.dep
+   if test ! -f "$target"; then
+      # Install PHP composer
+      download -f "https:/getcomposer.org/installer" "$src_dir"
+      cp "$src_dir/installer" "$extract/home/tc"
+      chmod a+rx "$extract/home/tc/installer"
+      chroot "$extract" chown -R tc.staff "/home/tc/"
+      cp /etc/resolv.conf "$extract/etc/resolv.conf" && msg "copy resolv.conf"
+      # http_proxy is imported (or not) from the environment 
+      # shellcheck disable=SC2154
+      cat << EOF > "$extract/tmp/script"
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=$http_proxy
+export https_proxy=$https_proxy
+cd /home/tc
+env HOME=/home/tc php installer || exit 1
+rm installer
+EOF
+      chmod a+x "$extract/tmp/script"
+      msg "Install PHP Composer $extract"
+      HOME=/home/tc chroot --userspec=tc "$extract" /tmp/script || error composer installation failed
+
+      # Install PHPSTAN
+      cat << EOF > "$extract/tmp/script"
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+# shellcheck disable=SC2154
+export http_proxy=$http_proxy
+export https_proxy=$https_proxy
+cd /home/tc
+env HOME=/home/tc php composer.phar require --dev phpstan/phpstan
+EOF
+      chmod a+x "$extract/tmp/script"
+      msg "Install PHPStan"  
+      chroot --userspec=tc "$extract" /tmp/script
+
+      # Remove temporary resolv.conf
+      rm "$extract/etc/resolv.conf"
+
+      # Create the package for next use
+      msg "Creating $package.tcz"
+      [ -f "$package" ] && rm "$package"
+      tempdir=$(mktemp -d)
+      chmod 755 "$tempdir"
+      mkdir -p "$tempdir/home/tc"
+      chmod -R 755 "$tempdir/home"
+      # shellcheck disable=SC2086
+      (cd "$extract/home/tc" || exit 1; tar -cf - composer.* vendor | tar -C "$tempdir/home/tc" -x -f -) 
       mksquashfs "$tempdir" "$target"
       rm -fr "$tempdir"
       md5sum "$target" | sed -e "s:  $target$::g" > "$target.md5.txt"
@@ -602,6 +661,92 @@ upgrade)
     fi
   done < <(find $tcz_dir -name "*.tcz" -print0)
   ;;
+static-chroot)
+  extract=$image
+
+  # Get the ISO
+  mkdir -p $work
+  get_unpack_livecd
+
+  # Unpack squashfs
+  if ! ls $extract/proc > /dev/null 2> /dev/null; then
+    cmd mkdir -p $extract
+    zcat "$squashfs" | { cd "$extract" || exit 1; cpio -i -H newc -d; }
+  fi
+
+  msg Append DSAS files
+  rsync -rlptv "$append/" "$extract/"
+  mkdir -p "$extract/home/tc"
+  chown root.root "$extract"
+  chmod 755 "$extract/home"
+
+  # Install the needed packages
+  install_tcz openssl-1.1.1
+  install_tcz libxml2
+  install_tcz libssh2
+  install_tcz libzip
+  install_tcz bzip2-lib
+  install_tcz php-8.0-cgi
+  install_tcz php-8.0-ext
+  install_tcz php-pam
+  install_tcz pcre2
+  install_tcz curl
+  install_tcz rsync
+  install_tcz node
+
+  # Install PHP cli and add iconv and phar extension
+  install_tcz php-8.0-cli
+  sed -i -e "s/;extension=phar/extension=phar/" $extract/usr/local/etc/php/php.ini
+  sed -i -e "s/;extension=iconv/extension=iconv/" $extract/usr/local/etc/php/php.ini
+  sed -i -e "s/;extension=curl/extension=curl/" $extract/usr/local/etc/php/php.ini
+  sed -i -e "s/;extension=zip/extension=zip/" $extract/usr/local/etc/php/php.ini
+  sed -i -e "s/;extension=tokenizer/extension=tokenizer/" $extract/usr/local/etc/php/php.ini
+
+  # Install PHP webdriver via composer             
+  install_phpstan
+  
+  mkdir -p $extract/home/tc/dsas
+  tar cf - --exclude tmp --exclude=work --exclude=.git . | tar -C $extract/home/tc/dsas -xvf - 
+  cat << EOF > $extract/home/tc/phpstan.neon
+parameters:
+  level: 9
+  paths:
+    - dsas/append/usr/local/share/www/api
+EOF
+  chown -R tc.staff $extract/home/tc
+
+  cat << EOF > $extract/tmp/script
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+cd /home/tc
+env HOME=/home/tc vendor/bin/phpstan
+EOF
+  chmod a+x "$extract/tmp/script"
+  msg "Running PHPStan on usr/local/share/www/api"
+  chroot --userspec=tc "$extract" /tmp/script || error error running phpstan
+
+  cat << EOF > $extract/tmp/script
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export HOME=/home/tc
+# shellcheck disable=SC2154
+export http_proxy=$http_proxy
+export https_proxy=$https_proxy
+cd /home/tc
+npm init -y
+npm init  @eslint/config
+npx eslint dsas/append/usr/local/share/www/dsas.js
+EOF
+  cp /etc/resolv.conf "$extract/etc/resolv.conf" && msg "copy resolv.conf"
+  chmod a+x "$extract/tmp/script"
+  msg "Running eslint on usr/local/share/www/dsas.js"
+  chroot --userspec=tc "$extract" /tmp/script || error error running phpstan
+  rm $extract/etc/resolv.conf
+
+  if [ "$keep" = "0" ]; then
+    rm -fr $image $newiso $mnt
+  fi
+
+  ;;
+
 static)
   if [ -x "vendor/bin/phpstan" ]; then
     msg "Running PHPStan on usr/local/share/www/api"
