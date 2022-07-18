@@ -47,6 +47,7 @@ while [ "$#" -gt 0 ]; do
       echo "     check           Run test code to test correct function of checkfiles" 
       echo "     iso             Build the DSAS ISO file. This the default command"
       echo "     static          Run static analysis on the DSAS source code"
+      echo "     upgrade         Upgrade the TCZ packages to their latest versiosn"
       echo "Valid options are"
       echo "     -r|--rebuild    Force the rebuild of source packages"
       echo "     -f|--download   Force the source packages to be re-downloaded"
@@ -165,10 +166,18 @@ get_tcz() {
         cp "$tce_dir/$package.tcz" "$target"
         if ! test -f "$tce_dir/$package/tcz.dep"; then
           touch "$tce_dir/$package.tcz.dep"
+        else
+          cp "$tce_dir/$package.tcz.dep" "$target"
+        fi
+        if ! test -f "$tce_dir/$package/tcz.md5.txt"; then
+          md5sum "$tcz_dir/$package.tcz" | sed -e "s:  $tcz_dir/$package.tcz$::g" > "$tcz_dir/$package.tcz.md5.txt"
+        else
+          cp "$tce_dir/$package.tcz.md5.txt" "$target"
         fi
       else
         msg "fetching package $package ..."
         $curl_cmd -o "$target" "$tcz_url/$package.tcz" || exit 1
+        md5sum "$tcz_dir/$package.tcz" | sed -e "s:  $tcz_dir/$package.tcz$::g" > "$tcz_dir/$package.tcz.md5.txt"
       fi
     fi
     if test ! -f "$dep"; then
@@ -568,6 +577,28 @@ realclean)
 check)
   error "Self test are not written yet"
   exit 1
+  ;;
+upgrade)
+  msg Fecthing md5.db.gz
+  $curl_cmd -o "$tcz_dir/md5.db.gz" "$tcz_url/md5.db.gz" || error failed to download md5.db.gz
+  gzip -f -d $tcz_dir/md5.db.gz
+  while IFS= read -r -d '' file; do
+    _file=${file#$tcz_dir/}
+    pkg_file=$pkg_dir/${_file%.tcz}
+    pkg_file=${pkg_file%-dev}
+    pkg_file=${pkg_file%-doc}.pkg
+    [ -f "$pkg_file" ] && continue   # Locally built package
+    [ "$_file" == "dsastestfiles.tcz" ] && continue  # Locally built file
+    [ "$_file" == "dsaswebdriver.tcz" ] && { msg Removing $_file; rm -f $file; continue; } # Remove to force rebuild
+    [ "$_file" == "firefox.tcz" ] && { msg Removing $_file; rm -f "$file"; continue; } # Remove to force a rebuild
+    read -r hash < "$file.md5.txt"
+    if ! grep -q "^$hash  $_file" $tcz_dir/md5.db; then
+      rm -f $file
+      msg "Fetching package $_file ..."
+      $curl_cmd -o "$file" "$tcz_url/$_file" || exit 1
+      md5sum "$file" | sed -e "s:  $file$::g" > "$file.tcz.md5.txt"
+    fi
+  done < <(find $tcz_dir -name "*.tcz" -print0)
   ;;
 static)
   if [ -x "vendor/bin/phpstan" ]; then
