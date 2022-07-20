@@ -738,7 +738,7 @@ EOF
   cp /etc/resolv.conf "$extract/etc/resolv.conf" && msg "copy resolv.conf"
   chmod a+x "$extract/tmp/script"
   msg "Running eslint on usr/local/share/www/dsas.js"
-  chroot --userspec=tc "$extract" /tmp/script || error error running phpstan
+  chroot --userspec=tc "$extract" /tmp/script || error error running eslint
   rm $extract/etc/resolv.conf
 
   if [ "$keep" = "0" ]; then
