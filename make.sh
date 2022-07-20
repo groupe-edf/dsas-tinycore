@@ -112,6 +112,7 @@ image=$work/extract
 build=$work/build
 append=./append
 testdir=./test
+js=./js
 dsascd=$work/dsas.iso
 rootfs64=$work/rootfs64
 docker=$work/docker
@@ -623,6 +624,7 @@ source)
   ;;
 clean)
   make -C "$testdir" clean
+  make -C "$js" clean
   [ -d "$extract/proc" ] && umount "$extract/proc"
   [ -d "$build/proc" ] && umount "$build/proc"
   rm -fr $image $build $newiso $mnt $dsascd $rootfs64 $dsascd.md5 \
@@ -631,6 +633,7 @@ clean)
   ;;
 realclean)
   make -C "$testdir" clean
+  make -C "$js" realclean
   rm -fr $work
   exit 0
   ;;
@@ -723,23 +726,10 @@ EOF
   chmod a+x "$extract/tmp/script"
   msg "Running PHPStan on usr/local/share/www/api"
   chroot --userspec=tc "$extract" /tmp/script || error error running phpstan
-
-  cat << EOF > $extract/tmp/script
-export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-export HOME=/home/tc
-# shellcheck disable=SC2154
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
-cd /home/tc
-npm init -y
-npm init  @eslint/config
-npx eslint dsas/append/usr/local/share/www/dsas.js
-EOF
-  cp /etc/resolv.conf "$extract/etc/resolv.conf" && msg "copy resolv.conf"
-  chmod a+x "$extract/tmp/script"
-  msg "Running eslint on usr/local/share/www/dsas.js"
-  chroot --userspec=tc "$extract" /tmp/script || error error running eslint
   rm $extract/etc/resolv.conf
+
+  msg "Running eslint on js/*"
+  make -C "$js" dev
 
   if [ "$keep" = "0" ]; then
     rm -fr $image $newiso $mnt
@@ -877,6 +867,12 @@ docker)
   mkdir -p "$extract/home/tc"
   chown root.root "$extract"
   chmod 755 "$extract/home"
+
+  # Make and install dsas.js
+  make -C "$js" prod
+  cp -f "$js/dist/dsas.js" "$extract/usr/local/share/www"
+  chown root.root "$extract/usr/local/share/www/dsas.js"
+  chmod 755 "$extract/usr/local/share/www/dsas.js"
 
   if [ "$testcode" = "1" ]; then
     # Install test files. Force remove temporary PKG file

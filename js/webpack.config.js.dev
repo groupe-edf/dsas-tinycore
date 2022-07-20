@@ -1,0 +1,41 @@
+const path = require("path");
+const ESLintPlugin = require("eslint-webpack-plugin");
+module.exports = {
+  mode: "development",
+  devtool: false,
+  plugins: [new ESLintPlugin(),],
+  entry: {
+    main: ["./src/DisplayLogs.js",
+           "./src/DsasCert.js",
+           "./src/DsasHelp.js",
+           "./src/DsasLogin.js",
+           "./src/DsasModal.js",
+           "./src/DsasNet.js",
+           "./src/DsasPasswd.js",
+           "./src/DsasService.js",
+           "./src/DsasStatus.js",
+           "./src/DsasTask.js",
+           "./src/DsasUsers.js",
+           "./src/DsasUtil.js",
+           "./src/DsasWeb.js",
+           "./src/MultiLang.js",],
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [
+          'style-loader',
+          'css-loader',
+        ],
+      },
+    ],
+  },
+  output: {
+    filename: 'dsas.js',
+    path: path.resolve(__dirname, 'dist'),
+    library: {name: "dsas",
+              type: "umd",
+              export: "all",},
+  },
+};
