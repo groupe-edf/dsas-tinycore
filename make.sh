@@ -473,15 +473,57 @@ install_firefox(){
         touch "$tce_dir/$package.tcz.dep"
       fi
     else
-      msg "Installing package $package ..."
-      tce-load -wi $latest || exit 1
-      msg "Constructing package $package"
-      firefox_getLatest.sh -e || exit 1
-      msg "fecthing package $package"
-      cp "$tce_dir/$package.tcz" "$target"
-      if ! test -f "$tce_dir/$package/tcz.dep"; then
-        touch "$tce_dir/$package.tcz.dep"
+      _old=$extract
+      extract="$build"
+      if [ -d "$extract" ]; then
+        umount "$extract/proc"
+        rm -fr "$extract"
       fi
+      mkdir -p "$extract"
+      zcat "$squashfs" | { cd "$extract" || exit 1; cpio -i -H newc -d; }
+      mount -t proc /proc "$extract/proc"
+
+      # FIXME : Fix missing links
+      # It appears that certain links are missings with the base intsall
+      # and they need to be forced
+      ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libpthread.so.0 libpthread.so; )
+      ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libdl.so.2 libdl.so; )
+
+      # Force install of coreutils as always needed for install_tcz
+      # In seperate sheel to avoid modifiying local variables
+      ( install_tcz coreutils )
+      ( install_tcz "$latest" )
+
+      # Copy /etc/resolv.conf file
+      mkdir -p "$extract/etc"
+      cp -p /etc/resolv.conf "$extract/etc/resolv.conf"
+
+      mkdir -p $extract/home/tc
+      chown tc.staff $extract/home/tc
+      echo tc > $extract/etc/sysconfig/tcuser
+
+      cat << EOF > "$extract/tmp/script"
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=$http_proxy
+export https_proxy=$https_proxy
+export USER=tc
+mkdir /tmp/tce
+sudo tce-setup
+$latest.sh -e || exit 1
+EOF
+      chmod a+x "$extract/tmp/script"
+      msg "Constructing package $package"
+      HOME=/home/tc chroot --userspec=tc "$extract" /tmp/script || error error constructing $package
+
+      msg "fecthing package $package"
+      cp "$extract/tmp/tce/optional/$package.tcz" "$target"
+      if ! test -f "$extract/tmp/tce/optional/$package.tcz.dep"; then
+        touch "$tce_dir/$package.tcz.dep"
+      else
+        cp "$extract/tmp/tce/optional/$package.tcz.dep" "$target.dep"
+      fi
+      md5sum "$target" | sed -e "s:  $target$::g" > "$target.md5.txt"
+      extract="$_old"
     fi
   fi
   install_tcz $package
