@@ -7,4 +7,4 @@ _pkg_path=node-v16.16.0
 _conf_cmd="setarch linux$arch ./configure --prefix=/usr/local --shared-openssl --shared-zlib --shared-nghttp2 --with-intl=system-icu"
 _make_cmd="make"
 _install_cmd="make install DESTDIR=" 
-_pkgs='main{/usr/local/lib,/usr/local/share,/usrlocal/bin};dev{/usr/local/include}'
+_pkgs='main{usr/local/lib,usr/local/share/systemtap,usr/local/bin};dev{usr/local/include};doc{usr/local/share/doc,/usr/local/share/man}'
