@@ -253,27 +253,28 @@ download() {
 }
 
 unpack() {
+  msg "Unpacking $1 to $2"
   case $(echo "$1" | sed -e "s/.*\(\..*\)$/\1/g") in
-    .tgz) tar xvzCf "$2" "$1"; ;;
-    .tbz) tar xvjCf "$2" "$1"; ;;
-    .tar) tar xvCf "$2" "$1"; ;;
+    .tgz) tar xzCf "$2" "$1" || return 1; ;;
+    .tbz) tar xjCf "$2" "$1" || return 1; ;;
+    .tar) tar xCf "$2" "$1" || return 1; ;;
     .gz)
       if [ "${1: -7}" = ".tar.gz" ]; then
-        tar xvzCf "$2" "$1";
+        tar xzCf "$2" "$1" || return 1
       else
         error "An archive can not be a gzip"
       fi
       ;;
     .bz2) 
       if [ "${1: -8}" = ".tar.bz2" ]; then
-        tar xvjCf "$2" "$1";
+        tar xjCf "$2" "$1" || return 1
       else
         error "An archive can not be a bzip2"
       fi
       ;;
     .xz)
       if [ "${1: -7}" = ".tar.xz" ]; then
-        tar xvJCf "$2" "$1";
+        tar xJCf "$2" "$1" || return 1
       else
         error "An archive can not be a xz"
       fi
@@ -341,7 +342,7 @@ build_pkg() {
 
         mkdir -p "$extract/$builddir"
         mkdir -p "$extract/$destdir"
-        unpack "$src_dir/$_src" "$extract/$builddir"
+        unpack "$src_dir/$_src" "$extract/$builddir" || error "Can not unpack $_src"
         chroot "$extract" chown -R tc.staff /home/tc
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
@@ -719,12 +720,6 @@ static-chroot)
     zcat "$squashfs" | { cd "$extract" || exit 1; cpio -i -H newc -d; }
   fi
 
-  msg Append DSAS files
-  rsync -rlptv "$append/" "$extract/"
-  mkdir -p "$extract/home/tc"
-  chown root.root "$extract"
-  chmod 755 "$extract/home"
-
   # Install the needed packages
   install_tcz openssl-1.1.1
   install_tcz libxml2
@@ -772,6 +767,38 @@ EOF
 
   msg "Running eslint on js/*"
   make -C "$js" dev
+
+  # Shellcheck needs Haskell/Cabal to rebuild. For now only allow on a 64bit platform
+  # and download a static binary
+  [ "$(uname -m)" = "x86_64" ] || msg "shellcheck can only be run on a 64bit machine"
+  _uri="https://github.com/koalaman/shellcheck/releases/download/v0.8.0/shellcheck-v0.8.0.tar.xz"
+  _src=$(basename "$_uri")
+  download "$_uri" "$src_dir"
+  unpack "$src_dir/$_src" "$extract/home/tc" || error "Can not unpack $_src"
+
+  cat << EOF > $extract/tmp/script
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export HOME=/home/tc
+export USER=tc
+cd /home/tc
+shellcheck=\$(find . -type f -name \"shellcheck\")
+[ -z \"\$shellcheck\" ] && { echo "shellcheck not found"; exit 1 }
+\$shellcheck -x "dsas/append/usr/local/sbin/checkfiles" \
+                "dsas/append/usr/local/sbin/dsaspasswd" \
+                "dsas/append/usr/local/sbin/getcertificate" \
+                "dsas/append/usr/local/sbin/getfiles" \
+                "dsas/append/usr/local/sbin/killtask" \
+                "dsas/append/usr/local/sbin/rotatelogs" \
+                "dsas/append/usr/local/sbin/runtask" \
+                "dsas/append/usr/local/sbin/snmpdsas" \
+                "dsas/append/usr/local/sbin/sysloghaut" \
+                "dsas/append/etc/init.d/services/dsas" \
+                "dsas/append/etc/init.d/rcS.docker" \
+                "dsas/make.sh"
+EOF
+  chmod a+x "$extract/tmp/script"
+  msg "Running shellcheck on shell code"
+  chroot --userspec=tc "$extract" /tmp/script || error error running shellcheck
 
   if [ "$keep" = "0" ]; then
     rm -fr $image $newiso $mnt
@@ -1057,7 +1084,7 @@ EOF
   # Special case, very limited busybox for chroot with only /bin/ash and /usr/bin/env installed
   _old=$extract
   extract=$extract/opt/lftp
-  install_tcz ash
+  ( install_tcz ash )
   extract=$_old
 
   # Install lftp and dependencies in /opt so that they can be available in chroot jail

@@ -1392,7 +1392,7 @@ It will be useful to add these two lines to the `~/.profile` file so that it is
 configured at each login. After the command
 
 ```shell
-tce-load -wi Xorg-7.7 compiletc rsync coreutils mkisofs-tools squashfs-tools git curl ncursesw-dev
+tce-load -wi Xorg-7.7 compiletc rsync coreutils mkisofs-tools squashfs-tools git curl ncursesw-dev tar node
 ```
 
 will install all the tools necessary for the build
@@ -1436,23 +1436,24 @@ Now we are ready to download the DSAS source code with the command
 git clone https://gitlab.devops-unitep.edf.fr/dsao-cyber/dsas---tinycore.git
 ```
 
-The version of `less` that is installed by default doesn't accept the option `-R` needed to
-correctly colour the output of the commande `git diff`. To allow this the commandes 
-
-```
-tce-load -wi less
-git config core.pager /usr/local/bin/less
-```
-
-is needed. Finally, we can configure the next actions on the source tree to ignore the http
-proxy with the commands
+We can configure the next actions on the source tree to ignore the http proxy with the 
+commands
 
 ```shell
 cd dsas---tinycore
 git config --add remote.origin.proxy ""
 ```
 
-Can we now restore the values of the proxy environment variables.
+Can we now restore the values of the proxy environment variables. Finally the version of
+`less` that is installed by default doesn't accept the option `-R` needed to correctly colour 
+the output of the command `git diff`. To allow this the commands 
+
+```
+tce-load -wi less
+git config core.pager /usr/local/bin/less
+```
+
+are needed.
 
 ### Building with a differnt distribution than TinyCore
 

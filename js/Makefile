@@ -7,7 +7,7 @@ prod: package.json
 	npm run build
 
 package.json:
-	which npm >& /dev/null || { echo "Install Node.js before continuing; exit 1; }
+	which npm >& /dev/null || { echo "Install Node.js before continuing"; exit 1; }
 	npm init -y
 	npm install --save marked bootstrap 
 	npm install --save-dev webpack webpack-cli eslint eslint-webpack-plugin style-loader css-loader || { rm -fr node_modules package-lock.json package.json; exit 1; }
