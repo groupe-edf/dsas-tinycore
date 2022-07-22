@@ -707,7 +707,8 @@ upgrade)
     fi
   done < <(find $tcz_dir -name "*.tcz" -print0)
   ;;
-static-chroot)
+
+static)
   extract=$image
 
   # Get the ISO
@@ -769,14 +770,30 @@ EOF
   make -C "$js" dev
 
   # Shellcheck needs Haskell/Cabal to rebuild. For now only allow on a 64bit platform
-  # and download a static binary
-  [ "$(uname -m)" = "x86_64" ] || msg "shellcheck can only be run on a 64bit machine"
-  _uri="https://github.com/koalaman/shellcheck/releases/download/v0.8.0/shellcheck-v0.8.0.tar.xz"
-  _src=$(basename "$_uri")
-  download "$_uri" "$src_dir"
-  unpack "$src_dir/$_src" "$extract/home/tc" || error "Can not unpack $_src"
+  # and download a static binary, or use shellchek if it is installed
 
-  cat << EOF > $extract/tmp/script
+  if which shellcheck >& /dev/null; then
+    msg "Running shellcheck on shell code"
+    shellcheck -x "append/usr/local/sbin/checkfiles" \
+                  "append/usr/local/sbin/dsaspasswd" \
+                  "append/usr/local/sbin/getcertificate" \
+                  "append/usr/local/sbin/getfiles" \
+                  "append/usr/local/sbin/killtask" \
+                  "append/usr/local/sbin/rotatelogs" \
+                  "append/usr/local/sbin/runtask" \
+                  "append/usr/local/sbin/snmpdsas" \
+                  "append/usr/local/sbin/sysloghaut" \
+                  "append/etc/init.d/services/dsas" \
+                  "append/etc/init.d/rcS.docker" \
+                  "make.sh"
+  else
+    [ "$(uname -m)" = "x86_64" ] || msg "shellcheck can only be run on a 64bit machine"
+    _uri="https://github.com/koalaman/shellcheck/releases/download/v0.8.0/shellcheck-v0.8.0.tar.xz"
+    _src=$(basename "$_uri")
+    download "$_uri" "$src_dir"
+    unpack "$src_dir/$_src" "$extract/home/tc" || error "Can not unpack $_src"
+
+    cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 export HOME=/home/tc
 export USER=tc
@@ -796,9 +813,10 @@ shellcheck=\$(find . -type f -name \"shellcheck\")
                 "dsas/append/etc/init.d/rcS.docker" \
                 "dsas/make.sh"
 EOF
-  chmod a+x "$extract/tmp/script"
-  msg "Running shellcheck on shell code"
-  chroot --userspec=tc "$extract" /tmp/script || error error running shellcheck
+    chmod a+x "$extract/tmp/script"
+    msg "Running shellcheck on shell code"
+    chroot --userspec=tc "$extract" /tmp/script || error error running shellcheck
+  fi
 
   if [ "$keep" = "0" ]; then
     rm -fr $image $newiso $mnt
@@ -806,37 +824,6 @@ EOF
 
   ;;
 
-static)
-  if [ -x "vendor/bin/phpstan" ]; then
-    msg "Running PHPStan on usr/local/share/www/api"
-    vendor/bin/phpstan
-  else
-    msg "### Install phpstan via composer before continuing"
-  fi
-  if which eslint > /dev/null 2>&1; then
-    msg "Running eslint on usr/local/share/www/dsas.js"
-    eslint $append/usr/local/share/www/dsas.js
-  else
-    msg "### Install eslint before continuing"
-  fi
-  if which shellcheck > /dev/null 2>&1; then
-    msg "Running shellcheck on shell code"
-    shellcheck -x "$append/usr/local/sbin/checkfiles" \
-                  "$append/usr/local/sbin/dsaspasswd" \
-                  "$append/usr/local/sbin/getcertificate" \
-                  "$append/usr/local/sbin/getfiles" \
-                  "$append/usr/local/sbin/killtask" \
-                  "$append/usr/local/sbin/rotatelogs" \
-                  "$append/usr/local/sbin/runtask" \
-                  "$append/usr/local/sbin/snmpdsas" \
-                  "$append/usr/local/sbin/sysloghaut" \
-                  "$append/etc/init.d/services/dsas" \
-                  "$append/etc/init.d/rcS.docker" \
-                  "make.sh"
-  else
-    msg "### Install shellcheck before continuing"
-  fi
-  ;;
 build)
   shift
   extract=$build
