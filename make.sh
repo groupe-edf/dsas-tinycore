@@ -595,6 +595,9 @@ install_phpstan(){
    if test ! -f "$target"; then
       # Install PHP composer
       download -f "https:/getcomposer.org/installer" "$src_dir"
+      mkdir -p $extract/home/tc
+      chown tc.staff $extract/home/tc
+      chmod 750 $extract/home/tc
       cp "$src_dir/installer" "$extract/home/tc"
       chmod a+rx "$extract/home/tc/installer"
       chroot "$extract" chown -R tc.staff "/home/tc/"
@@ -722,6 +725,7 @@ static)
   fi
 
   # Install the needed packages
+  install_tcz compiletc
   install_tcz openssl-1.1.1
   install_tcz libxml2
   install_tcz libssh2
@@ -730,13 +734,22 @@ static)
   install_tcz php-8.0-cgi
   install_tcz php-8.0-ext
   install_tcz php-pam
-  install_tcz pcre2
   install_tcz curl
   install_tcz rsync
   install_tcz node
 
+  # FIXME Tinycore 32bit doesn't include the right pcre dependance and 64bit uses a
+  # a difference dependance. Only install PCRE2 on 32bit platforms
+  [ "$arch" != 64 ] && install_tcz pcre2
+
   # Install PHP cli and add iconv and phar extension
   install_tcz php-8.0-cli
+ 
+  # Copy /etc/resolv.conf file 
+  mkdir -p "$extract/etc"
+  cp -p /etc/resolv.conf "$extract/etc/resolv.conf"
+
+  cp $append/usr/local/etc/php/php.ini $extract/usr/local/etc/php/php.ini
   sed -i -e "s/;extension=phar/extension=phar/" $extract/usr/local/etc/php/php.ini
   sed -i -e "s/;extension=iconv/extension=iconv/" $extract/usr/local/etc/php/php.ini
   sed -i -e "s/;extension=curl/extension=curl/" $extract/usr/local/etc/php/php.ini
@@ -764,10 +777,18 @@ EOF
   chmod a+x "$extract/tmp/script"
   msg "Running PHPStan on usr/local/share/www/api"
   chroot --userspec=tc "$extract" /tmp/script || error error running phpstan
-  rm $extract/etc/resolv.conf
 
+  cat << EOF > $extract/tmp/script
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=$http_proxy
+export https_proxy=$https_proxy
+export HOME=/home/tc
+cd /home/tc/dsas/js
+make dev
+EOF
+  chmod a+x "$extract/tmp/script"
   msg "Running eslint on js/*"
-  make -C "$js" dev
+  chroot --userspec=tc "$extract" /tmp/script || error error running eslint
 
   # Shellcheck needs Haskell/Cabal to rebuild. For now only allow on a 64bit platform
   # and download a static binary, or use shellchek if it is installed
@@ -904,7 +925,6 @@ docker)
   install_tcz php-8.0-cgi
   install_tcz php-8.0-ext
   install_tcz php-pam
-  install_tcz pcre2
   install_tcz dialog
   install_tcz rpm
   install_tcz p7zip         # Needed by LiveUpdate
@@ -914,6 +934,11 @@ docker)
   install_tcz lftp
   install_tcz libpam-radius-auth
   install_tcz sed           # Needed for 'sed -z'
+
+  # FIXME Tinycore 32bit doesn't include the right pcre dependance and 64bit uses a
+  # a difference dependance. 
+  [ "$arch" != 64 ] && install_tcz pcre2
+  [ "$arch" == 64 ] && install_tcz pcre21032
 
   # Copy the pre-extracted packages to work dir. This must be after packages
   # are installed to allow for files to be overwritten. Run as root 

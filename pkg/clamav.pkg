@@ -1,8 +1,14 @@
 _pkg=clamav
 _version=0.105.0
 _uri="https://www.clamav.net/downloads/production/clamav-0.105.0.tar.gz"
-_dep="bzip2-lib json-c curl libxml2 ncursesw check openssl-1.1.1 libssh2 pcre2 libzip"
-_build_dep="cmake rust bzip2-dev json-c-dev libxml2-dev ncursesw-dev check-dev curl-dev openssl-1.1.1-dev libssh2-dev pcre2-dev libzip-dev compiletc"
+# Tinycore 64bit has very old version of PCRE2 installed by default. Explicitly link to right version
+if [ "$arch" != 64" ]; then
+  _dep="bzip2-lib json-c curl libxml2 ncursesw check openssl-1.1.1 libssh2 pcre2 libzip"
+  _build_dep="cmake rust bzip2-dev json-c-dev libxml2-dev ncursesw-dev check-dev curl-dev openssl-1.1.1-dev libssh2-dev pcre2-dev libzip-dev compiletc"
+else
+  _dep="bzip2-lib json-c curl libxml2 ncursesw check openssl-1.1.1 libssh2 pcre21032 libzip"
+  _build_dep="cmake rust bzip2-dev json-c-dev libxml2-dev ncursesw-dev check-dev curl-dev openssl-1.1.1-dev libssh2-dev pcre21032-dev libzip-dev compiletc"
+fi
 _pkg_path="clamav-0.105.0"
 _pre_config=""
 _conf_cmd="setarch linux$arch cmake . -D ENABLE_MILTER=Off -D CMAKE_INSTALL_PREFIX=/usr/local -D CMAKE_INSTALL_LIBDIR=/usr/local/lib"

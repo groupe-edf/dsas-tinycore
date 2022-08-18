@@ -9,9 +9,9 @@ prod: package.json
 package.json:
 	which npm >& /dev/null || { echo "Install Node.js before continuing"; exit 1; }
 	npm init -y
-	npm install --save marked bootstrap 
-	npm install --save-dev webpack webpack-cli eslint eslint-webpack-plugin style-loader css-loader || { rm -fr node_modules package-lock.json package.json; exit 1; }
-	yes | npx install-peerdeps --dev eslint-config-airbnb-base || { rm -fr node_modules package-lock.json package.json; exit 1; }
+	npm install --save marked bootstrap
+	npm install --save-dev install-peerdeps webpack webpack-cli eslint-config-airbnb-base@14.2.1 eslint eslint-webpack-plugin style-loader css-loader || { rm -fr node_modules package-lock.json package.json; exit 1; }
+	#npx install-peerdeps --dev eslint-config-airbnb-base@18.2.1 || { rm -fr node_modules package-lock.json package.json; exit 1; }
 	sed -i -e 's/\("scripts": {\)/\1\n    "build": "webpack",/' package.json
 	sed -i -e 's/"main":.*/"private": true,/' package.json
 	sed -i -e 's/"name":.*/"name": "dsas",/' package.json
