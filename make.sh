@@ -47,7 +47,8 @@ while [ "$#" -gt 0 ]; do
       echo "     check           Run test code to test correct function of checkfiles" 
       echo "     iso             Build the DSAS ISO file. This the default command"
       echo "     static          Run static analysis on the DSAS source code"
-      echo "     upgrade         Upgrade the TCZ packages to their latest versiosn"
+      echo "     upgrade         Upgrade the TCZ packages to their latest version"
+      echo "     work            Set the work directory"
       echo "Valid options are"
       echo "     -r|--rebuild    Force the rebuild of source packages"
       echo "     -f|--download   Force the source packages to be re-downloaded"
@@ -728,14 +729,26 @@ get_unpack_livecd(){
 startdate=$(date +%s)
 
 case $cmd in
+work)
+  pkgs=$(echo "$pkgs" | xargs)
+  if [ -z "$pkgs" ]; then
+    [ -L "$work" ] && rm "$work"
+    mkdir -p "$work"
+  else
+    [ -d "$pkgs" ] || mkdir "$pkgs"
+    [ -d "$work" ] && mv "$work" "$work.old"
+    [ -L "$work" ] && rm "$work"
+    ln -s "$pkgs" "$work"
+  fi 
+  ;;
 source)
   tar cvzf $source --exclude=tmp --exclude=work --exclude=.git .
   exit 0
   ;;
 clean)
   make -C "$testdir" clean
-  make -C "$js" clean
-  [ -d "$extract/proc" ] && umount "$extract/proc"
+  [ -e $work ] || exit 0
+  [ -d "$image/proc" ] && umount "$image/proc"
   [ -d "$build/proc" ] && umount "$build/proc"
   rm -fr $image $build $newiso $mnt $dsascd $rootfs64 $dsascd.md5 \
       $docker $dockimage $source $work/dsas_pass.txt
@@ -743,11 +756,12 @@ clean)
   ;;
 realclean)
   make -C "$testdir" clean
-  make -C "$js" realclean
-  rm -fr $work
+  [ -e $work ] || exit 0
+  rm -fr "$work/*"
   exit 0
   ;;
 upgrade)
+  [ -e $work ] || error work directory does not exit. run \'./make.sh work ...\'
   msg Fecthing md5.db.gz
   $curl_cmd -o "$tcz_dir/md5.db.gz" "$tcz_url/md5.db.gz" || error failed to download md5.db.gz
   gzip -f -d $tcz_dir/md5.db.gz
@@ -775,7 +789,7 @@ static)
   extract=$image
 
   # Get the ISO
-  mkdir -p $work
+  [ -e $work ] || error work directory does not exit. run \'./make.sh work ...\'
   get_unpack_livecd
 
   # Unpack squashfs
@@ -908,7 +922,7 @@ EOF
 build)
   shift
   extract=$build
-  mkdir -p $work
+  [ -e $work ] || error work directory does not exit. run \'./make.sh work ...\'
   get_unpack_livecd
 
   [ -d "$extract" ] || mkdir -p "$extract"
@@ -951,7 +965,7 @@ docker)
   extract=$image
 
   # Get the ISO
-  mkdir -p $work
+  [ -e $work ] || error work directory does not exit. run \'./make.sh work ...\'
   get_unpack_livecd
 
   # Unpack squashfs
