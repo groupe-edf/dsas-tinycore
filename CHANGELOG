@@ -5,6 +5,7 @@ Version 1.1.2 (XX XXXX XXX)
 - Update ClamAV 1.105.0 -> 0.105.1 
 - Update curl 7.83.0 -> 7.84.0
 - Update libtalloc 2.3.3 -> 2.3.4
+- Update osslsigncode 2.3.0 -> 2.5.0
 - Add Node.js package version 16.17.0
 - Make dsas.js modular for easier developpement, based on Node.js/webpack
 - Add better static testing phpstan/eslint/shellcheck
