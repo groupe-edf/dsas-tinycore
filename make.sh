@@ -347,6 +347,9 @@ build_pkg() {
         chroot "$extract" chown -R tc.staff /home/tc
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=$http_proxy
+export https_proxy=$https_proxy
+export HOME=/home/tc
 $_pre_config
 exit \$?
 EOF
@@ -357,6 +360,9 @@ EOF
         msg "Configuring $_pkg"
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=$http_proxy
+export https_proxy=$https_proxy
+export HOME=/home/tc
 cd $builddir/$_pkg_path
 $_conf_cmd
 exit \$?
@@ -366,6 +372,8 @@ EOF
         msg "Building $_pkg"
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=$http_proxy
+export https_proxy=$https_proxy
 export HOME=/home/tc
 cd $builddir/$_pkg_path
 $_make_cmd
@@ -377,6 +385,8 @@ EOF
         cat << EOF > "$extract/tmp/script"
 export DESTDIR=$destdir
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=$http_proxy
+export https_proxy=$https_proxy
 export HOME=/home/tc
 cd $builddir/$_pkg_path
 $_install_cmd$destdir
@@ -386,6 +396,9 @@ EOF
         [  -z "$_install_cmd" ] || chroot "$extract" /tmp/script || { umount "$extract/proc"; error "Unexpected error ($?) in install"; }
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=$http_proxy
+export https_proxy=$https_proxy
+export HOME=/home/tc
 destdir=$destdir
 builddir=$builddir
 _pkg_path=$_pkg_path
