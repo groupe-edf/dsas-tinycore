@@ -8,6 +8,7 @@ _pre_config=""
 _conf_cmd="setarch linux$arch ./configure --prefix=/usr/local --shared-openssl --shared-zlib --shared-nghttp2 --with-intl=system-icu"
 # make install seems to rebuild everything. So don't use "_make_cmd, install directly
 # -j3 to stop OOM killer from terminating the process with 4GB. -latomic needed for 32bit
+# Need at least 4GB to build this package
 _make_cmd=""
 if [ "$arch" != "64" ]; then
   _install_cmd="env LDFLAGS='-latomic' make install -j3 DESTDIR="
