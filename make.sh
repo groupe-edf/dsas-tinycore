@@ -852,7 +852,7 @@ build)
   get_unpack_livecd
 
   [ -d "$extract" ] || mkdir -p "$extract"
-  [ -d "$builddir" ] || mkdir -p "$builddir"
+  [ -d "$extract/build" ] || mkdir -p "$extract/build"
   [ -z "$pkgs" ] && error "No package to build given"
   # shellcheck disable=SC2086
   build_pkg $pkgs
