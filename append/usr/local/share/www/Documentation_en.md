@@ -1320,7 +1320,7 @@ Software impacted by this risk
 | libgcrypt | [1.10.1](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.1.tar.bz2) | Used for RPM, DEB and GPG verification |
 | rpm | [4.16.1.3](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.16.x/rpm-4.16.1.3.tar.bz2) | Used for RPM checking |
 | osslsigncode | [2.3.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.3/osslsigncode-2.3.0.tar.gz) | Used for authenicode verification |
-| clamav | [0.105.0](https://www.clamav.net/downloads/production/clamav-0.105.0.tar.gz) | Used for antivirus tests |
+| clamav | [0.105.1](https://www.clamav.net/downloads/production/clamav-0.105.1.tar.gz) | Used for antivirus tests |
 
 ### Risque : Elevation of privileges
 
