@@ -491,7 +491,7 @@ install_firefox(){
       ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libdl.so.2 libdl.so; )
 
       # Force install of coreutils as always needed for install_tcz
-      # In seperate sheel to avoid modifiying local variables
+      # In seperate shell to avoid modifiying local variables
       ( install_tcz coreutils )
       ( install_tcz "$latest" )
 
@@ -647,6 +647,70 @@ EOF
       echo -n "" > "$target.dep"
     fi
     install_tcz $package
+}
+
+install_dsas_js() {
+   package=dsas_js
+   target=$tcz_dir/$package.tcz
+   dep=$target.dep
+   if test  ! -f "$target"; then
+      _old=$extract
+      extract="$build"
+      if [ -d "$extract" ]; then
+        umount "$extract/proc"
+        rm -fr "$extract"
+      fi
+      mkdir -p "$extract"
+      zcat "$squashfs" | { cd "$extract" || exit 1; cpio -i -H newc -d; }
+      mount -t proc /proc "$extract/proc"
+
+      # FIXME : Fix missing links
+      # It appears that certain links are missings with the base intsall
+      # and they need to be forced
+      ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libpthread.so.0 libpthread.so; )
+      ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libdl.so.2 libdl.so; )
+
+      # Force install of coreutils as always needed for install_tcz
+      # In seperate shell to avoid modifiying local variables
+      ( install_tcz coreutils curl node )
+
+      # Copy /etc/resolv.conf file
+      mkdir -p "$extract/etc"
+      cp -p /etc/resolv.conf "$extract/etc/resolv.conf"
+
+      # Copy DSAS files to build tree
+      mkdir -p $extract/home/tc/dsas
+      tar cf - --exclude tmp --exclude=work --exclude=.git . | tar -C $extract/home/tc/dsas -xvf - 
+      chown -R tc.staff $extract/home/tc
+
+      cat << EOF > "$extract/tmp/script"
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=$http_proxy
+export https_proxy=$https_proxy
+export HOME=/home/tc
+export USER=tc
+cd /home/tc/dsas/js
+make prod
+EOF
+      chmod a+x "$extract/tmp/script"
+      msg "Building  $package"
+      HOME=/home/tc chroot --userspec=tc "$extract" /tmp/script || error error constructing $package
+
+
+      msg "Constructing package $package"
+      # Create the package for next use
+      tempdir=$(mktemp -d)
+      chmod 755 "$tempdir"
+      mkdir -p "$tempdir/usr/local/share/www"
+      chmod -R 755 "$tempdir/usr"
+      cp "$extract/home/tc/dsas/js/dsas.js" "$tempdir/usr/local/share/www"
+      mksquashfs "$tempdir" "$target"
+      rm -fr "$tempdir"
+      md5sum "$target" | sed -e "s:  $target$::g" > "$target.md5.txt"
+      echo -n "" > "$target.dep"
+      extract="$_old"
+   fi
+   install_tcz $package
 }
 
 get_unpack_livecd(){
@@ -935,21 +999,6 @@ docker)
   [ "$arch" != 64 ] && install_tcz pcre2
   [ "$arch" == 64 ] && install_tcz pcre21032
 
-  # Copy the pre-extracted packages to work dir. This must be after packages
-  # are installed to allow for files to be overwritten. Run as root 
-  # and correct the ownership of files 
-  msg Append DSAS files
-  rsync -rlptv "$append/" "$extract/"
-  mkdir -p "$extract/home/tc"
-  chown root.root "$extract"
-  chmod 755 "$extract/home"
-
-  # Make and install dsas.js
-  make -C "$js" prod
-  cp -f "$js/dist/dsas.js" "$extract/usr/local/share/www"
-  chown root.root "$extract/usr/local/share/www/dsas.js"
-  chmod 755 "$extract/usr/local/share/www/dsas.js"
-
   if [ "$testcode" = "1" ]; then
     # Install test files. Force remove temporary PKG file
     if test ! -f "$tcz_dir/dsastestfiles.tcz"; then
@@ -993,6 +1042,18 @@ docker)
     download "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux${arch}.tar.gz" "$src_dir"
     tar xCzf "$extract/usr/local/bin" "$src_dir/geckodriver-v0.31.0-linux${arch}.tar.gz"   
   fi
+
+  # Install/build dsas.js 
+  install_dsas_js
+
+  # Copy the pre-extracted packages to work dir. This must be after packages
+  # are installed to allow for files to be overwritten. Run as root 
+  # and correct the ownership of files 
+  msg Append DSAS files
+  rsync -rlptv "$append/" "$extract/"
+  mkdir -p "$extract/home/tc"
+  chown root.root "$extract"
+  chmod 755 "$extract/home"
 
   # prevent autologin of tc user
   ( cd "$extract/etc" || exit 1; sed -i -r 's/(.*getty)(.*autologin)(.*)/\1\3/g'  inittab; )
