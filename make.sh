@@ -683,10 +683,6 @@ realclean)
   rm -fr $work
   exit 0
   ;;
-check)
-  error "Self test are not written yet"
-  exit 1
-  ;;
 upgrade)
   msg Fecthing md5.db.gz
   $curl_cmd -o "$tcz_dir/md5.db.gz" "$tcz_url/md5.db.gz" || error failed to download md5.db.gz
@@ -852,7 +848,6 @@ build)
   get_unpack_livecd
 
   [ -d "$extract" ] || mkdir -p "$extract"
-  [ -d "$extract/build" ] || mkdir -p "$extract/build"
   [ -z "$pkgs" ] && error "No package to build given"
   # shellcheck disable=SC2086
   build_pkg $pkgs
