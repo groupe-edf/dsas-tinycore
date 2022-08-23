@@ -673,7 +673,7 @@ install_dsas_js() {
 
       # Force install of coreutils as always needed for install_tcz
       # In seperate shell to avoid modifiying local variables
-      ( install_tcz coreutils curl node )
+      ( install_tcz coreutils compiletc curl node )
 
       # Copy /etc/resolv.conf file
       mkdir -p "$extract/etc"
