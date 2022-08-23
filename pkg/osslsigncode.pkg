@@ -1,10 +1,11 @@
 _pkg=osslsigncode
-_version=2.3.0
-_uri=https://github.com/mtrojnar/osslsigncode/releases/download/2.3/osslsigncode-2.3.0.tar.gz
+_version=2.5.0
+_uri=https://github.com/mtrojnar/osslsigncode/releases/download/2.5/osslsigncode-2.5.tar.gz
 _dep="curl openssl-1.1.1 libssh2"
-_build_dep="compiletc coreutils openssl-1.1.1-dev curl-dev libssh2-dev"
-_pkg_path=osslsigncode-2.3.0
-_conf_cmd="setarch linux$arch ./configure"
-_make_cmd="make"
-_install_cmd="make install DESTDIR=" 
+_build_dep="compiletc coreutils cmake openssl-1.1.1-dev curl-dev libssh2-dev"
+_pkg_path=osslsigncode-2.5
+_pre_config="sudo -u tc mkdir -p $builddir/$_pkg_path/build"
+_conf_cmd="cd build; setarch linux$arch cmake -S .."
+_make_cmd="cd build; cmake --build ."
+_install_cmd="cd build; make install DESTDIR=" 
 _pkgs='main{/usr}'
