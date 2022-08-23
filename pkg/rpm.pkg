@@ -1,6 +1,6 @@
 _pkg=rpm
-_version=4.16.1.3
-_uri=https://ftp.osuosl.org/pub/rpm/releases/rpm-4.16.x/rpm-4.16.1.3.tar.bz2
+_version=4.17.1
+_uri=https://ftp.osuosl.org/pub/rpm/releases/rpm-4.17.x/rpm-4.17.1.tar.bz2
 if [ "$arch" != "64" ]; then
   _dep="popt file libarchive3 libgcrypt lua-lib acl libxml2"
   _build_dep="compiletc lua-dev libarchive3 libarchive3-dev zlib_base-dev popt popt-dev file-dev libgcrypt acl-dev libxml2-dev"
@@ -8,8 +8,8 @@ else
   _dep="popt file libarchive3 libgcrypt lua-5.3-lib acl libxml2"
   _build_dep="compiletc lua-5.3-dev libarchive3 libarchive3-dev zlib_base-dev popt popt-dev file-dev libgcrypt acl-dev libxml2-dev"
 fi
-_pkg_path=rpm-4.16.1.3
-_conf_cmd="setarch linux$arch ./configure --enable-ndb --disable-bdb"
+_pkg_path=rpm-4.17.1
+_conf_cmd="setarch linux$arch ./configure --enable-ndb --disable-bdb --disable-sqlite"
 _make_cmd="make"
 _install_cmd="make install DESTDIR=" 
 # Why did the build leave the default database as Berkley when I explicitly disabled it ? 
