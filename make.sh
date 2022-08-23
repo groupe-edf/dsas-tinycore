@@ -1072,15 +1072,15 @@ chown -R tc.staff /home/tc
 chmod -R o-rwx /home/tc /home/haut /home/bas /home/verif 
 chown -R root.staff /var/dsas
 chmod 775 /var/dsas          # Write perm for verif
-chmod 640 /var/dsas/*.csr /var/dsas/*.pem /var/dsas/*.dsas
+chmod 640 "/var/dsas/*.csr" "/var/dsas/*.pem" "/var/dsas/*.dsas"
 chmod 660 /var/dsas/dsas_conf.xml
-chown tc.repo /var/dsas/*.csr /var/dsas/*.pem
+chown tc.repo "/var/dsas/*.csr" "/var/dsas/*.pem"
 chown tc.verif /var/dsas/dsas_conf.xml
-chown root.repo /var/dsas/repo.conf*
+chown root.repo "/var/dsas/repo.conf*"
 chown -R root.staff /opt
 chmod 770 /opt
 chmod 770 /opt/.filetool.lst
-chmod 644 /usr/local/share/www/* /usr/local/share/www/api/* /usr/local/share/www/en/* /usr/local/share/www/fr/*
+chmod 644 "/usr/local/share/www/*" "/usr/local/share/www/api/*" "/usr/local/share/www/en/*" "/usr/local/share/www/fr/*"
 chmod 755 /usr/local/share/www/en /usr/local/share/www/fr /usr/local/share/www/api
 sed -i "s/umask 0[0-7][0-7]/umask 027/" /etc/profile
 echo "
