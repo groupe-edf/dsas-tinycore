@@ -3,7 +3,8 @@
 # ash extensions I use
 #
 # shellcheck shell=sh
-# shellcheck disable=SC2039
+# Allow local variables
+# shellcheck disable=SC3043
 
 if [ -f "$(dirname "$0")/dsas_common.sh" ]; then
   # shellcheck source=append/usr/local/sbin/dsas_common.sh
@@ -28,7 +29,7 @@ get_certificate(){
     case $type in
       x509)
         f=$(openssl x509 -in "/tmp/cert.$2" -noout -fingerprint -sha256 -inform pem  | cut -d= -f2 | sed -e "s/://g" | tr "[:upper:]" "[:lower:]")
-        [ "$f" == "$1" ] && { echo $i; return; }
+        [ "$f" = "$1" ] && { echo $i; return; }
         ;;
       gpg)
         gpg -v < "/tmp/cert.$2" 2>&1 | grep -q "$1" && { echo "$i"; return; }
@@ -48,22 +49,22 @@ get_certificate(){
 
   # Not one of the added certificates. Is it in the certificate store ?
   while IFS= read -r line; do
-    if [ "$line" == "-----BEGIN CERTIFICATE-----" ]; then
-      if [ "$incert" == "true" ]; then
+    if [ "$line" = "-----BEGIN CERTIFICATE-----" ]; then
+      if [ "$incert" = "true" ]; then
         echo "error parsing $ca_bundle"
       else
         incert="true"
         cert="$line"
       fi
-    elif [ "$line" == "-----END CERTIFICATE-----" ]; then
-      if [ "$incert" == "false" ]; then
+    elif [ "$line" = "-----END CERTIFICATE-----" ]; then
+      if [ "$incert" = "false" ]; then
         echo "error parsing $ca_bundle"
       else
         cert="$cert\n$line"
         incert="false"
-        echo -e "$cert" > "/tmp/cert.$2"
+        echo "$cert" > "/tmp/cert.$2"
         f=$(openssl x509 -in "/tmp/cert.$2" -noout -fingerprint -sha256 -inform pem  | cut -d= -f2 | sed -e "s/://g" | tr "[:upper:]" "[:lower:]")
-        [ "$f" == "$1" ] && { echo 0; return; }
+        [ "$f" = "$1" ] && { echo 0; return; }
         /bin/rm "/tmp/cert.$2"
       fi
     else

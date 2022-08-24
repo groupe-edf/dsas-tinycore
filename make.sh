@@ -1,6 +1,14 @@
 #!/bin/sh
 #
-# shellcheck disable=SC2039
+# Shellcheck configuration to test for POSIX shell plus the Busybox/ASH extensions I use
+# Allow process subsitution with "<()"
+# shellcheck disable=SC3001
+# Allow echo flags
+# shellcheck disable=SC3037
+# Allow "read -d"
+# shellcheck disable=SC3045
+# Allow string indexing like "${1:3}"
+# shellcheck disable=SC3057
 
 # If not running as root and/or running /bin/dash restart as root with a compatible shell
 readlink /proc/$$/exe | grep -q dash && _shell="/bin/bash"
@@ -113,7 +121,6 @@ image=$work/extract
 build=$work/build
 append=./append
 testdir=./test
-js=./js
 dsascd=$work/dsas.iso
 rootfs64=$work/rootfs64
 docker=$work/docker
@@ -199,6 +206,7 @@ get_tcz() {
 }
 
 install_tcz() {
+    # Want array splitting here
     # shellcheck disable=SC2068
     get_tcz $@
     exit_if_nonroot
@@ -347,8 +355,8 @@ build_pkg() {
         chroot "$extract" chown -R tc.staff /home/tc
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 export HOME=/home/tc
 $_pre_config
 exit \$?
@@ -360,8 +368,8 @@ EOF
         msg "Configuring $_pkg"
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 export HOME=/home/tc
 cd $builddir/$_pkg_path
 $_conf_cmd
@@ -372,8 +380,8 @@ EOF
         msg "Building $_pkg"
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 export HOME=/home/tc
 cd $builddir/$_pkg_path
 $_make_cmd
@@ -385,8 +393,8 @@ EOF
         cat << EOF > "$extract/tmp/script"
 export DESTDIR=$destdir
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 export HOME=/home/tc
 cd $builddir/$_pkg_path
 $_install_cmd$destdir
@@ -396,8 +404,8 @@ EOF
         [  -z "$_install_cmd" ] || chroot "$extract" /tmp/script || { umount "$extract/proc"; error "Unexpected error ($?) in install"; }
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 export HOME=/home/tc
 destdir=$destdir
 builddir=$builddir
@@ -513,14 +521,14 @@ install_firefox(){
       mkdir -p "$extract/etc"
       cp -p /etc/resolv.conf "$extract/etc/resolv.conf"
 
-      mkdir -p $extract/home/tc
-      chown tc.staff $extract/home/tc
-      echo tc > $extract/etc/sysconfig/tcuser
+      mkdir -p "$extract/home/tc"
+      chown tc.staff "$extract/home/tc"
+      echo tc > "$extract/etc/sysconfig/tcuser"
 
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 export USER=tc
 mkdir /tmp/tce
 sudo tce-setup
@@ -555,12 +563,12 @@ install_webdriver(){
       chmod a+rx "$extract/home/tc/installer"
       chroot "$extract" chown -R tc.staff "/home/tc/"
       cp /etc/resolv.conf "$extract/etc/resolv.conf" && msg "copy resolv.conf"
-      # http_proxy is imported (or not) from the environment 
-      # shellcheck disable=SC2154
+      # http_proxy is imported (or not) from the environment. Shellcheck 
+      # complains if we don't force a default value here
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 cd /home/tc
 env HOME=/home/tc php installer || exit 1
 rm installer
@@ -572,9 +580,8 @@ EOF
       # Install Facebook Webdriver
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-# shellcheck disable=SC2154
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 cd /home/tc
 env HOME=/home/tc php composer.phar require php-webdriver/webdriver
 EOF
@@ -609,19 +616,17 @@ install_phpstan(){
    if test ! -f "$target"; then
       # Install PHP composer
       download -f "https:/getcomposer.org/installer" "$src_dir"
-      mkdir -p $extract/home/tc
-      chown tc.staff $extract/home/tc
-      chmod 750 $extract/home/tc
+      mkdir -p "$extract/home/tc"
+      chown tc.staff "$extract/home/tc"
+      chmod 750 "$extract/home/tc"
       cp "$src_dir/installer" "$extract/home/tc"
       chmod a+rx "$extract/home/tc/installer"
       chroot "$extract" chown -R tc.staff "/home/tc/"
       cp /etc/resolv.conf "$extract/etc/resolv.conf" && msg "copy resolv.conf"
-      # http_proxy is imported (or not) from the environment 
-      # shellcheck disable=SC2154
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 cd /home/tc
 env HOME=/home/tc php installer || exit 1
 rm installer
@@ -633,9 +638,8 @@ EOF
       # Install PHPSTAN
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-# shellcheck disable=SC2154
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 cd /home/tc
 env HOME=/home/tc php composer.phar require --dev phpstan/phpstan
 EOF
@@ -699,8 +703,8 @@ install_dsas_js() {
 
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 export HOME=/home/tc
 export USER=tc
 cd /home/tc/dsas/js
@@ -770,7 +774,7 @@ clean)
 realclean)
   make -C "$testdir" clean
   [ -e $work ] || exit 0
-  rm -fr "$work/*"
+  rm -fr "${work:?}/?*"
   exit 0
   ;;
 upgrade)
@@ -779,14 +783,14 @@ upgrade)
   $curl_cmd -o "$tcz_dir/md5.db.gz" "$tcz_url/md5.db.gz" || error failed to download md5.db.gz
   gzip -f -d $tcz_dir/md5.db.gz
   while IFS= read -r -d '' file; do
-    _file=${file#$tcz_dir/}
+    _file=${file#"$tcz_dir"/}
     pkg_file=$pkg_dir/${_file%.tcz}
     pkg_file=${pkg_file%-dev}
     pkg_file=${pkg_file%-doc}.pkg
     [ -f "$pkg_file" ] && continue   # Locally built package
-    [ "$_file" == "dsastestfiles.tcz" ] && continue  # Locally built file
-    [ "$_file" == "dsaswebdriver.tcz" ] && { msg "Removing $_file"; rm -f "$file"; continue; } # Remove to force rebuild
-    [ "$_file" == "firefox.tcz" ] && { msg "Removing $_file"; rm -f "$file"; continue; } # Remove to force a rebuild
+    [ "$_file" = "dsastestfiles.tcz" ] && continue  # Locally built file
+    [ "$_file" = "dsaswebdriver.tcz" ] && { msg "Removing $_file"; rm -f "$file"; continue; } # Remove to force rebuild
+    [ "$_file" = "firefox.tcz" ] && { msg "Removing $_file"; rm -f "$file"; continue; } # Remove to force a rebuild
     read -r hash < "$file.md5.txt"
     if ! grep -q "^$hash  $_file" $tcz_dir/md5.db; then
       # Don't use get_tcz as don't want to use local TCZ files
@@ -867,20 +871,20 @@ EOF
 
   cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 export HOME=/home/tc
 cd /home/tc/dsas/js
 make dev
 EOF
   chmod a+x "$extract/tmp/script"
-  msg "Running eslint on js/*"
+  msg "Running eslint on js/..."
   chroot --userspec=tc "$extract" /tmp/script || error error running eslint
 
   # Shellcheck needs Haskell/Cabal to rebuild. For now only allow on a 64bit platform
   # and download a static binary, or use shellchek if it is installed
 
-  if which shellcheck >& /dev/null; then
+  if which shellcheck > /dev/null 2>&1; then
     msg "Running shellcheck on shell code"
     shellcheck -x "append/usr/local/sbin/checkfiles" \
                   "append/usr/local/sbin/dsaspasswd" \
@@ -1025,7 +1029,7 @@ docker)
   # FIXME Tinycore 32bit doesn't include the right pcre dependance and 64bit uses a
   # a difference dependance. 
   [ "$arch" != 64 ] && install_tcz pcre2
-  [ "$arch" == 64 ] && install_tcz pcre21032
+  [ "$arch" = 64 ] && install_tcz pcre21032
 
   if [ "$testcode" = "1" ]; then
     # Install test files. Force remove temporary PKG file

@@ -3,7 +3,8 @@
 # ash extensions I use
 #
 # shellcheck shell=sh
-# shellcheck disable=SC2039
+# Allow string indexing like "${1:3}"
+# shellcheck disable=SC3057
 
 if [ -f "$(dirname "$0")/dsas_common.sh" ]; then
   # shellcheck source=append/usr/local/sbin/dsas_common.sh

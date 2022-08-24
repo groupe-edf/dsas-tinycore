@@ -3,7 +3,8 @@
 # ash extensions I use
 #
 # shellcheck shell=sh
-# shellcheck disable=SC2039
+# Allow "[["
+# shellcheck disable=SC3010
 
 # if root rerun as user tc
 if [ "$(id -u)" = 0 ]; then
@@ -22,7 +23,7 @@ else
 fi
 
 # If on machine haut, quit, as this script is reserved for the machine bas
-[ "$TYP" == "haut" ] && { 1>&2 echo "$0: Must be run from machine 'bas'"; exit 1; }
+[ "$TYP" = "haut" ] && { 1>&2 echo "$0: Must be run from machine 'bas'"; exit 1; }
 
 # Create run log file if it doesn't exist
 RUNLOG="$LOG/dsas_runlog"
@@ -65,7 +66,7 @@ verbose=0
 
 logfile="$LOG/dsas_verif.log"
 [ -f "$logfile" ] || ( umask 0007; touch "$logfile"; )
-[ "$(stat -c '%G' "$logfile")" == "verif" ] || chgrp verif "$logfile"
+[ "$(stat -c '%G' "$logfile")" = "verif" ] || chgrp verif "$logfile"
 
 while [ "$#" -gt 0 ]; do
   case $1 in
@@ -92,7 +93,7 @@ done
 
 # shellcheck disable=SC2086
 # shellcheck disable=SC2181
-if [ "$clamav" == "1" ]; then
+if [ "$clamav" = "1" ]; then
   # Only run clamav checks
   1>&2 myecho "$0: #### Tasks on machine HAUT ####"
   sudo sudo -u haut ssh "tc@$INTERCO_HAUT" "$(dirname "$0")/getfiles" $opts
