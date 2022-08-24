@@ -68,6 +68,7 @@ export function dsas_display_web(what = "all") {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error while loading the page : {0}", (error.statusText ? error.statusText : error))); }
     });
 }
+window.dsas_display_web = dsas_display_web;
 
 export function dsas_renew_cert() {
     modal_action(
@@ -76,6 +77,7 @@ export function dsas_renew_cert() {
         true,
     );
 }
+window.dsas_renew_cert = dsas_renew_cert;
 
 export function dsas_renew_cert_real() {
     fetch("api/dsas-web.php").then((response) => {
@@ -115,6 +117,7 @@ export function dsas_renew_cert_real() {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error while loading the page : {0}", (error.statusText ? error.statusText : error))); }
     });
 }
+window.dsas_renew_cert_real = dsas_renew_cert_real;
 
 export function dsas_upload_crt() {
     const crt = document.getElementById("crtupload");
@@ -141,3 +144,4 @@ export function dsas_upload_crt() {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error while loading the page : {0}", (error.statusText ? error.statusText : error))); }
     });
 }
+window.dsas_upload_crt = dsas_upload_crt;

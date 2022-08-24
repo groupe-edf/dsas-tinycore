@@ -165,6 +165,7 @@ export function dsas_display_cert(what = "all") {
         fail_loggedin(error.statusText);
     });
 }
+window.dsas_display_cert = dsas_init_loggedi;
 
 export function dsas_cert_delete(name, finger) {
     modal_action(
@@ -173,6 +174,7 @@ export function dsas_cert_delete(name, finger) {
         true,
     );
 }
+window.dsas_cert_delete = dsas_cert_delete;
 
 export function dsas_cert_real_delete(name, finger) {
     const formData = new FormData();
@@ -196,6 +198,7 @@ export function dsas_cert_real_delete(name, finger) {
         modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
     });
 }
+window.dsas_cert_real_delete = dsas_cert_real_delete;
 
 export function dsas_pubkey_name() {
     const modalDSAS = document.getElementById("modalDSAS");
@@ -207,6 +210,7 @@ export function dsas_pubkey_name() {
          + "    </div>";
     modalDSAS.setAttribute("body", body);
 }
+window.dsas_pubkey_name = dsas_pubkey_name;
 
 export function dsas_upload_cert_core(file, type, name) {
     const formData = new FormData();
@@ -233,8 +237,10 @@ export function dsas_upload_cert_core(file, type, name) {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
     });
 }
+window.dsas_upload_cert_core = dsas_upload_cert_core;
 
 export function dsas_upload_cert(type = "x509", name = "") {
     const cert = document.getElementById(type + "upload");
     dsas_upload_cert_core(cert[0].files[0], type, name);
 }
+window.dsas_upload_cert = dsas_upload_cert;

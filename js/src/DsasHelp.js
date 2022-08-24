@@ -22,6 +22,7 @@ function dsasHeadings() {
 export function dsas_display_version() {
     document.getElementById("Version").innerHTML = "<p><span data-i18n>DSAS Version</span> : " + dsasVersion + "</p>";
 }
+window.dsas_display_version = dsas_display_version;
 
 function dsasHelpTOC() {
     let body = "<ul class=\"list-unstyled\">";
@@ -87,3 +88,4 @@ export function dsas_display_help() {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error during documentation download : ") + error.statusText); }
     });
 }
+window.dsas_display_help = dsas_display_help;

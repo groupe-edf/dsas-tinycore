@@ -25,6 +25,7 @@ export function dsas_init_loggedin() {
         });
     });
 }
+window.dsas_init_loggedin = dsas_init_loggedin;
 
 export function dsas_login() {
     const username = document.getElementById("inp_user").value;
@@ -60,3 +61,4 @@ export function dsas_login() {
         document.getElementById("feed_pass").innerHTML = _("Username or password invalid.");
     });
 }
+window.dsas_login = dsas_login;

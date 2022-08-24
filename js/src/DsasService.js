@@ -73,6 +73,7 @@ export function dsas_display_service(what = "all") {
         fail_loggedin(error.statusText);
     });
 }
+window.dsas_display_service = dsas_display_service;
 
 export function dsas_change_service(what) {
     if (what === "ssh") {
@@ -185,3 +186,4 @@ export function dsas_change_service(what) {
         });
     }
 }
+window.dsas_change_service = dsas_change_service;

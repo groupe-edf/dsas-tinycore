@@ -32,6 +32,7 @@ export function dsas_display_users() {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error ({0}) during the download of users : {1}", error.status, error.statusText)); }
     });
 }
+window.dsas_display_users = dsas_display_users;
 
 export function dsas_user_passwd(user) {
     const modalDSAS = document.getElementById("modalDSAS");
@@ -43,6 +44,7 @@ export function dsas_user_passwd(user) {
          + "    </div>";
     modalDSAS.setAttribute("body", body);
 }
+window.dsas_user_passwd = dsas_user_passwd;
 
 export function dsas_real_user_passwd(user) {
     const passwd = document.getElementById("UserPassword").value;
@@ -64,10 +66,12 @@ export function dsas_real_user_passwd(user) {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error during password change : {0}", error.statusText)); }
     });
 }
+window.dsas_real_user_passwd = dsas_real_user_passwd;
 
 export function dsas_user_delete(user) {
     modal_action(_("Delete the user '{0}' ?", user), "dsas_real_user_delete('" + user + "');", true);
 }
+window.dsas_user_delete = dsas_user_delete;
 
 export function dsas_real_user_delete(user) {
     const formData = new FormData();
@@ -89,6 +93,7 @@ export function dsas_real_user_delete(user) {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error during user deletion : {0}", error.statusText)); }
     });
 }
+window.dsas_real_user_delete = dsas_real_user_delete;
 
 export function dsas_user_new() {
     const modalDSAS = document.getElementById("modalDSAS");
@@ -100,6 +105,7 @@ export function dsas_user_new() {
          + "    </div>";
     modalDSAS.setAttribute("body", body);
 }
+window.dsas_user_new = dsas_user_new;
 
 export function dsas_real_user_new() {
     const username = document.getElementById("NewUser").value;
@@ -122,6 +128,7 @@ export function dsas_real_user_new() {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error during user creation : {0}", error.statusText)); }
     });
 }
+window.dsas_real_user_new = dsas_real_user_new;
 
 export function dsas_change_users() {
     fetch("api/dsas-users.php").then((response) => {
@@ -167,3 +174,4 @@ export function dsas_change_users() {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error ({0}) during the download of users : {1}", error.status, error.statusText)); }
     });
 }
+window.dsas_change_users = dsas_change_users;

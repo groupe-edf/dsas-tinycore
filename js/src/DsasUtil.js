@@ -109,6 +109,7 @@ export function dsas_loggedin(update_timeout = true, is_admin = true) {
         );
     });
 }
+window.dsas_loggedin = dsas_loggedin;
 
 function fail_loggedin(status) {
     if (status === "Forbidden") {
@@ -156,6 +157,7 @@ export function dsas_check_warnings(disablenav = false, redirect = true) {
         fail_loggedin(error.statusText);
     });
 }
+window.dsas_check_warnings = dsas_check_warnings;
 
 // eslint-disable-next-line no-unused-vars
 function cert_is_ca(cert) {
@@ -216,6 +218,7 @@ export function dsas_apply() {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error during save of the configuration")); }
     });
 }
+window.dsas_apply = dsas_apply;
 
 export function dsas_real_backup() {
     const passwd = document.getElementById("BackupPassword").value;
@@ -244,6 +247,7 @@ export function dsas_real_backup() {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
     });
 }
+window.dsas_real_backup = dsas_real_backup;
 
 export function dsas_backup() {
     const modalDSAS = document.getElementById("modalDSAS");
@@ -255,6 +259,7 @@ export function dsas_backup() {
          + "    </div>";
     modalDSAS.setAttribute("body", body);
 }
+window.dsas_backup = dsas_backup;
 
 export function dsas_passwd_restore() {
     const modalDSAS = document.getElementById("modalDSAS");
@@ -266,6 +271,7 @@ export function dsas_passwd_restore() {
          + "    </div>";
     modalDSAS.setAttribute("body", body);
 }
+window.dsas_passwd_restore = dsas_passwd_restore;
 
 export function dsas_restore() {
     const inp = document.createElement("input");
@@ -277,6 +283,7 @@ export function dsas_restore() {
     inp.addEventListener("change", dsas_passwd_restore, true);
     inp.click();
 }
+window.dsas_restore = dsas_restore;
 
 export function dsas_restore_core(file, passwd = "") {
     const formData = new FormData();
@@ -312,12 +319,14 @@ export function dsas_restore_core(file, passwd = "") {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
     });
 }
+window.dsas_restore_core = dsas_restore_core;
 
 export function dsas_real_restore() {
     const passwd = document.getElementById("RestorePassword").value;
     const file = document.getElementById("RestoreSelectFile").files[0];
     dsas_restore_core(file, passwd);
 }
+window.dsas_real_restore = dsas_real_restore;
 
 function chkdown(site) {
     const times = 5;
@@ -438,6 +447,7 @@ export function dsas_reboot() {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error during reboot")); }
     });
 }
+window.dsas_reboot = dsas_reboot;
 
 export function dsas_shutdown() {
     const modalShutdown = document.getElementById("modalDSAS");
@@ -466,6 +476,7 @@ export function dsas_shutdown() {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error during shutdown")); }
     });
 }
+window.dsas_shutdown = dsas_shutdown;
 
 export function dsas_logout() {
     // No error checking because, only possible error is that already logged out
@@ -473,6 +484,7 @@ export function dsas_logout() {
         window.location.href = "login.html";
     }).catch(() => { window.location.href = "login.html"; });
 }
+window.dsas_logout = dsas_logout;
 
 class DSASHeader extends HTMLElement {
     connectedCallback() {

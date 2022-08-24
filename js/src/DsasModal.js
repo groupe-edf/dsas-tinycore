@@ -26,6 +26,7 @@ export function modal_message(text, action = null, hide = false) {
     modalDSAS.setAttribute("type", "Ok");
     modalDSAS.show();
 }
+window.modal_message = modal_message;
 
 export function modal_action(text, action = null, hide = false) {
     const modalDSAS = document.getElementById("modalDSAS");
@@ -48,6 +49,7 @@ export function modal_action(text, action = null, hide = false) {
     modalDSAS.setAttribute("title", text);
     modalDSAS.show();
 }
+window.modal_action = modal_action;
 
 export function modal_errors(errors, feedback = false) {
     if (feedback) {
@@ -73,6 +75,7 @@ export function modal_errors(errors, feedback = false) {
     }
     return false;
 }
+window.modal_errors = modal_errors;
 
 class DSASModal extends HTMLElement {
     connectedCallback() {

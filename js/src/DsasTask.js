@@ -223,6 +223,7 @@ export function dsas_display_tasks(what = "all") {
         });
     }
 }
+window.dsas_display_tasks = dsas_display_tasks;
 
 export function dsas_task_delete(id, name) {
     const body = _("Delete the task ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, id)
@@ -230,6 +231,7 @@ export function dsas_task_delete(id, name) {
         + "<label class=\"form-check-label\" for=\"TaskDeleteFiles\">" + _("Delete task files") + "</label>";
     modal_action(body, "dsas_task_real_delete('" + id + "');", true);
 }
+window.dsas_task_delete = dsas_task_delete;
 
 export function dsas_task_real_delete(id) {
     const formData = new FormData();
@@ -253,11 +255,13 @@ export function dsas_task_real_delete(id) {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
     });
 }
+window.dsas_task_real_delete = dsas_task_real_delete;
 
 export function dsas_task_kill(id, name) {
     const body = _("Kill the task ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, id);
     modal_action(body, "dsas_task_real_kill('" + id + "');", true);
 }
+window.dsas_task_kill = dsas_task_kill;
 
 export function dsas_task_real_kill(id) {
     const formData = new FormData();
@@ -279,6 +283,7 @@ export function dsas_task_real_kill(id) {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
     });
 }
+window.dsas_task_real_kill = dsas_task_real_kill;
 
 export function dsas_task_new() {
     modal_task();
@@ -294,6 +299,7 @@ export function dsas_task_new() {
     });
     document.getElementById("TaskCert").innerHTML = "";
 }
+window.dsas_task_new = dsas_task_new;
 
 function has_arch(archs, arch) {
     if (arch in (archs.constructor === Object ? [archs] : archs)) { return true; }
@@ -404,6 +410,7 @@ export function dsas_task_modify(id, name) {
         fail_loggedin(error.statusText);
     });
 }
+window.dsas_task_modify = dsas_task_modify;
 
 export function dsas_task_run(id, name) {
     modal_action(
@@ -412,6 +419,7 @@ export function dsas_task_run(id, name) {
         true,
     );
 }
+window.dsas_task_run = dsas_task_run;
 
 export function dsas_task_real_run(id) {
     const formData = new FormData();
@@ -434,6 +442,7 @@ export function dsas_task_real_run(id) {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
     });
 }
+window.dsas_task_real_run = dsas_task_real_run;
 
 export function dsas_task_info(id, name, len = 0) {
     const formData = new FormData();
@@ -457,6 +466,7 @@ export function dsas_task_info(id, name, len = 0) {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
     });
 }
+window. dsas_task_info =  dsas_task_info;
 
 export function dsas_add_task_arch(archs = []) {
     let type = "";
@@ -465,6 +475,7 @@ export function dsas_add_task_arch(archs = []) {
     });
     document.getElementById("TaskHasArch").innerHTML = task_arch_body(type, archs);
 }
+window.dsas_add_task_arch = dsas_add_task_arch;
 
 export function dsas_add_task_cert() {
     const taskCert = document.getElementById("TaskCert");
@@ -485,6 +496,7 @@ export function dsas_add_task_cert() {
         }
     }
 }
+window.dsas_add_task_cert = dsas_add_task_cert;
 
 export function dsas_task_cert_delete(fingerprint) {
     let body = "";
@@ -496,6 +508,7 @@ export function dsas_task_cert_delete(fingerprint) {
         });
     document.getElementById("TaskCert").innerHTML = body;
 }
+window.dsas_task_cert_delete = dsas_task_cert_delete;
 
 export function dsas_add_task(oldid = "") {
     const name = document.getElementById("TaskName").value;
@@ -558,6 +571,7 @@ export function dsas_add_task(oldid = "") {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
     });
 }
+window.dsas_add_task = dsas_add_task;
 
 export function dsas_modify_task(oldname = "", oldid = "") {
     const name = document.getElementById("TaskName").value;
@@ -580,6 +594,7 @@ export function dsas_modify_task(oldname = "", oldid = "") {
         });
     } else { dsas_add_task(oldid); }
 }
+window.dsas_modify_task = dsas_modify_task;
 
 class DSASTaskCert extends HTMLElement {
     connectedCallback() {

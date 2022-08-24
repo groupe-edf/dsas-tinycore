@@ -90,6 +90,7 @@ export function dsas_display_net(what = "all") {
         }
     });
 }
+window.dsas_display_net = dsas_display_net;
 
 export function dsas_change_net(what = "all", i = 0) {
     if (what === "dhcp") {
@@ -142,3 +143,4 @@ export function dsas_change_net(what = "all", i = 0) {
         });
     }
 }
+window.dsas_display_net = dsas_display_net;

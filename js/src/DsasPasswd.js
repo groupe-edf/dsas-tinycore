@@ -16,6 +16,7 @@ export function dsas_display_passwd() {
         }
     });
 }
+window.dsas_display_passwd = dsas_display_passwd;
 
 export function dsas_change_passwd() {
     const user = document.getElementById("User").innerHTML;
@@ -38,3 +39,4 @@ export function dsas_change_passwd() {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error during password change : {0}", error.statusText)); }
     });
 }
+window.dsas_change_passwd = dsas_change_passwd;

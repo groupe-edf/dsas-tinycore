@@ -100,6 +100,7 @@ export function dsas_status() {
         }
     });
 }
+window.dsas_status = dsas_status;
 
 function log_filter(line) {
     return (line.substr(0, 2) !== "  ");
@@ -135,6 +136,7 @@ export function dsas_togglelogs() {
         timeoutLogs = setTimeout(dsas_refresh_logs, 5000, true);
     }
 }
+window.dsas_togglelogs = dsas_togglelogs;
 
 export function dsas_display_logs(all = false) {
     fetch("api/dsas-verif-logs.php").then((response) => {
@@ -161,3 +163,4 @@ export function dsas_display_logs(all = false) {
         }
     });
 }
+window.dsas_display_logs = dsas_display_logs;
