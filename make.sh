@@ -895,8 +895,8 @@ EOF
                   "append/etc/init.d/rcS.docker" \
                   "make.sh"
   else
-    [ "$(uname -m)" = "x86_64" ] || msg "shellcheck can only be run on a 64bit machine"
-    _uri="https://github.com/koalaman/shellcheck/releases/download/v0.8.0/shellcheck-v0.8.0.tar.xz"
+    [ "$(uname -m)" = "x86_64" ] || error "shellcheck can only be run on a 64bit machine"
+    _uri="https://github.com/koalaman/shellcheck/releases/download/v0.8.0/shellcheck-v0.8.0.linux.x86_64.tar.xz"
     _src=$(basename "$_uri")
     download "$_uri" "$src_dir"
     unpack "$src_dir/$_src" "$extract/home/tc" || error "Can not unpack $_src"
@@ -906,8 +906,9 @@ export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 export HOME=/home/tc
 export USER=tc
 cd /home/tc
-shellcheck=\$(find . -type f -name \"shellcheck\")
-[ -z \"\$shellcheck\" ] && { echo "shellcheck not found"; exit 1 }
+shellcheck=\$(find /home/tc -type f -name "shellcheck")
+echo SHELLCHECK : \$shellcheck
+[ -z \"\$shellcheck\" ] && { echo "shellcheck not found"; exit 1; }
 \$shellcheck -x "dsas/append/usr/local/sbin/checkfiles" \
                 "dsas/append/usr/local/sbin/dsaspasswd" \
                 "dsas/append/usr/local/sbin/getcertificate" \
