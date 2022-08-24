@@ -1045,7 +1045,7 @@ chown root.repo /var/dsas/repo.conf*
 chown -R root.staff /opt
 chmod 770 /opt
 chmod 770 /opt/.filetool.lst
-chmod 644 /usr/local/share/www/* /usr/local/share/www/api/* /usr/local/share/www/en/* /usr/local/share/www/fr/*
+chmod 644 /usr/local/share/www/?* /usr/local/share/www/api/?* /usr/local/share/www/en/?* /usr/local/share/www/fr/?*
 chmod 755 /usr/local/share/www/en /usr/local/share/www/fr /usr/local/share/www/api
 sed -i "s/umask 0[0-7][0-7]/umask 027/" /etc/profile
 echo "
