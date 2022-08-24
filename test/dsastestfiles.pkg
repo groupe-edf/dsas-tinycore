@@ -2,7 +2,7 @@ _pkg=dsastestfiles
 _version=<VERSION>
 # Fake URI. The file must be put in place manually
 _uri=https://127.0.0.1/dsastestfiles-<VERSION>.tgz
-_build_dep="compiletc coreutils xz p7zip openssl-1.1.1 gnupg zip-unzip tar lcab osslsigncode rpm createrepo_c"
+_build_dep="compiletc coreutils ncursesw xz p7zip openssl-1.1.1 gnupg zip-unzip tar lcab osslsigncode rpm createrepo_c"
 _dep="openssl-1.1.1 gnupg osslsigncode rpm"
 _pkg_path=dsastestfiles-<VERSION>
 _pre_config="chgrp staff usr/local/var/lib/rpm"

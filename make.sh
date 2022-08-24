@@ -671,7 +671,16 @@ install_dsas_js() {
    package=dsas_js
    target=$tcz_dir/$package.tcz
    dep=$target.dep
-   if test  ! -f "$target"; then
+
+   # Remove old TCZ if JS file is newer
+   while IFS= read -r -d '' file; do
+     if [ "$(stat -c '%Y' "$target")" -lt "$(stat -c '%Y' "$file")" ]; then
+       rm -f "$target"
+       break;
+     fi
+   done < <(find ./js -name "*.js" -print0)
+
+   if test  ! -f "$target" || XXXXXXXX ; then
       _old=$extract
       extract="$build"
       if [ -d "$extract" ]; then
@@ -714,14 +723,13 @@ EOF
       msg "Building  $package"
       HOME=/home/tc chroot --userspec=tc "$extract" /tmp/script || error error constructing $package
 
-
       msg "Constructing package $package"
       # Create the package for next use
       tempdir=$(mktemp -d)
       chmod 755 "$tempdir"
       mkdir -p "$tempdir/usr/local/share/www"
       chmod -R 755 "$tempdir/usr"
-      cp "$extract/home/tc/dsas/js/dsas.js" "$tempdir/usr/local/share/www"
+      cp "$extract/home/tc/dsas/js/dist/dsas.js" "$tempdir/usr/local/share/www"
       mksquashfs "$tempdir" "$target"
       rm -fr "$tempdir"
       md5sum "$target" | sed -e "s:  $target$::g" > "$target.md5.txt"
@@ -1168,7 +1176,7 @@ chown root.repo /var/dsas/repo.conf.dsas
 chown -R root.staff /opt
 chmod 770 /opt
 chmod 770 /opt/.filetool.lst
-chmod 644 /usr/local/share/www/?* /usr/local/share/www/api/?* /usr/local/share/www/en/?* /usr/local/share/www/fr/?*
+chmod 644 /usr/local/share/www/?* /usr/local/share/www/api/?* /usr/local/share/www/en/?* /usr/local/share/www/fr/?
 *
 chmod 755 /usr/local/share/www/en /usr/local/share/www/fr /usr/local/share/www/api
 sed -i "s/umask 0[0-7][0-7]/umask 027/" /etc/profile
