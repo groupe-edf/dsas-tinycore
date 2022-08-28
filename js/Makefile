@@ -9,7 +9,7 @@ prod: package.json
 package.json:
 	which npm >& /dev/null || { echo "Install Node.js before continuing"; exit 1; }
 	npm init -y || { rm -fr node_modules package-lock.json package.json; exit 1; }
-	npm install --save marked bootstrap popper || { rm -fr node_modules package-lock.json package.json; exit 1; }
+	npm install --save marked || { rm -fr node_modules package-lock.json package.json; exit 1; }
 	npm install --save-dev webpack webpack-cli eslint eslint-webpack-plugin style-loader css-loader || { rm -fr node_modules package-lock.json package.json; exit 1; }
 	# FIXME Ignore error "Exit handler never called" during install of module install-peerdeps. It'll still work
 	npm install --save-dev install-peerdeps || true
