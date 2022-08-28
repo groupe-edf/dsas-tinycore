@@ -1,7 +1,8 @@
 // The javascript used by the DSAS index.html page
+import DisplayLogs from "./DisplayLogs";
 
 // These functions are in another file
-/* globals _ modal_message fail_loggedin dsas_origin date_to_locale DisplayLogs */
+/* globals _ modal_message fail_loggedin dsas_origin date_to_locale */
 
 // Global variable for the DisplayLogs instance for status logs
 let statusLogs;
@@ -100,7 +101,6 @@ export function dsas_status() {
         }
     });
 }
-window.dsas_status = dsas_status;
 
 function log_filter(line) {
     return (line.substr(0, 2) !== "  ");
@@ -123,7 +123,7 @@ function log_render(line) {
     }
 }
 
-export function dsas_togglelogs() {
+function dsas_togglelogs() {
     const btn = document.getElementById("loghide");
     if (timeoutLogs !== 0) { clearTimeout(timeoutLogs); }
     if (btn.value === _("All logs")) {
@@ -136,19 +136,16 @@ export function dsas_togglelogs() {
         timeoutLogs = setTimeout(dsas_refresh_logs, 5000, true);
     }
 }
-window.dsas_togglelogs = dsas_togglelogs;
 
-export function dsas_display_logs(all = false) {
+export function dsas_display_logs() {
     fetch("api/dsas-verif-logs.php").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((logs) => {
-        document.getElementById("VerifLogs").innerHTML = "   <div class=\"row\"><div class=\"col-md-4\">\n"
-             + "     <h5>" + _("Filtered file logs :") + "</h5></div>\n"
-             + "      <div class=\"col-md-8 text-end\">\n"
-             + "        <input type=\"button\" class=\"btn btn-primary btn-sm\" id=\"loghide\" value=\"" + (all ? _("All logs") : _("Errors only")) + "\" onclick=\"dsas_togglelogs();\">\n"
-             + "        <input type=\"search\" class=\"input-lg rounded\"  id=\"logsearch\" placeholder=\"" + _("Search") + "\" onkeypress=\"if (event.key === 'Enter'){ statusLogs.search(document.getElementById('logsearch').value);};\">\n"
-             + "   </div></div><span id=\"logwind\"></span>\n";
+        document.getElementById("loghide").addEventListener("click", () => { dsas_togglelogs(); });
+        document.getElementById("logsearch").addEventListener("keypress", (event) => {
+            if (event.key === "Enter") statusLogs.search(document.getElementById("logsearch").value);
+        });
 
         if (logs) {
             statusLogs = new DisplayLogs("logwind", logs, false, log_highlight, "", log_render);
@@ -163,4 +160,3 @@ export function dsas_display_logs(all = false) {
         }
     });
 }
-window.dsas_display_logs = dsas_display_logs;

@@ -1,8 +1,9 @@
 // The javascript used by the DSAS task.html page
+const DisplayLogs = require("./DisplayLogs").default;
 
 // These functions are in another file
 /* globals _ modal_message modal_errors modal_action fail_loggedin print_obj empty_obj */
-/* globals date_to_locale DisplayLogs cert_name cert_is_ca clear_feedback */
+/* globals date_to_locale cert_name cert_is_ca clear_feedback */
 
 // Global variable for the DisplayLog instance for the task log files
 let infoLogs;
@@ -302,8 +303,7 @@ export function dsas_task_new() {
 window.dsas_task_new = dsas_task_new;
 
 function has_arch(archs, arch) {
-    if (arch in (archs.constructor === Object ? [archs] : archs)) { return true; }
-    return false;
+    return (archs.constructor === Object ? [archs] : archs).includes(arch);
 }
 
 function task_arch_body(type, archs) {
@@ -466,7 +466,7 @@ export function dsas_task_info(id, name, len = 0) {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
     });
 }
-window. dsas_task_info =  dsas_task_info;
+window.dsas_task_info = dsas_task_info;
 
 export function dsas_add_task_arch(archs = []) {
     let type = "";

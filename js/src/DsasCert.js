@@ -165,7 +165,7 @@ export function dsas_display_cert(what = "all") {
         fail_loggedin(error.statusText);
     });
 }
-window.dsas_display_cert = dsas_init_loggedi;
+window.dsas_display_cert = dsas_display_cert;
 
 export function dsas_cert_delete(name, finger) {
     modal_action(

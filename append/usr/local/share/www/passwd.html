@@ -3,16 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Password</title>
-    <script src="dsas.js"></script>
+    <link href="bootstrap-5.0.2.min.css" rel="stylesheet" type="text/css" />
+    <script src="bootstrap-5.0.2.bundle.min.js"></script>
 </head>
 <body>
 
 <dsas-modal id="modalDSAS" tag="DSAS"  type="Ok"></dsas-modal>
-<script>
-  dsas_loggedin(true, false);
-  dsas_display_passwd();
-</script>
-
 <div class="container p-3 my-3 border">
   <form>
     <div class="row">
@@ -33,11 +29,12 @@
     </div>
     <div class="row mb-3">
       <div class="col-sm-12 text-end">
-        <input type="submit" class="btn btn-primary" value="Update" onclick="dsas_change_passwd(); return false;" data-i18n-value>
-        <input type="submit" class="btn btn-primary" value="Logout" onclick="dsas_logout(); return false;;" data-i18n-value>
+        <input type="submit" class="btn btn-primary" id="update" value="Update" onclick="dsas_change_passwd(); return false;" data-i18n-value>
+        <input type="submit" class="btn btn-primary" id="logout" value="Logout" onclick="dsas_logout(); return false;;" data-i18n-value>
       </div>
     </div>
   </form>
 </div>
+<script src="dsas.js"></script>
 </body>
 </html>

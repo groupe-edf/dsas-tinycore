@@ -1,24 +1,9 @@
 // The javascript used by the DSAS passwd.html page
+import { _ } from "./MultiLang";
+import { modal_message, modal_errors } from "./DsasModal";
+import { fail_loggedin, clear_feedback } from "./DsasUtil";
 
-// These functions are in another file
-/* globals _ modal_message modal_errors clear_feedback fail_loggedin */
-
-export function dsas_display_passwd() {
-    fetch("api/dsas-passwd.php").then((response) => {
-        if (response.ok) { return response.json(); }
-        return Promise.reject(new Error(response.statusText));
-    }).then((obj) => {
-        document.getElementById("User").innerHTML = obj.username;
-        document.getElementById("Type").innerHTML = obj.type;
-    }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) {
-            if (error.status) { modal_message(_("Error ({0}) during the machine detection : {1}", error.status, error.statusText)); } else { modal_message(_("Error : {0}", error)); }
-        }
-    });
-}
-window.dsas_display_passwd = dsas_display_passwd;
-
-export function dsas_change_passwd() {
+function dsas_change_passwd() {
     const user = document.getElementById("User").innerHTML;
     const passwd = document.getElementById("inp_pass").value;
     const formData = new FormData();
@@ -39,4 +24,26 @@ export function dsas_change_passwd() {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error during password change : {0}", error.statusText)); }
     });
 }
-window.dsas_change_passwd = dsas_change_passwd;
+
+function dsas_logout() {
+    // No error checking because, only possible error is that already logged out
+    fetch("api/logout.php").then(() => {
+        window.location.href = "login.html";
+    }).catch(() => { window.location.href = "login.html"; });
+}
+
+export default function dsas_display_passwd() {
+    fetch("api/dsas-passwd.php").then((response) => {
+        if (response.ok) { return response.json(); }
+        return Promise.reject(new Error(response.statusText));
+    }).then((obj) => {
+        document.getElementById("User").innerHTML = obj.username;
+        document.getElementById("Type").innerHTML = obj.type;
+    }).catch((error) => {
+        if (!fail_loggedin(error.statusText)) {
+            if (error.status) { modal_message(_("Error ({0}) during the machine detection : {1}", error.status, error.statusText)); } else { modal_message(_("Error : {0}", error)); }
+        }
+    });
+    document.getElementById("update").addEventListener("click", () => { dsas_change_passwd(); return false; });
+    document.getElementById("logout").addEventListener("click", () => { dsas_logout(); return false; });
+}

@@ -1,53 +1,56 @@
 // General DSAS modal display functions used throughout the DSAS
-
-// Relies on "bootstrap.js" being imported first
 import { Modal } from "bootstrap";
+import { _ } from "./MultiLang";
 
 // These functions are in another file
-/* globals _ clear_feedback */
+/* globals clear_feedback */
 
 export function modal_message(text, action = null, hide = false) {
     const modalDSAS = document.getElementById("modalDSAS");
-    modalDSAS.removeAttribute("disable");
-    modalDSAS.removeAttribute("body");
-    modalDSAS.removeAttribute("size");
-    modalDSAS.removeAttribute("static");
-    if (hide) {
-        modalDSAS.setAttribute("hideonclick", true);
-    } else {
-        modalDSAS.removeAttribute("hideonclick");
+    if (modalDSAS) {
+        modalDSAS.removeAttribute("disable");
+        modalDSAS.removeAttribute("body");
+        modalDSAS.removeAttribute("size");
+        modalDSAS.removeAttribute("static");
+        if (hide) {
+            modalDSAS.setAttribute("hideonclick", true);
+        } else {
+            modalDSAS.removeAttribute("hideonclick");
+        }
+        if (action) {
+            modalDSAS.setAttribute("action", action);
+        } else {
+            modalDSAS.setAttribute("action", "");
+        }
+        modalDSAS.setAttribute("title", text);
+        modalDSAS.setAttribute("type", "Ok");
+        modalDSAS.show();
     }
-    if (action) {
-        modalDSAS.setAttribute("action", action);
-    } else {
-        modalDSAS.setAttribute("action", "");
-    }
-    modalDSAS.setAttribute("title", text);
-    modalDSAS.setAttribute("type", "Ok");
-    modalDSAS.show();
 }
 window.modal_message = modal_message;
 
 export function modal_action(text, action = null, hide = false) {
     const modalDSAS = document.getElementById("modalDSAS");
-    modalDSAS.removeAttribute("disable");
-    modalDSAS.removeAttribute("body");
-    modalDSAS.removeAttribute("type");
-    modalDSAS.removeAttribute("size");
-    modalDSAS.removeAttribute("static");
-    if (hide) {
-        modalDSAS.setAttribute("hideonclick", true);
-    } else {
-        modalDSAS.removeAttribute("hideonclick");
-    }
+    if (modalDSAS) {
+        modalDSAS.removeAttribute("disable");
+        modalDSAS.removeAttribute("body");
+        modalDSAS.removeAttribute("type");
+        modalDSAS.removeAttribute("size");
+        modalDSAS.removeAttribute("static");
+        if (hide) {
+            modalDSAS.setAttribute("hideonclick", true);
+        } else {
+            modalDSAS.removeAttribute("hideonclick");
+        }
 
-    if (action) {
-        modalDSAS.setAttribute("action", action);
-    } else {
-        modalDSAS.setAttribute("action", "");
+        if (action) {
+            modalDSAS.setAttribute("action", action);
+        } else {
+            modalDSAS.setAttribute("action", "");
+        }
+        modalDSAS.setAttribute("title", text);
+        modalDSAS.show();
     }
-    modalDSAS.setAttribute("title", text);
-    modalDSAS.show();
 }
 window.modal_action = modal_action;
 
