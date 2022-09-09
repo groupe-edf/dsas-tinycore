@@ -427,7 +427,7 @@ EOF
         # Create the pkgname and shell escaped list of directories/files and then make TCZ 
         OIFS=$IFS
         IFS=";"
-        [ -z "$_pkg" ] && _pkg="main{.}"
+        [ -z "$_pkgs" ] && _pkgs="main{.}"
         for arg in $_pkgs; do
           pkg=$(echo "$arg" | sed -e "s/{.*$//" | awk '{$1=$1};1')
           IFS=","
