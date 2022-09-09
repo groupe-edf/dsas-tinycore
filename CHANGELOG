@@ -1,6 +1,12 @@
 Log of the principal changes to the DSAS
 
-Version 1.1.2 (XX XXXX XXX)
+Version 1.2.0 (XX XXX XXX)
+- Add Node.js package version 16.17.0
+- Make dsas.js modular for easier developpement, based on Node.js/webpack
+- Add better static testing phpstan/eslint/shellcheck
+- Add testing framework
+
+Version 1.1.2 (09 Sept 2022)
 - Update openssl (1.1.1n -> 1.1.1q)
 - Update ClamAV 1.105.0 -> 0.105.1 
 - Update curl 7.83.0 -> 7.84.0
@@ -8,10 +14,6 @@ Version 1.1.2 (XX XXXX XXX)
 - Update osslsigncode 2.3.0 -> 2.5.0
 - Update rpm 14.16.3.1 -> 4.17.1
 - Update libarchive3 3.5.2 -> 3.6.1
-- Add Node.js package version 16.17.0
-- Make dsas.js modular for easier developpement, based on Node.js/webpack
-- Add better static testing phpstan/eslint/shellcheck
-- Add testing framework
 - Don't allow unsigned rpm files to pass for "rpm" tasks
 - Problem with downloading ClamAV signatures introduced in version 1.1.0 fixed
 - Problem setting extended SNMPv3 options
