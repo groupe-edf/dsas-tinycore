@@ -435,7 +435,7 @@ try {
       $caps->setCapability("loggingPrefs", ['browser' => 'all']);
       $GLOBALS["driver"] = FirefoxDriver::start($caps);
       return true;
-    }, true);
+    }, true, false);
 
   // Get login page
   test("Navigating to /login.html", function () {
@@ -2111,7 +2111,7 @@ try {
         throw new RuntimeException("Task not found");
       });
 
-    // FIXME Delete an existing task removing its files and test that everything is gone
+    // Delete an existing task removing its files and test that everything is gone
     test("Delete Deb task removing files", function() {
         // Create the task directory to be kept, as the task hasn't run
         exec("ssh tc@haut sudo mkdir /home/dsas/haut/share/tests/dummyDeb /home/dsas/bas/share/tests/dummyDeb", $data, $retval);
@@ -2183,18 +2183,18 @@ try {
 } catch (Exception $e) {
   // Catch other errors here so that firefox is shut down cleanly
   echo $e->getMessage() . PHP_EOL;
-  screenshot();
+  if (array_key_exists("driver", $GLOBALS)) screenshot();
 } finally {
   // Restore original XML configure file and apply it
   test("Restoring original configuration", function () {
       copy("/var/dsas/dsas_conf.xml.test", "/var/dsas/dsas_conf.xml"); 
       unlink("/var/dsas/dsas_conf.xml.test");
-      apply();
+      if (array_key_exists("driver", $GLOBALS)) apply();
       return true;
     });
 
   // Quit firefox instance
-  $driver->quit();
+  if (array_key_exists("driver", $GLOBALS)) $driver->quit();
 
   if ($nfail !== 0)
     return 1;
