@@ -1,8 +1,8 @@
 // The javascript used by the DSAS index.html page
 import DisplayLogs from "./DisplayLogs";
-
-// These functions are in another file
-/* globals _ modal_message fail_loggedin dsas_origin date_to_locale */
+import { _ } from "./MultiLang";
+import { modal_message } from "./DsasModal";
+import { fail_loggedin, dsas_origin, date_to_locale } from "./DsasUtil";
 
 // Global variable for the DisplayLogs instance for status logs
 let statusLogs;

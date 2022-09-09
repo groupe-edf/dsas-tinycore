@@ -1,6 +1,7 @@
 // The javascript used by the DSAS help.html page
 
 // Relies on "marked.js" being imported first
+import "./github-markdown.min.css";
 import { setOptions, parse } from "marked";
 
 // These functions are in another file

@@ -1,38 +1,7 @@
 // The javascript used by the DSAS users.html page
-
-/* globals _ modal_message modal_action modal_errors clear_feedback print_obj fail_loggedin */
-
-export function dsas_display_users() {
-    fetch("api/dsas-users.php").then((response) => {
-        if (response.ok) { return response.json(); }
-        return Promise.reject(new Error(response.statusText));
-    }).then((obj) => {
-        const users = obj.user;
-        let body = "";
-        (users.constructor === Object ? [users] : users).forEach((user) => {
-            const is_tc = user.username === "tc";
-            body += "<tr><th scope=\"row\" id=\"username_" + user.username + "\">" + user.username + "</th>";
-            body += "<td><input type=\"text\" id=\"description_" + user.username + "\" value=\"" + print_obj(user.description) + "\" class=\"form-control\"" + (is_tc ? " disabled readonly" : "") + "></td>";
-            body += "<td><select class=\"form-select\" name=\"UserType_" + user.username + "\" id=\"UserType_" + user.username + "\"" + (is_tc ? " disabled" : "") + ">"
-                + "<option id=\"admin_" + user.username + "\" value=\"admin\"" + (user.type === "admin" ? " selected" : "") + ">" + _("administrator") + "</option>"
-                + "<option id=\"bas_" + user.username + "\" value=\"bas\"" + (user.type === "bas" ? " selected" : "") + ">" + _("lower") + "</option>"
-                + "<option id=\"haut_" + user.username + "\" value=\"haut\"" + (user.type === "haut" ? " selected" : "") + ">" + _("upper") + "</option>"
-                + "</select></td>";
-            body += "<td style=\"text-align:center\"><input type=\"checkbox\" id=\"active_" + user.username + "\" class=\"form-check-input\"" + (user.active === "true" ? " checked" : "") + "></td>";
-            body += "<td><a data-toggle=\"tooltip\" title=\"" + _("Change Password") + "\" onclick=\"dsas_user_passwd('"
-                + user.username + "');\"><img src=\"lock.svg\"></a>";
-            if (!is_tc) {
-                body += "&nbsp;<a data-toggle=\"tooltip\" title=\"" + _("Delete") + "\" onclick=\"dsas_user_delete('"
-                    + user.username + "');\"><img src=\"x-lg.svg\"></a>";
-            }
-            body += "</td>";
-        });
-        document.getElementById("Users").innerHTML = body;
-    }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error ({0}) during the download of users : {1}", error.status, error.statusText)); }
-    });
-}
-window.dsas_display_users = dsas_display_users;
+import { _ } from "./MultiLang";
+import { modal_message, modal_action, modal_errors } from "./DsasModal";
+import { fail_loggedin, print_obj } from "./DsasUtil";
 
 export function dsas_user_passwd(user) {
     const modalDSAS = document.getElementById("modalDSAS");
@@ -60,20 +29,14 @@ export function dsas_real_user_passwd(user) {
             modal_errors(errors);
         } catch (e) {
         // Its text => here always just "Ok". Do nothing
-            clear_feedback();
         }
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error during password change : {0}", error.statusText)); }
+        if (!fail_loggedin(error.statusText)) { modal_message(_("Error during password change : {0}", (error.statusText ? error.statusText : error))); }
     });
 }
 window.dsas_real_user_passwd = dsas_real_user_passwd;
 
-export function dsas_user_delete(user) {
-    modal_action(_("Delete the user '{0}' ?", user), "dsas_real_user_delete('" + user + "');", true);
-}
-window.dsas_user_delete = dsas_user_delete;
-
-export function dsas_real_user_delete(user) {
+function dsas_real_user_delete(user) {
     const formData = new FormData();
     formData.append("op", "delete");
     formData.append("data", JSON.stringify({ username: user }));
@@ -86,16 +49,19 @@ export function dsas_real_user_delete(user) {
             modal_errors(errors);
         } catch (e) {
         // Its text => here always just "Ok".
-            clear_feedback();
-            dsas_display_users();
+            window.location.reload();
         }
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error during user deletion : {0}", error.statusText)); }
+        if (!fail_loggedin(error.statusText)) { modal_message(_("Error during user deletion : {0}", (error.statusText ? error.statusText : error))); }
     });
 }
-window.dsas_real_user_delete = dsas_real_user_delete;
 
-export function dsas_user_new() {
+export function dsas_user_delete(user) {
+    modal_action(_("Delete the user '{0}' ?", user), () => { dsas_real_user_delete(user); }, true);
+}
+window.dsas_user_delete = dsas_user_delete;
+
+function dsas_user_new() {
     const modalDSAS = document.getElementById("modalDSAS");
     let body = "";
     modal_action(_("New username"), "dsas_real_user_new();", true);
@@ -105,7 +71,6 @@ export function dsas_user_new() {
          + "    </div>";
     modalDSAS.setAttribute("body", body);
 }
-window.dsas_user_new = dsas_user_new;
 
 export function dsas_real_user_new() {
     const username = document.getElementById("NewUser").value;
@@ -121,16 +86,15 @@ export function dsas_real_user_new() {
             modal_errors(errors);
         } catch (e) {
         // Its text => here always just "Ok".
-            clear_feedback();
-            dsas_display_users();
+            window.location.reload();
         }
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error during user creation : {0}", error.statusText)); }
+        if (!fail_loggedin(error.statusText)) { modal_message(_("Error during user creation : {0}", (error.statusText ? error.statusText : error))); }
     });
 }
 window.dsas_real_user_new = dsas_real_user_new;
 
-export function dsas_change_users() {
+function dsas_change_users() {
     fetch("api/dsas-users.php").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
@@ -164,14 +128,54 @@ export function dsas_change_users() {
                 modal_errors(errors);
             } catch (e) {
             // Its text => here always just "Ok".
-                clear_feedback();
                 modal_message(_("Changes successfully saved"));
             }
         }).catch((error) => {
-            if (!fail_loggedin(error.statusText)) { modal_message(_("Error during user creation : {0}", error.statusText)); }
+            if (!fail_loggedin(error.statusText)) { modal_message(_("Error during user creation : {0}", (error.statusText ? error.statusText : error))); }
         });
     }).catch((error) => {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error ({0}) during the download of users : {1}", error.status, error.statusText)); }
     });
 }
-window.dsas_change_users = dsas_change_users;
+
+export default function dsas_display_users() {
+    fetch("api/dsas-users.php").then((response) => {
+        if (response.ok) { return response.json(); }
+        return Promise.reject(new Error(response.statusText));
+    }).then((obj) => {
+        const users = obj.user;
+        let body = "";
+        (users.constructor === Object ? [users] : users).forEach((user) => {
+            const is_tc = user.username === "tc";
+            body += "<tr><th scope=\"row\" id=\"username_" + user.username + "\">" + user.username + "</th>";
+            body += "<td><input type=\"text\" id=\"description_" + user.username + "\" value=\"" + print_obj(user.description) + "\" class=\"form-control\"" + (is_tc ? " disabled readonly" : "") + "></td>";
+            body += "<td><select class=\"form-select\" name=\"UserType_" + user.username + "\" id=\"UserType_" + user.username + "\"" + (is_tc ? " disabled" : "") + ">"
+                + "<option id=\"admin_" + user.username + "\" value=\"admin\"" + (user.type === "admin" ? " selected" : "") + ">" + _("administrator") + "</option>"
+                + "<option id=\"bas_" + user.username + "\" value=\"bas\"" + (user.type === "bas" ? " selected" : "") + ">" + _("lower") + "</option>"
+                + "<option id=\"haut_" + user.username + "\" value=\"haut\"" + (user.type === "haut" ? " selected" : "") + ">" + _("upper") + "</option>"
+                + "</select></td>";
+            body += "<td style=\"text-align:center\"><input type=\"checkbox\" id=\"active_" + user.username + "\" class=\"form-check-input\"" + (user.active === "true" ? " checked" : "") + "></td>";
+            body += "<td><a data-toggle=\"tooltip\" title=\"" + _("Change Password") + "\" onclick=\"dsas_user_passwd('"
+                + user.username + "');\"><img src=\"lock.svg\"></a>";
+            if (!is_tc) {
+                body += "&nbsp;<a data-toggle=\"tooltip\" title=\"" + _("Delete") + "\" onclick=\"dsas_user_delete('"
+                    + user.username + "');\"><img src=\"x-lg.svg\"></a>";
+            }
+            body += "</td>";
+        });
+        document.getElementById("Users").innerHTML = body;
+        document.getElementById("AddUser").addEventListener("click", () => { dsas_user_new(); });
+        document.getElementById("ChangeUsers").addEventListener("click", () => {
+            dsas_change_users();
+            return false;
+        });
+    }).catch((error) => {
+        if (!fail_loggedin(error.statusText)) {
+            if (error.statusText) {
+                modal_message(_("Error ({0}) during the download of users : {1}", error.status, error.statusText));
+            } else {
+                modal_message(_("Error ({0}) during the download of users : {1}", 0, error));
+            }
+        }
+    });
+}

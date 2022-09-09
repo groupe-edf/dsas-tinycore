@@ -1,5 +1,6 @@
 // A class to display a set of very large log files in bootstrap tabs,
 // only rendering the minimum number of lines so as to remain rapid.
+// Relies on bootstrap for the tabs, etc
 
 export default class DisplayLogs {
     constructor(id, logs, hidescrollbar = false, emphasis = "", filter = "", render = "") {
@@ -115,7 +116,7 @@ export default class DisplayLogs {
             const curIndex = (this.highlight.line < 0 ? this.curItem : this.highlight.line);
             const curTab = (this.highlight.tab < 0 ? this.tab : this.highlight.tab);
             const matches = [];
-            let found = -1;
+            let found = 0;
             for (let i = 0; i < this.logs.length; i += 1) {
                 let j = 0;
                 this.logs[i].split("\n").forEach((line) => {
@@ -127,14 +128,14 @@ export default class DisplayLogs {
                     }
                 });
             }
-            for (let i = 0; i < matches.length; i += 1) {
-                if ((i > curTab) || ((i === curTab) && (matches[i].line > curIndex))) {
-                    found = i;
+            for (let j = 0; j < matches.length; j += 1) {
+                if ((matches[j].tab > curTab) || ((matches[j].tab === curTab)
+                    && (matches[j].line > curIndex))) {
+                    found = j;
                     break;
                 }
             }
 
-            if (found < 0) { found = 0; }
             if (matches.length > 0) {
                 this.tab = matches[found].tab;
                 this.highlight = { tab: this.tab, line: matches[found].line };
@@ -159,7 +160,7 @@ export default class DisplayLogs {
         const colors = ["text-muted", "text-dark", "text-info", "text-primary",
             "text-success", "text-warning", "text-danger"];
         let index = (this.emphasis ? this.emphasis(line) : 0);
-        index = (index > 0 ? 0 : index);
+        index = (index < 0 ? 0 : index);
         index = (index >= colors.length ? colors.length - 1 : index);
         return colors[index];
     }

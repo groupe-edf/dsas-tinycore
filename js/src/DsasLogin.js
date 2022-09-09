@@ -32,19 +32,22 @@ function dsas_login() {
         if (response.ok) {
             uri.search = new URLSearchParams({ admin: true });
             fetch(uri).then((response2) => {
-                if (response2.ok) { window.location = "index.html"; }
-                uri.search = new URLSearchParams({ admin: false });
-                fetch(uri).then((response3) => {
-                    if (response3.ok) { window.location = "passwd.html"; }
-                });
+                if (response2.ok) {
+                    window.location = "index.html";
+                } else {
+                    uri.search = new URLSearchParams({ admin: false });
+                    fetch(uri).then((response3) => {
+                        if (response3.ok) { window.location = "passwd.html"; }
+                    });
+                }
             });
+            return true;
         }
         return Promise.reject(new Error(response.statusText));
-    }).catch((error) => {
+    }).catch(() => {
         document.getElementById("inp_user").setAttribute("class", "form-control is-invalid");
         document.getElementById("inp_pass").setAttribute("class", "form-control is-invalid");
         document.getElementById("feed_pass").innerHTML = _("Username or password invalid.");
-        document.getElementById("feed_user").innerHTML = _("Error : {0}", (error.statusText ? error.statusText : error));
     });
 }
 

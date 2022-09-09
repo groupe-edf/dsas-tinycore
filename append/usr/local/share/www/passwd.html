@@ -5,6 +5,7 @@
     <title>Password</title>
     <link href="bootstrap-5.0.2.min.css" rel="stylesheet" type="text/css" />
     <script src="bootstrap-5.0.2.bundle.min.js"></script>
+    <script src="dsas.js></script>
 </head>
 <body>
 
@@ -29,12 +30,14 @@
     </div>
     <div class="row mb-3">
       <div class="col-sm-12 text-end">
-        <input type="submit" class="btn btn-primary" id="update" value="Update" onclick="dsas_change_passwd(); return false;" data-i18n-value>
-        <input type="submit" class="btn btn-primary" id="logout" value="Logout" onclick="dsas_logout(); return false;;" data-i18n-value>
+        <input type="submit" class="btn btn-primary" id="update" value="Update" data-i18n-value>
+        <input type="submit" class="btn btn-primary" id="logout" value="Logout" data-i18n-value>
       </div>
     </div>
   </form>
 </div>
-<script src="dsas.js"></script>
+<script>
+    dsas_entry("passwd.html");
+</script>
 </body>
 </html>

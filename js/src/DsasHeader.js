@@ -145,7 +145,7 @@ export function dsas_restore_core(file, passwd = "") {
             modalDSAS.removeAttribute("body");
             modalDSAS.removeAttribute("size");
             modalDSAS.removeAttribute("hideonclick");
-            modalDSAS.setAttribute("action", "");
+            modalDSAS.setAction();
             modalDSAS.setAttribute("title", _("Apply the configuration"));
             modalDSAS.setAttribute("type", "Ok");
             modalDSAS.show();
@@ -314,7 +314,7 @@ export function dsas_shutdown() {
 }
 window.dsas_shutdown = dsas_shutdown;
 
-export function dsas_logout() {
+function dsas_logout() {
     // No error checking because, only possible error is that already logged out
     fetch("api/logout.php").then(() => {
         window.location.href = "login.html";

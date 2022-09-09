@@ -2,9 +2,6 @@
 import { Modal } from "bootstrap";
 import { _ } from "./MultiLang";
 
-// These functions are in another file
-/* globals clear_feedback */
-
 export function modal_message(text, action = null, hide = false) {
     const modalDSAS = document.getElementById("modalDSAS");
     if (modalDSAS) {
@@ -18,9 +15,9 @@ export function modal_message(text, action = null, hide = false) {
             modalDSAS.removeAttribute("hideonclick");
         }
         if (action) {
-            modalDSAS.setAttribute("action", action);
+            modalDSAS.setAction(action);
         } else {
-            modalDSAS.setAttribute("action", "");
+            modalDSAS.setAction();
         }
         modalDSAS.setAttribute("title", text);
         modalDSAS.setAttribute("type", "Ok");
@@ -44,9 +41,9 @@ export function modal_action(text, action = null, hide = false) {
         }
 
         if (action) {
-            modalDSAS.setAttribute("action", action);
+            modalDSAS.setAction(action);
         } else {
-            modalDSAS.setAttribute("action", "");
+            modalDSAS.setAction();
         }
         modalDSAS.setAttribute("title", text);
         modalDSAS.show();
@@ -57,7 +54,9 @@ window.modal_action = modal_action;
 export function modal_errors(errors, feedback = false) {
     if (feedback) {
         // Clear old invalid feedbacks
-        clear_feedback();
+        // eslint-disable-next-line no-param-reassign
+        document.getElementsByClassName("invalid-feedback").forEach((feed) => { feed.innerHTML = ""; });
+        document.getElementsByClassName("form-control").forEach((feed) => { feed.setAttribute("class", "form-control"); });
     }
 
     if (errors && errors !== "Ok") {
@@ -92,41 +91,103 @@ class DSASModal extends HTMLElement {
         const tag = this.getAttribute("tag");
         const title = this.getAttribute("title");
         const body = this.getAttribute("body");
-        const action = this.getAttribute("action");
         const disable = this.getAttribute("disable");
         const type = this.getAttribute("type");
         const hideonclick = this.getAttribute("hideonclick");
         const size = this.getAttribute("size");
         const isStatic = this.getAttribute("static");
+        let el;
 
-        this.innerHTML = "        <div class=\"modal fade\" id=\"static" + tag + "\" " + (isStatic === null || isStatic === true ? "data-bs-backdrop=\"static\" data-bs-keyboard=\"false\" " : "") + "aria-labelledby=\"static" + tag + "Label\" aria-hidden=\"true\">\n"
-        + "          <div class=\"modal-dialog" + (size === null || size === "" ? "" : " modal-" + size) + "\">\n"
-        + "            <div class=\"modal-content\">\n"
-        + "              <div class=\"modal-header\">\n"
-        + "                <div id=\"static" + tag + "Label\">" + (title === null ? "" : "<h5 class=\"modal-title\">" + title + "</h5>") + "</div>\n"
-        + "              </div>\n"
-        + "              " + (body === null ? "<div id=\"body" + tag + "\"></div>" : "<div class=\"modal-body\" id=\"body" + tag + "\">" + body + "</div>") + "\n"
-        + "              <div class=\"modal-footer\">\n"
-        + (type !== "Ok" ? "                <button type=\"button\" id=\"cancel" + tag + "\" class=\"btn btn-secondary\" data-bs-dismiss=\"modal\""
-        + (disable === null ? "" : " disable") + ">" + _("Cancel") + "</button>\n" : "")
-        + "                <button type=\"button\" id=\"ok" + tag + "\" class=\"btn btn-primary\""
-        + (!action ? "data-bs-dismiss=\"modal\"" : "onclick=\"" + action + "\""
-        + (hideonclick === null ? "" : " data-bs-dismiss=\"modal\""))
-        + (disable === null ? "" : " disable") + ">" + (type === "Ok" ? _("Ok") : _("Confirm")) + "</button>\n"
-        + "              </div>\n"
-        + "            </div>\n"
-        + "          </div>";
+        this.innerHTML = ""; // Clear all existing elements
+        el = this.appendChild(document.createElement("div"));
+        el.className = "modal fade";
+        el.id = "static" + tag;
+        if (isStatic === null || isStatic === true) {
+            el.setAttribute("data-bs-backdrop", "static");
+            el.setAttribute("data-bs-keyboard", "false");
+        }
+        el.setAttribute("aria-labelledby", "static" + tag + "Label");
+        el.setAttribute("aria-hidden", "true");
+
+        el = el.appendChild(document.createElement("div"));
+        if (size === null || size === "") {
+            el.className = "modal-dialog";
+        } else {
+            el.className = "modal-dialog modal-" + size;
+        }
+
+        el = el.appendChild(document.createElement("div"));
+        el.className = "modal-content";
+        const view = el;
+
+        el = view.appendChild(document.createElement("div"));
+        el.className = "modal-header";
+        el = el.appendChild(document.createElement("div"));
+        el.id = "static" + tag + "Label";
+        if (title !== null) {
+            el.appendChild(document.createElement("h5"));
+            el.className = "modal-title";
+            el.innerHTML = title;
+        }
+
+        el = view.appendChild(document.createElement("div"));
+        el.id = "body" + tag;
+        el.className = "modal-body";
+        if (body !== null) {
+            el.innerHTML = body;
+        }
+
+        el = view.appendChild(document.createElement("div"));
+        el.className = "modal-footer";
+        if (type !== "Ok") {
+            const el2 = document.createElement("button");
+            el2.id = "cancel" + tag;
+            el2.className = "btn btn-secondary";
+            el2.setAttribute("data-bs-dismiss", "modal");
+            if (disable !== null) {
+                el2.setAttribute("disable", "");
+            }
+            el2.innerHTML = _("Cancel");
+            el.appendChild(el2);
+        }
+        {
+            // In brackets to limit scope of el2
+            const el2 = document.createElement("button");
+            el2.id = "ok" + tag;
+            el2.className = "btn btn-primary";
+            if (disable !== null) {
+                el2.setAttribute("disable", "");
+            }
+            if (!this.action || hideonclick !== null) {
+                el2.setAttribute("data-bs-dismiss", "modal");
+            }
+            el2.innerHTML = (type === "Ok" ? _("Ok") : _("Confirm"));
+            if (this.action) {
+                if (typeof (this.action) === "string") {
+                    // FIXME Should Try not to use this form of the function as it needs
+                    // the action to be globally defined. It could also be abused to inject
+                    // javascript
+                    // eslint-disable-next-line no-eval
+                    el2.addEventListener("click", () => { eval(this.action); });
+                    console.log("string listener on ok");
+                } else {
+                    el2.addEventListener("click", this.action);
+                    console.log("function listener on ok");
+                }
+            }
+            el.appendChild(el2);
+        }
     }
 
     static get observedAttributes() {
-        return ["tag", "title", "body", "action", "disable", "type", "hideonclick", "size", "static"];
+        return ["tag", "title", "body", "disable", "type", "hideonclick", "size", "static"];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
         const tag = this.getAttribute("tag");
         const type = this.getAttribute("type");
 
-        if ((name === "tag") || (name === "type") || (name === "action") || (name === "hideonclick") || (name === "size") || (name === "static")) { this.render(); } else {
+        if ((name === "tag") || (name === "type") || (name === "hideonclick") || (name === "size") || (name === "static")) { this.render(); } else {
             switch (name) {
             case "disable":
                 if (newValue === null) {
@@ -155,6 +216,11 @@ class DSASModal extends HTMLElement {
                 throw new Error("Unknown modal option");
             }
         }
+    }
+
+    setAction(_action = null) {
+        this.action = _action;
+        this.render();
     }
 
     show() {

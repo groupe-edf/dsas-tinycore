@@ -17,7 +17,7 @@ function modal_info(name, text) {
     modalDSAS.removeAttribute("disable");
     modalDSAS.setAttribute("static", false);
     modalDSAS.setAttribute("hideonclick", true);
-    modalDSAS.setAttribute("action", "clearTimeout(timeoutInfo)");
+    modalDSAS.setAction("clearTimeout(timeoutInfo)");
     modalDSAS.setAttribute("title", _("Info : {0}", name));
     modalDSAS.setAttribute("type", "Ok");
     modalDSAS.setAttribute("size", "xl");
@@ -31,9 +31,9 @@ function modal_task(action = "dsas_add_task();", ca = "", taskchange = "dsas_add
     modalDSAS.removeAttribute("type");
     modalDSAS.removeAttribute("static");
     if (action) {
-        modalDSAS.setAttribute("action", action);
+        modalDSAS.setAction(action);
     } else {
-        modalDSAS.removeAttribute("action");
+        modalDSAS.setAction();
     }
     modalDSAS.setAttribute("hideonclick", true);
     modalDSAS.setAttribute("title", _("Add a task"));
