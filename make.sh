@@ -676,10 +676,7 @@ realclean)
   rm -fr $work
   exit 0
   ;;
-check)
-  error "Self test are not written yet"
-  exit 1
-  ;;
+
 upgrade)
   msg Fecthing md5.db.gz
   $curl_cmd -o "$tcz_dir/md5.db.gz" "$tcz_url/md5.db.gz" || error failed to download md5.db.gz
@@ -702,91 +699,6 @@ upgrade)
       md5sum "$file" | sed -e "s:  $file$::g" > "$file.tcz.md5.txt"
     fi
   done < <(find $tcz_dir -name "*.tcz" -print0)
-  ;;
-static-chroot)
-  extract=$image
-
-  # Get the ISO
-  mkdir -p $work
-  get_unpack_livecd
-
-  # Unpack squashfs
-  if ! ls $extract/proc > /dev/null 2> /dev/null; then
-    cmd mkdir -p $extract
-    zcat "$squashfs" | { cd "$extract" || exit 1; cpio -i -H newc -d; }
-  fi
-
-  msg Append DSAS files
-  rsync -rlptv "$append/" "$extract/"
-  mkdir -p "$extract/home/tc"
-  chown root.root "$extract"
-  chmod 755 "$extract/home"
-
-  # Install the needed packages
-  install_tcz openssl-1.1.1
-  install_tcz libxml2
-  install_tcz libssh2
-  install_tcz libzip
-  install_tcz bzip2-lib
-  install_tcz php-8.0-cgi
-  install_tcz php-8.0-ext
-  install_tcz php-pam
-  install_tcz pcre2
-  install_tcz curl
-  install_tcz rsync
-  install_tcz node
-
-  # Install PHP cli and add iconv and phar extension
-  install_tcz php-8.0-cli
-  sed -i -e "s/;extension=phar/extension=phar/" $extract/usr/local/etc/php/php.ini
-  sed -i -e "s/;extension=iconv/extension=iconv/" $extract/usr/local/etc/php/php.ini
-  sed -i -e "s/;extension=curl/extension=curl/" $extract/usr/local/etc/php/php.ini
-  sed -i -e "s/;extension=zip/extension=zip/" $extract/usr/local/etc/php/php.ini
-  sed -i -e "s/;extension=tokenizer/extension=tokenizer/" $extract/usr/local/etc/php/php.ini
-
-  # Install PHP webdriver via composer             
-  install_phpstan
-  
-  mkdir -p $extract/home/tc/dsas
-  tar cf - --exclude tmp --exclude=work --exclude=.git . | tar -C $extract/home/tc/dsas -xvf - 
-  cat << EOF > $extract/home/tc/phpstan.neon
-parameters:
-  level: 9
-  paths:
-    - dsas/append/usr/local/share/www/api
-EOF
-  chown -R tc.staff $extract/home/tc
-
-  cat << EOF > $extract/tmp/script
-export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-cd /home/tc
-env HOME=/home/tc vendor/bin/phpstan
-EOF
-  chmod a+x "$extract/tmp/script"
-  msg "Running PHPStan on usr/local/share/www/api"
-  chroot --userspec=tc "$extract" /tmp/script || error error running phpstan
-
-  cat << EOF > $extract/tmp/script
-export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-export HOME=/home/tc
-# shellcheck disable=SC2154
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
-cd /home/tc
-npm init -y
-npm init  @eslint/config
-npx eslint dsas/append/usr/local/share/www/dsas.js
-EOF
-  cp /etc/resolv.conf "$extract/etc/resolv.conf" && msg "copy resolv.conf"
-  chmod a+x "$extract/tmp/script"
-  msg "Running eslint on usr/local/share/www/dsas.js"
-  chroot --userspec=tc "$extract" /tmp/script || error error running phpstan
-  rm $extract/etc/resolv.conf
-
-  if [ "$keep" = "0" ]; then
-    rm -fr $image $newiso $mnt
-  fi
-
   ;;
 
 static)
