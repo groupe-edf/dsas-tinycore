@@ -1,7 +1,7 @@
 _version=0.105.1
 _uri="https://www.clamav.net/downloads/production/clamav-0.105.1.tar.gz"
 # Tinycore 64bit has very old version of PCRE2 installed by default. Explicitly link to right version
-if [ "$arch" != 64" ]; then
+if [ "$arch" != "64" ]; then
   _dep="bzip2-lib json-c curl libxml2 ncursesw check openssl-1.1.1 libssh2 pcre2 libzip"
   _build_dep="cmake rust bzip2-dev json-c-dev libxml2-dev ncursesw-dev check-dev curl-dev openssl-1.1.1-dev libssh2-dev pcre2-dev libzip-dev compiletc"
 else
