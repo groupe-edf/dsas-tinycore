@@ -1890,16 +1890,21 @@ function dsas_task_info(id, name, len = 0) {
                 statusText: response.statusText});
     }).then(text => {
         var info = JSON.parse(text);
-        if (len === 0) {
-            modal_info(name, "<span id=\"logwind\"></span>");
-            DSASLogs = new DisplayLogs("logwind", info);
-        } else
-            DSASLogs.appendlog(info);
+
+        if (info && (info[0].constructor === Object) && (Object.keys(info[0])[0] === "error")) {
+            modal_errors(info);
+        } else {
+            if (len === 0) {
+                modal_info(name, "<span id=\"logwind\"></span>");
+                DSASLogs = new DisplayLogs("logwind", info);
+            } else
+                DSASLogs.appendlog(info);
       
-        // Automatically refresh the logs every 5 seconds
-        if (timeout_logs !== 0)
-            clearTimeout(timeout_logs);
-        timeout_logs = setTimeout(dsas_task_info, 5000, id, name, DSASLogs.logs[0].length);
+            // Automatically refresh the logs every 5 seconds
+            if (timeout_logs !== 0)
+                clearTimeout(timeout_logs);
+            timeout_logs = setTimeout(dsas_task_info, 5000, id, name, DSASLogs.logs[0].length);
+        }
     }).catch(error => {
         if (! fail_loggedin(error.statusText))
             modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
