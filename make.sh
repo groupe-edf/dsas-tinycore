@@ -945,6 +945,7 @@ docker)
 
     # Install firefox, explicitly install the fonts
     install_firefox
+    install_tcz harfbuzz fribidi # FIXME missing firefox dependency !!
     install_tcz Xorg-fonts
     install_tcz xfonts-unifont
     install_tcz unifont 
