@@ -1,3 +1,4 @@
+_pkg=clamav
 _version=0.105.1
 _uri="https://www.clamav.net/downloads/production/clamav-0.105.1.tar.gz"
 # Tinycore 64bit has very old version of PCRE2 installed by default. Explicitly link to right version
