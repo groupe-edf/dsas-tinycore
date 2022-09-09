@@ -8,7 +8,7 @@ import { setOptions, parse } from "marked";
 /* globals modal_message fail_loggedin dsas_origin _ */
 
 // DSAS version variable
-const dsasVersion = "1.1.2";
+const dsasVersion = "1.2.0";
 
 function dsasHeadings() {
     const hs = Array.prototype.slice.call(document.querySelectorAll("h1, h2, h3"));
