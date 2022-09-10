@@ -42,7 +42,7 @@ function iface_body(iface, i) {
         + "</div>";
 }
 
-export function dsas_display_net(what = "all") {
+export default function dsas_display_net(what = "all") {
     fetch("api/dsas-net.php").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
@@ -143,4 +143,4 @@ export function dsas_change_net(what = "all", i = 0) {
         });
     }
 }
-window.dsas_display_net = dsas_display_net;
+window.dsas_change_net = dsas_change_net;

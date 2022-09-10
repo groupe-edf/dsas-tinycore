@@ -4,17 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Web</title>
+    <link href="bootstrap-5.0.2.min.css" rel="stylesheet" type="text/css" />
+    <script src="bootstrap-5.0.2.bundle.min.js"></script>
     <script src="dsas.js"></script>
 </head>
 <body>
 
 <dsas-header></dsas-header>
-<script>
-  dsas_loggedin();
-  dsas_check_warnings();
-  dsas_display_web("all");
-</script>
-
 <div class="container p-3 my-3 border" id="web_csr"></div>
 
 <div class="container p-3 my-3 border" id="web_pem"></div>
@@ -53,5 +49,8 @@
     </div>
   </div>
 </div>
+<script>
+    dsas_entry("web.html");
+</script>
 </body>
 </html>

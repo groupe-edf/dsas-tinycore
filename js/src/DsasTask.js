@@ -179,7 +179,7 @@ function task_body(task) {
     return body;
 }
 
-export function dsas_display_tasks(what = "all") {
+export default function dsas_display_tasks(what = "all") {
     if (what === "all" || what === "tasks" || what === "status") {
         fetch("api/dsas-task.php").then((response) => {
             if (response.ok) { return response.json(); }

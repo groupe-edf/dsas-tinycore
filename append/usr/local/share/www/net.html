@@ -4,18 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Net</title>
+    <link rel="stylesheet" type="text/css" href="bootstrap-5.0.2.min.css" />
+    <script src="bootstrap-5.0.2.bundle.min.js"></script>
     <script src="dsas.js"></script>
 </head>
 <body>
 
 <dsas-header></dsas-header>
-<script>
-  dsas_loggedin();
-  dsas_check_warnings();
-</script>
-
 <div class="container p-3 my-3 border" id="network"></div>
-<script>dsas_display_net("all");</script>
-
+<script>
+    dsas_entry("net.html");
+</script>
 </body>
 </html>

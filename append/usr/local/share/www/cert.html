@@ -7,16 +7,10 @@
     <link rel="stylesheet" type="text/css" href="bootstrap-5.0.2.min.css" />
     <script src="bootstrap-5.0.2.bundle.min.js"></script>
     <script src="dsas.js"></script>
-    <link rel="stylesheet" type="text/css" href="dsas.css" />
 </head>
 <body>
 
 <dsas-header></dsas-header>
-<script>
-  dsas_loggedin();
-  dsas_check_warnings();
-</script>
-
 <!-- hidden form for file upload -->
 <form id ="x509upload">
   <input type="file" name="x509file" id="x509file" style="display: none"
@@ -69,7 +63,8 @@
   <h5 data-i18n>Legend : <span class="text">Certification Authority</span> - <span class="text-info">Intermediate Certificate</span> - <span class="text-warning">Less than 6 months before expiry</span> - <span class="text-danger">Expired</span></h5>
 </div>
 
-<script>dsas_display_cert();</script>
-
+<script>
+    dsas_entry("cert.html");
+</script>
 </body>
 </html>

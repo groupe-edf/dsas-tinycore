@@ -60,6 +60,8 @@ function dsas_real_backup() {
     const passwd = document.getElementById("BackupPassword").value;
     const uri = new URL("api/backup.php", dsas_origin());
     uri.search = new URLSearchParams({ passwd });
+
+    console.log("save");
     fetch(uri).then((response) => {
         if (response.ok) { return response.text(); }
         return Promise.reject(new Error(response.statusText));
@@ -76,7 +78,7 @@ function dsas_real_backup() {
                 a.click();
                 window.URL.revokeObjectURL(backupurl);
             };
-        });
+        })();
         saveBase64(backup, "dsas_backup.tgz");
     }).catch((error) => {
         // Don't translate error.statusText here
@@ -85,7 +87,7 @@ function dsas_real_backup() {
 }
 window.dsas_real_backup = dsas_real_backup;
 
-export function dsas_backup() {
+function dsas_backup() {
     const modalDSAS = document.getElementById("modalDSAS");
     let body = "";
     modal_action(_("Backup the DSAS configuration"), "dsas_real_backup();", true);
@@ -97,7 +99,7 @@ export function dsas_backup() {
 }
 window.dsas_backup = dsas_backup;
 
-export function dsas_passwd_restore() {
+function dsas_passwd_restore() {
     const modalDSAS = document.getElementById("modalDSAS");
     let body = "";
     modal_action(_("Restoration of the DSAS configuration"), "dsas_real_restore();", true);
@@ -109,7 +111,7 @@ export function dsas_passwd_restore() {
 }
 window.dsas_passwd_restore = dsas_passwd_restore;
 
-export function dsas_restore() {
+function dsas_restore() {
     const inp = document.createElement("input");
     document.body.appendChild(inp);
     inp.style = "display: none";
@@ -121,7 +123,7 @@ export function dsas_restore() {
 }
 window.dsas_restore = dsas_restore;
 
-export function dsas_restore_core(file, passwd = "") {
+export default function dsas_restore_core(file, passwd = "") {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("passwd", passwd);
@@ -157,7 +159,7 @@ export function dsas_restore_core(file, passwd = "") {
 }
 window.dsas_restore_core = dsas_restore_core;
 
-export function dsas_real_restore() {
+function dsas_real_restore() {
     const passwd = document.getElementById("RestorePassword").value;
     const file = document.getElementById("RestoreSelectFile").files[0];
     dsas_restore_core(file, passwd);
@@ -257,7 +259,7 @@ function waitshutdown(c = 0) {
     }
 }
 
-export function dsas_reboot() {
+function dsas_reboot() {
     const modalReboot = document.getElementById("modalDSAS");
     modalReboot.setAttribute("disable", true);
     modalReboot.setAttribute("body", "  <div class=\"row\">\n"
@@ -285,7 +287,7 @@ export function dsas_reboot() {
 }
 window.dsas_reboot = dsas_reboot;
 
-export function dsas_shutdown() {
+function dsas_shutdown() {
     const modalShutdown = document.getElementById("modalDSAS");
 
     modalShutdown.setAttribute("disable", true);
@@ -370,7 +372,7 @@ class DSASHeader extends HTMLElement {
         + "      <ul class=\"navbar-nav ms-auto\">\n"
         + "      <span data-i18n-navbar-lang></span>\n"
         + "      <li class=\"nav-item px-2\">\n"
-        + "        <a class=\"nav-link " + disablenav + " btn btn-sm btn-danger\" onclick=\"modal_action('" + _("Are you sure you want to apply ?") + "', 'dsas_apply();')\">" + _("Apply") + "</a>\n"
+        + "        <a class=\"nav-link " + disablenav + " btn-sm btn-danger\" onclick=\"modal_action('" + _("Are you sure you want to apply ?") + "', 'dsas_apply();')\">" + _("Apply") + "</a>\n"
         + "      </li>\n"
         + "      </ul>\n"
         + "    </nav></div></div>"

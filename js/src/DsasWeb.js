@@ -2,7 +2,7 @@
 
 /* globals _ modal_message modal_errors modal_action clear_feedback fail_loggedin */
 
-export function dsas_display_web(what = "all") {
+export default function dsas_display_web(what = "all") {
     fetch("api/dsas-web.php").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));

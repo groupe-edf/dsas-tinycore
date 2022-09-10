@@ -4,16 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Service</title>
+    <link rel="stylesheet" type="text/css" href="bootstrap-5.0.2.min.css" />
+    <script src="bootstrap-5.0.2.bundle.min.js"></script>
     <script src="dsas.js"></script>
 </head>
 <body>
 
 <dsas-header></dsas-header>
-<script>
-  dsas_loggedin();
-  dsas_check_warnings();
-</script>
-
 <div class="container p-3 my-3 border">
   <h5 data-i18n>Service configuration :</h5>
   <form class="g-2">
@@ -150,9 +147,9 @@
       </div>
     </div>
   </form>
-  <script>dsas_display_service("all");</script>
 </div>
-
-
+<script>
+    dsas_entry("service.html");
+</script>
 </body>
 </html>

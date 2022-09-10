@@ -152,7 +152,7 @@ function treat_x509_certs(certs, added = false) {
     return body;
 }
 
-export function dsas_display_cert(what = "all") {
+export default function dsas_display_cert(what = "all") {
     fetch("api/dsas-cert.php").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));

@@ -169,10 +169,8 @@ class DSASModal extends HTMLElement {
                     // javascript
                     // eslint-disable-next-line no-eval
                     el2.addEventListener("click", () => { eval(this.action); });
-                    console.log("string listener on ok");
                 } else {
                     el2.addEventListener("click", this.action);
-                    console.log("function listener on ok");
                 }
             }
             el.appendChild(el2);

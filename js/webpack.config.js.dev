@@ -5,16 +5,7 @@ module.exports = {
   devtool: false,
   plugins: [new ESLintPlugin(),],
   entry: {
-    main: ["./src/DsasEntry.js",
-           "./src/DsasModal.js",
-           "./src/DsasCert.js",
-           "./src/DsasHelp.js",
-           "./src/DsasNet.js",
-           "./src/DsasService.js",
-           "./src/DsasStatus.js",
-           "./src/DsasTask.js",
-           "./src/DsasUsers.js",
-           "./src/DsasWeb.js",],
+    main: ["./src/DsasEntry.js", ],
   },
   module: {
     rules: [

@@ -2,7 +2,7 @@
 
 /* globals _ modal_message modal_errors clear_feedback fail_loggedin print_obj empty_obj */
 
-export function dsas_display_service(what = "all") {
+export default function dsas_display_service(what = "all") {
     fetch("api/dsas-service.php").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));

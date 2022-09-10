@@ -2,6 +2,7 @@
 
 // Relies on "marked.js" being imported first
 import "./github-markdown.min.css";
+import "./dsas.css";
 import { setOptions, parse } from "marked";
 
 // These functions are in another file
@@ -20,10 +21,9 @@ function dsasHeadings() {
     return ph;
 }
 
-export function dsas_display_version() {
+function dsas_display_version() {
     document.getElementById("Version").innerHTML = "<p><span data-i18n>DSAS Version</span> : " + dsasVersion + "</p>";
 }
-window.dsas_display_version = dsas_display_version;
 
 function dsasHelpTOC() {
     let body = "<ul class=\"list-unstyled\">";
@@ -69,11 +69,12 @@ function dsasHelpTOC() {
     document.getElementById("toc").innerHTML = body + "<ul>";
 }
 
-export function dsas_display_help() {
+export default function dsas_display_help() {
     const urlParams = new URLSearchParams(window.location.search);
     const lang = urlParams.get("language");
     const uri = (lang ? "Documentation_" + lang + ".md" : "Documentation_en.md");
 
+    dsas_display_version();
     fetch(uri).then((response) => {
         if (response.ok) { return response.text(); }
         return Promise.reject(new Error(response.statusText));
