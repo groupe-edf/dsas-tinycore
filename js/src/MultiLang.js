@@ -58,7 +58,7 @@ export default class MultiLang {
             if (this.currentLanguage !== _lang) {
                 this.currentLanguage = _lang;
                 document.cookie = "Language=" + _lang + "; expires=Fri 31 Dec 9999 23:59:59;SameSite=Lax";
-                if (this.onLang) { this.onLang(); } else { window.location.reload(); }
+                if (this.onLang) { this.onLang(_lang); } else { window.location.reload(); }
             }
         }
     }
@@ -138,12 +138,12 @@ export const ml = new MultiLang(
         [...document.getElementsByTagName("dsas-header")].forEach((head) => { head.render(); });
         ml.translateHTML();
     }),
-    (() => {
+    ((_lang) => {
         [...document.getElementsByTagName("dsas-header")].forEach((head) => head.render());
         if ((window.location.pathname === "help.html")
                 || (window.location.pathname === "/help.html")) {
             // Special case for help.html
-            window.location = "help.html?language=" + this.currentLanguage;
+            window.location = "help.html?language=" + _lang;
         } else {
             window.location.reload();
         }
