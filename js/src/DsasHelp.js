@@ -4,9 +4,9 @@
 import "./github-markdown.min.css";
 import "./dsas.css";
 import { setOptions, parse } from "marked";
-
-// These functions are in another file
-/* globals modal_message fail_loggedin dsas_origin _ */
+import { _ } from "./MultiLang";
+import { modal_message } from "./DsasModal";
+import { fail_loggedin, dsas_origin } from "./DsasUtil";
 
 // DSAS version variable
 const dsasVersion = "1.2.0";

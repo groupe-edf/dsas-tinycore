@@ -53,10 +53,10 @@ window.modal_action = modal_action;
 
 export function modal_errors(errors, feedback = false) {
     if (feedback) {
-        // Clear old invalid feedbacks
+        // Clear old invalid feedbacks. Don't use clear_feedback to avoid circular reference
         // eslint-disable-next-line no-param-reassign
-        document.getElementsByClassName("invalid-feedback").forEach((feed) => { feed.innerHTML = ""; });
-        document.getElementsByClassName("form-control").forEach((feed) => { feed.setAttribute("class", "form-control"); });
+        [...document.getElementsByClassName("invalid-feedback")].forEach((feed) => { feed.innerHTML = ""; });
+        [...document.getElementsByClassName("form-control")].forEach((feed) => { feed.setAttribute("class", "form-control"); });
     }
 
     if (errors && errors !== "Ok") {
@@ -79,7 +79,7 @@ export function modal_errors(errors, feedback = false) {
 }
 window.modal_errors = modal_errors;
 
-class DSASModal extends HTMLElement {
+export default class DSASModal extends HTMLElement {
     connectedCallback() {
         if (!this.rendered) {
             this.render();
@@ -246,4 +246,6 @@ class DSASModal extends HTMLElement {
     }
 }
 
-customElements.define("dsas-modal", DSASModal);
+if (customElements.get("dsas-modal") === undefined) {
+    customElements.define("dsas-modal", DSASModal);
+}

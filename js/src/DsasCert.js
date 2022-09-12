@@ -1,14 +1,19 @@
 // The javascript used by the DSAS cert.html page
-
-/* globals _ modal_message modal_errors modal_action clear_feedback */
-/* globals fail_loggedin cert_is_ca cert_name */
+import { _ } from "./MultiLang";
+import { modal_message, modal_errors, modal_action } from "./DsasModal";
+import {
+    fail_loggedin,
+    clear_feedback,
+    cert_is_ca,
+    cert_name,
+} from "./DsasUtil";
 
 function cert_expiring(cert) {
     // JS is time_t times 1000 'cause in milliseconds
     let tt = cert.validTo_time_t;
     tt *= 1000;
 
-    // EDF CA has à value of -1. What does that even mean !!
+    // EDF CA has a value of -1. What does that even mean !!
     if (tt < 0) return false;
     // Expiring if less than 6 months are left
     if (tt - Date.now() < 180 * 24 * 3600000) { return true; }
@@ -128,10 +133,14 @@ function treat_x509_certs(certs, added = false) {
         const pemblob = new Blob([cert.pem], { type: "application/x-x509-user-cert" });
         const url = window.URL.createObjectURL(pemblob);
         const name = cert_name(cert);
-        let cls = "text";
-        if (cert_expired(cert)) { cls = "text-danger"; }
-        if (cert_expiring(cert)) { cls = "text-warning"; }
-        if (cert_is_ca(cert)) { cls = "text-info"; }
+        let cls = "text-info";
+        if (cert_expired(cert)) {
+            cls = "text-danger";
+        } else if (cert_expiring(cert)) {
+            cls = "text-warning";
+        } else if (cert_is_ca(cert)) {
+            cls = "text";
+        }
 
         body = body
       + "<p class=\"my-0 " + cls + "\"><a class=\"text-toggle\" data-bs-toggle=\"collapse\" href=\"#" + (added ? "add" : "ca") + i + "\" role=\"button\""

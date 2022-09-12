@@ -1,6 +1,7 @@
 // DSAS entry point
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap/dist/js/bootstrap.bundle";
+import "../scss/styles.scss";
+// eslint-disable-next-line no-unused-vars
+import * as bootstrap from "bootstrap";
 import "./DsasHeader";
 import { dsas_loggedin, dsas_check_warnings } from "./DsasUtil";
 import { dsas_status, dsas_display_logs } from "./DsasStatus"; // For the "index.html" page

@@ -1,6 +1,7 @@
 // The javascript used by the DSAS web.html page
-
-/* globals _ modal_message modal_errors modal_action clear_feedback fail_loggedin */
+import { _ } from "./MultiLang";
+import { modal_message, modal_errors, modal_action } from "./DsasModal";
+import { fail_loggedin, clear_feedback } from "./DsasUtil";
 
 export default function dsas_display_web(what = "all") {
     fetch("api/dsas-web.php").then((response) => {

@@ -1,6 +1,12 @@
 // The javascript used by the DSAS service.html page
-
-/* globals _ modal_message modal_errors clear_feedback fail_loggedin print_obj empty_obj */
+import { _ } from "./MultiLang";
+import { modal_message, modal_errors } from "./DsasModal";
+import {
+    fail_loggedin,
+    clear_feedback,
+    print_obj,
+    empty_obj,
+} from "./DsasUtil";
 
 function iface_body(iface, i) {
     const dhcp = (iface.dhcp === "true");

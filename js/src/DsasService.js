@@ -1,6 +1,12 @@
 // The javascript used by the DSAS service.html page
-
-/* globals _ modal_message modal_errors clear_feedback fail_loggedin print_obj empty_obj */
+import { _ } from "./MultiLang";
+import { modal_message, modal_errors } from "./DsasModal";
+import {
+    fail_loggedin,
+    clear_feedback,
+    print_obj,
+    empty_obj,
+} from "./DsasUtil";
 
 export default function dsas_display_service(what = "all") {
     fetch("api/dsas-service.php").then((response) => {
@@ -126,7 +132,7 @@ export function dsas_change_service(what) {
             serv.snmp.active = (document.getElementById("snmp").checked ? "true" : "false");
             serv.snmp.username = document.getElementById("snmp_user").value;
             serv.snmp.password = document.getElementById("snmp_pass").value;
-            document.getElementsByTagName("option").forEach((opt) => {
+            [...document.getElementsByTagName("option")].forEach((opt) => {
                 switch (opt.id) {
                 case "snmp_md5":
                 case "snmp_sha":
@@ -139,7 +145,7 @@ export function dsas_change_service(what) {
                 }
             });
             serv.snmp.passpriv = document.getElementById("snmp_passpriv").value;
-            document.getElementsByTagName("option").forEach((opt) => {
+            [...document.getElementsByTagName("option")].forEach((opt) => {
                 switch (opt.id) {
                 case "snmp_des":
                 case "snmp_aes":

@@ -60,8 +60,6 @@ function dsas_real_backup() {
     const passwd = document.getElementById("BackupPassword").value;
     const uri = new URL("api/backup.php", dsas_origin());
     uri.search = new URLSearchParams({ passwd });
-
-    console.log("save");
     fetch(uri).then((response) => {
         if (response.ok) { return response.text(); }
         return Promise.reject(new Error(response.statusText));
@@ -333,7 +331,7 @@ class DSASHeader extends HTMLElement {
     }
 
     render() {
-        const disablenav = this.getAttribute("disablenav");
+        const disablenav = (this.getAttribute("disablenav") ? this.getAttribute("disablenav") : "");
 
         this.innerHTML = "    <div class=\"row g-0 sticky-top\"><div class=\"col-8\"><nav class=\"navbar navbar-expand-sm bg-dark navbar-dark\">\n"
         + "      <a class=\"navbar-brand px-2\"" + ((disablenav !== "disabled") ? " href=\"/" : "") + "\">DSAS</a>\n"
@@ -372,7 +370,7 @@ class DSASHeader extends HTMLElement {
         + "      <ul class=\"navbar-nav ms-auto\">\n"
         + "      <span data-i18n-navbar-lang></span>\n"
         + "      <li class=\"nav-item px-2\">\n"
-        + "        <a class=\"nav-link " + disablenav + " btn-sm btn-danger\" onclick=\"modal_action('" + _("Are you sure you want to apply ?") + "', 'dsas_apply();')\">" + _("Apply") + "</a>\n"
+        + "        <a class=\"btn " + disablenav + " btn-danger\" onclick=\"modal_action('" + _("Are you sure you want to apply ?") + "', 'dsas_apply();')\">" + _("Apply") + "</a>\n"
         + "      </li>\n"
         + "      </ul>\n"
         + "    </nav></div></div>"
@@ -388,4 +386,6 @@ class DSASHeader extends HTMLElement {
     }
 }
 
-customElements.define("dsas-header", DSASHeader);
+if (customElements.get("dsas-header") === undefined) {
+    customElements.define("dsas-header", DSASHeader);
+}

@@ -1,9 +1,16 @@
 // The javascript used by the DSAS task.html page
-const DisplayLogs = require("./DisplayLogs").default;
-
-// These functions are in another file
-/* globals _ modal_message modal_errors modal_action fail_loggedin print_obj empty_obj */
-/* globals date_to_locale cert_name cert_is_ca clear_feedback */
+import DisplayLogs from "./DisplayLogs";
+import { _ } from "./MultiLang";
+import { modal_message, modal_errors, modal_action } from "./DsasModal";
+import {
+    fail_loggedin,
+    clear_feedback,
+    print_obj,
+    empty_obj,
+    date_to_locale,
+    cert_name,
+    cert_is_ca,
+} from "./DsasUtil";
 
 // Global variable for the DisplayLog instance for the task log files
 let infoLogs;
@@ -291,7 +298,7 @@ export function dsas_task_new() {
     document.getElementById("TaskName").value = "";
     document.getElementById("TaskDirectory").value = "";
     document.getElementById("TaskURI").value = "";
-    document.getElementsByTagName("option").forEach((opt) => {
+    [...document.getElementsByTagName("option")].forEach((opt) => {
         // eslint-disable-next-line no-param-reassign
         opt.selected = (opt.id === "TaskTypeNull"
             || opt.id === "TaskRunNull"
@@ -388,7 +395,7 @@ export function dsas_task_modify(id, name) {
                     document.getElementById("TaskDirectory").value = print_obj(task.directory);
                     document.getElementById("TaskURI").value = print_obj(task.uri);
 
-                    document.getElementsByTagName("option").forEach((opt) => {
+                    [...document.getElementsByTagName("option")].forEach((opt) => {
                         // eslint-disable-next-line no-param-reassign
                         opt.selected = (((opt.id.substr(0, 8) === "TaskType") && (opt.value === task.type))
                                 || ((opt.id.substr(0, 7) === "TaskRun") && (opt.value === task.run))
@@ -475,7 +482,7 @@ window.dsas_task_info = dsas_task_info;
 
 export function dsas_add_task_arch(archs = []) {
     let type = "";
-    document.getElementsByTagName("option").forEach((opt) => {
+    [...document.getElementsByTagName("option")].forEach((opt) => {
         if (opt.id.substr(0, 8) === "TaskType" && opt.selected) { type = opt.value; }
     });
     document.getElementById("TaskHasArch").innerHTML = task_arch_body(type, archs);
@@ -484,8 +491,8 @@ window.dsas_add_task_arch = dsas_add_task_arch;
 
 export function dsas_add_task_cert() {
     const taskCert = document.getElementById("TaskCert");
-    const opt = document.getElementsByTagName("option")
-        .filter((o) => opt.id.substr(0, 7) !== "TaskRun"
+    const opt = [...document.getElementsByTagName("option")]
+        .filter((o) => o.id.substr(0, 7) !== "TaskRun"
             && o.id.substr(0, 8) !== "TaskType"
             && o.id.substr(0, 6) !== "TaskCA"
             && o.selected);
@@ -493,8 +500,8 @@ export function dsas_add_task_cert() {
         const name = opt[0].innerHTML;
         const finger = opt[0].value;
         let add = true;
-        document.getElementsByTagName("dsas-task-cert")
-            .filter((line) => line.getAttribute("fingerprint") === finger).forEach(() => { add = false; });
+        [...document.getElementsByTagName("dsas-task-cert")
+            .filter((line) => line.getAttribute("fingerprint") === finger)].forEach(() => { add = false; });
         if (add) {
             taskCert.innerHTML = taskCert.innerHTML + "<dsas-task-cert name=\"" + name
           + "\" fingerprint=\"" + finger + "\"></dsas-task-cert>";
@@ -505,7 +512,7 @@ window.dsas_add_task_cert = dsas_add_task_cert;
 
 export function dsas_task_cert_delete(fingerprint) {
     let body = "";
-    document.getElementsByTagName("dsas-task-cert")
+    [...document.getElementsByTagName("dsas-task-cert")]
         .filter((line) => line.getAttribute("fingerprint") !== fingerprint)
         .forEach((line) => {
             body += "<dsas-task-cert name=\"" + line.getAttribute("name")
@@ -525,7 +532,7 @@ export function dsas_add_task(oldid = "") {
     const certs = [];
     const archs = [];
 
-    document.getElementsByTagName("option").forEach((opt) => {
+    [...document.getElementsByTagName("option")].forEach((opt) => {
         if (opt.id.substr(0, 8) === "TaskType" && opt.selected) { type = opt.value; }
         if (opt.id.substr(0, 7) === "TaskRun" && opt.selected) { run = opt.value; }
         if (opt.id.substr(0, 6) === "TaskCA" && opt.selected) {
@@ -539,13 +546,13 @@ export function dsas_add_task(oldid = "") {
         }
     });
     if (type === "deb") {
-        document.getElementsByTagName("input").forEach((inp) => {
+        [...document.getElementsByTagName("input")].forEach((inp) => {
             if (inp.id.substr(0, 8) === "TaskArch") {
                 archs.push({ arch: inp.value, active: (inp.checked ? "true" : "false") });
             }
         });
     }
-    document.getElementsByTagName("dsas-task-cert").forEach((cert) => certs.push({ name: cert.getAttribute("name"), fingerprint: cert.getAttribute("fingerprint") }));
+    [...document.getElementsByTagName("dsas-task-cert")].forEach((cert) => certs.push({ name: cert.getAttribute("name"), fingerprint: cert.getAttribute("fingerprint") }));
 
     const formData = new FormData();
     formData.append("op", "add");
@@ -625,4 +632,6 @@ class DSASTaskCert extends HTMLElement {
     }
 }
 
-customElements.define("dsas-task-cert", DSASTaskCert);
+if (customElements.get("dsas-task-cert") === undefined) {
+    customElements.define("dsas-task-cert", DSASTaskCert);
+}

@@ -105,7 +105,7 @@ function dsas_change_users() {
         (users.constructor === Object ? [users] : users).forEach((user) => {
             const { username } = user;
             const description = document.getElementById("description_" + username).value;
-            document.getElementsByTagName("option").forEach((opt) => {
+            [...document.getElementsByTagName("option")].forEach((opt) => {
                 if (opt.id === ("admin_" + username) && opt.selected) { type = "admin"; }
                 if (opt.id === ("bas_" + username) && opt.selected) { type = "bas"; }
                 if (opt.id === ("haut_" + username) && opt.selected) { type = "haut"; }

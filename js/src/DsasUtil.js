@@ -58,8 +58,8 @@ window.date_to_locale = date_to_locale;
 // eslint-disable-next-line no-unused-vars
 export function clear_feedback() {
     // eslint-disable-next-line no-param-reassign
-    document.getElementsByClassName("invalid-feedback").forEach((feed) => { feed.innerHTML = ""; });
-    document.getElementsByClassName("form-control").forEach((feed) => { feed.setAttribute("class", "form-control"); });
+    [...document.getElementsByClassName("invalid-feedback")].forEach((feed) => { feed.innerHTML = ""; });
+    [...document.getElementsByClassName("form-control")].forEach((feed) => { feed.setAttribute("class", "form-control"); });
 }
 window.clear_feedback = clear_feedback;
 

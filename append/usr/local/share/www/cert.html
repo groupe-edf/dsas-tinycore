@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Certificates</title>
-    <link rel="stylesheet" type="text/css" href="bootstrap-5.0.2.min.css" />
-    <script src="bootstrap-5.0.2.bundle.min.js"></script>
-    <script src="dsas.js"></script>
 </head>
 <body>
 
@@ -63,8 +60,7 @@
   <h5 data-i18n>Legend : <span class="text">Certification Authority</span> - <span class="text-info">Intermediate Certificate</span> - <span class="text-warning">Less than 6 months before expiry</span> - <span class="text-danger">Expired</span></h5>
 </div>
 
-<script>
-    dsas_entry("cert.html");
-</script>
+<script src="dsas.js"></script>
+<script>dsas_entry("cert.html");</script>
 </body>
 </html>
