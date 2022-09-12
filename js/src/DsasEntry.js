@@ -4,8 +4,8 @@ import "../scss/styles.scss";
 import * as bootstrap from "bootstrap";
 import "./DsasHeader";
 import { dsas_loggedin, dsas_check_warnings } from "./DsasUtil";
-import { dsas_status, dsas_display_logs } from "./DsasStatus"; // For the "index.html" page
 import dsas_init_loggedin from "./DsasLogin"; // For the "login.html" page
+import dsas_display_status from "./DsasStatus"; // For the "index.html" page
 import dsas_display_passwd from "./DsasPasswd"; // For the "passwd.html" page
 import dsas_display_users from "./DsasUsers"; // For the "users.html" page
 import dsas_display_help from "./DsasHelp"; // For the "help.html" page
@@ -71,8 +71,7 @@ export default function dsas_entry(_page = null) {
         // Assume on "index.html"
         dsas_loggedin();
         dsas_check_warnings();
-        dsas_status();
-        dsas_display_logs("all");
+        dsas_display_status();
         break;
     }
 }

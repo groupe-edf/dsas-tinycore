@@ -83,6 +83,7 @@ function dsas_real_backup() {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
     });
 }
+// This needs to be exposed so test code can use it
 window.dsas_real_backup = dsas_real_backup;
 
 function dsas_backup() {

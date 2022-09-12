@@ -154,4 +154,3 @@ export const ml = new MultiLang(
 export function _(...args) {
     return ml.translate(...args);
 }
-window._ = _;

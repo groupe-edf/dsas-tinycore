@@ -77,7 +77,7 @@ function dsas_refresh_logs(all = false) {
     });
 }
 
-export function dsas_status() {
+function dsas_status() {
     fetch("api/dsas-status.php").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
@@ -137,7 +137,7 @@ function dsas_togglelogs() {
     }
 }
 
-export function dsas_display_logs() {
+function dsas_display_logs() {
     fetch("api/dsas-verif-logs.php").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
@@ -159,4 +159,9 @@ export function dsas_display_logs() {
             if (error.statusText) { modal_message(_("Error ({0}) during the download of the logs : {1}", error.status, error.statusText)); } else { modal_message(_("Error ({0}) during the download of the logs : {1}", 0, error)); }
         }
     });
+}
+
+export default function dsas_display_status() {
+    dsas_status();
+    dsas_display_logs("all");
 }
