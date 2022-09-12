@@ -246,6 +246,7 @@ export function dsas_upload_cert_core(file, type, name) {
         if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
     });
 }
+//  This needs to be exposed so test code can use it
 window.dsas_upload_cert_core = dsas_upload_cert_core;
 
 export function dsas_upload_cert(type = "x509", name = "") {

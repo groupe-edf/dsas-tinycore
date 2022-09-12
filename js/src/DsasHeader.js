@@ -22,6 +22,8 @@ function b64toBlob(b64Data, contentType = "", sliceSize = 512) {
     const blob = new Blob(byteArray, { type: contentType });
     return blob;
 }
+// This needed to be exposed so test code can use it
+window.b64toBlob = b64toBlob;
 
 function dsas_apply() {
     const modalApply = document.getElementById("modalDSAS");
@@ -89,7 +91,7 @@ window.dsas_real_backup = dsas_real_backup;
 function dsas_backup() {
     const modalDSAS = document.getElementById("modalDSAS");
     let body = "";
-    modal_action(_("Backup the DSAS configuration"), "dsas_real_backup();", true);
+    modal_action(_("Backup the DSAS configuration"), () = > { dsas_real_backup(); }, true);
     body = "    <div class=\"col-9 d-flex justify-content-center\">\n"
          + "      <label for=\"BackupPassword\">" + _("Backup password :") + "</label>\n"
          + "      <input type=\"password\" id=\"BackupPassword\" value=\"\" class=\"form-control\" onkeypress=\"if (event.key === 'Enter'){ modalDSAS.hide(); dsas_real_backup();}\">\n"
