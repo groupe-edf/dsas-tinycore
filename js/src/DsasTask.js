@@ -525,8 +525,8 @@ export function dsas_add_task_cert() {
         const name = opt[0].innerHTML;
         const finger = opt[0].value;
         let add = true;
-        [...document.getElementsByTagName("dsas-task-cert")
-            .filter((line) => line.getAttribute("fingerprint") === finger)].forEach(() => { add = false; });
+        [...document.getElementsByTagName("dsas-task-cert")]
+            .filter((line) => line.getAttribute("fingerprint") === finger).forEach(() => { add = false; });
         if (add) {
             taskCert.innerHTML = taskCert.innerHTML + "<dsas-task-cert name=\"" + name
           + "\" fingerprint=\"" + finger + "\"></dsas-task-cert>";
