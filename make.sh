@@ -680,7 +680,7 @@ install_dsas_js() {
      fi
    done < <(find ./js -name "*.js" -print0)
 
-   if test  ! -f "$target" || XXXXXXXX ; then
+   if test  ! -f "$target"; then
       _old=$extract
       extract="$build"
       if [ -d "$extract" ]; then
@@ -1070,12 +1070,8 @@ docker)
     install_tcz xfonts-unifont
     install_tcz unifont 
 
-    # Install PHP cli and add iconv and phar extension
+    # Install PHP
     install_tcz php-8.0-cli
-    sed -i -e "s/;extension=phar/extension=phar/" $extract/usr/local/etc/php/php.ini
-    sed -i -e "s/;extension=iconv/extension=iconv/" $extract/usr/local/etc/php/php.ini
-    sed -i -e "s/;extension=curl/extension=curl/" $extract/usr/local/etc/php/php.ini
-    sed -i -e "s/;extension=zip/extension=zip/" $extract/usr/local/etc/php/php.ini
 
     # Install PHP webdriver via composer             
     install_webdriver
@@ -1096,6 +1092,14 @@ docker)
   mkdir -p "$extract/home/tc"
   chown root.root "$extract"
   chmod 755 "$extract/home"
+
+  # Now that phop.ini is copied, if in test mode add iconv, phar, etc 
+  if [ "$testcode" = "1" ]; then
+    sed -i -e "s/;extension=phar/extension=phar/" $extract/usr/local/etc/php/php.ini
+    sed -i -e "s/;extension=iconv/extension=iconv/" $extract/usr/local/etc/php/php.ini
+    sed -i -e "s/;extension=curl/extension=curl/" $extract/usr/local/etc/php/php.ini
+    sed -i -e "s/;extension=zip/extension=zip/" $extract/usr/local/etc/php/php.ini
+  fi
 
   # prevent autologin of tc user
   ( cd "$extract/etc" || exit 1; sed -i -r 's/(.*getty)(.*autologin)(.*)/\1\3/g'  inittab; )

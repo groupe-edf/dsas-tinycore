@@ -87,6 +87,7 @@ function test(string $_msg, callable $_fn, bool $_fatal = false, $sshot = -1) {
   } catch (Throwable $e) {
     if ($_fatal) {
       fatal(); 
+      echo $e->getMessage() . PHP_EOL;
       throw $e;
     } else {
       fail();
