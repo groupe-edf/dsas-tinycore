@@ -2205,6 +2205,11 @@ try {
   test("Restoring original configuration", function () {
       copy("/var/dsas/dsas_conf.xml.test", "/var/dsas/dsas_conf.xml"); 
       unlink("/var/dsas/dsas_conf.xml.test");
+      // After cheating and replacing the files of the DSAS need to
+      // refresh and wait for the refresh to finish. Don't know what
+      // page we're on, so can't wait on an element. Use modal_delay
+      $GLOBALS["driver"]->navigate()->refresh();
+      modal_delay();
       if (array_key_exists("driver", $GLOBALS)) {
         apply();
         return true;
@@ -2220,9 +2225,10 @@ try {
       $testuser = file_get_contents("/etc/passwd");
       if (str_contains( file_get_contents("/etc/passwd"), "testuser")) {
         exec("sudo deluser testuser", $data, $retval);
-        if ($retval == 0)
-          return true;
+        if ($retval != 0)
+          return false;
       }
+      return true;
     });
 
   // Quit firefox instance
