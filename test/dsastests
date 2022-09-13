@@ -1385,7 +1385,6 @@ try {
     test("Backing up the configuration via navbar", function () {
         if (file_exists("/home/tc/dsas_backup.tgz"))
           unlink("/home/tc/dsas_backup.tgz");
-        save();
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[contains(@onclick,'dsas_backup();')]"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
@@ -2207,9 +2206,9 @@ try {
       unlink("/var/dsas/dsas_conf.xml.test");
       // After cheating and replacing the files of the DSAS need to
       // refresh and wait for the refresh to finish. Don't know what
-      // page we're on, so can't wait on an element. Use modal_delay
+      // page we're on, so can't wait on an element. Use sleep.
       $GLOBALS["driver"]->navigate()->refresh();
-      modal_delay();
+      sleep(1);
       if (array_key_exists("driver", $GLOBALS)) {
         apply();
         return true;
