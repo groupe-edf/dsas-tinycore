@@ -84,13 +84,13 @@ export default class MultiLang {
             if (!args) { return str; }
             return String.format(str, ...args);
         }
-        const key0 = key[0];
+        str = key;
         if (this.phrases[this.currentLanguage]) {
-            key[0] = this.phrases[this.currentLanguage][key0] || key0;
+            str[0] = this.phrases[this.currentLanguage][str[0]] || str[0];
         }
 
-        if (!args) { return String.format(...key); }
-        return String.format(...key, ...args);
+        if (!args) { return String.format(...str); }
+        return String.format(...str, ...args);
     }
 
     translateHTML() {
