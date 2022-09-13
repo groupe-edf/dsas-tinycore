@@ -1296,7 +1296,7 @@ try {
       });
     
     // Login as added user and see if on passwd.hmtl rather than index.html
-    test("Testing login/logout as added user of type 'lower'", function() {
+    test("Testing login as added user of type 'lower'", function() {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_user"))->clear()->sendKeys("testuser");
         $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys("T3stPassw0rd!"); 
         $GLOBALS["driver"]->findElement(WebDriverBy::className("btn"))->click();
@@ -1310,7 +1310,10 @@ try {
       });
 
     // Logout again 
-    $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//input[contains(@onclick,'dsas_logout();')]"))->click();
+    test("Testing logout as added user of type 'lower'", function() {
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("logout"))->click();
+        return true;
+      }, true);
 
     // Log back in again as principal user
     test("Login as principal user", function() {
