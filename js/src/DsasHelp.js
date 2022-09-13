@@ -87,7 +87,7 @@ export default function dsas_display_help() {
         + parse(text).replace(/fgt_sslvpn.url_rewrite\(/g, "") + "</article>";
         dsasHelpTOC();
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error during documentation download : ") + error.statusText); }
+        if (!fail_loggedin(error)) { modal_message(_("Error during documentation download : ") + (error.message ? error.message : error)); }
     });
 }
 window.dsas_display_help = dsas_display_help;

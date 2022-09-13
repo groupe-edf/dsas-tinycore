@@ -76,7 +76,7 @@ export default function dsas_display_service(what = "all") {
             document.getElementById("snmp_privencrypt").disabled = (serv.snmp.active !== "true");
         }
     }).catch((error) => {
-        fail_loggedin(error.statusText);
+        fail_loggedin(error);
     });
 }
 window.dsas_display_service = dsas_display_service;
@@ -185,10 +185,10 @@ export function dsas_change_service(what) {
                     modal_message(_("Changes successfully saved"));
                 }
             }).catch((error) => {
-                modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
+                modal_message(_("Error : {0}", (error.message ? error.message : error)));
             });
         }).catch((error) => {
-            fail_loggedin(error.statusText);
+            fail_loggedin(error);
         });
     }
 }

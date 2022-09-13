@@ -31,7 +31,7 @@ export function dsas_real_user_passwd(user) {
         // Its text => here always just "Ok". Do nothing
         }
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error during password change : {0}", (error.statusText ? error.statusText : error))); }
+        if (!fail_loggedin(error)) { modal_message(_("Error during password change : {0}", (error.message ? error.message : error))); }
     });
 }
 window.dsas_real_user_passwd = dsas_real_user_passwd;
@@ -52,7 +52,7 @@ function dsas_real_user_delete(user) {
             window.location.reload();
         }
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error during user deletion : {0}", (error.statusText ? error.statusText : error))); }
+        if (!fail_loggedin(error)) { modal_message(_("Error during user deletion : {0}", (error.message ? error.message : error))); }
     });
 }
 
@@ -89,7 +89,7 @@ export function dsas_real_user_new() {
             window.location.reload();
         }
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error during user creation : {0}", (error.statusText ? error.statusText : error))); }
+        if (!fail_loggedin(error)) { modal_message(_("Error during user creation : {0}", (error.message ? error.message : error))); }
     });
 }
 window.dsas_real_user_new = dsas_real_user_new;
@@ -131,10 +131,10 @@ function dsas_change_users() {
                 modal_message(_("Changes successfully saved"));
             }
         }).catch((error) => {
-            if (!fail_loggedin(error.statusText)) { modal_message(_("Error during user creation : {0}", (error.statusText ? error.statusText : error))); }
+            if (!fail_loggedin(error)) { modal_message(_("Error during user creation : {0}", (error.message ? error.message : error))); }
         });
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error ({0}) during the download of users : {1}", error.status, error.statusText)); }
+        if (!fail_loggedin(error)) { modal_message(_("Error ({0}) during the download of users : {1}", 0, (error.message ? error.message : error))); }
     });
 }
 
@@ -170,12 +170,8 @@ export default function dsas_display_users() {
             return false;
         });
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) {
-            if (error.statusText) {
-                modal_message(_("Error ({0}) during the download of users : {1}", error.status, error.statusText));
-            } else {
-                modal_message(_("Error ({0}) during the download of users : {1}", 0, error));
-            }
+        if (!fail_loggedin(error)) {
+            modal_message(_("Error ({0}) during the download of users : {1}", 0, (error.message ? error.message : error)));
         }
     });
 }

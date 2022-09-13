@@ -21,7 +21,7 @@ function dsas_change_passwd() {
             modal_message(_("Password successfully changed"));
         }
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error during password change : {0}", error.statusText)); }
+        if (!fail_loggedin(error)) { modal_message(_("Error during password change : {0}", (error.message ? error.message : error))); }
     });
 }
 
@@ -40,8 +40,8 @@ export default function dsas_display_passwd() {
         document.getElementById("User").innerHTML = obj.username;
         document.getElementById("Type").innerHTML = obj.type;
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) {
-            if (error.status) { modal_message(_("Error ({0}) during the machine detection : {1}", error.status, error.statusText)); } else { modal_message(_("Error : {0}", error)); }
+        if (!fail_loggedin(error)) {
+            modal_message(_("Error during password change : {0}", (error.message ? error.message : error)));
         }
     });
     document.getElementById("update").addEventListener("click", () => { dsas_change_passwd(); return false; });

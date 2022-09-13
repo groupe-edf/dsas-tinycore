@@ -19,6 +19,11 @@ let infoLogs;
 let timeoutInfo;
 let timeoutTasks;
 
+function clearTimeouts() {
+    if (timeoutInfo !== 0) { clearTimeout(timeoutInfo); }
+    if (timeoutTasks !== 0) { clearTimeout(timeoutTasks); }
+}
+
 function modal_info(name, text) {
     const modalDSAS = document.getElementById("modalDSAS");
     modalDSAS.removeAttribute("disable");
@@ -85,7 +90,11 @@ function modal_task(action = "dsas_add_task();", ca = "", taskchange = "dsas_add
         });
         document.getElementById("TaskCA").innerHTML = certbody;
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message("Erreur (" + error.status + ") pendant chargement des certificates :\n" + error.statusText); }
+        if (fail_loggedin(error)) {
+            clearTimeouts();
+        } else {
+            modal_message(_("Error while loading the certificates : {0}", (error.message ? error.message : error)));
+        }
     });
 
     modalDSAS.setAttribute("body", "<form>\n"
@@ -227,7 +236,7 @@ export default function dsas_display_tasks(what = "all") {
             document.getElementById("Tasks").innerHTML = body;
             timeoutTasks = setTimeout(dsas_display_tasks, 10000, "status");
         }).catch((error) => {
-            fail_loggedin(error.statusText);
+            if (fail_loggedin(error)) { clearTimeouts(); }
         });
     }
 }
@@ -260,7 +269,11 @@ export function dsas_task_real_delete(id) {
             dsas_display_tasks("tasks");
         }
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
+        if (fail_loggedin(error)) {
+            clearTimeouts();
+        } else {
+            modal_message(_("Error : {0}", (error.message ? error.message : error)));
+        }
     });
 }
 window.dsas_task_real_delete = dsas_task_real_delete;
@@ -288,7 +301,11 @@ export function dsas_task_real_kill(id) {
             dsas_display_tasks("status");
         }
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
+        if (fail_loggedin(error)) {
+            clearTimeouts();
+        } else {
+            modal_message(_("Error : {0}", (error.message ? error.message : error)));
+        }
     });
 }
 window.dsas_task_real_kill = dsas_task_real_kill;
@@ -414,7 +431,7 @@ export function dsas_task_modify(id, name) {
                 });
         }
     }).catch((error) => {
-        fail_loggedin(error.statusText);
+        if (fail_loggedin(error)) { clearTimeouts(); }
     });
 }
 window.dsas_task_modify = dsas_task_modify;
@@ -446,7 +463,11 @@ export function dsas_task_real_run(id) {
             timeoutTasks = setTimeout(dsas_display_tasks, 500, "status");
         }
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
+        if (fail_loggedin(error)) {
+            clearTimeouts();
+        } else {
+            modal_message(_("Error : {0}", (error.message ? error.message : error)));
+        }
     });
 }
 window.dsas_task_real_run = dsas_task_real_run;
@@ -475,7 +496,11 @@ export function dsas_task_info(id, name, len = 0) {
             timeoutInfo = setTimeout(dsas_task_info, 5000, id, name, infoLogs.logs[0].length);
         }
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
+        if (fail_loggedin(error)) {
+            clearTimeouts();
+        } else {
+            modal_message(_("Error : {0}", (error.message ? error.message : error)));
+        }
     });
 }
 window.dsas_task_info = dsas_task_info;
@@ -580,7 +605,11 @@ export function dsas_add_task(oldid = "") {
             dsas_display_tasks("status");
         }
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
+        if (fail_loggedin(error)) {
+            clearTimeouts();
+        } else {
+            modal_message(_("Error : {0}", (error.message ? error.message : error)));
+        }
     });
 }
 window.dsas_add_task = dsas_add_task;
@@ -602,7 +631,11 @@ export function dsas_modify_task(oldname = "", oldid = "") {
             if (response.ok) { dsas_add_task(oldid); }
             return Promise.reject(new Error(response.statusText));
         }).catch((error) => {
-            if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
+            if (fail_loggedin(error)) {
+                clearTimeouts();
+            } else {
+                modal_message(_("Error : {0}", (error.message ? error.message : error)));
+            }
         });
     } else { dsas_add_task(oldid); }
 }

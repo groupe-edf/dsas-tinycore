@@ -66,7 +66,7 @@ export default function dsas_display_web(what = "all") {
             }
         }
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error while loading the page : {0}", (error.statusText ? error.statusText : error))); }
+        if (!fail_loggedin(error)) { modal_message(_("Error while loading the page : {0}", (error.message ? error.message : error))); }
     });
 }
 
@@ -105,7 +105,7 @@ function dsas_renew_cert_real() {
             }
         });
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error while loading the page : {0}", (error.statusText ? error.statusText : error))); }
+        if (!fail_loggedin(error)) { modal_message(_("Error while loading the page : {0}", (error.message ? error.message : error))); }
     });
 }
 
@@ -140,7 +140,7 @@ export function dsas_upload_crt() {
             modal_message(_("CRT successfully uploaded"), () => { dsas_display_web("cert"); }, true);
         }
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error while loading the page : {0}", (error.statusText ? error.statusText : error))); }
+        if (!fail_loggedin(error)) { modal_message(_("Error while loading the page : {0}", (error.message ? error.message : error))); }
     });
 }
 window.dsas_upload_crt = dsas_upload_crt;

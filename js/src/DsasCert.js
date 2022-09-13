@@ -171,7 +171,7 @@ export default function dsas_display_cert(what = "all") {
         if (what === "all" || what === "pubkey") { document.getElementById("pubkey").innerHTML = treat_ssl_pubkeys(certs[0].dsas.pubkey, true); }
         if (what === "all" || what === "gpg") { document.getElementById("gpg").innerHTML = treat_gpg_certs(certs[0].dsas.gpg); }
     }).catch((error) => {
-        fail_loggedin(error.statusText);
+        fail_loggedin(error);
     });
 }
 window.dsas_display_cert = dsas_display_cert;
@@ -204,7 +204,7 @@ export function dsas_cert_real_delete(name, finger) {
             dsas_display_cert("gpg");
         }
     }).catch((error) => {
-        modal_message(_("Error : {0}", (error.statusText ? error.statusText : error)));
+        modal_message(_("Error : {0}", (error.message ? error.message : error)));
     });
 }
 window.dsas_cert_real_delete = dsas_cert_real_delete;
@@ -243,7 +243,7 @@ export function dsas_upload_cert_core(file, type, name) {
             modal_message(_("Certificate successfully sent"), "dsas_display_cert();", true);
         }
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
+        if (!fail_loggedin(error)) { modal_message(_("Error : {0}", (error.message ? error.message : error))); }
     });
 }
 //  This needs to be exposed so test code can use it

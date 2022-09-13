@@ -11,6 +11,11 @@ let statusLogs;
 let timeoutStatus;
 let timeoutLogs;
 
+function clearTimeouts() {
+    if (timeoutStatus !== 0) { clearTimeout(timeoutStatus); }
+    if (timeoutLogs !== 0) { clearTimeout(timeoutLogs); }
+}
+
 function format_space(bytes) {
     // Special case zero
     if (bytes === 0) { return "0 B"; }
@@ -71,8 +76,10 @@ function dsas_refresh_logs(all = false) {
         if (timeoutLogs !== 0) { clearTimeout(timeoutLogs); }
         timeoutLogs = setTimeout(dsas_refresh_logs, 5000, all);
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) {
-            if (error.statusText) { modal_message(_("Error ({0}) during the download of the logs : {1}", error.status, error.statusText)); } else { modal_message(_("Error ({0}) during the download of the logs : {1}", 0, error)); }
+        if (fail_loggedin(error)) {
+            clearTimeouts();
+        } else {
+            modal_message(_("Error ({0}) during the download of the logs : {1}", 0, (error.message ? error.message : error)));
         }
     });
 }
@@ -96,8 +103,10 @@ function dsas_status() {
         if (timeoutStatus !== 0) { clearTimeout(timeoutStatus); }
         timeoutStatus = setTimeout(dsas_status, 5000);
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) {
-            if (error.status) { modal_message(_("Error ({0}) during the machine detection : {1}", error.status, error.statusText)); } else { modal_message(_("Lost contact with the lower machine")); }
+        if (fail_loggedin(error)) {
+            clearTimeouts();
+        } else {
+            modal_message(_("Error ({0}) during the machine detection : {1}", 0, (error.message ? error.message : error)));
         }
     });
 }
@@ -155,8 +164,10 @@ function dsas_display_logs() {
             timeoutLogs = setTimeout(dsas_refresh_logs, 5000);
         } else { modal_message(_("No logs returned by the DSAS")); }
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) {
-            if (error.statusText) { modal_message(_("Error ({0}) during the download of the logs : {1}", error.status, error.statusText)); } else { modal_message(_("Error ({0}) during the download of the logs : {1}", 0, error)); }
+        if (fail_loggedin(error)) {
+            clearTimeouts();
+        } else {
+            modal_message(_("Error ({0}) during the download of the logs : {1}", 0, (error.message ? error.message : error)));
         }
     });
 }

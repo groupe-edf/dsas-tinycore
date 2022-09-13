@@ -53,7 +53,7 @@ function dsas_apply() {
         modalApply.removeAttribute("disable");
         modalApply.removeAttribute("body");
         modalApply.hide();
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error during save of the configuration")); }
+        if (!fail_loggedin(error)) { modal_message(_("Error during save of the configuration")); }
     });
 }
 window.dsas_apply = dsas_apply;
@@ -81,8 +81,7 @@ function dsas_real_backup() {
         })();
         saveBase64(backup, "dsas_backup.tgz");
     }).catch((error) => {
-        // Don't translate error.statusText here
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
+        if (!fail_loggedin(error)) { modal_message(_("Error : {0}", (error.message ? error.message : error))); }
     });
 }
 // This needs to be exposed so test code can use it
@@ -91,7 +90,7 @@ window.dsas_real_backup = dsas_real_backup;
 function dsas_backup() {
     const modalDSAS = document.getElementById("modalDSAS");
     let body = "";
-    modal_action(_("Backup the DSAS configuration"), () = > { dsas_real_backup(); }, true);
+    modal_action(_("Backup the DSAS configuration"), () => { dsas_real_backup(); }, true);
     body = "    <div class=\"col-9 d-flex justify-content-center\">\n"
          + "      <label for=\"BackupPassword\">" + _("Backup password :") + "</label>\n"
          + "      <input type=\"password\" id=\"BackupPassword\" value=\"\" class=\"form-control\" onkeypress=\"if (event.key === 'Enter'){ modalDSAS.hide(); dsas_real_backup();}\">\n"
@@ -155,7 +154,7 @@ export default function dsas_restore_core(file, passwd = "") {
             dsas_apply();
         }
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error : {0}", (error.statusText ? error.statusText : error))); }
+        if (!fail_loggedin(error)) { modal_message(_("Error : {0}", (error.message ? error.message : error))); }
     });
 }
 window.dsas_restore_core = dsas_restore_core;
@@ -274,8 +273,9 @@ function dsas_reboot() {
                  + "    </div>\n"
                  + "  </div>");
 
-    // Clear status and login timeouts before continuing
+    // Clear status, task and login timeouts before continuing
     clearTimeoutLogin();
+    // FIXME How to clear status and task timeouts here ?
 
     fetch("api/reboot.php").then((response) => {
         if (response.ok) { setTimeout(waitreboot, 1000); }
@@ -283,7 +283,7 @@ function dsas_reboot() {
     }).catch((error) => {
         modalReboot.removeAttribute("disable");
         modalReboot.hide();
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error during reboot")); }
+        if (!fail_loggedin(error)) { modal_message(_("Error during reboot")); }
     });
 }
 window.dsas_reboot = dsas_reboot;
@@ -305,6 +305,7 @@ function dsas_shutdown() {
 
     // Clear status and login timeouts before continuing
     clearTimeoutLogin();
+    // FIXME How to clear status and task timeouts here ?
 
     fetch("api/shutdown.php").then((response) => {
         if (response.ok) { return setTimeout(waitshutdown, 1000); }
@@ -312,7 +313,7 @@ function dsas_shutdown() {
     }).catch((error) => {
         modalShutdown.removeAttribute("disable");
         modalShutdown.hide();
-        if (!fail_loggedin(error.statusText)) { modal_message(_("Error during shutdown")); }
+        if (!fail_loggedin(error)) { modal_message(_("Error during shutdown")); }
     });
 }
 window.dsas_shutdown = dsas_shutdown;

@@ -91,8 +91,8 @@ export default function dsas_display_net(what = "all") {
             });
         }
     }).catch((error) => {
-        if (!fail_loggedin(error.statusText)) {
-            modal_message(_("Error while loading the page : {0}", (error.statusText ? error.statusText : error)));
+        if (!fail_loggedin(error)) {
+            modal_message(_("Error while loading the page : {0}", (error.message ? error.message : error)));
         }
     });
 }
@@ -142,10 +142,10 @@ export function dsas_change_net(what = "all", i = 0) {
                     dsas_display_net("all");
                 }
             }).catch((error) => {
-                modal_message(_("Error while loading the page : {0}", (error.statusText ? error.statusText : error)));
+                modal_message(_("Error while loading the page : {0}", (error.message ? error.message : error)));
             });
         }).catch((error) => {
-            fail_loggedin(error.statusText);
+            fail_loggedin(error);
         });
     }
 }

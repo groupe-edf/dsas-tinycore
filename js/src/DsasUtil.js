@@ -88,7 +88,8 @@ export function dsas_loggedin(update_timeout = true, is_admin = true) {
 }
 
 export function fail_loggedin(status) {
-    if (status === "Forbidden") {
+    if (status && String(status).includes("Forbidden")) {
+        clearTimeoutLogin();
         modal_message(
             _("You are not connected. Click 'Ok' to reconnect."),
             "window.location='login.html'",
@@ -105,7 +106,7 @@ export function dsas_check_warnings(disablenav = false, redirect = true) {
     }).then((obj) => {
         if ((obj.first === "true") && redirect) { window.location = "passwd.html"; }
     }).catch((error) => {
-        fail_loggedin(error.statusText);
+        fail_loggedin(error);
     });
 
     fetch("api/dsas-get-warning.php").then((response) => {
@@ -131,7 +132,7 @@ export function dsas_check_warnings(disablenav = false, redirect = true) {
             if (body) { modal_message(body); }
         }
     }).catch((error) => {
-        fail_loggedin(error.statusText);
+        fail_loggedin(error);
     });
 }
 
