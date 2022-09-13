@@ -86,13 +86,11 @@ export default class MultiLang {
         }
         const key0 = key[0];
         if (this.phrases[this.currentLanguage]) {
-            str = this.phrases[this.currentLanguage][key0] || key0;
-        } else {
-            str = key0;
+            key[0] = this.phrases[this.currentLanguage][key0] || key0;
         }
 
-        if (!args) { return String.format(...str); }
-        return String.format(...str, ...args);
+        if (!args) { return String.format(...key); }
+        return String.format(...key, ...args);
     }
 
     translateHTML() {
