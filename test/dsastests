@@ -795,7 +795,7 @@ try {
     // Try applying config and seeing if listening on right SSH addresses and users 
     test("Applying ssh configuration", function () {
         apply();
-        exec("netstat -at 2> /dev/null", $data);
+        exec("netstat -nat 2> /dev/null", $data);
         foreach ($data as $d) {
           preg_match("/^tcp.*\s([0-9.]+):[22|ssh].*\s([0-9.]+):.*LISTEN\s*$/",
              trim($d), $regex);
