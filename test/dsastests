@@ -414,7 +414,7 @@ try {
   // Setup local firefox instance
   test("Setting up firefox instance", function () {
       $firefoxOptions = new FirefoxOptions();
-      $firefoxOptions->addArguments(["-headless"]);
+      $firefoxOptions->addArguments(["-headless","-width", "1920", "-height", "1200"]);
 
       $firefoxProfile = new FirefoxProfile();
       $firefoxProfile->setPreference("browser.download.folderList", 2);
@@ -807,7 +807,15 @@ try {
           throw new RuntimeException("Can not start ssh server");
         if ($GLOBALS["ip"] != $regex[1])
           throw new RuntimeException("Server ssh listening on wrong interface");
-        $f = explode(PHP_EOL, file_get_contents("/usr/local/etc/ssh/sshd_config"));
+
+        exec("sudo cp -f /usr/local/etc/ssh/sshd_config /tmp", $data, $retval);
+        if ($retval != 0)
+          throw new RuntimeException("Can not copy /usr/local/etc/ssh/sshd_config");
+        exec("sudo chown tc /tmp/sshd_config", $data, $retval);
+        if ($retval != 0)
+          throw new RuntimeException("Can not change owner of /tmp/sshd_config");
+        $f = explode(PHP_EOL, file_get_contents("/tmp/sshd_config"));
+        unlink("/tmp/sshd_config");
         $isok = false;
         foreach ($f as $_f) {
           preg_match("/^ListenAddress\s+([0-9.]+).*$/", trim($_f), $regex);
@@ -841,8 +849,12 @@ try {
       }, true);
 
     // Deactivate SSH
-    if ($GLOBALS["driver"]->findElement(WebDriverBy::id("ssh"))->isSelected())
-      $GLOBALS["driver"]->findElement(WebDriverBy::id("ssh"))->click();
+    test("Deactivation of SSH", function () {
+        if ($GLOBALS["driver"]->findElement(WebDriverBy::id("ssh"))->isSelected()) {
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("ssh"))->click();
+        }
+        return true;
+     }, true);
 
     // Test activation of SNMP
     test("Activation of SNMPv3", function () {
@@ -2190,8 +2202,24 @@ try {
   test("Restoring original configuration", function () {
       copy("/var/dsas/dsas_conf.xml.test", "/var/dsas/dsas_conf.xml"); 
       unlink("/var/dsas/dsas_conf.xml.test");
-      if (array_key_exists("driver", $GLOBALS)) apply();
-      return true;
+      if (array_key_exists("driver", $GLOBALS)) {
+        apply();
+        return true;
+      } else {
+        exec("sudo /etc/init.d/services/dsas apply", $data, $retval);
+        if ($retval == 0)
+          return true;
+      }
+    });
+
+  // Remove 'testuser' if still active
+  test("Removing 'testuser' if previous tests failed", function () {
+      $testuser = file_get_contents("/etc/passwd");
+      if (str_contains( file_get_contents("/etc/passwd"), "testuser")) {
+        exec("sudo deluser testuser", $data, $retval);
+        if ($retval == 0)
+          return true;
+      }
     });
 
   // Quit firefox instance
