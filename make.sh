@@ -767,7 +767,7 @@ work)
   fi 
   ;;
 source)
-  tar cvzf $source --exclude=tmp --exclude=work --exclude=.git .
+  tar cvzf $source --exclude=tmp --exclude=work --exclude=.git* .
   exit 0
   ;;
 clean)
