@@ -163,12 +163,7 @@ function feedfn($msg, $fld, $value) {
 
 // Apply and clear modals
 function apply() {
-  foreach ($GLOBALS["driver"]->findElements(WebDriverBy::className("btn")) as $el) {
-    if (str_contains($el->getAttribute("class"), "nav-link")) {
-      $el->click();  // Click on Apply button
-      break;
-    }
-  }
+  $GLOBALS["driver"]->findElement(WebDriverBy::id("applyDSAS"))->click(); 
   $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
   $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click(); // Click Ok to confirm
   // Extra long delay here during apply
@@ -182,7 +177,6 @@ function apply() {
 
 // Hit save button on page and clear any modals
 function save($modal = true) {
-  // Have to be careful not to click the Apply button
   foreach ($GLOBALS["driver"]->findElements(WebDriverBy::className("btn")) as $el) {
     if (str_contains($el->getAttribute("class"), "nav-link"))
       continue;

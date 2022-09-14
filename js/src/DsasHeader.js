@@ -374,7 +374,7 @@ class DSASHeader extends HTMLElement {
         + "      <ul class=\"navbar-nav ms-auto\">\n"
         + "      <span data-i18n-navbar-lang></span>\n"
         + "      <li class=\"nav-item px-2\">\n"
-        + "        <a class=\"nav-link btn " + disablenav + " btn-danger\" onclick=\"modal_action('" + _("Are you sure you want to apply ?") + "', 'dsas_apply();')\">" + _("Apply") + "</a>\n"
+        + "        <a class=\"btn " + disablenav + " btn-danger\" id=\"applyDSAS\" onclick=\"modal_action('" + _("Are you sure you want to apply ?") + "', 'dsas_apply();')\">" + _("Apply") + "</a>\n"
         + "      </li>\n"
         + "      </ul>\n"
         + "    </nav></div></div>"
