@@ -11,40 +11,40 @@
 <!-- hidden form for file upload -->
 <form id ="x509upload">
   <input type="file" name="x509file" id="x509file" style="display: none"
-         accept="text/plain,application/x-x509-user-cert,application/x-x509-ca-cert" onchange="dsas_upload_cert();">
+         accept="text/plain,application/x-x509-user-cert,application/x-x509-ca-cert">
 </form>
 <div class="container p-3 my-3 border">
     <div class="row"><div class="col-md-10"><h5><a class="text-toggle" data-bs-toggle="collapse" href="#cert"
     role="button" aria-controls="cert" aria-expanded="false">
     <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded">
     <img src="caret-down.svg"/></i></a><span data-i18n>X509 certificates added :</span></h5></div>
-    <div class="col-md-2 text-end"><img src="plus-lg.svg" data-toggle="tooltip" title="Add" onclick="document.getElementById('x509file').click();" data-i18n-title></div></div>
+    <div class="col-md-2 text-end"><img src="plus-lg.svg" id="x509add" data-toggle="tooltip" title="Add" data-i18n-title></div></div>
     <div class="collapse" id="cert"></div>
 </div>
 
 <form id ="pubkeyupload">
   <input type="file" name="pubkeyfile" id="pubkeyfile" style="display: none"
-         accept="text/plain,application/x-pem-file" onchange="dsas_pubkey_name();">
+         accept="text/plain,application/x-pem-file">
 </form>
 <div class="container p-3 my-3 border">
     <div class="row"><div class="col-md-6"><h5><a class="text-toggle" data-bs-toggle="collapse" href="#pubkey"
     role="button" aria-controls="pubkey" aria-expanded="false">
     <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded">
     <img src="caret-down.svg"/></i></a><span data-i18n>SSL public keys added :</h5></div>
-    <div class="col-md-6 text-end"><img src="plus-lg.svg"  data-toggle="tooltip" title="Add" onclick="document.getElementById('pubkeyfile').click();" data-i18n-title></div></div>
+    <div class="col-md-6 text-end"><img src="plus-lg.svg"  id="pubkeyadd" data-toggle="tooltip" title="Add" data-i18n-title></div></div>
     <div class="collapse" id="pubkey"></div></div>
 </div>
 
 <form id ="gpgupload">
   <input type="file" name="gpgfile" id="gpgfile" style="display: none"
-         accept="text/plain,application/pgp-keys" onchange="dsas_upload_cert('gpg');">
+         accept="text/plain,application/pgp-keys">
 </form>
 <div class="container p-3 my-3 border">
     <div class="row"><div class="col-md-6"><h5><a class="text-toggle" data-bs-toggle="collapse" href="#gpg"
     role="button" aria-controls="gpg" aria-expanded="false">
     <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded">
     <img src="caret-down.svg"/></i></a><span data-i18n>GPG certificates added :</h5></div>
-    <div class="col-md-6 text-end"><img src="plus-lg.svg"  data-toggle="tooltip" title="Add" onclick="document.getElementById('gpgfile').click();" data-i18n-title></div></div>
+    <div class="col-md-6 text-end"><img src="plus-lg.svg"  data-toggle="tooltip" title="Add" data-i18n-title></div></div>
     <div class="collapse" id="gpg"></div></div>
 </div>
 

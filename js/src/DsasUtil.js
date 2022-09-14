@@ -8,8 +8,6 @@ export function clearTimeoutLogin() {
     if (timeoutLogin !== 0) { clearTimeout(timeoutLogin); }
 }
 
-// Many following functions are used elsewhere just not here. Shut eslint up
-// eslint-disable-next-line no-unused-vars
 export function cert_name(cert) {
     if (cert.subject.CN) { return cert.subject.CN; }
     if (cert.subject.OU) { return cert.subject.OU; }
@@ -25,13 +23,11 @@ export function empty_obj(obj) {
 }
 window.empty_obj = empty_obj;
 
-// eslint-disable-next-line no-unused-vars
 export function print_obj(obj) {
     return (empty_obj(obj) ? "" : _(obj));
 }
 window.print_obj = print_obj;
 
-// eslint-disable-next-line no-unused-vars
 export function date_to_locale(d) {
     if (d === "never") { return _("never"); }
     const c = new Intl.DateTimeFormat(ml.currentLanguage, {
@@ -43,19 +39,27 @@ export function date_to_locale(d) {
         second: "numeric",
     });
     if (typeof (d) === "string") {
+        if (d.length < 14) {
+            return c.format(new Date("20" + d.substr(0, 2) + "-" + d.substr(2, 2) + "-" + d.substr(4, 2) + "T"
+               + d.substr(6, 2) + ":" + d.substr(8, 2) + ":" + d.substr(10, 2) + "Z"));
+        }
         return c.format(new Date(d.substr(0, 4) + "-" + d.substr(4, 2) + "-" + d.substr(6, 2) + "T"
            + d.substr(8, 2) + ":" + d.substr(10, 2) + ":" + d.substr(12, 2) + "Z"));
     }
     const ret = [];
     d.forEach((d2) => {
-        ret.push(c.format(new Date(d2.substr(0, 4) + "-" + d2.substr(4, 2) + "-" + d2.substr(6, 2) + "T"
-           + d2.substr(8, 2) + ":" + d2.substr(10, 2) + ":" + d2.substr(12, 2) + "Z")));
+        if (d2.length < 14) {
+            ret.push(c.format(new Date("20" + d2.substr(0, 2) + "-" + d2.substr(2, 2) + "-" + d2.substr(4, 2) + "T"
+               + d2.substr(6, 2) + ":" + d2.substr(8, 2) + ":" + d2.substr(10, 2) + "Z")));
+        } else {
+            ret.push(c.format(new Date(d2.substr(0, 4) + "-" + d2.substr(4, 2) + "-" + d2.substr(6, 2) + "T"
+               + d2.substr(8, 2) + ":" + d2.substr(10, 2) + ":" + d2.substr(12, 2) + "Z")));
+        }
     });
     return ret;
 }
 window.date_to_locale = date_to_locale;
 
-// eslint-disable-next-line no-unused-vars
 export function clear_feedback() {
     // eslint-disable-next-line no-param-reassign
     [...document.getElementsByClassName("invalid-feedback")].forEach((feed) => { feed.innerHTML = ""; });

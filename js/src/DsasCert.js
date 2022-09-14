@@ -1,9 +1,10 @@
 // The javascript used by the DSAS cert.html page
-import { _ } from "./MultiLang";
+import { _, ml } from "./MultiLang";
 import { modal_message, modal_errors, modal_action } from "./DsasModal";
 import {
     fail_loggedin,
     clear_feedback,
+    date_to_locale,
     cert_is_ca,
     cert_name,
 } from "./DsasUtil";
@@ -38,24 +39,23 @@ function escapeHtml(unsafe) {
 
 function time_t_to_date(t) {
     if (t <= 0) { return _("always"); }
-
-    const d = new Date(t * 1000);
-    return d.toUTCString();
-}
-
-function date_to_str(d) {
-    // Example : Convert '170131235959Z' to '31 jan 2017 23:58:59. Asume always "Z" = UTC
-    return d.substr(4, 2) + " " + ["jan", "f&eacute;v", "mar", "avr", "mai", "jun", "jul",
-        "aou", "sep", "oct", "nov", "d&eacute;c"][Number(d.substr(2, 2)) - 1] + " 20"
-      + d.substr(0, 2) + " " + d.substr(6, 2) + ":" + d.substr(8, 2) + ":" + d.substr(10, 2) + " UTC";
+    const c = new Intl.DateTimeFormat(ml.currentLanguage, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric",
+    });
+    return c.format(new Date(t * 1000));
 }
 
 function cert_body(c) {
     const cert = c; // Keep eslint happy
     delete cert.pem; // Don't display the PEM file, download button for that
     // Convert ValidFrom and ValidTo de something human readable
-    cert.validFrom = date_to_str(cert.validFrom);
-    cert.validTo = date_to_str(cert.validTo);
+    cert.validFrom = date_to_locale(cert.validFrom);
+    cert.validTo = date_to_locale(cert.validTo);
 
     // Tidy up the purposes, which I find ugly for the PHP openssl_x509_parse function
     const purposes = [];
@@ -161,6 +161,51 @@ function treat_x509_certs(certs, added = false) {
     return body;
 }
 
+export function dsas_upload_cert_core(file, type, name) {
+    const formData = new FormData();
+    formData.append("op", type + "_upload");
+    formData.append("file", file);
+    formData.append("name", name);
+
+    fetch("api/dsas-cert.php", {
+        method: "POST",
+        body: formData,
+    }).then((response) => {
+        if (response.ok) { return response.text(); }
+        return Promise.reject(new Error(response.statusText));
+    }).then((text) => {
+        try {
+            const errors = JSON.parse(text);
+            modal_errors(errors);
+        } catch (e) {
+        // Its text => here always just "Ok"
+            clear_feedback();
+            modal_message(_("Certificate successfully sent"), () => { window.location.reload(); }, true);
+        }
+    }).catch((error) => {
+        if (!fail_loggedin(error)) { modal_message(_("Error : {0}", (error.message ? error.message : error))); }
+    });
+}
+//  This needs to be exposed so test code can use it
+window.dsas_upload_cert_core = dsas_upload_cert_core;
+
+export function dsas_upload_cert(type = "x509", name = "") {
+    const cert = document.getElementById(type + "upload");
+    dsas_upload_cert_core(cert[0].files[0], type, name);
+}
+window.dsas_upload_cert = dsas_upload_cert;
+
+function dsas_pubkey_name() {
+    const modalDSAS = document.getElementById("modalDSAS");
+    let body = "";
+    modal_action(_("Enter name for public key"), () => { dsas_upload_cert("pubkey", document.getElementById("PubkeyName").value); }, true);
+    body = "    <div class=\"col-9 d-flex justify-content-center\">\n"
+         + "      <label for=\"PubkeyName\">" + _("Name :") + "</label>\n"
+         + "      <input type=\"text\" id=\"PubkeyName\" value=\"\" class=\"form-control\" onkeypress=\"if (event.key === 'Enter'){ modalDSAS.hide(); dsas_upload_cert('pubkey', document.getElementById('PubkeyName').value);}\">\n"
+         + "    </div>";
+    modalDSAS.setAttribute("body", body);
+}
+
 export default function dsas_display_cert(what = "all") {
     fetch("api/dsas-cert.php").then((response) => {
         if (response.ok) { return response.json(); }
@@ -170,20 +215,18 @@ export default function dsas_display_cert(what = "all") {
         if (what === "all" || what === "cert") { document.getElementById("cert").innerHTML = treat_x509_certs(certs[0].dsas.x509, true); }
         if (what === "all" || what === "pubkey") { document.getElementById("pubkey").innerHTML = treat_ssl_pubkeys(certs[0].dsas.pubkey, true); }
         if (what === "all" || what === "gpg") { document.getElementById("gpg").innerHTML = treat_gpg_certs(certs[0].dsas.gpg); }
+        if (what === "all") {
+            document.getElementById("x509file").addEventListener("change", () => { dsas_upload_cert(); });
+            document.getElementById("x509add").addEventListener("click", () => { document.getElementById("x509file").click(); });
+            document.getElementById("pubkeyfile").addEventListener("change", () => { dsas_pubkey_name(); });
+            document.getElementById("pubkeyadd").addEventListener("click", () => { document.getElementById("pubkeyfile").click(); });
+            document.getElementById("gpgfile").addEventListener("change", () => { dsas_upload_cert("gpg"); });
+            document.getElementById("gpgadd").addEventListener("click", () => { document.getElementById("gpgfile").click(); });
+        }
     }).catch((error) => {
         fail_loggedin(error);
     });
 }
-window.dsas_display_cert = dsas_display_cert;
-
-export function dsas_cert_delete(name, finger) {
-    modal_action(
-        _("Delete the certificate ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, finger.substr(0, 50)),
-        "dsas_cert_real_delete('" + name + "','" + finger + "');",
-        true,
-    );
-}
-window.dsas_cert_delete = dsas_cert_delete;
 
 export function dsas_cert_real_delete(name, finger) {
     const formData = new FormData();
@@ -207,50 +250,12 @@ export function dsas_cert_real_delete(name, finger) {
         modal_message(_("Error : {0}", (error.message ? error.message : error)));
     });
 }
-window.dsas_cert_real_delete = dsas_cert_real_delete;
 
-export function dsas_pubkey_name() {
-    const modalDSAS = document.getElementById("modalDSAS");
-    let body = "";
-    modal_action(_("Enter name for public key"), "dsas_upload_cert(\"pubkey\", document.getElementById(\"PubkeyName\").value);", true);
-    body = "    <div class=\"col-9 d-flex justify-content-center\">\n"
-         + "      <label for=\"PubkeyName\">" + _("Name :") + "</label>\n"
-         + "      <input type=\"text\" id=\"PubkeyName\" value=\"\" class=\"form-control\" onkeypress=\"if (event.key === 'Enter'){ modalDSAS.hide(); dsas_upload_cert('pubkey', document.getElementById('PubkeyName').value);}\">\n"
-         + "    </div>";
-    modalDSAS.setAttribute("body", body);
+export function dsas_cert_delete(name, finger) {
+    modal_action(
+        _("Delete the certificate ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, finger.substr(0, 50)),
+        () => { dsas_cert_real_delete(name, finger); },
+        true,
+    );
 }
-window.dsas_pubkey_name = dsas_pubkey_name;
-
-export function dsas_upload_cert_core(file, type, name) {
-    const formData = new FormData();
-    formData.append("op", type + "_upload");
-    formData.append("file", file);
-    formData.append("name", name);
-
-    fetch("api/dsas-cert.php", {
-        method: "POST",
-        body: formData,
-    }).then((response) => {
-        if (response.ok) { return response.text(); }
-        return Promise.reject(new Error(response.statusText));
-    }).then((text) => {
-        try {
-            const errors = JSON.parse(text);
-            modal_errors(errors);
-        } catch (e) {
-        // Its text => here always just "Ok"
-            clear_feedback();
-            modal_message(_("Certificate successfully sent"), "dsas_display_cert();", true);
-        }
-    }).catch((error) => {
-        if (!fail_loggedin(error)) { modal_message(_("Error : {0}", (error.message ? error.message : error))); }
-    });
-}
-//  This needs to be exposed so test code can use it
-window.dsas_upload_cert_core = dsas_upload_cert_core;
-
-export function dsas_upload_cert(type = "x509", name = "") {
-    const cert = document.getElementById(type + "upload");
-    dsas_upload_cert_core(cert[0].files[0], type, name);
-}
-window.dsas_upload_cert = dsas_upload_cert;
+window.dsas_cert_delete = dsas_cert_delete;
