@@ -122,18 +122,20 @@ function treat_gpg_certs(certs, node) {
         if (cert_expired(cert)) { cls = "text-danger"; }
         if (cert_expiring(cert)) { cls = "text-warning"; }
         item.querySelector("p").className = "my-0 " + cls;
-        links[0].setAttribute("href", "#gpg") + i);
+        links[0].setAttribute("href", "#gpg" + i);
         links[1].setAttribute("href", url);
         links[2].addEventListener("click", () => { dsas_cert_delete(name.replaceAll("\n", "\\n"), cert.fingerprint); });
         links[2].removeAttribute("hidden");
+        item.querySelector("span").innerHTML = escapeHtml(name);
         item.querySelector("div").setAttribute("id", "gpg" + i);
-        item.QuerySelector("pre").innerHTML = gpg_body(cert);
+        item.querySelector("pre").innerHTML = gpg_body(cert);
+        item.querySelector("pre").setAttribute("style", "height : 235x");
         node.appendChild(item);
         i += 1;
     });
 }
 
-function treat_ssl_pubkeys(pubkeys, node ) {
+function treat_ssl_pubkeys(certs, node) {
     let i = 0;
     const temp = document.getElementById("certtemplate");
     certs.forEach((cert) => {
@@ -146,9 +148,10 @@ function treat_ssl_pubkeys(pubkeys, node ) {
         links[1].setAttribute("href", url);
         links[2].addEventListener("click", () => { dsas_cert_delete(name.replaceAll("\n", "\\n"), cert.fingerprint); });
         links[2].removeAttribute("hidden");
+        item.querySelector("span").innerHTML = name;
         item.querySelector("div").setAttribute("id", "pubkey" + i);
-        item.QuerySelector("pre").innerHTML = cert.fingerprint;
-        item.QuerySelector("pre").setAttribute("style", "height : 20x");
+        item.querySelector("pre").innerHTML = cert.fingerprint;
+        item.querySelector("pre").setAttribute("style", "height : 20x");
         node.appendChild(item);
         i += 1;
     });
@@ -178,8 +181,9 @@ function treat_x509_certs(certs, node, added = false) {
             links[2].addEventListener("click", () => { dsas_cert_delete(name.replaceAll("\n", "\\n"), cert.fingerprint); });
             links[2].removeAttribute("hidden");
         }
+        item.querySelector("span").innerHTML = name;
         item.querySelector("div").setAttribute("id", (added ? "add" : "ca") + i);
-        item.QuerySelector("pre").innerHTML = cert_body(cert);
+        item.querySelector("pre").innerHTML = cert_body(cert);
         node.appendChild(item);
         i += 1;
     });
@@ -239,7 +243,7 @@ export default function dsas_display_cert(what = "all") {
     }).then((certs) => {
         if (what === "all" || what === "ca") { treat_x509_certs(certs[0].ca, document.getElementById("ca")); }
         if (what === "all" || what === "cert") { treat_x509_certs(certs[0].dsas.x509, document.getElementById("cert"), true); }
-        if (what === "all" || what === "pubkey") { treat_ssl_pubkeys(certs[0].dsas.pubkey,  document.getElementById("pubkey"), true); }
+        if (what === "all" || what === "pubkey") { treat_ssl_pubkeys(certs[0].dsas.pubkey, document.getElementById("pubkey"), true); }
         if (what === "all" || what === "gpg") { treat_gpg_certs(certs[0].dsas.gpg, document.getElementById("gpg")); }
         if (what === "all") {
             document.getElementById("x509file").addEventListener("change", () => { dsas_upload_cert(); });
