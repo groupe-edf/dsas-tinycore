@@ -73,7 +73,7 @@ export default function dsas_display_net(what = "all") {
             let dns_servers = "";
             document.getElementById("iface_dhcp" + i).setAttribute("checked", "");
             if (what === "all") {
-                const fn = (function (j) { return function () { dsas_change_net("dhcp", j); }; }(i));
+                const fn = (function _dhcp_(j) { return function _dhcp() { dsas_change_net("dhcp", j); }; }(i));
                 document.getElementById("iface_dhcp" + i).addEventListener("change", fn);
             }
             document.getElementById("iface_cidr" + i).disabled = dhcp;
