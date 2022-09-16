@@ -50,6 +50,41 @@ function time_t_to_date(t) {
     return c.format(new Date(t * 1000));
 }
 
+function dsas_cert_real_delete(name, finger) {
+    const formData = new FormData();
+    formData.append("op", "delete");
+    formData.append("finger", finger);
+    fetch("api/dsas-cert.php", { method: "POST", body: formData }).then((response) => {
+        if (response.ok) { return response.text(); }
+        return Promise.reject(new Error(response.statusText));
+    }).then((text) => {
+        try {
+            const errors = JSON.parse(text);
+            modal_errors(errors);
+        } catch (e) {
+        // Its text => here always just "Ok"
+            clear_feedback();
+            // Disable ESLINT here as circular refering behind the functions
+            /* eslint-disable-next-line no-use-before-define */
+            dsas_display_cert("cert");
+            /* eslint-disable-next-line no-use-before-define */
+            dsas_display_cert("pubkey");
+            /* eslint-disable-next-line no-use-before-define */
+            dsas_display_cert("gpg");
+        }
+    }).catch((error) => {
+        modal_message(_("Error : {0}", (error.message ? error.message : error)));
+    });
+}
+
+function dsas_cert_delete(name, finger) {
+    modal_action(
+        _("Delete the certificate ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, finger.substr(0, 50)),
+        () => { dsas_cert_real_delete(name, finger); },
+        true,
+    );
+}
+
 function cert_body(c) {
     const cert = c; // Keep eslint happy
     delete cert.pem; // Don't display the PEM file, download button for that
@@ -74,65 +109,60 @@ function gpg_body(c) {
     return JSON.stringify(cert, null, 2);
 }
 
-function treat_gpg_certs(certs) {
-    let body = "";
+function treat_gpg_certs(certs, node) {
     let i = 0;
+    const temp = document.getElementById("certtemplate");
     certs.forEach((cert) => {
         const pemblob = new Blob([cert.pem], { type: "application/x-x509-user-cert" });
         const url = window.URL.createObjectURL(pemblob);
         const name = cert.uid;
-        let cls = "text";
+        const item = temp.content.cloneNode(true);
+        const links = item.querySelectorAll("a");
+        let cls = "text-info";
         if (cert_expired(cert)) { cls = "text-danger"; }
         if (cert_expiring(cert)) { cls = "text-warning"; }
-
-        body = body
-      + "<p class=\"my-0 " + cls + "\"><a class=\"text-toggle\" data-bs-toggle=\"collapse\" href=\"#gpg" + i + "\" role=\"button\""
-      + "aria-controls=\"gpg" + i + "\" aria-expanded=\"false\">"
-      + "<i class=\"text-collapsed\"><img src=\"caret-right.svg\"/></i>"
-      + "<i class=\"text-expanded\"><img src=\"caret-down.svg\"/></i></a>" + escapeHtml(name)
-      + "&nbsp;<a data-toggle=\"tooltip\" title=\"" + _("Download") + "\" href=\"" + url + "\" download=\"" + name.replace(/ /g, "_") + ".gpg\">"
-      + "<img src=\"save.svg\"></a>";
-        body = body + "&nbsp;<a data-toggle=\"tooltip\" title=\"" + _("Delete") + "\" onclick=\"dsas_cert_delete('" + name.replaceAll("\n", "\\n") + "','"
-        + cert.fingerprint + "');\"><img src=\"x-lg.svg\"></a>";
-        body = body
-      + "</p><div class=\"collapse\" id=\"gpg" + i + "\"><div class=\"card card-body\">"
-      + "<pre style=\"height : 210px\">" + gpg_body(cert) + "</pre></div></div>\n";
+        item.querySelector("p").className = "my-0 " + cls;
+        links[0].setAttribute("href", "#gpg") + i);
+        links[1].setAttribute("href", url);
+        links[2].addEventListener("click", () => { dsas_cert_delete(name.replaceAll("\n", "\\n"), cert.fingerprint); });
+        links[2].removeAttribute("hidden");
+        item.querySelector("div").setAttribute("id", "gpg" + i);
+        item.QuerySelector("pre").innerHTML = gpg_body(cert);
+        node.appendChild(item);
         i += 1;
     });
-    return body;
 }
 
-function treat_ssl_pubkeys(pubkeys) {
-    let body = "";
+function treat_ssl_pubkeys(pubkeys, node ) {
     let i = 0;
-    pubkeys.forEach((pubkey) => {
-        const pemblob = new Blob([pubkey.pem], { type: "application/x-pem-file" });
+    const temp = document.getElementById("certtemplate");
+    certs.forEach((cert) => {
+        const pemblob = new Blob([cert.pem], { type: "application/x-pem-file" });
         const url = window.URL.createObjectURL(pemblob);
-        const { name } = pubkey;
-        body = body
-      + "<p class=\"my-0\"><a class=\"text-toggle\" data-bs-toggle=\"collapse\" href=\"#pubkey" + i + "\" role=\"button\""
-      + "aria-controls=\"pubkey" + i + "\" aria-expanded=\"false\">"
-      + "<i class=\"text-collapsed\"><img src=\"caret-right.svg\"/></i>"
-      + "<i class=\"text-expanded\"><img src=\"caret-down.svg\"/></i></a>" + name
-      + "&nbsp;<a data-toggle=\"tooltip\" title=\"" + _("Download") + "\" href=\"" + url + "\" download=\"" + name.replace(/ /g, "_") + ".pem\">"
-      + "<img src=\"save.svg\"></a>";
-        body = body + "&nbsp;<a data-toggle=\"tooltip\" title=\"" + _("Delete") + "\" onclick=\"dsas_cert_delete('" + name.replaceAll("\n", "\\n") + "','"
-        + pubkey.fingerprint + "');\"><img src=\"x-lg.svg\"></a>";
-        body = body
-      + "</p><div class=\"collapse\" id=\"pubkey" + i + "\"><div class=\"card card-body\">"
-      + "<pre style=\"height : 20px\">fingerprint : " + pubkey.fingerprint + "</pre></div></div>\n";
+        const { name } = cert;
+        const item = temp.content.cloneNode(true);
+        const links = item.querySelectorAll("a");
+        links[0].setAttribute("href", "#pubkey" + i);
+        links[1].setAttribute("href", url);
+        links[2].addEventListener("click", () => { dsas_cert_delete(name.replaceAll("\n", "\\n"), cert.fingerprint); });
+        links[2].removeAttribute("hidden");
+        item.querySelector("div").setAttribute("id", "pubkey" + i);
+        item.QuerySelector("pre").innerHTML = cert.fingerprint;
+        item.QuerySelector("pre").setAttribute("style", "height : 20x");
+        node.appendChild(item);
         i += 1;
     });
-    return body;
 }
 
-function treat_x509_certs(certs, added = false) {
-    let body = "";
+function treat_x509_certs(certs, node, added = false) {
     let i = 0;
+    const temp = document.getElementById("certtemplate");
     certs.forEach((cert) => {
         const pemblob = new Blob([cert.pem], { type: "application/x-x509-user-cert" });
         const url = window.URL.createObjectURL(pemblob);
         const name = cert_name(cert);
+        const item = temp.content.cloneNode(true);
+        const links = item.querySelectorAll("a");
         let cls = "text-info";
         if (cert_expired(cert)) {
             cls = "text-danger";
@@ -141,27 +171,21 @@ function treat_x509_certs(certs, added = false) {
         } else if (cert_is_ca(cert)) {
             cls = "text";
         }
-
-        body = body
-      + "<p class=\"my-0 " + cls + "\"><a class=\"text-toggle\" data-bs-toggle=\"collapse\" href=\"#" + (added ? "add" : "ca") + i + "\" role=\"button\""
-      + "aria-controls=\"ca" + i + "\" aria-expanded=\"false\">"
-      + "<i class=\"text-collapsed\"><img src=\"caret-right.svg\"/></i>"
-      + "<i class=\"text-expanded\"><img src=\"caret-down.svg\"/></i></a>" + name
-      + "&nbsp;<a data-toggle=\"tooltip\" title=\"" + _("Download") + "\" href=\"" + url + "\" download=\"" + name.replace(/ /g, "_") + ".crt\">"
-      + "<img src=\"save.svg\"></a>";
+        item.querySelector("p").className = "my-0 " + cls;
+        links[0].setAttribute("href", "#" + (added ? "add" : "ca") + i);
+        links[1].setAttribute("href", url);
         if (added) {
-            body = body + "&nbsp;<a data-toggle=\"tooltip\" title=\"" + _("Delete") + "\" onclick=\"dsas_cert_delete('" + name.replaceAll("\n", "\\n") + "','"
-        + cert.fingerprint + "');\"><img src=\"x-lg.svg\"></a>";
+            links[2].addEventListener("click", () => { dsas_cert_delete(name.replaceAll("\n", "\\n"), cert.fingerprint); });
+            links[2].removeAttribute("hidden");
         }
-        body = body
-      + "</p><div class=\"collapse\" id=\"" + (added ? "add" : "ca") + i + "\"><div class=\"card card-body\">"
-      + "<pre style=\"height : 300px\">" + cert_body(cert) + "</pre></div></div>\n";
+        item.querySelector("div").setAttribute("id", (added ? "add" : "ca") + i);
+        item.QuerySelector("pre").innerHTML = cert_body(cert);
+        node.appendChild(item);
         i += 1;
     });
-    return body;
 }
 
-export function dsas_upload_cert_core(file, type, name) {
+function dsas_upload_cert_core(file, type, name) {
     const formData = new FormData();
     formData.append("op", type + "_upload");
     formData.append("file", file);
@@ -180,7 +204,9 @@ export function dsas_upload_cert_core(file, type, name) {
         } catch (e) {
         // Its text => here always just "Ok"
             clear_feedback();
-            modal_message(_("Certificate successfully sent"), () => { window.location.reload(); }, true);
+            // Don't use location.reload here as it closes the tabs
+            /* eslint-disable-next-line no-use-before-define */
+            modal_message(_("Certificate successfully sent"), () => { dsas_display_cert("all"); }, true);
         }
     }).catch((error) => {
         if (!fail_loggedin(error)) { modal_message(_("Error : {0}", (error.message ? error.message : error))); }
@@ -189,11 +215,10 @@ export function dsas_upload_cert_core(file, type, name) {
 //  This needs to be exposed so test code can use it
 window.dsas_upload_cert_core = dsas_upload_cert_core;
 
-export function dsas_upload_cert(type = "x509", name = "") {
+function dsas_upload_cert(type = "x509", name = "") {
     const cert = document.getElementById(type + "upload");
     dsas_upload_cert_core(cert[0].files[0], type, name);
 }
-window.dsas_upload_cert = dsas_upload_cert;
 
 function dsas_pubkey_name() {
     const modalDSAS = document.getElementById("modalDSAS");
@@ -201,9 +226,10 @@ function dsas_pubkey_name() {
     modal_action(_("Enter name for public key"), () => { dsas_upload_cert("pubkey", document.getElementById("PubkeyName").value); }, true);
     body = "    <div class=\"col-9 d-flex justify-content-center\">\n"
          + "      <label for=\"PubkeyName\">" + _("Name :") + "</label>\n"
-         + "      <input type=\"text\" id=\"PubkeyName\" value=\"\" class=\"form-control\" onkeypress=\"if (event.key === 'Enter'){ modalDSAS.hide(); dsas_upload_cert('pubkey', document.getElementById('PubkeyName').value);}\">\n"
+         + "      <input type=\"text\" id=\"PubkeyName\" value=\"\" class=\"form-control\">\n"
          + "    </div>";
     modalDSAS.setAttribute("body", body);
+    document.getElementById("PubkeyName").addEventListener("keypress", (event) => { if (event.key === "Enter") { modalDSAS.hide(); dsas_upload_cert("pubkey", document.getElementById("PubkeyName").value); } });
 }
 
 export default function dsas_display_cert(what = "all") {
@@ -211,10 +237,10 @@ export default function dsas_display_cert(what = "all") {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((certs) => {
-        if (what === "all" || what === "ca") { document.getElementById("ca").innerHTML = treat_x509_certs(certs[0].ca); }
-        if (what === "all" || what === "cert") { document.getElementById("cert").innerHTML = treat_x509_certs(certs[0].dsas.x509, true); }
-        if (what === "all" || what === "pubkey") { document.getElementById("pubkey").innerHTML = treat_ssl_pubkeys(certs[0].dsas.pubkey, true); }
-        if (what === "all" || what === "gpg") { document.getElementById("gpg").innerHTML = treat_gpg_certs(certs[0].dsas.gpg); }
+        if (what === "all" || what === "ca") { treat_x509_certs(certs[0].ca, document.getElementById("ca")); }
+        if (what === "all" || what === "cert") { treat_x509_certs(certs[0].dsas.x509, document.getElementById("cert"), true); }
+        if (what === "all" || what === "pubkey") { treat_ssl_pubkeys(certs[0].dsas.pubkey,  document.getElementById("pubkey"), true); }
+        if (what === "all" || what === "gpg") { treat_gpg_certs(certs[0].dsas.gpg, document.getElementById("gpg")); }
         if (what === "all") {
             document.getElementById("x509file").addEventListener("change", () => { dsas_upload_cert(); });
             document.getElementById("x509add").addEventListener("click", () => { document.getElementById("x509file").click(); });
@@ -227,35 +253,3 @@ export default function dsas_display_cert(what = "all") {
         fail_loggedin(error);
     });
 }
-
-export function dsas_cert_real_delete(name, finger) {
-    const formData = new FormData();
-    formData.append("op", "delete");
-    formData.append("finger", finger);
-    fetch("api/dsas-cert.php", { method: "POST", body: formData }).then((response) => {
-        if (response.ok) { return response.text(); }
-        return Promise.reject(new Error(response.statusText));
-    }).then((text) => {
-        try {
-            const errors = JSON.parse(text);
-            modal_errors(errors);
-        } catch (e) {
-        // Its text => here always just "Ok"
-            clear_feedback();
-            dsas_display_cert("cert");
-            dsas_display_cert("pubkey");
-            dsas_display_cert("gpg");
-        }
-    }).catch((error) => {
-        modal_message(_("Error : {0}", (error.message ? error.message : error)));
-    });
-}
-
-export function dsas_cert_delete(name, finger) {
-    modal_action(
-        _("Delete the certificate ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, finger.substr(0, 50)),
-        () => { dsas_cert_real_delete(name, finger); },
-        true,
-    );
-}
-window.dsas_cert_delete = dsas_cert_delete;
