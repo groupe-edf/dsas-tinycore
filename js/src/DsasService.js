@@ -8,80 +8,7 @@ import {
     empty_obj,
 } from "./DsasUtil";
 
-export default function dsas_display_service(what = "all") {
-    fetch("api/dsas-service.php").then((response) => {
-        if (response.ok) { return response.json(); }
-        return Promise.reject(new Error(response.statusText));
-    }).then((serv) => {
-        if (what === "ssh" || what === "all") {
-            document.getElementById("ssh").checked = (serv.ssh.active === "true");
-            document.getElementById("user_tc").value = print_obj(serv.ssh.user_tc);
-            document.getElementById("user_tc").disabled = (serv.ssh.active !== "true");
-            document.getElementById("user_bas").value = print_obj(serv.ssh.user_bas);
-            document.getElementById("user_bas").disabled = (serv.ssh.active !== "true");
-            document.getElementById("user_haut").value = print_obj(serv.ssh.user_haut);
-            document.getElementById("user_haut").disabled = (serv.ssh.active !== "true");
-        }
-        if (what === "radius" || what === "all") {
-            if (!empty_obj(document.getElementById("radius"))) {
-                // FIXME : The test above allows the radius code to be commented in service.htmls
-                if (empty_obj(serv.radius)) {
-                    // This allow me to not have to artificially upgrade the XML file version
-                    document.getElementById("radius").checked = false;
-                    document.getElementById("radius_server").disabled = true;
-                    document.getElementById("radius_secret").disabled = true;
-                } else {
-                    document.getElementById("radius").checked = (serv.radius.active === "true");
-                    document.getElementById("radius_server").value = print_obj(serv.radius.server);
-                    document.getElementById("radius_server").disabled = (serv.radius.active !== "true");
-                    document.getElementById("radius_secret").value = print_obj(serv.radius.secret);
-                    document.getElementById("radius_secret").disabled = (serv.radius.active !== "true");
-                }
-            }
-        }
-        if (what === "syslog" || what === "all") {
-            document.getElementById("syslog").checked = (serv.syslog.active === "true");
-            document.getElementById("syslog_server").value = print_obj(serv.syslog.server);
-            document.getElementById("syslog_server").disabled = (serv.syslog.active !== "true");
-        }
-        if (what === "ntp" || what === "all") {
-            let pool = "";
-            if (!empty_obj(serv.ntp.server)) {
-                (serv.ntp.server.constructor === Array
-                    ? serv.ntp.server : [serv.ntp.server]).forEach((s) => { pool = pool + s + "\n"; });
-            }
-            document.getElementById("ntp").checked = (serv.ntp.active === "true");
-            document.getElementById("ntp_pool").value = pool;
-            document.getElementById("ntp_pool").disabled = (serv.ntp.active !== "true");
-        }
-        if (what === "antivirus" || what === "all") {
-            document.getElementById("antivirus").checked = (serv.antivirus.active === "true");
-            document.getElementById("antivirus_uri").value = print_obj(serv.antivirus.uri);
-            document.getElementById("antivirus_uri").disabled = (serv.antivirus.active !== "true");
-        }
-        if (what === "repo" || what === "all") {
-            document.getElementById("repo").checked = (serv.web.repo === "true");
-        }
-        if (what === "snmp" || what === "all") {
-            document.getElementById("snmp").checked = (serv.snmp.active === "true");
-            document.getElementById("snmp_user").value = print_obj(serv.snmp.username);
-            document.getElementById("snmp_user").disabled = (serv.snmp.active !== "true");
-            document.getElementById("snmp_pass").value = print_obj(serv.snmp.password);
-            document.getElementById("snmp_pass").disabled = (serv.snmp.active !== "true");
-            document.getElementById("snmp_encrypt").value = print_obj(serv.snmp.encrypt);
-            document.getElementById("snmp_encrypt").disabled = (serv.snmp.active !== "true");
-            document.getElementById("snmp_passpriv").value = print_obj(serv.snmp.passpriv);
-            document.getElementById("snmp_passpriv").disabled = (serv.snmp.active !== "true");
-            document.getElementById("snmp_privencrypt").value = print_obj(serv.snmp.privencrypt);
-            document.getElementById("snmp_privencrypt").disabled = (serv.snmp.active !== "true");
-        }
-    }).catch((error) => {
-        fail_loggedin(error);
-    });
-}
-window.dsas_display_service = dsas_display_service;
-
-export function dsas_change_service(what) {
+function dsas_change_service(what) {
     if (what === "ssh") {
         const nchk = !document.getElementById("ssh").checked;
         document.getElementById("user_tc").disabled = nchk;
@@ -192,4 +119,89 @@ export function dsas_change_service(what) {
         });
     }
 }
-window.dsas_change_service = dsas_change_service;
+
+export default function dsas_display_service(what = "all") {
+    fetch("api/dsas-service.php").then((response) => {
+        if (response.ok) { return response.json(); }
+        return Promise.reject(new Error(response.statusText));
+    }).then((serv) => {
+        if (what === "ssh" || what === "all") {
+            document.getElementById("ssh").checked = (serv.ssh.active === "true");
+            document.getElementById("user_tc").value = print_obj(serv.ssh.user_tc);
+            document.getElementById("user_tc").disabled = (serv.ssh.active !== "true");
+            document.getElementById("user_bas").value = print_obj(serv.ssh.user_bas);
+            document.getElementById("user_bas").disabled = (serv.ssh.active !== "true");
+            document.getElementById("user_haut").value = print_obj(serv.ssh.user_haut);
+            document.getElementById("user_haut").disabled = (serv.ssh.active !== "true");
+        }
+        if (what === "radius" || what === "all") {
+            if (!empty_obj(document.getElementById("radius"))) {
+                // FIXME : The test above allows the radius code to be commented in service.htmls
+                if (empty_obj(serv.radius)) {
+                    // This allow me to not have to artificially upgrade the XML file version
+                    document.getElementById("radius").checked = false;
+                    document.getElementById("radius_server").disabled = true;
+                    document.getElementById("radius_secret").disabled = true;
+                } else {
+                    document.getElementById("radius").checked = (serv.radius.active === "true");
+                    document.getElementById("radius_server").value = print_obj(serv.radius.server);
+                    document.getElementById("radius_server").disabled = (serv.radius.active !== "true");
+                    document.getElementById("radius_secret").value = print_obj(serv.radius.secret);
+                    document.getElementById("radius_secret").disabled = (serv.radius.active !== "true");
+                }
+            }
+        }
+        if (what === "syslog" || what === "all") {
+            document.getElementById("syslog").checked = (serv.syslog.active === "true");
+            document.getElementById("syslog_server").value = print_obj(serv.syslog.server);
+            document.getElementById("syslog_server").disabled = (serv.syslog.active !== "true");
+        }
+        if (what === "ntp" || what === "all") {
+            let pool = "";
+            if (!empty_obj(serv.ntp.server)) {
+                (serv.ntp.server.constructor === Array
+                    ? serv.ntp.server : [serv.ntp.server]).forEach((s) => { pool = pool + s + "\n"; });
+            }
+            document.getElementById("ntp").checked = (serv.ntp.active === "true");
+            document.getElementById("ntp_pool").value = pool;
+            document.getElementById("ntp_pool").disabled = (serv.ntp.active !== "true");
+        }
+        if (what === "antivirus" || what === "all") {
+            document.getElementById("antivirus").checked = (serv.antivirus.active === "true");
+            document.getElementById("antivirus_uri").value = print_obj(serv.antivirus.uri);
+            document.getElementById("antivirus_uri").disabled = (serv.antivirus.active !== "true");
+        }
+        if (what === "repo" || what === "all") {
+            document.getElementById("repo").checked = (serv.web.repo === "true");
+        }
+        if (what === "snmp" || what === "all") {
+            document.getElementById("snmp").checked = (serv.snmp.active === "true");
+            document.getElementById("snmp_user").value = print_obj(serv.snmp.username);
+            document.getElementById("snmp_user").disabled = (serv.snmp.active !== "true");
+            document.getElementById("snmp_pass").value = print_obj(serv.snmp.password);
+            document.getElementById("snmp_pass").disabled = (serv.snmp.active !== "true");
+            document.getElementById("snmp_encrypt").value = print_obj(serv.snmp.encrypt);
+            document.getElementById("snmp_encrypt").disabled = (serv.snmp.active !== "true");
+            document.getElementById("snmp_passpriv").value = print_obj(serv.snmp.passpriv);
+            document.getElementById("snmp_passpriv").disabled = (serv.snmp.active !== "true");
+            document.getElementById("snmp_privencrypt").value = print_obj(serv.snmp.privencrypt);
+            document.getElementById("snmp_privencrypt").disabled = (serv.snmp.active !== "true");
+        }
+        if (what === "all") {
+            document.getElementById("ssh").addEventListener("change", () => { dsas_change_service("ssh"); });
+            document.getElementById("snmp").addEventListener("change", () => { dsas_change_service("snmp"); });
+            document.getElementById("syslog").addEventListener("change", () => { dsas_change_service("syslog"); });
+            document.getElementById("ntp").addEventListener("change", () => { dsas_change_service("ntp"); });
+            document.getElementById("antivirus").addEventListener("change", () => { dsas_change_service("antivirus"); });
+            document.getElementById("repo").addEventListener("change", () => { dsas_change_service("repo"); });
+            // This has a test as the radius code is deactivate in the html. Simply uncommenting
+            // the html code shoudld activate this code if needed
+            if (document.getElementById("radius")) {
+                document.getElementById("radius").addEventListener("change", () => { dsas_change_service("radius"); });
+            }
+            document.getElementById("save").addEventListener("click", () => { dsas_change_service(); return false; });
+        }
+    }).catch((error) => {
+        fail_loggedin(error);
+    });
+}
