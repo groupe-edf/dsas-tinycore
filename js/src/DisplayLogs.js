@@ -4,6 +4,8 @@
 
 export default class DisplayLogs {
     constructor(id, logs, hidescrollbar = false, emphasis = "", filter = "", render = "") {
+        const temp = document.getElementById(id);
+
         this.view = null;
         this.logs = (typeof (logs) === "string" ? [logs] : logs);
         this.emphasis = emphasis;
@@ -15,20 +17,40 @@ export default class DisplayLogs {
         this.highlight = { tab: -1, line: -1 };
         this.nitems = this.numberOfItems();
 
-        let body = "";
+        temp.textContent = ""; // Clear existing content
         if (this.logs.length === 1) {
-            body = body + "<div id=\"logpane\"  style=\"height: 500px; position: relative; overflow-x: auto; overflow-y: auto;\">\n"
-          + "  <div id=\"heightForcer\"></div>\n"
-          + "  <div id=\"log0\" class=\"container tab-pane active\"></div>";
+            let el = temp.appendChild(document.createElement("div"));
+            el.id = "logpane";
+            el.setAttribute("style", "height: 500px; position: relative; overflow-x: auto; overflow-y: auto;");
+            el.appendChild(document.createElement("div")).id = "heightForcer";
+            el = el.appendChild(document.createElement("div"));
+            el.id = "log0";
+            el.className = "container tab-pane active";
         } else {
-            body += "<ul class=\"nav nav-tabs\" id=\"logs\" role=\"tablist\">\n";
-            for (let i = 0; i < this.logs.length; i += 1) { body = body + "  <li class=\"nav-item\"><a class=\"nav-link" + (i === 0 ? " active" : "") + "\" id=\"navlog" + i + "\" data-bs-toggle=\"tab\" href=\"#log" + i + "\">" + i + "</a></li>\n"; }
-            body = body + "</ul>\n<div class=\"tab-content\" id=\"logpane\"  style=\"height: 500px; position: relative; overflow-x: auto; overflow-y: auto;\">\n"
-          + "  <div id=\"heightForcer\"></div>\n";
-            for (let i = 0; i < this.logs.length; i += 1) { body = body + "<div id=\"log" + i + "\" class=\"container tab-pane " + (i === 0 ? "active" : "fade") + "\"></div>"; }
-            body += "</div>";
+            let el = temp.appendChild(document.createElement("ul"));
+            el.className = "nav nav-tabs";
+            el.id = "logs";
+            el.setAttribute("role", "tablist");
+            for (let i = 0; i < this.logs.length; i += 1) {
+                const li = el.appendChild(document.createElement("li"));
+                li.className = "nav-item";
+                const link = li.appendChild(document.createElement("a"));
+                link.className = "nav-link" + (i === 0 ? " active" : "");
+                link.id = "navlog" + i;
+                link.setAttribute("data-bs-toggle", "tab");
+                link.href = "#log" + i;
+                link.textContent = i;
+            }
+            el = temp.appendChild(document.createElement("div"));
+            el.id = "logpane";
+            el.setAttribute("style", "height: 500px; position: relative; overflow-x: auto; overflow-y: auto;");
+            el.appendChild(document.createElement("div")).id = "heightForcer";
+            for (let i = 0; i < this.logs.length; i += 1) {
+                const div = el.appendChild(document.createElement("div"));
+                div.id = "log" + i;
+                div.className = "container tab-pane " + (i === 0 ? "active" : "fade");
+            }
         }
-        document.getElementById(id).innerHTML = body;
         this.init_holder();
     }
 
@@ -72,7 +94,7 @@ export default class DisplayLogs {
 
     itemHeight() {
         const pre = document.createElement("pre");
-        pre.innerHTML = "testing height";
+        pre.textContent = "testing height";
         this.holder.appendChild(pre);
 
         const output = pre.offsetHeight;
@@ -195,7 +217,7 @@ export default class DisplayLogs {
                                 } else {
                                     pre.className = "my-0 " + this.color(lines[index]) + " overflow-auto";
                                 }
-                                pre.innerHTML = (this.render
+                                pre.textContent = (this.render
                                     ? this.render(lines[index])
                                     : lines[index]);
                                 this.view.appendChild(pre);
@@ -213,14 +235,14 @@ export default class DisplayLogs {
                         } else {
                             pre.className = "my-0 " + this.color(lines[index]) + " overflow-auto";
                         }
-                        pre.innerHTML = (this.render ? this.render(lines[index]) : lines[index]);
+                        pre.textContent = (this.render ? this.render(lines[index]) : lines[index]);
                         this.view.appendChild(pre);
                     }
                 }
             } else {
                 pre = document.createElement("pre");
                 pre.className = "my-0 text-muted";
-                pre.innerHTML = "&lt;Empty&gt;"; // Can't translate this easily
+                pre.textContent = "<Empty>"; // Can't translate this easily
                 this.view.appendChild(pre);
             }
         }

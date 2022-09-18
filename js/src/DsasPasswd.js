@@ -4,7 +4,7 @@ import { modal_message, modal_errors } from "./DsasModal";
 import { fail_loggedin, clear_feedback } from "./DsasUtil";
 
 function dsas_change_passwd() {
-    const user = document.getElementById("User").innerHTML;
+    const user = document.getElementById("User").textContent;
     const passwd = document.getElementById("inp_pass").value;
     const formData = new FormData();
     formData.append("data", JSON.stringify({ username: user, passwd }));
@@ -37,8 +37,8 @@ export default function dsas_display_passwd() {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((obj) => {
-        document.getElementById("User").innerHTML = obj.username;
-        document.getElementById("Type").innerHTML = obj.type;
+        document.getElementById("User").textContent = obj.username;
+        document.getElementById("Type").textContent = obj.type;
     }).catch((error) => {
         if (!fail_loggedin(error)) {
             modal_message(_("Error during password change : {0}", (error.message ? error.message : error)));

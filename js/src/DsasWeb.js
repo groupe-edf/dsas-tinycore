@@ -27,7 +27,7 @@ export default function dsas_display_web(what = "all") {
 
             const csrblob = new Blob([web.ssl.csr], { type: "application/x-x509-user-cert" });
             const csrurl = window.URL.createObjectURL(csrblob);
-            document.getElementById("csr_body").innerHTML = web.ssl.csr;
+            document.getElementById("csr_body").textContent = web.ssl.csr;
             document.getElementById("getcsr").setAttribute("href", csrurl);
 
             document.getElementById("web_pem").innerHTML = "  <h5><a class=\"text-toggle\" data-bs-toggle=\"collapse\" href=\"#cert\"\n"
@@ -42,13 +42,13 @@ export default function dsas_display_web(what = "all") {
                 + "  </div>";
             const pemblob = new Blob([web.ssl.pem], { type: "application/x-x509-user-cert" });
             const pemurl = window.URL.createObjectURL(pemblob);
-            document.getElementById("pem_body").innerHTML = web.ssl.pem;
+            document.getElementById("pem_body").textContent = web.ssl.pem;
             document.getElementById("getpem").setAttribute("href", pemurl);
 
-            document.getElementById("web_renew").innerHTML = _("Renew certificate");
-            document.getElementById("web_email").innerHTML = _("email");
-            document.getElementById("web_validity").innerHTML = _("Validity");
-            document.getElementById("web_renew2").value = _("Renew certificate");
+            document.getElementById("web_renew").textContent = _("Renew certificate");
+            document.getElementById("web_email").textContent = _("email");
+            document.getElementById("web_validity").textContent = _("Validity");
+            document.getElementById("web_renew2").textContent = _("Renew certificate");
             document.getElementById("validity").innerHTML = "<option id=\"valid0\" value=\"0\" selected>" + _("Years") + "</option>\n"
                 + "<option id=\"valid1\" value=\"1\">" + _("One year") + "</option>\n"
                 + "<option id=\"valid2\" value=\"2\">" + _("Two years") + "</option>\n"

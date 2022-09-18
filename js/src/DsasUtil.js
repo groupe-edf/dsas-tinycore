@@ -28,6 +28,15 @@ export function print_obj(obj) {
 }
 window.print_obj = print_obj;
 
+export function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 export function date_to_locale(d) {
     if (d === "never") { return _("never"); }
     const c = new Intl.DateTimeFormat(ml.currentLanguage, {

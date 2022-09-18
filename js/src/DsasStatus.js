@@ -26,39 +26,31 @@ function format_space(bytes) {
     return (bytes / 1024 ** Math.floor(exp)).toFixed(2) + " " + symbols[exp];
 }
 
-function machine_status(obj) {
+function machine_status(name, obj) {
     let p = 100.0 - (100.0 * obj.disk_free) / obj.disk_total;
-    const disk = "<div class=\"d-flex justify-content-between\">"
-    + "<div>" + _("Disk : {0}", obj.disk) + "</div>\n"
-    + "<div>" + format_space(obj.disk_total - obj.disk_free)
-    + " / " + format_space(obj.disk_total) + "</div></div>"
-    + "  <div class=\"col-12 progress\">\n"
-    + "    <div class=\"progress-bar\" role=\"progressbar\" style=\"width: " + p.toFixed()
-    + "%\" aria-valuenow=\"" + p.toFixed() + "\" aria-valuemin=\"0\" aria-valuemax=\"100\">" + p.toFixed(1) + " %</div>\n"
-    + "  </div>\n";
+    document.getElementById(name + "Disk").textContent = _("Disk : {0}", obj.disk);
+    document.getElementById(name + "DiskSize").textContent = format_space(obj.disk_total
+        - obj.disk_free) + " / " + format_space(obj.disk_total);
+    document.getElementById(name + "DiskBar").setAttribute("style", "width: " + p.toFixed() + "%");
+    document.getElementById(name + "DiskBar").setAttribute("aria-valuenow", p.toFixed());
+    document.getElementById(name + "DiskBar").textContent = p.toFixed(1) + "%";
     p = (100.0 * obj.memory_used) / obj.memory_total;
-    const memory = "<div class=\"d-flex justify-content-between\">"
-    + "<div>" + _("Memory :") + "</div>\n"
-    + "<div>" + format_space(obj.memory_used)
-    + " / " + format_space(obj.memory_total) + "</div></div>"
-    + "  <div class=\"col-12 progress\">\n"
-    + "    <div class=\"progress-bar\" role=\"progressbar\" style=\"width: " + p.toFixed()
-    + "%\" aria-valuenow=\"" + p.toFixed() + "\" aria-valuemin=\"0\" aria-valuemax=\"100\">" + p.toFixed(1) + " %</div>\n"
-    + "  </div>\n";
-
-    if (obj.loadavg < 0.01) { p = 0; } else {
+    document.getElementById(name + "Memory").textContent = format_space(obj.memory_used)
+        + " / " + format_space(obj.memory_total);
+    document.getElementById(name + "MemoryBar").setAttribute("style", "width: " + p.toFixed() + "%");
+    document.getElementById(name + "MemoryBar").setAttribute("aria-valuenow", p.toFixed());
+    document.getElementById(name + "MemoryBar").textContent = p.toFixed(1) + "%";
+    if (obj.loadavg < 0.01) {
+        p = 0;
+    } else {
     // Scale by the number of cores
         p = ((Math.log10(obj.loadavg) + 2) * 25) / obj.cores;
         p = (p > 100 ? 100 : p);
     }
-    const load = "<div class=\"d-flex justify-content-between\">"
-    + "<div>" + _("Load average :") + "</div>\n<div>" + obj.loadavg + "</div></div>"
-    + "  <div class=\"col-12 progress\">\n"
-    + "    <div class=\"progress-bar\" role=\"progressbar\" style=\"width: " + p.toFixed()
-    + "%\" aria-valuenow=\"" + p.toFixed() + "\" aria-valuemin=\"0\" aria-valuemax=\"100\">" + obj.loadavg + "</div>\n"
-    + "  </div>\n";
-
-    return disk + memory + load;
+    document.getElementById(name + "LoadAvg").textContent = obj.loadavg;
+    document.getElementById(name + "LoadBar").setAttribute("style", "width: " + p.toFixed() + "%");
+    document.getElementById(name + "LoadBar").setAttribute("aria-valuenow", p.toFixed());
+    document.getElementById(name + "LoadBar").textContent = obj.loadavg;
 }
 
 function dsas_refresh_logs(all = false) {
@@ -89,16 +81,13 @@ function dsas_status() {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((obj) => {
-        let body = "<div class=\"row\"><div class=\"col-6 container p-3 border\">"
-        + "<h5>" + _("Lower Machine :") + "</h5>" + machine_status(obj.bas);
+        machine_status("Lower", obj.bas);
         if (obj.haut.status === "down") {
-            body = body + "</div><div class=\"col-6 container p-3 border text-muted\">"
-           + "<h5 class=\"text-danger\">" + _("Upper Machine :") + " " + _("UNAVAILABLE") + "</h5>" + machine_status(obj.haut) + "</div></div>";
+            document.getElementById("Upper").className = "col-6 container p-3 border text-muted";
         } else {
-            body = body + "</div><div class=\"col-6 container p-3 border\">"
-           + "<h5>" + _("Upper Machine :") + "</h5>" + machine_status(obj.haut) + "</div></div>";
+            document.getElementById("Upper").className = "col-6 container p-3 border";
         }
-        document.getElementById("StatusBar").innerHTML = body;
+        machine_status("Upper", obj.haut);
         // Automatically refresh the page
         if (timeoutStatus !== 0) { clearTimeout(timeoutStatus); }
         timeoutStatus = setTimeout(dsas_status, 5000);

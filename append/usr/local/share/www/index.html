@@ -9,7 +9,58 @@
 
 <dsas-header></dsas-header>
 
-<div class="container p-3 border" id="StatusBar"></div>
+<div class="container p-3 border" id="StatusBar">
+  <div class="row">
+    <div class="col-6 container p-3 border" id="Lower">
+      <h5 id="LowerName" data-i18n>Lower Machine :</h5>
+      <div class="d-flex justify-content-between" id="LowerStatus">
+        <div id="LowerDisk"></div>
+        <div id="LowerDiskSize"></div>
+      </div>
+      <div class="col-12 progress">
+        <div class="progress-bar" role="progressbar" id="LowerDiskBar" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+      <div class="d-flex justify-content-between">
+        <div data-i18n>Memory :</div>
+        <div id="LowerMemory"></div>
+      </div>
+      <div class="col-12 progress">
+        <div class="progress-bar" role="progressbar" id="LowerMemoryBar" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+      <div class="d-flex justify-content-between">
+        <div id="LowerLoad" data-i18n>Load average :</div>
+        <div id="LowerLoadAvg"></div>
+      </div>
+      <div class="col-12 progress">
+        <div class="progress-bar" role="progressbar" id="LowerLoadBar" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+    </div>
+    <div class="col-6 container p-3 border" id="Upper">
+      <h5 id="UpperName" data-i18n>Lower Machine :</h5>
+      <div class="d-flex justify-content-between" id="UpperStatus">
+        <div id="UpperDisk"></div>
+        <div id="UpperDiskSize"></div>
+      </div>
+      <div class="col-12 progress">
+        <div class="progress-bar" role="progressbar" id="UpperDiskBar" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+      <div class="d-flex justify-content-between">
+        <div data-i18n>Memory :</div>
+        <div id="UpperMemory"></div>
+      </div>
+      <div class="col-12 progress">
+        <div class="progress-bar" role="progressbar" id="UpperMemoryBar" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+      <div class="d-flex justify-content-between">
+        <div data-i18n>Load average :</div>
+        <div id="UpperLoadAvg"></div>
+      </div>
+      <div class="col-12 progress">
+        <div class="progress-bar" role="progressbar" id="UpperLoadBar" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="container p-3 border" id="VerifLogs">
   <div class="row">

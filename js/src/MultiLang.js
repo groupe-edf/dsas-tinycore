@@ -96,7 +96,7 @@ export default class MultiLang {
     translateHTML() {
         // The eslint aribnb style is too annoying for the next 3 lines.
         // eslint-disable-next-line no-param-reassign
-        document.querySelectorAll("[data-i18n]").forEach((el) => { el.innerHTML = this.translate(el.innerHTML); });
+        document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = this.translate(el.textContent); });
         // eslint-disable-next-line no-param-reassign
         document.querySelectorAll("[data-i18n-value]").forEach((el) => { el.value = this.translate(el.value); });
         // eslint-disable-next-line no-param-reassign
@@ -111,7 +111,7 @@ export default class MultiLang {
             const a = li.appendChild(document.createElement("a"));
             a.className = "nav-link dropdown-toggle";
             a.setAttribute("data-bs-toggle", "dropdown");
-            a.innerHTML = this.currentLanguage;
+            a.textContent = this.currentLanguage;
             const d = li.appendChild(document.createElement("div"));
             d.className = "dropdown-menu";
 
@@ -120,7 +120,7 @@ export default class MultiLang {
                 l.className = "dropdown-item";
                 l.addEventListener("click", (evt) => { this.setLanguage(evt.currentTarget.lang); });
                 l.lang = e;
-                l.innerHTML = e;
+                l.textContent = e;
             });
         });
     }

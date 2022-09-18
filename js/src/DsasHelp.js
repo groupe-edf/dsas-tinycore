@@ -22,7 +22,7 @@ function dsasHeadings() {
 }
 
 function dsas_display_version() {
-    document.getElementById("Version").innerHTML = "<p><span data-i18n>DSAS Version</span> : " + dsasVersion + "</p>";
+    document.getElementById("Version").textContent = _("DSAS Version") + " : " + dsasVersion;
 }
 
 function dsasHelpTOC() {
@@ -79,8 +79,9 @@ export default function dsas_display_help() {
         if (response.ok) { return response.text(); }
         return Promise.reject(new Error(response.statusText));
     }).then((text) => {
-        // If user text was passed here we'd need to sanitize it, but the documentation
-        // is supplied with the DSAS.
+        // Marked" has to use innerHTML as it returns a formatted string.
+        // If user text was passed here we'd need to sanitize it, but the
+        // documentation is supplied with the DSAS. "
         // FIXME Fortigate SSL VPN F***'s up here. Kludge to fix it.
         setOptions({ baseUrl: dsas_origin() });
         document.getElementById("Documentation").innerHTML = "<article class=\"markdown-body\">"

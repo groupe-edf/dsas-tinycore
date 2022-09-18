@@ -9,6 +9,24 @@
 
 <dsas-header></dsas-header>
 
+
+<template id="templateUser">
+  <tr>
+    <th scope="row"></th>
+    <td><input type="text" class="form-control"></td>
+    <td><select class="form-select">
+        <option value="admin" data-i18n>administrator</option>
+        <option value="bas" data-i18n>lower</option>
+        <option value="haut" data-i18n>upper</option>
+    </select></td>
+    <td style="text-align:center"><input type="checkbox" class="form-check-input"></td>
+    <td>
+      <a data-toggle="tooltip" title="Change Password" data-i18n-title><img src="lock.svg"></a>
+      &nbsp;<a data-toggle="tooltip" title="Delete" data-i18n-title>><img src="x-lg.svg"></a>
+    <td>
+  </tr>
+</template>
+
 <div class="container p-3 my-3 border">
   <div class="row">
     <div class="col-md-10"><h5 data-i18n>Users</h5></div>

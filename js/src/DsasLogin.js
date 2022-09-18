@@ -9,19 +9,19 @@ function dsas_login() {
 
     // Remove existing errors
     document.getElementById("inp_user").setAttribute("class", "form-control");
-    document.getElementById("feed_user").innerHTML = "";
+    document.getElementById("feed_user").textContent = "";
     document.getElementById("inp_pass").setAttribute("class", "form-control");
-    document.getElementById("feed_pass").innerHTML = "";
+    document.getElementById("feed_pass").textContent = "";
 
     if (!username) {
         document.getElementById("inp_user").setAttribute("class", "form-control is-invalid");
-        document.getElementById("feed_user").innerHTML = _("Enter the username.");
+        document.getElementById("feed_user").textContent = _("Enter the username.");
         return;
     }
 
     if (!password) {
         document.getElementById("inp_pass").setAttribute("class", "form-control is-invalid");
-        document.getElementById("feed_pass").innerHTML = _("Enter the password.");
+        document.getElementById("feed_pass").textContent = _("Enter the password.");
         return;
     }
 
@@ -47,7 +47,7 @@ function dsas_login() {
     }).catch(() => {
         document.getElementById("inp_user").setAttribute("class", "form-control is-invalid");
         document.getElementById("inp_pass").setAttribute("class", "form-control is-invalid");
-        document.getElementById("feed_pass").innerHTML = _("Username or password invalid.");
+        document.getElementById("feed_pass").textContent = _("Username or password invalid.");
     });
 }
 
@@ -56,7 +56,7 @@ export default function dsas_init_loggedin() {
     const uri = new URL("api/login.php", dsas_origin());
 
     document.getElementById("inp_pass").addEventListener("keyup", (e) => {
-        document.getElementById("feed_pass").innerHTML = (
+        document.getElementById("feed_pass").textContent = (
             e.getModifierState("CapsLock") ? _("Caps Lock is on") : "");
         document.getElementById("inp_pass").setAttribute(
             "class", (

@@ -28,15 +28,6 @@ function cert_expired(cert) {
     return false;
 }
 
-function escapeHtml(unsafe) {
-    return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-
 function time_t_to_date(t) {
     if (t <= 0) { return _("always"); }
     const c = new Intl.DateTimeFormat(ml.currentLanguage, {
@@ -112,6 +103,8 @@ function gpg_body(c) {
 function treat_gpg_certs(certs, node) {
     let i = 0;
     const temp = document.getElementById("certtemplate");
+    // Remove current contents
+    while (node.lastElementChild) node.removeChild(node.lastElementChild);
     certs.forEach((cert) => {
         const pemblob = new Blob([cert.pem], { type: "application/x-x509-user-cert" });
         const url = window.URL.createObjectURL(pemblob);
@@ -126,9 +119,9 @@ function treat_gpg_certs(certs, node) {
         links[1].setAttribute("href", url);
         links[2].addEventListener("click", () => { dsas_cert_delete(name.replaceAll("\n", "\\n"), cert.fingerprint); });
         links[2].removeAttribute("hidden");
-        item.querySelector("span").innerHTML = escapeHtml(name);
+        item.querySelector("span").textContent = name;
         item.querySelector("div").setAttribute("id", "gpg" + i);
-        item.querySelector("pre").innerHTML = gpg_body(cert);
+        item.querySelector("pre").textContent = gpg_body(cert);
         item.querySelector("pre").setAttribute("style", "height : 235x");
         node.appendChild(item);
         i += 1;
@@ -138,6 +131,8 @@ function treat_gpg_certs(certs, node) {
 function treat_ssl_pubkeys(certs, node) {
     let i = 0;
     const temp = document.getElementById("certtemplate");
+    // Remove current contents
+    while (node.lastElementChild) node.removeChild(node.lastElementChild);
     certs.forEach((cert) => {
         const pemblob = new Blob([cert.pem], { type: "application/x-pem-file" });
         const url = window.URL.createObjectURL(pemblob);
@@ -148,9 +143,9 @@ function treat_ssl_pubkeys(certs, node) {
         links[1].setAttribute("href", url);
         links[2].addEventListener("click", () => { dsas_cert_delete(name.replaceAll("\n", "\\n"), cert.fingerprint); });
         links[2].removeAttribute("hidden");
-        item.querySelector("span").innerHTML = name;
+        item.querySelector("span").textContent = name;
         item.querySelector("div").setAttribute("id", "pubkey" + i);
-        item.querySelector("pre").innerHTML = cert.fingerprint;
+        item.querySelector("pre").textContent = cert.fingerprint;
         item.querySelector("pre").setAttribute("style", "height : 20x");
         node.appendChild(item);
         i += 1;
@@ -160,6 +155,8 @@ function treat_ssl_pubkeys(certs, node) {
 function treat_x509_certs(certs, node, added = false) {
     let i = 0;
     const temp = document.getElementById("certtemplate");
+    // Remove current contents
+    while (node.lastElementChild) node.removeChild(node.lastElementChild);
     certs.forEach((cert) => {
         const pemblob = new Blob([cert.pem], { type: "application/x-x509-user-cert" });
         const url = window.URL.createObjectURL(pemblob);
@@ -181,9 +178,9 @@ function treat_x509_certs(certs, node, added = false) {
             links[2].addEventListener("click", () => { dsas_cert_delete(name.replaceAll("\n", "\\n"), cert.fingerprint); });
             links[2].removeAttribute("hidden");
         }
-        item.querySelector("span").innerHTML = name;
+        item.querySelector("span").textContent = name;
         item.querySelector("div").setAttribute("id", (added ? "add" : "ca") + i);
-        item.querySelector("pre").innerHTML = cert_body(cert);
+        item.querySelector("pre").textContent = cert_body(cert);
         node.appendChild(item);
         i += 1;
     });

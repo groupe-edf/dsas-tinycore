@@ -55,7 +55,7 @@ export function modal_errors(errors, feedback = false) {
     if (feedback) {
         // Clear old invalid feedbacks. Don't use clear_feedback to avoid circular reference
         // eslint-disable-next-line no-param-reassign
-        [...document.getElementsByClassName("invalid-feedback")].forEach((feed) => { feed.innerHTML = ""; });
+        [...document.getElementsByClassName("invalid-feedback")].forEach((feed) => { feed.textContent = ""; });
         [...document.getElementsByClassName("form-control")].forEach((feed) => { feed.setAttribute("class", "form-control"); });
     }
 
@@ -68,7 +68,7 @@ export function modal_errors(errors, feedback = false) {
                     body = body + "<p>" + _(err[Object.keys(err)]) + "</p>";
                 } else {
                     document.getElementById(key).setAttribute("class", "form-control is-invalid");
-                    document.getElementById("feed_" + key).innerHTML = _(err[key]);
+                    document.getElementById("feed_" + key).textContent = _(err[key]);
                 }
             }
         });
@@ -98,7 +98,7 @@ export default class DSASModal extends HTMLElement {
         const isStatic = this.getAttribute("static");
         let el;
 
-        this.innerHTML = ""; // Clear all existing elements
+        this.textContent = ""; // Clear all existing elements
         el = this.appendChild(document.createElement("div"));
         el.className = "modal fade";
         el.id = "static" + tag;
@@ -127,7 +127,7 @@ export default class DSASModal extends HTMLElement {
         if (title !== null) {
             el.appendChild(document.createElement("h5"));
             el.className = "modal-title";
-            el.innerHTML = title;
+            el.textContent = title;
         }
 
         el = view.appendChild(document.createElement("div"));
@@ -147,7 +147,7 @@ export default class DSASModal extends HTMLElement {
             if (disable !== null) {
                 el2.setAttribute("disable", "");
             }
-            el2.innerHTML = _("Cancel");
+            el2.textContent = _("Cancel");
             el.appendChild(el2);
         }
         {
@@ -161,7 +161,7 @@ export default class DSASModal extends HTMLElement {
             if (!this.action || hideonclick !== null) {
                 el2.setAttribute("data-bs-dismiss", "modal");
             }
-            el2.innerHTML = (type === "Ok" ? _("Ok") : _("Confirm"));
+            el2.textContent = (type === "Ok" ? _("Ok") : _("Confirm"));
             if (this.action) {
                 if (typeof (this.action) === "string") {
                     // FIXME Should Try not to use this form of the function as it needs
