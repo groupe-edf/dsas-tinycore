@@ -8,14 +8,43 @@
 <body>
 
 <dsas-header></dsas-header>
-<div class="container p-3 my-3 border" id="web_csr"></div>
+<div class="container p-3 my-3 border" id="web_csr">
+  <h5><a class="text-toggle" data-bs-toggle="collapse" href="#csr" role="button" aria-controls="csr" aria-expanded="false">
+    <i class="text-collapsed><img src="caret-right.svg"/></i><i class="text-expanded"><img src="caret-down.svg"/></i></a>
+    <span data-i18n>Certificate Signing Request</span>
+    <a data-toggle="tooltip" title="Download" id="getcsr" download="dsas.csr" data-i18n-title><img src="save.svg"></a>
+  </h5>
+  <div class="collapse" id="csr">
+    <div class="card card-body">
+      <pre id="csr_body" style="height : 300px"></pre>
+      <form id="crtupload">
+        <label for="upload" data-toggle="tooltip" title="CSR file signed by a CA" data-i18n data-i18n-title>Upload CRT</label>
+        <input type="file" name="crtfile" id="crtfile" style="display: none" accept="text/plain,application/x-x509-user-cert">
+        <input type="submit" class="btn btn-primary btn-sm" name="upload" value="Upload" data-i18n-value>
+      </form>
+    </div>
+  </div>
+</div>
 
-<div class="container p-3 my-3 border" id="web_pem"></div>
+<div class="container p-3 my-3 border" id="web_pem">
+  <h5><a class="text-toggle" data-bs-toggle="collapse" href="#cert" role="button" aria-controls="cert" aria-expanded="false">\n"
+    <i class="text-collapsed><img src="caret-right.svg"/></i><i class="text-expanded"><img src="caret-down.svg"/></i></a>
+    <span data-i18n>Public Certificate</span>
+    <a data-toggle="tooltip" title="Download" id="getpem" download="dsas.crt" data-i18n-title><img src="save.svg"></a>
+  </h5>
+  <div class="collapse" id="cert">
+    <div class="card card-body">
+      <pre id="pem_body" style="height : 300px"></pre>
+    </div>
+  </div>
+</div>
 
 <div class="container p-3 my-3 border">
   <h5><a class="text-toggle" data-bs-toggle="collapse" href="#attr"
     role="button" aria-controls="attr" aria-expanded="false">
-    <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded"><img src="caret-down.svg"/></i></a><span id="web_renew"></span></h5>
+    <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded"><img src="caret-down.svg"/></i></a>
+    <span id="web_renew" data-i18n>Renew Certificate</span>
+  </h5>
   <div class="collapse" id="attr">
     <div class="card card-body">
       <form>
@@ -32,14 +61,21 @@
           <input class="col-md-5" type="text" name="organizationName" id="organizationName" value=""> 
           <label class="col-md-1" for="organizationalUnitName" data-toggle="tooltip" title="organizationalUnitName">OU</label>
           <input class="col-md-5" type="text" name="organizationalUnitName" id="organizationalUnitName" value=""> 
-          <label class="col-md-1" for="emailAddress" data-toggle="tooltip" title="emailAddress" id="web_email"></label>
+          <label class="col-md-1" for="emailAddress" data-toggle="tooltip" title="emailAddress" id="web_email" data-i18n>email</label>
           <input class="col-md-5" type="email" name="emailAddress" id="emailAddress" value=""> 
-          <label class="col-md-1" for="validity" id="web_validity"></label>
+          <label class="col-md-1" for="validity" id="web_validity" data-i18n>Validity</label>
           <div class="col-md-5">
-            <select class="form-select" name="validity" id="validity"></select>
+            <select class="form-select" name="validity" id="validity">
+              <option id="valid0" value="0" selected data-i18n>Years</option>
+              <option id="valid1" value="1" data-i18n>One year</option>
+              <option id="valid2" value="2" data-i18n>Two years</option>
+              <option id="valid3" value="3" data-i18n>Three years</option>
+              <option id="valid4" value="4" data-i18n>Four years</option>
+              <option id="valid5" value="5" data-i18n>Five years</option>
+            </select>
           </div>
           <div class="form-group">
-            <input type="submit" class="btn btn-primary btn-sm" id="web_renew2" onclick="dsas_renew_cert(); return false;"> 
+            <input type="submit" class="btn btn-primary btn-sm" id="web_renew2" value="Renew certificate" data-i18n-value> 
           </div>
         </div>
       </form>

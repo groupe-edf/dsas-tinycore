@@ -24,7 +24,6 @@ export function modal_message(text, action = null, hide = false) {
         modalDSAS.show();
     }
 }
-window.modal_message = modal_message;
 
 export function modal_action(text, action = null, hide = false) {
     const modalDSAS = document.getElementById("modalDSAS");
@@ -49,7 +48,6 @@ export function modal_action(text, action = null, hide = false) {
         modalDSAS.show();
     }
 }
-window.modal_action = modal_action;
 
 export function modal_errors(errors, feedback = false) {
     if (feedback) {
@@ -77,7 +75,6 @@ export function modal_errors(errors, feedback = false) {
     }
     return false;
 }
-window.modal_errors = modal_errors;
 
 export default class DSASModal extends HTMLElement {
     connectedCallback() {
@@ -123,10 +120,10 @@ export default class DSASModal extends HTMLElement {
         el.className = "modal-header";
         el = el.appendChild(document.createElement("div"));
         el.id = "static" + tag + "Label";
+        el.appendChild(document.createElement("h5"));
+        el.className = "modal-title";
         if (title !== null) {
-            el.appendChild(document.createElement("h5"));
-            el.className = "modal-title";
-            el.innerHTML = title;
+            el.textContent = title;
         }
 
         el = view.appendChild(document.createElement("div"));
@@ -192,8 +189,8 @@ export default class DSASModal extends HTMLElement {
                 }
                 break;
             case "title":
-                if (document.getElementById("static" + tag + "Label")) {
-                    document.getElementById("static" + tag + "Label").innerHTML = "<h5 class=\"modal-title\">" + newValue + "</h5>";
+                if (document.getElementsByClassName("modal-title")[0]) {
+                    document.getElementsByClassName("modal-title")[0].textContent = newValue;
                 } else {
                     this.render();
                 }
@@ -213,7 +210,7 @@ export default class DSASModal extends HTMLElement {
         const tag = this.getAttribute("tag");
         if (body) {
             if (typeof (body) === "string") {
-                document.getElementById("body" + tag).innerHTML = body;
+                document.getElementById("body" + tag).textContent = body;
             } else {
                 document.getElementById("body" + tag).textContent = "";
                 document.getElementById("body" + tag).appendChild(body);

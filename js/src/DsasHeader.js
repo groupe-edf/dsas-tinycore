@@ -27,14 +27,20 @@ window.b64toBlob = b64toBlob;
 
 function dsas_apply() {
     const modalApply = document.getElementById("modalDSAS");
+    const spinner = document.createDocumentFragment();
+    let el = spinner.appendChild(document.createElement("span"));
+    el.className = "spinner-border spinner-border-sm";
+    el = spinner.appendChild(document.createElement("span"));
+    el.textContent = _("Backup on the configuration in progress");
     modalApply.setAttribute("disable", true);
-    modalApply.setBody("<span class='spinner-border spinner-border-sm'></span> &nbsp; Sauvegarde de la configuration en cours.");
+    modalApply.setBody(spinner);
 
     fetch("api/save.php").then((response) => {
         if (response.ok) { return response.text(); }
         return Promise.reject(new Error(response.statusText));
     }).then(() => {
-        modalApply.setBody("<span class='spinner-border spinner-border-sm'></span> &nbsp; Application de la configuration en cours.");
+        el.textContent = _("&nbsp;Application of the configuration in progress");
+        modalApply.setBody(spinner);
         fetch("api/apply.php").then((response) => {
             if (response.ok) { return response.text(); }
             return Promise.reject(new Error(response.statusText));
@@ -56,7 +62,6 @@ function dsas_apply() {
         if (!fail_loggedin(error)) { modal_message(_("Error during save of the configuration")); }
     });
 }
-window.dsas_apply = dsas_apply;
 
 function dsas_real_backup() {
     const passwd = document.getElementById("BackupPassword").value;
@@ -84,44 +89,22 @@ function dsas_real_backup() {
         if (!fail_loggedin(error)) { modal_message(_("Error : {0}", (error.message ? error.message : error))); }
     });
 }
-// This needs to be exposed so test code can use it
-window.dsas_real_backup = dsas_real_backup;
 
 function dsas_backup() {
     const modalDSAS = document.getElementById("modalDSAS");
-    let body = "";
+    const body = document.createDocumentFragment();
     modal_action(_("Backup the DSAS configuration"), () => { dsas_real_backup(); }, true);
-    body = "    <div class=\"col-9 d-flex justify-content-center\">\n"
-         + "      <label for=\"BackupPassword\">" + _("Backup password :") + "</label>\n"
-         + "      <input type=\"password\" id=\"BackupPassword\" value=\"\" class=\"form-control\" onkeypress=\"if (event.key === 'Enter'){ modalDSAS.hide(); dsas_real_backup();}\">\n"
-         + "    </div>";
+    const el = body.appendChild(document.createElement("div"));
+    el.className = "col-9 d-flex justify-content-center";
+    let el2 = el.appendChild(document.createElement("label"));
+    el2.setAttribute("for", "BackupPassword");
+    el2.textContent = _("Backup password :");
+    el2 = el.appendChild(document.createElement("input"));
+    el2.className = "form-control";
+    el2.id = "BackupPassword";
+    el2.addEventListener("keypress", (e) => { if (e.key === "Enter") { modalDSAS.hide(); dsas_real_backup(); } });
     modalDSAS.setBody(body);
 }
-window.dsas_backup = dsas_backup;
-
-function dsas_passwd_restore() {
-    const modalDSAS = document.getElementById("modalDSAS");
-    let body = "";
-    modal_action(_("Restoration of the DSAS configuration"), "dsas_real_restore();", true);
-    body = "    <div class=\"col-9 d-flex justify-content-center\">\n"
-         + "      <label for=\"RestorePassword\">" + _("Restoration password :") + "</label>\n"
-         + "      <input type=\"password\" id=\"RestorePassword\" value=\"\" class=\"form-control\" onkeypress=\"if (event.key === 'Enter') {modalDSAS.hide(); dsas_real_restore();}\">\n"
-         + "    </div>";
-    modalDSAS.setBody(body);
-}
-window.dsas_passwd_restore = dsas_passwd_restore;
-
-function dsas_restore() {
-    const inp = document.createElement("input");
-    document.body.appendChild(inp);
-    inp.style = "display: none";
-    inp.type = "file";
-    inp.accept = "application/gzip";
-    inp.id = "RestoreSelectFile";
-    inp.addEventListener("change", dsas_passwd_restore, true);
-    inp.click();
-}
-window.dsas_restore = dsas_restore;
 
 export default function dsas_restore_core(file, passwd = "") {
     const formData = new FormData();
@@ -157,6 +140,7 @@ export default function dsas_restore_core(file, passwd = "") {
         if (!fail_loggedin(error)) { modal_message(_("Error : {0}", (error.message ? error.message : error))); }
     });
 }
+// This needs to be exposed so test code can use it
 window.dsas_restore_core = dsas_restore_core;
 
 function dsas_real_restore() {
@@ -164,7 +148,34 @@ function dsas_real_restore() {
     const file = document.getElementById("RestoreSelectFile").files[0];
     dsas_restore_core(file, passwd);
 }
-window.dsas_real_restore = dsas_real_restore;
+
+function dsas_passwd_restore() {
+    const modalDSAS = document.getElementById("modalDSAS");
+    const body = document.createDocumentFragment();
+    modal_action(_("Restoration of the DSAS configuration"), dsas_real_restore, true);
+
+    const el = body.appendChild(document.createElement("div"));
+    el.className = "col-9 d-flex justify-content-center";
+    let el2 = el.appendChild(document.createElement("label"));
+    el2.setAttribute("for", "RetorePassword");
+    el2.textContent = _("Restoration password :");
+    el2 = el.appendChild(document.createElement("input"));
+    el2.className = "form-control";
+    el2.id = "RestorePassword";
+    el2.addEventListener("keypress", (e) => { if (e.key === "Enter") { modalDSAS.hide(); dsas_real_restore(); } });
+    modalDSAS.setBody(body);
+}
+
+function dsas_restore() {
+    const inp = document.createElement("input");
+    document.body.appendChild(inp);
+    inp.style = "display: none";
+    inp.type = "file";
+    inp.accept = "application/gzip";
+    inp.id = "RestoreSelectFile";
+    inp.addEventListener("change", dsas_passwd_restore, true);
+    inp.click();
+}
 
 function chkdown(site) {
     const times = 5;
@@ -286,7 +297,6 @@ function dsas_reboot() {
         if (!fail_loggedin(error)) { modal_message(_("Error during reboot")); }
     });
 }
-window.dsas_reboot = dsas_reboot;
 
 function dsas_shutdown() {
     const modalShutdown = document.getElementById("modalDSAS");
@@ -316,7 +326,6 @@ function dsas_shutdown() {
         if (!fail_loggedin(error)) { modal_message(_("Error during shutdown")); }
     });
 }
-window.dsas_shutdown = dsas_shutdown;
 
 function dsas_logout() {
     // No error checking because, only possible error is that already logged out
@@ -324,7 +333,6 @@ function dsas_logout() {
         window.location.href = "login.html";
     }).catch(() => { window.location.href = "login.html"; });
 }
-window.dsas_logout = dsas_logout;
 
 class DSASHeader extends HTMLElement {
     connectedCallback() {
@@ -337,48 +345,55 @@ class DSASHeader extends HTMLElement {
     render() {
         const disablenav = (this.getAttribute("disablenav") ? this.getAttribute("disablenav") : "");
 
-        this.innerHTML = "    <div class=\"row g-0 sticky-top\"><div class=\"col-8\"><nav class=\"navbar navbar-expand-sm bg-dark navbar-dark\">\n"
-        + "      <a class=\"navbar-brand px-2\"" + ((disablenav !== "disabled") ? " href=\"/" : "") + "\">DSAS</a>\n"
-        + "      <ul class=\"navbar-nav\">\n"
-        + "      <li class=\"nav-item dropdown\">\n"
-        + "        <a class=\"nav-link " + disablenav + " dropdown-toggle\" data-bs-toggle=\"dropdown\">\n"
-        + "        " + _("Configuration") + "\n"
-        + "        </a>\n"
-        + "        <div class=\"dropdown-menu\">\n"
-        + "          <a class=\"dropdown-item\" href=\"tasks.html\">" + _("Tasks") + "</a>\n"
-        + "          <a class=\"dropdown-item\" href=\"cert.html\">" + _("Certificates") + "</a>\n"
-        + "          <a class=\"dropdown-item\" href=\"service.html\">" + _("Services") + "</a>\n"
-        + "          <a class=\"dropdown-item\" href=\"net.html\">" + _("Network") + "</a>\n"
-        + "          <a class=\"dropdown-item\" href=\"web.html\">" + _("Web") + "</a>\n"
-        + "        </div>\n"
-        + "      </li>\n"
-        + "      <li class=\"nav-item dropdown\">\n"
-        + "        <a class=\"nav-link dropdown-toggle\" data-bs-toggle=\"dropdown\">\n"
-        + "        " + _("System") + "\n"
-        + "        </a>\n"
-        + "        <div class=\"dropdown-menu\">\n"
-        + "          <a class=\"dropdown-item\" href=\"users.html\">" + _("Users") + "</a>\n"
-        + "          <a class=\"dropdown-item " + disablenav + "\" onclick=\"dsas_backup();\">" + _("Backup") + "</a>\n"
-        + "          <a class=\"dropdown-item\" onclick=\"dsas_restore();\">" + _("Restore") + "</a>\n"
-        + "          <a class=\"dropdown-item " + disablenav + "\" onclick=\"modal_action('" + _("Are you sure you want to restart ?") + "', 'dsas_reboot();')\">" + _("Restart") + "</a>\n"
-        + "          <a class=\"dropdown-item " + disablenav + "\" onclick=\"modal_action('" + _("Are you sure you want to shutdown ?") + "', 'dsas_shutdown();')\">" + _("Shutdown") + "</a>\n"
-        + "          <a class=\"dropdown-item " + disablenav + "\" onclick=\"modal_action('" + _("Are you sure you want to logout ?") + "', 'dsas_logout();', true)\">" + _("Logout") + "</a>\n"
-        + "        </div>\n"
-        + "      </li>\n"
-        + "      <li class=\"nav-item\">\n"
-        + "        <a class=\"nav-link " + disablenav + "\" href=\"help.html" + (ml.currentLanguage ? "?language=" + ml.currentLanguage : "") + "\">" + _("Documentation") + "</a>\n"
-        + "      </li>\n"
-        + "      </ul>\n"
-        + "    </nav></div>"
-        + "    <div class=\"col-4\"><nav class=\"navbar navbar-expand-sm bg-dark navbar-dark\">\n"
-        + "      <ul class=\"navbar-nav ms-auto\">\n"
-        + "      <span data-i18n-navbar-lang></span>\n"
-        + "      <li class=\"nav-item px-2\">\n"
-        + "        <a class=\"btn " + disablenav + " btn-danger\" id=\"applyDSAS\" onclick=\"modal_action('" + _("Are you sure you want to apply ?") + "', 'dsas_apply();')\">" + _("Apply") + "</a>\n"
-        + "      </li>\n"
-        + "      </ul>\n"
-        + "    </nav></div></div>"
-        + "    <dsas-modal id=\"modalDSAS\" tag=\"DSAS\"  type=\"Ok\"></dsas-modal>\n";
+        // FIXME Remove innerHTML ?
+        // This isn't a security risk as there are no user defined fields in the html below
+        // Maybe at least remove disablenav and treat seperately in JS ?
+        this.innerHTML = `    <div class="row g-0 sticky-top"><div class="col-8"><nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+      <a class="navbar-brand px-2"` + ((disablenav !== "disabled") ? " href=\"/\"" : "") + `>DSAS</a>
+      <ul class="navbar-nav">
+      <li class="nav-item dropdown">
+        <a class="nav-link ` + disablenav + ` dropdown-toggle" data-bs-toggle="dropdown" data-i18n>Configuration</a>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="tasks.html" data-i18n>Tasks</a>
+          <a class="dropdown-item" href="cert.html" data-i18n>Certificates</a>
+          <a class="dropdown-item" href="service.html" data-i18n>Services</a>
+          <a class="dropdown-item" href="net.html" data-i18n>Network</a>
+          <a class="dropdown-item" href="web.html" data-i18n>Web</a>
+        </div>
+      </li> 
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" data-i18n>System</a>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="users.html" data-i18n>Users</a>
+          <a class="dropdown-item ` + disablenav + `" id="headbackup" data-i18n>Backup</a>
+          <a class="dropdown-item" id="headrestore" data-i18n>Restore</a>
+          <a class="dropdown-item ` + disablenav + `" id="headreboot" data-i18n>Restart</a>
+          <a class="dropdown-item ` + disablenav + `" id="headshutdown" data-i18n>Shutdown</a>
+          <a class="dropdown-item ` + disablenav + `" id="headlogout" data-i18n>Logout</a>
+        </div>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link ` + disablenav + `" id="headhelp" href="help.html" data-i18n>Documentation</a>
+      </li>
+      </ul>
+    </nav></div>
+    <div class="col-4"><nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+      <ul class="navbar-nav ms-auto">
+      <span data-i18n-navbar-lang></span>
+      <li class="nav-item px-2">
+        <a class="btn ` + disablenav + ` btn-danger" id="applyDSAS" data-i18n>Apply</a>
+      </li>
+      </ul>
+    </nav></div></div>
+    <dsas-modal id="modalDSAS" tag="DSAS"  type="Ok"></dsas-modal>`;
+
+        this.getElementById("headbackup").addEventListener("click", () => { dsas_backup(); });
+        this.getElementById("headrestore").addEventListener("click", () => { dsas_restore(); });
+        this.getElementById("headreboot").addEventListener("click", () => { modal_action(_("Are you sure you want to restart ?"), dsas_reboot); });
+        this.getElementById("headshutdown").addEventListener("click", () => { modal_action(_("Are you sure you want to shutdown ?"), dsas_shutdown); });
+        this.getElementById("headlogout").addEventListener("click", () => { modal_action(_("Are you sure you want to logout ?"), dsas_logout, true); });
+        this.getElementById("applyDSAS").addEventListener("click", () => { modal_action(_("Are you sure you want to apply ?"), dsas_apply, true); });
+        if (ml.currentLanguage) { this.getElementById("headhelp").href = "help.html?language=" + ml.currentLanguage; }
     }
 
     static get observedAttributes() {

@@ -54,10 +54,22 @@ function dsas_task_real_delete(id) {
 }
 
 function dsas_task_delete(id, name) {
-    const body = _("Delete the task ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, id)
-        + "<br><input class=\"form-check-iput\" type=\"checkbox\" id=\"TaskDeleteFiles\" checked>"
-        + "<label class=\"form-check-label\" for=\"TaskDeleteFiles\">" + _("Delete task files") + "</label>";
-    modal_action(body, () => { dsas_task_real_delete(id); }, true);
+    const modalDSAS = document.getElementById("modalDSAS");
+    const body = document.createDocumentFragment();
+    body.append(_("&nbsp;&nbsp;Name : {0}\r\n&nbsp;&nbsp;ID : {1}\r\n", name, id));
+    let el = document.creatElement("input");
+    el.className = "form-check-input";
+    el.id = "TaskDeleteFiles";
+    el.setAttribute("type", "checkbox");
+    el.setAttribute("checked", "");
+    body.append(el);
+    el = document.createElement("label");
+    el.className = "form-check-label";
+    el.setAttribute("for", "TaskDeleteFiles");
+    el.textContent = _("Delete task files");
+    body.append(el);
+    modal_action(_("Delete the task ?"), () => { dsas_task_real_delete(id); }, true);
+    modalDSAS.setBody(body);
 }
 
 function dsas_task_real_kill(id) {
@@ -87,8 +99,9 @@ function dsas_task_real_kill(id) {
 }
 
 function dsas_task_kill(id, name) {
-    const body = _("Kill the task ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, id);
-    modal_action(body, () => { dsas_task_real_kill(id); }, true);
+    const modalDSAS = document.getElementById("modalDSAS");
+    modal_action(_("Kill the task?"), () => { dsas_task_real_kill(id); }, true);
+    modalDSAS.setBody(_("&nbsp;&nbsp;Name : {0}\r\n&nbsp;&nbsp;ID : {1}", name, id));
 }
 
 function has_arch(archs, arch) {
@@ -147,7 +160,7 @@ function dsas_add_task(oldid = "") {
             } else if (opt.id === "TaskCA_Self") {
                 ca = { fingerprint: opt.value, name: "Self-Signed" };
             } else {
-                ca = { fingerprint: opt.value, name: opt.innerHTML };
+                ca = { fingerprint: opt.value, name: opt.textContent };
             }
         }
     });
@@ -203,14 +216,15 @@ function dsas_add_task_cert() {
             && o.id.substr(0, 6) !== "TaskCA"
             && o.selected);
     if (opt) {
-        const name = opt[0].innerHTML;
+        const name = opt[0].textContent;
         const finger = opt[0].value;
         let add = true;
         [...document.getElementsByTagName("dsas-task-cert")]
             .filter((line) => line.getAttribute("fingerprint") === finger).forEach(() => { add = false; });
         if (add) {
-            taskCert.innerHTML = taskCert.innerHTML + "<dsas-task-cert name=\"" + name
-          + "\" fingerprint=\"" + finger + "\"></dsas-task-cert>";
+            const el = taskCert.appendChild(document.createElement("dsas-task-cert"));
+            el.setAttribute("name", name);
+            el.setAttribute("fingerprint", finger);
         }
     }
 }
@@ -358,13 +372,11 @@ function dsas_task_modify(id, name) {
                     taskcerts.textContent = "";
                     if (task.cert.constructor === Object) {
                         const el = taskcerts.appendChild(document.createElement("dsas-task-cert"));
-                        el.textContent = task.cert.name;
                         el.setAttribute("name", task.cert.name);
                         el.setAttribute("fingerprint", task.cert.fingerprint);
                     } else {
                         task.cert.forEach((cert) => {
                             const el = taskcerts.appendChild(document.createElement("dsas-task-cert"));
-                            el.textContent = cert.name;
                             el.setAttribute("name", cert.name);
                             el.setAttribute("fingerprint", cert.fingerprint);
                         });
@@ -405,14 +417,12 @@ function dsas_task_real_run(id) {
 }
 
 function dsas_task_run(id, name) {
-    modal_action(
-        _("Run the task ?&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}", name, id),
-        () => { dsas_task_real_run(id); },
-        true,
-    );
+    const modalDSAS = document.getElementById("modalDSAS");
+    modal_action(_("Run the task ?"), () => { dsas_task_real_run(id); }, true);
+    modalDSAS.setBody(_("&nbsp;&nbsp;Name : {0}\r\n&nbsp;&nbsp;ID : {1}", name, id));
 }
 
-function modal_info(name, text) {
+function modal_info(name, body) {
     const modalDSAS = document.getElementById("modalDSAS");
     modalDSAS.removeAttribute("disable");
     modalDSAS.setAttribute("static", false);
@@ -421,7 +431,7 @@ function modal_info(name, text) {
     modalDSAS.setAttribute("title", _("Info : {0}", name));
     modalDSAS.setAttribute("type", "Ok");
     modalDSAS.setAttribute("size", "xl");
-    modalDSAS.setBody(text);
+    modalDSAS.setBody(body);
     modalDSAS.show();
 }
 
@@ -440,7 +450,9 @@ function dsas_task_info(id, name, len = 0) {
             if (timeoutInfo !== 0) { clearTimeout(timeoutInfo); }
         } else {
             if (len === 0) {
-                modal_info(name, "<span id=\"logwind\"></span>");
+                const el = document.createElement("span");
+                el.id = "logwind";
+                modal_info(name, el);
                 infoLogs = new DisplayLogs("logwind", info);
             } else { infoLogs.appendlog(info); }
 

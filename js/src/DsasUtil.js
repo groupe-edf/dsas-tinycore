@@ -15,18 +15,15 @@ export function cert_name(cert) {
     if (cert.extensions.subjectKeyIdentifier) { return cert.extensions.subjectKeyIdentifier; }
     return "name";
 }
-window.cert_name = cert_name;
 
 export function empty_obj(obj) {
     if (!obj || Object.keys(obj).length === 0 || obj === "undefined") { return true; }
     return false;
 }
-window.empty_obj = empty_obj;
 
 export function print_obj(obj) {
     return (empty_obj(obj) ? "" : _(obj));
 }
-window.print_obj = print_obj;
 
 export function escapeHtml(unsafe) {
     return unsafe
@@ -67,21 +64,18 @@ export function date_to_locale(d) {
     });
     return ret;
 }
-window.date_to_locale = date_to_locale;
 
 export function clear_feedback() {
     // eslint-disable-next-line no-param-reassign
-    [...document.getElementsByClassName("invalid-feedback")].forEach((feed) => { feed.innerHTML = ""; });
+    [...document.getElementsByClassName("invalid-feedback")].forEach((feed) => { feed.textContent = ""; });
     [...document.getElementsByClassName("form-control")].forEach((feed) => { feed.setAttribute("class", "form-control"); });
 }
-window.clear_feedback = clear_feedback;
 
 export function dsas_origin() {
     // Can't just use window.location.origin as we might be wrapped in a WebSSL portal
     const s = String(window.location);
     return s.substring(0, s.lastIndexOf("/") + 1);
 }
-window.dsas_origin = dsas_origin;
 
 export function dsas_loggedin(update_timeout = true, is_admin = true) {
     const uri = new URL("api/login.php", dsas_origin());
@@ -110,7 +104,6 @@ export function fail_loggedin(status) {
         return true;
     } return false;
 }
-window.fail_loggedin = fail_loggedin;
 
 export function dsas_check_warnings(disablenav = false, redirect = true) {
     fetch("api/dsas-users.php").then((response) => {
@@ -127,22 +120,27 @@ export function dsas_check_warnings(disablenav = false, redirect = true) {
         return Promise.reject(new Error(response.statusText));
     }).then((obj) => {
         if (obj !== null) {
-            let warn = "";
-            let error = "";
-            let body = "";
+            let error = false;
+            const body = document.createDocumentFragment();
             obj.forEach((line) => {
                 if (line.type === "warn") {
-                    warn += "<p>" + _(line.msg);
+                    const el = body.append(document.createElement("p"));
+                    el.textContent = _(line.msg);
+                    el.className = "text-warning";
                 } else {
-                    error += "<p>" + _(line.msg) + "</p>\n";
+                    const el = body.append(document.createElement("p"));
+                    el.textContent = _(line.msg);
+                    el.className = "text-danger";
+                    error = true;
                 }
             });
-            if (error) {
-                if (disablenav) { document.getElementsByTagName("dsas-header")[0].setAttribute("disablenav", "disabled"); }
-                body += "<p class=\"text-danger\">" + error + "</p>";
+            if (error && disablenav) {
+                document.getElementsByTagName("dsas-header")[0].setAttribute("disablenav", "disabled");
             }
-            if (warn) { body += "<p class=\"text-warning\">" + warn + "</p>"; }
-            if (body) { modal_message(body); }
+            if (body.firstChild) {
+                modal_message(_("Error :"));
+                document.getElementById("modalDSAS").setBody(body);
+            }
         }
     }).catch((error) => {
         fail_loggedin(error);
@@ -155,4 +153,3 @@ export function cert_is_ca(cert) {
                 .indexOf(cert.extensions.subjectKeyIdentifier) >= 0) { return true; }
     return false;
 }
-window.cert_is_ca = cert_is_ca;

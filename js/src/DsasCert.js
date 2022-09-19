@@ -69,11 +69,9 @@ function dsas_cert_real_delete(name, finger) {
 }
 
 function dsas_cert_delete(name, finger) {
-    modal_action(
-        _("Delete the certificate ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, finger.substr(0, 50)),
-        () => { dsas_cert_real_delete(name, finger); },
-        true,
-    );
+    const modalDSAS = document.getElementById("modalDSAS");
+    modal_action(_("Delete the certificate ?"), () => { dsas_cert_real_delete(name, finger); }, true);
+    modalDSAS.setBody(_("&nbsp;&nbsp;Name : {0}\r\n&nbsp;&nbsp;ID : {1}", name, finger.substr(0, 50)));
 }
 
 function cert_body(c) {
@@ -223,14 +221,18 @@ function dsas_upload_cert(type = "x509", name = "") {
 
 function dsas_pubkey_name() {
     const modalDSAS = document.getElementById("modalDSAS");
-    let body = "";
+    const body = document.createElement("div");
+    body.className = "col-9 d-flex justify-content-center";
+    let el = body.appendChild(document.createElement("label"));
+    el.setAttribute("for", "PubkeyName");
+    el.textContent = _("Name :");
+    el = body.appendChild(document.createElement("input"));
+    el.claaName = "form-control";
+    el.setAttribute("type", "text");
+    el.id = "PubkeyName";
+    el.addEventListener("keypress", (event) => { if (event.key === "Enter") { modalDSAS.hide(); dsas_upload_cert("pubkey", document.getElementById("PubkeyName").value); } });
     modal_action(_("Enter name for public key"), () => { dsas_upload_cert("pubkey", document.getElementById("PubkeyName").value); }, true);
-    body = "    <div class=\"col-9 d-flex justify-content-center\">\n"
-         + "      <label for=\"PubkeyName\">" + _("Name :") + "</label>\n"
-         + "      <input type=\"text\" id=\"PubkeyName\" value=\"\" class=\"form-control\">\n"
-         + "    </div>";
     modalDSAS.setBody(body);
-    document.getElementById("PubkeyName").addEventListener("keypress", (event) => { if (event.key === "Enter") { modalDSAS.hide(); dsas_upload_cert("pubkey", document.getElementById("PubkeyName").value); } });
 }
 
 export default function dsas_display_cert(what = "all") {

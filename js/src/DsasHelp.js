@@ -65,7 +65,8 @@ function dsasHelpTOC() {
         body += "</ul></li>";
         lvl -= 1;
     }
-
+    // FIXME Get rid of innerHTML
+    // Not a security risk as document is supplied with the DSAS
     document.getElementById("toc").innerHTML = body + "<ul>";
 }
 
