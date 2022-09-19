@@ -273,16 +273,25 @@ function waitshutdown(c = 0) {
 function dsas_reboot() {
     const modalReboot = document.getElementById("modalDSAS");
     modalReboot.setAttribute("disable", true);
-    modalReboot.setBody("  <div class=\"row\">\n"
-                 + "    <div class=\"col-8\">\n"
-                 + "      <span class=\"spinner-border spinner-border-sm\"></span>&nbsp;" + _("Rebooting the DSAS")
-                 + "    </div>"
-                 + "    <div class=\"col-4\">"
-                 + "      <div class=\"progress\">"
-                 + "        <div class=\"progress-bar\" id=\"progressReboot\" role=\"progressbar\" style=\"\" aria-valuenow=\"\" araia-valuemin=\"0\" aria-valuemax=\"100\"></div>"
-                 + "      </div>\n"
-                 + "    </div>\n"
-                 + "  </div>");
+    const body = document.createElement("div");
+    body.className = "row";
+    let el = body.appendChild(document.createElement("div"));
+    el.className = "col-8";
+    let el2 = el.appendChild(document.createElement("span"));
+    el2.className = "spinner-border spinner-border-sm";
+    el2 =   el.appendChild(document.createElement("span"));
+    el2.textContent = "&nbsp;" +  _("Rebooting the DSAS")
+    el =  body.appendChild(document.createElement("div"));
+    el.className = "col-4";
+    el2 =  el.appendChild(document.createElement("div"));
+    el2.className = "progress";
+    el2 = el2.appendChild(document.createElement("div"));
+    el2.className = "progress-bar";
+    el2.id = "progessReboot";
+    el2.setAttribute("role", "progressbar");
+    el2.setAttribute("aria-valuemin", "0");
+    el2.setAttribute("aria-valuemax", "100");
+    modalReboot.setBody(body);
 
     // Clear status, task and login timeouts before continuing
     clearTimeoutLogin();
@@ -300,18 +309,26 @@ function dsas_reboot() {
 
 function dsas_shutdown() {
     const modalShutdown = document.getElementById("modalDSAS");
-
     modalShutdown.setAttribute("disable", true);
-    modalShutdown.setBody("  <div class=\"row\">\n"
-                 + "    <div class=\"col-8\">\n"
-                 + "      <span class=\"spinner-border spinner-border-sm\"></span> &nbsp;" + _("Shutting down the DSAS")
-                 + "    </div>"
-                 + "    <div class=\"col-4\">"
-                 + "      <div class=\"progress\">"
-                 + "        <div class=\"progress-bar\" id=\"progressShutdown\" role=\"progressbar\" style=\"\" aria-valuenow=\"\" araia-valuemin=\"0\" aria-valuemax=\"100\"></div>"
-                 + "      </div>\n"
-                 + "    </div>\n"
-                 + "  </div>");
+    const body = document.createElement("div");
+    body.className = "row";
+    let el = body.appendChild(document.createElement("div"));
+    el.className = "col-8";
+    let el2 = el.appendChild(document.createElement("span"));
+    el2.className = "spinner-border spinner-border-sm";
+    el2 =   el.appendChild(document.createElement("span"));
+    el2.textContent = "&nbsp;" +  _("Shutting down the DSAS")
+    el =  body.appendChild(document.createElement("div"));
+    el.className = "col-4";
+    el2 =  el.appendChild(document.createElement("div"));
+    el2.className = "progress";
+    el2 = el2.appendChild(document.createElement("div"));
+    el2.className = "progress-bar";
+    el2.id = "progessShutdown";
+    el2.setAttribute("role", "progressbar");
+    el2.setAttribute("aria-valuemin", "0");
+    el2.setAttribute("aria-valuemax", "100");
+    modalShutdown.setBody(body);
 
     // Clear status and login timeouts before continuing
     clearTimeoutLogin();
