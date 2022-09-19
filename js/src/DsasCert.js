@@ -229,7 +229,7 @@ function dsas_pubkey_name() {
          + "      <label for=\"PubkeyName\">" + _("Name :") + "</label>\n"
          + "      <input type=\"text\" id=\"PubkeyName\" value=\"\" class=\"form-control\">\n"
          + "    </div>";
-    modalDSAS.setAttribute("body", body);
+    modalDSAS.setBody(body);
     document.getElementById("PubkeyName").addEventListener("keypress", (event) => { if (event.key === "Enter") { modalDSAS.hide(); dsas_upload_cert("pubkey", document.getElementById("PubkeyName").value); } });
 }
 

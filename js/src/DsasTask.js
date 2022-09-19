@@ -24,144 +24,6 @@ function clearTimeouts() {
     if (timeoutTasks !== 0) { clearTimeout(timeoutTasks); }
 }
 
-function modal_info(name, text) {
-    const modalDSAS = document.getElementById("modalDSAS");
-    modalDSAS.removeAttribute("disable");
-    modalDSAS.setAttribute("static", false);
-    modalDSAS.setAttribute("hideonclick", true);
-    modalDSAS.setAction("clearTimeout(timeoutInfo)");
-    modalDSAS.setAttribute("title", _("Info : {0}", name));
-    modalDSAS.setAttribute("type", "Ok");
-    modalDSAS.setAttribute("size", "xl");
-    modalDSAS.setAttribute("body", text);
-    modalDSAS.show();
-}
-
-function modal_task(action = "dsas_add_task();", ca = "", taskchange = "dsas_add_task_arch();") {
-    const modalDSAS = document.getElementById("modalDSAS");
-    modalDSAS.removeAttribute("disable");
-    modalDSAS.removeAttribute("type");
-    modalDSAS.removeAttribute("static");
-    if (action) {
-        modalDSAS.setAction(action);
-    } else {
-        modalDSAS.setAction();
-    }
-    modalDSAS.setAttribute("hideonclick", true);
-    modalDSAS.setAttribute("title", _("Add a task"));
-    modalDSAS.setAttribute("size", "lg");
-    modalDSAS.show();
-
-    fetch("api/dsas-cert.php").then((response) => {
-        if (response.ok) { return response.json(); }
-        return Promise.reject(new Error(response.statusText));
-    }).then((certs) => {
-        let i = 1;
-        let certbody = "<option id=\"TaskAddCert0\" value=\"\" selected>" + _("Select a certificate") + "</option>\n";
-        certs[0].dsas.x509.forEach((cert) => {
-            certbody += "<option id=\"TaskAddCert" + i + "\" value=\"" + cert.fingerprint
-                    + "\">" + cert_name(cert) + "</option>\n";
-            i += 1;
-        });
-        certs[0].dsas.pubkey.forEach((cert) => {
-            certbody += "<option  id=\"TaskAddCert" + i + "\" value=\"" + cert.fingerprint
-                    + "\">" + cert.name + "</option>\n";
-            i += 1;
-        });
-        certs[0].dsas.gpg.forEach((cert) => {
-            certbody += "<option id=\"TaskAddCert" + i + "\" value=\"" + cert.fingerprint
-                    + "\">" + cert.uid + "</option>\n";
-            i += 1;
-        });
-        certs[0].ca.forEach((cert) => {
-            certbody += "<option id=\"TaskAddCert" + i + "\" value=\"" + cert.fingerprint
-                    + "\">" + cert_name(cert) + "</option>\n";
-            i += 1;
-        });
-        document.getElementById("TaskAddCert").innerHTML = certbody;
-
-        certbody = "        <option id=\"TaskCA_Base\" value=\"\"" + (empty_obj(ca) ? " selected" : "") + ">" + _("Base CA") + "</option>\n"
-            + "        <option id=\"TaskCA_Self\" value=\"self\"" + (ca === "self" ? " selected" : "") + ">" + _("Self-signed") + "</option>\n";
-        certs[0].dsas.x509.forEach((cert) => {
-            if (cert_is_ca(cert)) {
-                certbody += "<option id=\"TaskCACert_" + cert.fingerprint + "\" value=\"" + cert.fingerprint
-                  + "\"" + (ca === cert.fingerprint ? " selected" : "") + ">" + cert_name(cert) + "</option>\n";
-            }
-        });
-        document.getElementById("TaskCA").innerHTML = certbody;
-    }).catch((error) => {
-        if (fail_loggedin(error)) {
-            clearTimeouts();
-        } else {
-            modal_message(_("Error while loading the certificates : {0}", (error.message ? error.message : error)));
-        }
-    });
-
-    modalDSAS.setAttribute("body", "<form>\n"
-+ "  <div class=\"row\">\n"
-+ "    <div class=\"col-6\">\n"
-+ "      <label for=\"TaskName\">" + _("Task name :") + "</label>\n"
-+ "      <input type=\"text\" id=\"TaskName\" value=\"\" class=\"form-control\">\n"
-+ "      <div class=\"invalid-feedback\" id=\"feed_TaskName\"></div>\n"
-+ "    </div>\n"
-+ "    <div class=\"col-6\">\n"
-+ "      <label for=\"TaskDirectory\">" + _("Folder used by the task :") + "</label>\n"
-+ "      <input type=\"text\" id=\"TaskDirectory\" value=\"\" class=\"form-control\">\n"
-+ "      <div class=\"invalid-feedback\" id=\"feed_Directory\"></div>\n"
-+ "    </div>\n"
-+ "    <div class=\"col-6\">\n"
-+ "      <label for=\"TaskURI\">" + _("URI (no download if empty) :") + "</label>\n"
-+ "      <input type=\"text\" id=\"TaskURI\" value=\"\" class=\"form-control\">\n"
-+ "      <div class=\"invalid-feedback\" id=\"feed_URI\"></div>\n"
-+ "    </div>\n"
-+ "    <div class=\"col-6\">\n"
-+ "      <label for=\"TaskCA\">" + _("URI Certification Authority") + "</label>\n"
-+ "      <select class=\"form-select\" name=\"TaskCA\" id=\"TaskCA\"></select>\n"
-+ "    </div>\n"
-+ "    <div class=\"col-6\">\n"
-+ "      <label for=\"TaskRun\">" + _("Periodicity of the task :") + "</label>\n"
-+ "      <select class=\"form-select\" name=\"TaskRun\" id=\"TaskRun\">\n"
-+ "        <option id=\"TaskRunNull\" value=\"\">" + _("Select a period") + "</option>\n"
-+ "        <option id=\"TaskRunNever\" value=\"never\">" + _("never") + "</option>\n"
-+ "        <option id=\"TaskRunQuarterHourly\" value=\"quarterhourly\">" + _("quarter hourly") + "</option>\n"
-+ "        <option id=\"TaskRunHourly\" value=\"hourly\">" + _("hourly") + "</option>\n"
-+ "        <option id=\"TaskRunDaily\" value=\"daily\">" + _("daily") + "</option>\n"
-+ "        <option id=\"TaskRunWeekly\" value=\"weekly\">" + _("weekly") + "</option>\n"
-+ "        <option id=\"TaskRunMonthly\" value=\"monthly\">" + _("monthly") + "</option>\n"
-+ "      </select>\n"
-+ "    </div>\n"
-+ "    <div class=\"col-6\">\n"
-+ "      <label for=\"TaskType\">" + _("Task type :") + "</label>\n"
-+ "      <select class=\"form-select\" name=\"TaskType\" id=\"TaskType\" onchange=\"" + taskchange + "\">\n"
-+ "        <option id=\"TaskTypeNull\" value=\"\">" + _("Select a type") + "</option>\n"
-+ "        <option id=\"TaskTypeRPM\" value=\"rpm\">rpm</option>\n"
-+ "        <option id=\"TaskTypeRepomd\" value=\"repomd\">repomd</option>\n"
-+ "        <option id=\"TaskTypeDeb\" value=\"deb\">deb</option>\n"
-+ "        <option id=\"TaskTypeAuth\" value=\"authenticode\">authenticode</option>\n"
-+ "        <option id=\"TaskTypeLive\" value=\"liveupdate\">liveupdate</option>\n"
-+ "        <option id=\"TaskTypeCyber\" value=\"cyberwatch\">cyberwatch</option>\n"
-+ "        <option id=\"TaskTypeSsl\" value=\"openssl\">openssl</option>\n"
-+ "        <option id=\"TaskTypeGpg\" value=\"gpg\">gpg</option>\n"
-+ "        <option id=\"TaskTypeJar\" value=\"jar\">jar</option>\n"
-+ "        <option id=\"TaskTypeTrend\" value=\"trend\">trend</option>\n"
-+ "      </select>\n"
-+ "    </div>\n"
-+ "    <div class=\"col-6\">\n"
-+ "      <label for=\"TaskAddCert\">" + _("Add a certificate :") + "</label>\n"
-+ "      <select class=\"form-select\" name=\"TaskAddCert\" id=\"TaskAddCert\" onchange=\"dsas_add_task_cert();\">\n"
-+ "              </select>\n"
-+ "    </div>\n"
-+ "    <div class=\"col-6\" id=\"TaskHasArch\"></div>\n"
-+ "  </div>\n"
-+ "  <div class=\"row\">\n"
-+ "    <div class=\"col-12\">\n"
-+ "      <label for=\"TaskCert\">" + _("Certificates") + "</label>\n"
-+ "      <div class=\"container my-1 border\" id=\"TaskCert\"></div>\n"
-+ "    </div>\n"
-+ "  </div>\n"
-+ "</form>");
-}
-
 function task_body(task) {
     let body = "";
 
@@ -240,17 +102,8 @@ export default function dsas_display_tasks(what = "all") {
         });
     }
 }
-window.dsas_display_tasks = dsas_display_tasks;
 
-export function dsas_task_delete(id, name) {
-    const body = _("Delete the task ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, id)
-        + "<br><input class=\"form-check-iput\" type=\"checkbox\" id=\"TaskDeleteFiles\" checked>"
-        + "<label class=\"form-check-label\" for=\"TaskDeleteFiles\">" + _("Delete task files") + "</label>";
-    modal_action(body, "dsas_task_real_delete('" + id + "');", true);
-}
-window.dsas_task_delete = dsas_task_delete;
-
-export function dsas_task_real_delete(id) {
+function dsas_task_real_delete(id) {
     const formData = new FormData();
     const deleteFiles = document.getElementById("TaskDeleteFiles").checked;
     formData.append("op", "delete");
@@ -276,15 +129,16 @@ export function dsas_task_real_delete(id) {
         }
     });
 }
-window.dsas_task_real_delete = dsas_task_real_delete;
 
-export function dsas_task_kill(id, name) {
-    const body = _("Kill the task ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, id);
-    modal_action(body, "dsas_task_real_kill('" + id + "');", true);
+export function dsas_task_delete(id, name) {
+    const body = _("Delete the task ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, id)
+        + "<br><input class=\"form-check-iput\" type=\"checkbox\" id=\"TaskDeleteFiles\" checked>"
+        + "<label class=\"form-check-label\" for=\"TaskDeleteFiles\">" + _("Delete task files") + "</label>";
+    modal_action(body, () => { dsas_task_real_delete(id); }, true);
 }
-window.dsas_task_kill = dsas_task_kill;
+window.dsas_task_delete = dsas_task_delete;
 
-export function dsas_task_real_kill(id) {
+function dsas_task_real_kill(id) {
     const formData = new FormData();
     formData.append("op", "kill");
     formData.append("id", id);
@@ -308,244 +162,50 @@ export function dsas_task_real_kill(id) {
         }
     });
 }
-window.dsas_task_real_kill = dsas_task_real_kill;
 
-export function dsas_task_new() {
-    modal_task();
-    document.getElementById("TaskName").value = "";
-    document.getElementById("TaskDirectory").value = "";
-    document.getElementById("TaskURI").value = "";
-    [...document.getElementsByTagName("option")].forEach((opt) => {
-        // eslint-disable-next-line no-param-reassign
-        opt.selected = (opt.id === "TaskTypeNull"
-            || opt.id === "TaskRunNull"
-            || opt.id === "TaskAddCert0"
-            || opt.id === "TaskCA_Base");
-    });
-    document.getElementById("TaskCert").innerHTML = "";
+export function dsas_task_kill(id, name) {
+    const body = _("Kill the task ?<br><small>&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}</small>", name, id);
+    modal_action(body, () => { dsas_task_real_kill(id); }, true);
 }
-window.dsas_task_new = dsas_task_new;
+window.dsas_task_kill = dsas_task_kill;
 
 function has_arch(archs, arch) {
     return (archs.constructor === Object ? [archs] : archs).includes(arch);
 }
 
 function task_arch_body(type, archs) {
-    let body = "";
-
-    if (type === "deb") {
-        body = "      <div class=\"form-check form-check-inline\">\n"
-+ "        <input class=\"form-check-input\" id=\"TaskArchSource\" type=\"checkbox\" value=\"source\"" + (has_arch(archs, "source") ? " checked" : "") + ">\n"
-+ "        <label class=\"form-check-label\" for=\"TaskArchSource\">" + _("Source") + "</label>\n"
-+ "      </div>\n"
-+ "      <div class=\"form-check form-check-inline\">\n"
-+ "        <input class=\"form-check-input\" id=\"TaskArchAll\" type=\"checkbox\" value=\"all\"" + (has_arch(archs, "all") ? " checked" : "") + ">\n"
-+ "        <label class=\"form-check-label\" for=\"TaskArchAll\">all</label>\n"
-+ "      </div>\n"
-+ "      <div class=\"form-check form-check-inline\">\n"
-+ "        <input class=\"form-check-input\" id=\"TaskArchAmd64\" type=\"checkbox\" value=\"amd64\"" + (has_arch(archs, "amd64") ? " checked" : "") + ">\n"
-+ "        <label class=\"form-check-label\" for=\"TaskArchAmd64\">amd64</label>\n"
-+ "      </div>\n"
-+ "      <div class=\"form-check form-check-inline\">\n"
-+ "        <input class=\"form-check-input\" id=\"TaskArchArm64\" type=\"checkbox\" value=\"arm64\"" + (has_arch(archs, "arm64") ? " checked" : "") + ">\n"
-+ "        <label class=\"form-check-label\" for=\"TaskArchArm64\">arm64</label>\n"
-+ "      </div>\n"
-+ "      <div class=\"form-check form-check-inline\">\n"
-+ "        <input class=\"form-check-input\" id=\"TaskArchArmEL\" type=\"checkbox\" value=\"armel\"" + (has_arch(archs, "armel") ? " checked" : "") + ">\n"
-+ "        <label class=\"form-check-label\" for=\"TaskArchArmEL\">armel</label>\n"
-+ "      </div>\n"
-+ "      <div class=\"form-check form-check-inline\">\n"
-+ "        <input class=\"form-check-input\" id=\"TaskArchArmHF\" type=\"checkbox\" value=\"armhf\"" + (has_arch(archs, "armhf") ? " checked" : "") + ">\n"
-+ "        <label class=\"form-check-label\" for=\"TaskArchArmHF\">armhf</label>\n"
-+ "      </div>\n"
-+ "      <div class=\"form-check form-check-inline\">\n"
-+ "        <input class=\"form-check-input\" id=\"TaskArchI386\" type=\"checkbox\" value=\"i386\"" + (has_arch(archs, "i386") ? " checked" : "") + ">\n"
-+ "        <label class=\"form-check-label\" for=\"TaskArchI386\">i386</label>\n"
-+ "      </div>\n"
-+ "      <div class=\"form-check form-check-inline\">\n"
-+ "        <input class=\"form-check-input\" id=\"TaskArchMips64EL\" type=\"checkbox\" value=\"mips64el\"" + (has_arch(archs, "mips64el") ? " checked" : "") + ">\n"
-+ "        <label class=\"form-check-label\" for=\"TaskArchMips64EL\">mips64el</label>\n"
-+ "      </div>\n"
-+ "      <div class=\"form-check form-check-inline\">\n"
-+ "        <input class=\"form-check-input\" id=\"TaskArchMipsEL\" type=\"checkbox\" value=\"mipsel\"" + (has_arch(archs, "mipsel") ? " checked" : "") + ">\n"
-+ "        <label class=\"form-check-label\" for=\"TaskArchMipsEL\">mipsel</label>\n"
-+ "      </div>\n"
-+ "      <div class=\"form-check form-check-inline\">\n"
-+ "        <input class=\"form-check-input\" id=\"TaskArchPpc64EL\" type=\"checkbox\" value=\"ppc64el\"" + (has_arch(archs, "ppc64el") ? " checked" : "") + ">\n"
-+ "        <label class=\"form-check-label\" for=\"TaskArchPpc64EL\">ppc64el</label>\n"
-+ "      </div>\n"
-+ "      <div class=\"form-check form-check-inline\">\n"
-+ "        <input class=\"form-check-input\" id=\"TaskArchS390x\" type=\"checkbox\" value=\"s390x\"" + (has_arch(archs, "s390x") ? " checked" : "") + ">\n"
-+ "        <label class=\"form-check-label\" for=\"TaskArchS390x\">s390x</label>\n"
-+ "      </div>\n";
+    if (type !== "deb") {
+        document.getElementById("TaskHasArch").setAttribute("hidden", "");
+    } else {
+        document.getElementById("TaskHasArch").removeAttribute("hidden");
+        [["Source", "source"],
+            ["All", "all"],
+            ["Amd64", "amd64"],
+            ["Arm64", "arm64"],
+            ["ArmEL", "armel"],
+            ["ArmHF", "armhf"],
+            ["I386", "i386"],
+            ["Mips64EL", "mips64el"],
+            ["MipsEL", "mipsel"],
+            ["Ppc64EL", "ppc64el"],
+            ["S390x", "s390x"]].forEach((arch) => {
+            if (has_arch(archs, arch[1])) {
+                document.getElementById("TaskArch" + arch[0]).setAttribute("checked", "");
+            } else {
+                document.getElementById("TaskArch" + arch[0]).removeAttribute("checked");
+            }
+        });
     }
-
-    return body;
 }
 
-// The argument name to this function is not used but added to be consistent
-// with the other dsas_task_* functions to make other code easier to use
-// eslint-disable-next-line no-unused-vars
-export function dsas_task_modify(id, name) {
-    fetch("api/dsas-task.php").then((response) => {
-        if (response.ok) { return response.json(); }
-        return Promise.reject(new Error(response.statusText));
-    }).then((tasks) => {
-        if (tasks.task) {
-            (tasks.task.constructor === Object ? [tasks.task] : tasks.task)
-                .filter((task) => id === task.id).forEach((task) => {
-                    let body = "dsas_add_task_arch(";
-                    if (task.type === "deb") {
-                        body += "[";
-                        (task.archs.arch.constructor === Object ? [task.archs.arch]
-                            : task.archs.arch).forEach((_arch) => {
-                            body = body + ", '" + _arch + "', ";
-                        });
-                        if (body.substr(-2) === ", ") { body = body.substr(0, body.length - 2); }
-                        body += "]);";
-                    } else {
-                        body += ");";
-                    }
-
-                    modal_task("dsas_modify_task('" + task.name + "','" + task.id + "');", task.ca.fingerprint, body);
-                    document.getElementById("TaskName").value = print_obj(task.name);
-                    document.getElementById("TaskDirectory").value = print_obj(task.directory);
-                    document.getElementById("TaskURI").value = print_obj(task.uri);
-
-                    [...document.getElementsByTagName("option")].forEach((opt) => {
-                        // eslint-disable-next-line no-param-reassign
-                        opt.selected = (((opt.id.substr(0, 8) === "TaskType") && (opt.value === task.type))
-                                || ((opt.id.substr(0, 7) === "TaskRun") && (opt.value === task.run))
-                                || ((opt.id.substr(0, 11) === "TaskAddCert") && (opt.id === "TaskAddCert0")));
-                    });
-                    if (task.cert.constructor === Object) {
-                        document.getElementById("TaskCert").innerHTML = document.getElementById("TaskCert").innerHTML + "<dsas-task-cert name=\"" + task.cert.name
-                            + "\" fingerprint=\"" + task.cert.fingerprint + "\"></dsas-task-cert>";
-                    } else {
-                        task.cert.forEach((cert) => {
-                            document.getElementById("TaskCert").innerHTML = document.getElementById("TaskCert").innerHTML + "<dsas-task-cert name=\"" + cert.name
-                                + "\" fingerprint=\"" + cert.fingerprint + "\"></dsas-task-cert>";
-                        });
-                    }
-                    document.getElementById("TaskHasArch").innerHTML = task_arch_body(task.type, task.archs.arch);
-                });
-        }
-    }).catch((error) => {
-        if (fail_loggedin(error)) { clearTimeouts(); }
-    });
-}
-window.dsas_task_modify = dsas_task_modify;
-
-export function dsas_task_run(id, name) {
-    modal_action(
-        _("Run the task ?&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}", name, id),
-        "dsas_task_real_run('" + id + "');",
-        true,
-    );
-}
-window.dsas_task_run = dsas_task_run;
-
-export function dsas_task_real_run(id) {
-    const formData = new FormData();
-    formData.append("op", "run");
-    formData.append("id", id);
-    fetch("api/dsas-task.php", { method: "POST", body: formData }).then((response) => {
-        if (response.ok) { return response.text(); }
-        return Promise.reject(new Error(response.statusText));
-    }).then((text) => {
-        try {
-            const errors = JSON.parse(text);
-            modal_errors(errors);
-        } catch (e) {
-        // Its text => here always just "Ok"
-            clear_feedback();
-            // Delay update of task status 0,5 seconds to allow runlog file to be updated first
-            timeoutTasks = setTimeout(dsas_display_tasks, 500, "status");
-        }
-    }).catch((error) => {
-        if (fail_loggedin(error)) {
-            clearTimeouts();
-        } else {
-            modal_message(_("Error : {0}", (error.message ? error.message : error)));
-        }
-    });
-}
-window.dsas_task_real_run = dsas_task_real_run;
-
-export function dsas_task_info(id, name, len = 0) {
-    const formData = new FormData();
-    formData.append("op", "info");
-    formData.append("id", id);
-    formData.append("len", len);
-    fetch("api/dsas-task.php", { method: "POST", body: formData }).then((response) => {
-        if (response.ok) { return response.text(); }
-        return Promise.reject(new Error(response.statusText));
-    }).then((text) => {
-        const info = JSON.parse(text);
-        if (info && (info[0].constructor === Object) && (Object.keys(info[0])[0] === "error")) {
-            modal_errors(info);
-            if (timeoutInfo !== 0) { clearTimeout(timeoutInfo); }
-        } else {
-            if (len === 0) {
-                modal_info(name, "<span id=\"logwind\"></span>");
-                infoLogs = new DisplayLogs("logwind", info);
-            } else { infoLogs.appendlog(info); }
-
-            // Automatically refresh the logs every 5 seconds
-            if (timeoutInfo !== 0) { clearTimeout(timeoutInfo); }
-            timeoutInfo = setTimeout(dsas_task_info, 5000, id, name, infoLogs.logs[0].length);
-        }
-    }).catch((error) => {
-        if (fail_loggedin(error)) {
-            clearTimeouts();
-        } else {
-            modal_message(_("Error : {0}", (error.message ? error.message : error)));
-        }
-    });
-}
-window.dsas_task_info = dsas_task_info;
-
-export function dsas_add_task_arch(archs = []) {
+function dsas_add_task_arch(archs = []) {
     let type = "";
     [...document.getElementsByTagName("option")].forEach((opt) => {
         if (opt.id.substr(0, 8) === "TaskType" && opt.selected) { type = opt.value; }
     });
-    document.getElementById("TaskHasArch").innerHTML = task_arch_body(type, archs);
+    task_arch_body(type, archs);
 }
 window.dsas_add_task_arch = dsas_add_task_arch;
-
-export function dsas_add_task_cert() {
-    const taskCert = document.getElementById("TaskCert");
-    const opt = [...document.getElementsByTagName("option")]
-        .filter((o) => o.id.substr(0, 7) !== "TaskRun"
-            && o.id.substr(0, 8) !== "TaskType"
-            && o.id.substr(0, 6) !== "TaskCA"
-            && o.selected);
-    if (opt) {
-        const name = opt[0].innerHTML;
-        const finger = opt[0].value;
-        let add = true;
-        [...document.getElementsByTagName("dsas-task-cert")]
-            .filter((line) => line.getAttribute("fingerprint") === finger).forEach(() => { add = false; });
-        if (add) {
-            taskCert.innerHTML = taskCert.innerHTML + "<dsas-task-cert name=\"" + name
-          + "\" fingerprint=\"" + finger + "\"></dsas-task-cert>";
-        }
-    }
-}
-window.dsas_add_task_cert = dsas_add_task_cert;
-
-export function dsas_task_cert_delete(fingerprint) {
-    let body = "";
-    [...document.getElementsByTagName("dsas-task-cert")]
-        .filter((line) => line.getAttribute("fingerprint") !== fingerprint)
-        .forEach((line) => {
-            body += "<dsas-task-cert name=\"" + line.getAttribute("name")
-                + "\" fingerprint=\"" + line.getAttribute("fingerprint") + "\"></dsas-task-cert>";
-        });
-    document.getElementById("TaskCert").innerHTML = body;
-}
-window.dsas_task_cert_delete = dsas_task_cert_delete;
 
 export function dsas_add_task(oldid = "") {
     const name = document.getElementById("TaskName").value;
@@ -614,6 +274,262 @@ export function dsas_add_task(oldid = "") {
 }
 window.dsas_add_task = dsas_add_task;
 
+export function dsas_add_task_cert() {
+    const taskCert = document.getElementById("TaskCert");
+    const opt = [...document.getElementsByTagName("option")]
+        .filter((o) => o.id.substr(0, 7) !== "TaskRun"
+            && o.id.substr(0, 8) !== "TaskType"
+            && o.id.substr(0, 6) !== "TaskCA"
+            && o.selected);
+    if (opt) {
+        const name = opt[0].innerHTML;
+        const finger = opt[0].value;
+        let add = true;
+        [...document.getElementsByTagName("dsas-task-cert")]
+            .filter((line) => line.getAttribute("fingerprint") === finger).forEach(() => { add = false; });
+        if (add) {
+            taskCert.innerHTML = taskCert.innerHTML + "<dsas-task-cert name=\"" + name
+          + "\" fingerprint=\"" + finger + "\"></dsas-task-cert>";
+        }
+    }
+}
+window.dsas_add_task_cert = dsas_add_task_cert;
+
+function modal_info(name, text) {
+    const modalDSAS = document.getElementById("modalDSAS");
+    modalDSAS.removeAttribute("disable");
+    modalDSAS.setAttribute("static", false);
+    modalDSAS.setAttribute("hideonclick", true);
+    modalDSAS.setAction("clearTimeout(timeoutInfo)");
+    modalDSAS.setAttribute("title", _("Info : {0}", name));
+    modalDSAS.setAttribute("type", "Ok");
+    modalDSAS.setAttribute("size", "xl");
+    modalDSAS.setBody(text);
+    modalDSAS.show();
+}
+
+function modal_task(action = () => { dsas_add_task(); }, ca = "", taskchange = () => { dsas_add_task_arch(); }) {
+    const modalDSAS = document.getElementById("modalDSAS");
+    const temp = document.getElementById("newtasktemplate");
+    const b = temp.content.cloneNode(true);
+    modalDSAS.removeAttribute("disable");
+    modalDSAS.removeAttribute("type");
+    modalDSAS.removeAttribute("static");
+    if (action) {
+        modalDSAS.setAction(action);
+    } else {
+        modalDSAS.setAction();
+    }
+    modalDSAS.setAttribute("hideonclick", true);
+    modalDSAS.setAttribute("title", _("Add a task"));
+    modalDSAS.setAttribute("size", "lg");
+    b.getElementById("TaskType").addEventListener("change", taskchange);
+    b.getElementById("TaskAddCert").addEventListener("change", () => { dsas_add_task_cert(); });
+    modalDSAS.show();
+    modalDSAS.setBody(b);
+
+    fetch("api/dsas-cert.php").then((response) => {
+        if (response.ok) { return response.json(); }
+        return Promise.reject(new Error(response.statusText));
+    }).then((certs) => {
+        let i = 1;
+        const body = document.getElementById("bodyDSAS");
+        const certopt = body.querySelector("#TaskAddCert");
+        const certca = body.querySelector("#TaskCA");
+        let opt = certopt.appendChild(document.createElement("option"));
+        opt.id = "TaskAddCert0";
+        opt.setAttribute("selected", "");
+        opt.textContent = _("Select a certificate");
+        certs[0].dsas.x509.forEach((cert) => {
+            opt = certopt.appendChild(document.createElement("option"));
+            opt.id = "TaskAddCert" + i;
+            opt.value = cert.fingerprint;
+            opt.textContent = cert_name(cert);
+            i += 1;
+        });
+        certs[0].dsas.pubkey.forEach((cert) => {
+            opt = certopt.appendChild(document.createElement("option"));
+            opt.id = "TaskAddCert" + i;
+            opt.value = cert.fingerprint;
+            opt.textContent = cert.name;
+            i += 1;
+        });
+        certs[0].dsas.gpg.forEach((cert) => {
+            opt = certopt.appendChild(document.createElement("option"));
+            opt.id = "TaskAddCert" + i;
+            opt.value = cert.fingerprint;
+            opt.textContent = cert.uid;
+            i += 1;
+        });
+        certs[0].ca.forEach((cert) => {
+            opt = certopt.appendChild(document.createElement("option"));
+            opt.id = "TaskAddCert" + i;
+            opt.value = cert.fingerprint;
+            opt.textContent = cert_name(cert);
+            i += 1;
+        });
+        opt = certca.appendChild(document.createElement("option"));
+        opt.id = "TaskCA_Base";
+        if (empty_obj(ca)) { opt.setAttribute("selected", ""); }
+        opt.textContent = _("Base CA");
+        opt = certca.appendChild(document.createElement("option"));
+        opt.id = "TaskCA_Self";
+        opt.value = "self";
+        if (ca === "self") { opt.setAttribute("selected", ""); }
+        opt.textContent = _("Self-signed");
+        certs[0].dsas.x509.forEach((cert) => {
+            if (cert_is_ca(cert)) {
+                opt = certca.appendChild(document.createElement("option"));
+                opt.id = "TaskCACert_" + cert.fingerprint;
+                opt.value = cert.fingerprint;
+                if (ca === cert.fingerprint) { opt.setAttribute("selected", ""); }
+                opt.textContent = cert_name(cert);
+            }
+        });
+    }).catch((error) => {
+        if (fail_loggedin(error)) {
+            clearTimeouts();
+        } else {
+            modal_message(_("Error while loading the certificates : {0}", (error.message ? error.message : error)));
+        }
+    });
+}
+
+export function dsas_task_new() {
+    modal_task();
+    document.getElementById("TaskName").value = "";
+    document.getElementById("TaskDirectory").value = "";
+    document.getElementById("TaskURI").value = "";
+    [...document.getElementsByTagName("option")].forEach((opt) => {
+        // eslint-disable-next-line no-param-reassign
+        opt.selected = (opt.id === "TaskTypeNull"
+            || opt.id === "TaskRunNull"
+            || opt.id === "TaskAddCert0"
+            || opt.id === "TaskCA_Base");
+    });
+    document.getElementById("TaskCert").textContent = "";
+}
+window.dsas_task_new = dsas_task_new;
+
+// The argument name to this function is not used but added to be consistent
+// with the other dsas_task_* functions to make other code easier to use
+// eslint-disable-next-line no-unused-vars
+export function dsas_task_modify(id, name) {
+    fetch("api/dsas-task.php").then((response) => {
+        if (response.ok) { return response.json(); }
+        return Promise.reject(new Error(response.statusText));
+    }).then((tasks) => {
+        if (tasks.task) {
+            (tasks.task.constructor === Object ? [tasks.task] : tasks.task)
+                .filter((task) => id === task.id).forEach((task) => {
+                    modal_task(() => { dsas_modify_task(task.name, task.id); }, task.ca.fingerprint, () => { dsas_add_task_arch(task.archs);  });
+                    document.getElementById("TaskName").value = print_obj(task.name);
+                    document.getElementById("TaskDirectory").value = print_obj(task.directory);
+                    document.getElementById("TaskURI").value = print_obj(task.uri);
+
+                    [...document.getElementsByTagName("option")].forEach((opt) => {
+                        // eslint-disable-next-line no-param-reassign
+                        opt.selected = (((opt.id.substr(0, 8) === "TaskType") && (opt.value === task.type))
+                                || ((opt.id.substr(0, 7) === "TaskRun") && (opt.value === task.run))
+                                || ((opt.id.substr(0, 11) === "TaskAddCert") && (opt.id === "TaskAddCert0")));
+                    });
+                    const taskcerts = document.getElementById("TaskCert");
+                    taskcerts.textContent = "";
+                    if (task.cert.constructor === Object) {
+                        const el = taskcerts.appendChild(document.createElement("dsas-task-cert"));
+                        el.name = task.cert.name;
+                        el.fingerprint = task.cert.fingerprint;
+                    } else {
+                        task.cert.forEach((cert) => {
+                            const el = taskcerts.appendChild(document.createElement("dsas-task-cert"));
+                            el.name = cert.name;
+                            el.fingerprint = cert.fingerprint;
+                        });
+                    }
+                    task_arch_body(task.type, task.archs.arch);
+                });
+        }
+    }).catch((error) => {
+        if (fail_loggedin(error)) { clearTimeouts(); }
+    });
+}
+window.dsas_task_modify = dsas_task_modify;
+
+function dsas_task_real_run(id) {
+    const formData = new FormData();
+    formData.append("op", "run");
+    formData.append("id", id);
+    fetch("api/dsas-task.php", { method: "POST", body: formData }).then((response) => {
+        if (response.ok) { return response.text(); }
+        return Promise.reject(new Error(response.statusText));
+    }).then((text) => {
+        try {
+            const errors = JSON.parse(text);
+            modal_errors(errors);
+        } catch (e) {
+        // Its text => here always just "Ok"
+            clear_feedback();
+            // Delay update of task status 0,5 seconds to allow runlog file to be updated first
+            timeoutTasks = setTimeout(dsas_display_tasks, 500, "status");
+        }
+    }).catch((error) => {
+        if (fail_loggedin(error)) {
+            clearTimeouts();
+        } else {
+            modal_message(_("Error : {0}", (error.message ? error.message : error)));
+        }
+    });
+}
+
+export function dsas_task_run(id, name) {
+    modal_action(
+        _("Run the task ?&nbsp;&nbsp;Name : {0}<br>&nbsp;&nbsp;ID : {1}", name, id),
+        () => { dsas_task_real_run(id); },
+        true,
+    );
+}
+window.dsas_task_run = dsas_task_run;
+
+export function dsas_task_info(id, name, len = 0) {
+    const formData = new FormData();
+    formData.append("op", "info");
+    formData.append("id", id);
+    formData.append("len", len);
+    fetch("api/dsas-task.php", { method: "POST", body: formData }).then((response) => {
+        if (response.ok) { return response.text(); }
+        return Promise.reject(new Error(response.statusText));
+    }).then((text) => {
+        const info = JSON.parse(text);
+        if (info && (info[0].constructor === Object) && (Object.keys(info[0])[0] === "error")) {
+            modal_errors(info);
+            if (timeoutInfo !== 0) { clearTimeout(timeoutInfo); }
+        } else {
+            if (len === 0) {
+                modal_info(name, "<span id=\"logwind\"></span>");
+                infoLogs = new DisplayLogs("logwind", info);
+            } else { infoLogs.appendlog(info); }
+
+            // Automatically refresh the logs every 5 seconds
+            if (timeoutInfo !== 0) { clearTimeout(timeoutInfo); }
+            timeoutInfo = setTimeout(dsas_task_info, 5000, id, name, infoLogs.logs[0].length);
+        }
+    }).catch((error) => {
+        if (fail_loggedin(error)) {
+            clearTimeouts();
+        } else {
+            modal_message(_("Error : {0}", (error.message ? error.message : error)));
+        }
+    });
+}
+window.dsas_task_info = dsas_task_info;
+
+function dsas_task_cert_delete(fingerprint) {
+    const taskcerts = document.getElementById("TaskCert");
+    [...document.getElementsByTagName("dsas-task-cert")]
+        .filter((line) => line.getAttribute("fingerprint") === fingerprint)
+        .forEach((line) => { line.remove(); });
+}
+
 export function dsas_modify_task(oldname = "", oldid = "") {
     const name = document.getElementById("TaskName").value;
 
@@ -652,8 +568,16 @@ class DSASTaskCert extends HTMLElement {
     render() {
         const name = this.getAttribute("name");
         const fingerprint = this.getAttribute("fingerprint");
-        this.innerHTML = "<p class=\"my-0\">" + name + "<a  data-toggle=\"tooltip\" title=\"" + _("Delete") + "\" onclick=\"dsas_task_cert_delete('" + fingerprint + "','"
-           + fingerprint + "');\"><img src=\"x-lg.svg\"></a></p>";
+        this.textContent = "";
+        let el = this.appendChild(document.createElement("p"));
+        el.className = "my-0";
+        el.textContent = name;
+        el = el.appendChild(document.createElement("a"));
+        el.setAttribute("data-toggle", "tooltip");
+        el.title = _("Delete");
+        el.addEventListener("click", () => { dsas_task_cert_delete(fingerprint); });
+        el = el.appendChild(document.createElement("img"));
+        el.src = "x-lg.svg";
     }
 
     static get observedAttributes() {

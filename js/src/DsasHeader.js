@@ -28,30 +28,30 @@ window.b64toBlob = b64toBlob;
 function dsas_apply() {
     const modalApply = document.getElementById("modalDSAS");
     modalApply.setAttribute("disable", true);
-    modalApply.setAttribute("body", "<span class='spinner-border spinner-border-sm'></span> &nbsp; Sauvegarde de la configuration en cours.");
+    modalApply.setBody("<span class='spinner-border spinner-border-sm'></span> &nbsp; Sauvegarde de la configuration en cours.");
 
     fetch("api/save.php").then((response) => {
         if (response.ok) { return response.text(); }
         return Promise.reject(new Error(response.statusText));
     }).then(() => {
-        modalApply.setAttribute("body", "<span class='spinner-border spinner-border-sm'></span> &nbsp; Application de la configuration en cours.");
+        modalApply.setBody("<span class='spinner-border spinner-border-sm'></span> &nbsp; Application de la configuration en cours.");
         fetch("api/apply.php").then((response) => {
             if (response.ok) { return response.text(); }
             return Promise.reject(new Error(response.statusText));
         }).then(() => {
             modalApply.removeAttribute("disable");
-            modalApply.removeAttribute("body");
+            modalApply.setBody("");
             modalApply.hide();
             modal_message(_("Configuration applied"));
         }).catch(() => {
             modalApply.removeAttribute("disable");
-            modalApply.removeAttribute("body");
+            modalApply.setBody("");
             modalApply.hide();
             modal_message(_("Error during application of the configuration"));
         });
     }).catch((error) => {
         modalApply.removeAttribute("disable");
-        modalApply.removeAttribute("body");
+        modalApply.setBody("");
         modalApply.hide();
         if (!fail_loggedin(error)) { modal_message(_("Error during save of the configuration")); }
     });
@@ -95,7 +95,7 @@ function dsas_backup() {
          + "      <label for=\"BackupPassword\">" + _("Backup password :") + "</label>\n"
          + "      <input type=\"password\" id=\"BackupPassword\" value=\"\" class=\"form-control\" onkeypress=\"if (event.key === 'Enter'){ modalDSAS.hide(); dsas_real_backup();}\">\n"
          + "    </div>";
-    modalDSAS.setAttribute("body", body);
+    modalDSAS.setBody(body);
 }
 window.dsas_backup = dsas_backup;
 
@@ -107,7 +107,7 @@ function dsas_passwd_restore() {
          + "      <label for=\"RestorePassword\">" + _("Restoration password :") + "</label>\n"
          + "      <input type=\"password\" id=\"RestorePassword\" value=\"\" class=\"form-control\" onkeypress=\"if (event.key === 'Enter') {modalDSAS.hide(); dsas_real_restore();}\">\n"
          + "    </div>";
-    modalDSAS.setAttribute("body", body);
+    modalDSAS.setBody(body);
 }
 window.dsas_passwd_restore = dsas_passwd_restore;
 
@@ -144,7 +144,7 @@ export default function dsas_restore_core(file, passwd = "") {
         // dsas_apply with a pre setup modal
             const modalDSAS = document.getElementById("modalDSAS");
             modalDSAS.removeAttribute("disable");
-            modalDSAS.removeAttribute("body");
+            modalDSAS.setBody("");
             modalDSAS.removeAttribute("size");
             modalDSAS.removeAttribute("hideonclick");
             modalDSAS.setAction();
@@ -262,7 +262,7 @@ function waitshutdown(c = 0) {
 function dsas_reboot() {
     const modalReboot = document.getElementById("modalDSAS");
     modalReboot.setAttribute("disable", true);
-    modalReboot.setAttribute("body", "  <div class=\"row\">\n"
+    modalReboot.setBody("  <div class=\"row\">\n"
                  + "    <div class=\"col-8\">\n"
                  + "      <span class=\"spinner-border spinner-border-sm\"></span>&nbsp;" + _("Rebooting the DSAS")
                  + "    </div>"
@@ -292,7 +292,7 @@ function dsas_shutdown() {
     const modalShutdown = document.getElementById("modalDSAS");
 
     modalShutdown.setAttribute("disable", true);
-    modalShutdown.setAttribute("body", "  <div class=\"row\">\n"
+    modalShutdown.setBody("  <div class=\"row\">\n"
                  + "    <div class=\"col-8\">\n"
                  + "      <span class=\"spinner-border spinner-border-sm\"></span> &nbsp;" + _("Shutting down the DSAS")
                  + "    </div>"

@@ -6,7 +6,7 @@ export function modal_message(text, action = null, hide = false) {
     const modalDSAS = document.getElementById("modalDSAS");
     if (modalDSAS) {
         modalDSAS.removeAttribute("disable");
-        modalDSAS.removeAttribute("body");
+        modalDSAS.setBody("");
         modalDSAS.removeAttribute("size");
         modalDSAS.removeAttribute("static");
         if (hide) {
@@ -30,7 +30,7 @@ export function modal_action(text, action = null, hide = false) {
     const modalDSAS = document.getElementById("modalDSAS");
     if (modalDSAS) {
         modalDSAS.removeAttribute("disable");
-        modalDSAS.removeAttribute("body");
+        modalDSAS.setBody("");
         modalDSAS.removeAttribute("type");
         modalDSAS.removeAttribute("size");
         modalDSAS.removeAttribute("static");
@@ -90,7 +90,6 @@ export default class DSASModal extends HTMLElement {
     render() {
         const tag = this.getAttribute("tag");
         const title = this.getAttribute("title");
-        const body = this.getAttribute("body");
         const disable = this.getAttribute("disable");
         const type = this.getAttribute("type");
         const hideonclick = this.getAttribute("hideonclick");
@@ -127,16 +126,12 @@ export default class DSASModal extends HTMLElement {
         if (title !== null) {
             el.appendChild(document.createElement("h5"));
             el.className = "modal-title";
-            el.textContent = title;
+            el.innerHTML = title;
         }
 
         el = view.appendChild(document.createElement("div"));
         el.id = "body" + tag;
         el.className = "modal-body";
-        if (body !== null) {
-            el.innerHTML = body;
-        }
-
         el = view.appendChild(document.createElement("div"));
         el.className = "modal-footer";
         if (type !== "Ok") {
@@ -178,7 +173,7 @@ export default class DSASModal extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ["tag", "title", "body", "disable", "type", "hideonclick", "size", "static"];
+        return ["tag", "title", "disable", "type", "hideonclick", "size", "static"];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -203,13 +198,6 @@ export default class DSASModal extends HTMLElement {
                     this.render();
                 }
                 break;
-            case "body":
-                if (document.getElementById("body" + tag)) {
-                    document.getElementById("body" + tag).innerHTML = newValue;
-                } else {
-                    this.render();
-                }
-                break;
             default:
                 throw new Error("Unknown modal option");
             }
@@ -219,6 +207,20 @@ export default class DSASModal extends HTMLElement {
     setAction(_action = null) {
         this.action = _action;
         this.render();
+    }
+
+    setBody(body = null) {
+        const tag = this.getAttribute("tag");
+        if (body) {
+            if (typeof (body) === "string") {
+                document.getElementById("body" + tag).innerHTML = body;
+            } else {
+                document.getElementById("body" + tag).textContent = "";
+                document.getElementById("body" + tag).appendChild(body);
+            }
+        } else {
+            document.getElementById("body" + tag).textContent = "";
+        }
     }
 
     show() {

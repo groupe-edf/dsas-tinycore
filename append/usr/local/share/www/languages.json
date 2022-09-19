@@ -330,7 +330,7 @@
     "DSAS user password update" : "DSAS mot de passe utilisateur mise à jour",
     "Update" : "Mise à jour",
     "Change Password" : "Changer le mot de passe",
-    "Error ({0}) during the download of users : {1}" : "Erreur {0} pendant le télécharement des utilisateurs",
+    "Error ({0}) during the download of users : {1}" : "Erreur {0} pendant le téléchargement des utilisateurs",
     "Publication of the repository by HTTPS is {0}" : "La publication de la r&eacute;positoire par HTTPS est {0}",
     "Active" : "Activé",
     "Inactive" : "Désactivé",

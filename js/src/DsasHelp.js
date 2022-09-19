@@ -79,9 +79,9 @@ export default function dsas_display_help() {
         if (response.ok) { return response.text(); }
         return Promise.reject(new Error(response.statusText));
     }).then((text) => {
-        // Marked" has to use innerHTML as it returns a formatted string.
+        // "Marked" has to use innerHTML as it returns a formatted string.
         // If user text was passed here we'd need to sanitize it, but the
-        // documentation is supplied with the DSAS. "
+        // documentation is supplied with the DSAS.
         // FIXME Fortigate SSL VPN F***'s up here. Kludge to fix it.
         setOptions({ baseUrl: dsas_origin() });
         document.getElementById("Documentation").innerHTML = "<article class=\"markdown-body\">"
@@ -91,4 +91,3 @@ export default function dsas_display_help() {
         if (!fail_loggedin(error)) { modal_message(_("Error during documentation download : ") + (error.message ? error.message : error)); }
     });
 }
-window.dsas_display_help = dsas_display_help;
