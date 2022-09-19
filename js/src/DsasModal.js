@@ -155,13 +155,8 @@ export default class DSASModal extends HTMLElement {
             }
             el2.textContent = (type === "Ok" ? _("Ok") : _("Confirm"));
             if (this.action) {
-                if (typeof (this.action) === "string") {
-                    // FIXME Should Try not to use this form of the function as it needs
-                    // the action to be globally defined. It could also be abused to inject
-                    // javascript
-                    // eslint-disable-next-line no-eval
-                    el2.addEventListener("click", () => { eval(this.action); });
-                } else {
+                // FIXME Fail silently if a function is passed as a string
+                if (typeof (this.action) !== "string") {
                     el2.addEventListener("click", this.action);
                 }
             }
