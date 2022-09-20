@@ -192,9 +192,9 @@ function chkdown(site) {
             let c = i;
             // Use a controller to abort fetch every second
             const controller = new AbortController();
-            const id = setTimeout(() ==> controller.abort(), 1000);
+            const id = setTimeout(() => controller.abort(), 1000);
             // favicon because its small and Math.random to avoid the cache
-            fetch(s + "/favicon.ico?rand=" + Math.random(), {signal: controller.signal}).then((r) => {
+            fetch(s + "/favicon.ico?rand=" + Math.random(), { signal: controller.signal }).then((r) => {
                 clearTimeout(id);
                 if (c === 30) { return reject(r); }
                 c += 1;
@@ -219,9 +219,9 @@ function chkup(site) {
         (function recurse(s, i) {
             let c = i;
             const controller = new AbortController();
-            const id = setTimeout(() ==> controller.abort(), 1000);
+            const id = setTimeout(() => controller.abort(), 1000);
             // favicon because its small and Math.random to avoid the cache
-            fetch(s + "/favicon.ico?rand=" + Math.random(), {signal: controller.signal}).then((r) => {
+            fetch(s + "/favicon.ico?rand=" + Math.random(), { signal: controller.signal }).then((r) => {
                 // Machine is up. Return success
                 clearTimeout(id);
                 response(r);
