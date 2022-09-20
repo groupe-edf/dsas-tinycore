@@ -2198,19 +2198,9 @@ try {
   test("Restoring original configuration", function () {
       copy("/var/dsas/dsas_conf.xml.test", "/var/dsas/dsas_conf.xml"); 
       unlink("/var/dsas/dsas_conf.xml.test");
-      // After cheating and replacing the files of the DSAS need to
-      // refresh and wait for the refresh to finish. Don't know what
-      // page we're on, so can't wait on an element. Use sleep.
-      $GLOBALS["driver"]->navigate()->refresh();
-      sleep(1);
-      if (array_key_exists("driver", $GLOBALS)) {
-        apply();
+      exec("sudo /etc/init.d/services/dsas apply", $data, $retval);
+      if ($retval == 0)
         return true;
-      } else {
-        exec("sudo /etc/init.d/services/dsas apply", $data, $retval);
-        if ($retval == 0)
-          return true;
-      }
     });
 
   // Remove 'testuser' if still active
