@@ -93,19 +93,19 @@ export default class MultiLang {
         return String.format(...str, ...args);
     }
 
-    translateHTML() {
+    translateHTML(target = document) {
         // The eslint aribnb style is too annoying for the next 3 lines.
         // eslint-disable-next-line no-param-reassign
-        document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = this.translate(el.textContent); });
+        target.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = this.translate(el.textContent); });
         // eslint-disable-next-line no-param-reassign
-        document.querySelectorAll("[data-i18n-value]").forEach((el) => { el.value = this.translate(el.value); });
+        target.querySelectorAll("[data-i18n-value]").forEach((el) => { el.value = this.translate(el.value); });
         // eslint-disable-next-line no-param-reassign
-        document.querySelectorAll("[data-i18n-title]").forEach((el) => { el.title = this.translate(el.title); });
+        target.querySelectorAll("[data-i18n-title]").forEach((el) => { el.title = this.translate(el.title); });
         // eslint-disable-next-line no-param-reassign
-        document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => { el.placeholder = this.translate(el.placeholder); });
+        target.querySelectorAll("[data-i18n-placeholder]").forEach((el) => { el.placeholder = this.translate(el.placeholder); });
 
         // Insert language navbar dropdown
-        document.querySelectorAll("[data-i18n-navbar-lang]").forEach((el) => {
+        target.querySelectorAll("[data-i18n-navbar-lang]").forEach((el) => {
             const li = el.appendChild(document.createElement("li"));
             li.className = "nav-item dropdown";
             const a = li.appendChild(document.createElement("a"));
