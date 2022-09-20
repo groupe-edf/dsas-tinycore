@@ -1,6 +1,6 @@
 // The javascript used by the DSAS task.html page
 import DisplayLogs from "./DisplayLogs";
-import { _ } from "./MultiLang";
+import { ml, _ } from "./MultiLang";
 import { modal_message, modal_errors, modal_action } from "./DsasModal";
 import {
     fail_loggedin,
@@ -10,19 +10,12 @@ import {
     date_to_locale,
     cert_name,
     cert_is_ca,
+    dsasSetTimeout,
+    dsasClearTimeout,
 } from "./DsasUtil";
 
 // Global variable for the DisplayLog instance for the task log files
 let infoLogs;
-
-// Global variable for the log refresh and task info tasks
-let timeoutInfo;
-let timeoutTasks;
-
-function clearTimeouts() {
-    if (timeoutInfo !== 0) { clearTimeout(timeoutInfo); }
-    if (timeoutTasks !== 0) { clearTimeout(timeoutTasks); }
-}
 
 function dsas_task_real_delete(id) {
     const formData = new FormData();
@@ -46,7 +39,8 @@ function dsas_task_real_delete(id) {
         }
     }).catch((error) => {
         if (fail_loggedin(error)) {
-            clearTimeouts();
+            dsasClearTimeout("tasks");
+            dsasClearTimeout("info");
         } else {
             modal_message(_("Error : {0}", (error.message ? error.message : error)));
         }
@@ -56,8 +50,8 @@ function dsas_task_real_delete(id) {
 function dsas_task_delete(id, name) {
     const modalDSAS = document.getElementById("modalDSAS");
     const body = document.createDocumentFragment();
-    body.append(_("&nbsp;&nbsp;Name : {0}\r\n&nbsp;&nbsp;ID : {1}\r\n", name, id));
-    let el = document.creatElement("input");
+    body.append(_(" Name : {0}\r\n ID : {1}", name, id) + "\r\n");
+    let el = document.createElement("input");
     el.className = "form-check-input";
     el.id = "TaskDeleteFiles";
     el.setAttribute("type", "checkbox");
@@ -66,7 +60,7 @@ function dsas_task_delete(id, name) {
     el = document.createElement("label");
     el.className = "form-check-label";
     el.setAttribute("for", "TaskDeleteFiles");
-    el.textContent = _("Delete task files");
+    el.textContent = " " + _("Delete task files");
     body.append(el);
     modal_action(_("Delete the task ?"), () => { dsas_task_real_delete(id); }, true);
     modalDSAS.setBody(body);
@@ -91,7 +85,8 @@ function dsas_task_real_kill(id) {
         }
     }).catch((error) => {
         if (fail_loggedin(error)) {
-            clearTimeouts();
+            dsasClearTimeout("tasks");
+            dsasClearTimeout("info");
         } else {
             modal_message(_("Error : {0}", (error.message ? error.message : error)));
         }
@@ -101,7 +96,7 @@ function dsas_task_real_kill(id) {
 function dsas_task_kill(id, name) {
     const modalDSAS = document.getElementById("modalDSAS");
     modal_action(_("Kill the task?"), () => { dsas_task_real_kill(id); }, true);
-    modalDSAS.setBody(_("&nbsp;&nbsp;Name : {0}\r\n&nbsp;&nbsp;ID : {1}", name, id));
+    modalDSAS.setBody(_(" Name : {0}\r\n ID : {1}", name, id));
 }
 
 function has_arch(archs, arch) {
@@ -201,7 +196,8 @@ function dsas_add_task(oldid = "") {
         }
     }).catch((error) => {
         if (fail_loggedin(error)) {
-            clearTimeouts();
+            dsasClearTimeout("tasks");
+            dsasClearTimeout("info");
         } else {
             modal_message(_("Error : {0}", (error.message ? error.message : error)));
         }
@@ -233,6 +229,7 @@ function modal_task(action = () => { dsas_add_task(); }, ca = "", taskchange = (
     const modalDSAS = document.getElementById("modalDSAS");
     const temp = document.getElementById("newtasktemplate");
     const b = temp.content.cloneNode(true);
+    ml.translateHTML(b); // Need to force translation of templates after cloning
     modalDSAS.removeAttribute("disable");
     modalDSAS.removeAttribute("type");
     modalDSAS.removeAttribute("static");
@@ -309,7 +306,8 @@ function modal_task(action = () => { dsas_add_task(); }, ca = "", taskchange = (
         });
     }).catch((error) => {
         if (fail_loggedin(error)) {
-            clearTimeouts();
+            dsasClearTimeout("tasks");
+            dsasClearTimeout("info");
         } else {
             modal_message(_("Error while loading the certificates : {0}", (error.message ? error.message : error)));
         }
@@ -334,7 +332,8 @@ function dsas_modify_task(oldname = "", oldid = "") {
             return Promise.reject(new Error(response.statusText));
         }).catch((error) => {
             if (fail_loggedin(error)) {
-                clearTimeouts();
+                dsasClearTimeout("tasks");
+                dsasClearTimeout("info");
             } else {
                 modal_message(_("Error : {0}", (error.message ? error.message : error)));
             }
@@ -385,7 +384,10 @@ function dsas_task_modify(id, name) {
                 });
         }
     }).catch((error) => {
-        if (fail_loggedin(error)) { clearTimeouts(); }
+        if (fail_loggedin(error)) {
+            dsasClearTimeout("tasks");
+            dsasClearTimeout("info");
+        }
     });
 }
 
@@ -405,11 +407,12 @@ function dsas_task_real_run(id) {
             clear_feedback();
             // Delay update of task status 0,5 seconds to allow runlog file to be updated first
             // eslint-disable-next-line no-use-before-define
-            timeoutTasks = setTimeout(dsas_display_tasks, 500, "status");
+            dsasSetTimeout("tasks", dsas_display_tasks, 500, "status");
         }
     }).catch((error) => {
         if (fail_loggedin(error)) {
-            clearTimeouts();
+            dsasClearTimeout("tasks");
+            dsasClearTimeout("info");
         } else {
             modal_message(_("Error : {0}", (error.message ? error.message : error)));
         }
@@ -419,7 +422,7 @@ function dsas_task_real_run(id) {
 function dsas_task_run(id, name) {
     const modalDSAS = document.getElementById("modalDSAS");
     modal_action(_("Run the task ?"), () => { dsas_task_real_run(id); }, true);
-    modalDSAS.setBody(_("&nbsp;&nbsp;Name : {0}\r\n&nbsp;&nbsp;ID : {1}", name, id));
+    modalDSAS.setBody(_(" Name : {0}\r\n ID : {1}", name, id));
 }
 
 function modal_info(name, body) {
@@ -447,7 +450,7 @@ function dsas_task_info(id, name, len = 0) {
         const info = JSON.parse(text);
         if (info && (info[0].constructor === Object) && (Object.keys(info[0])[0] === "error")) {
             modal_errors(info);
-            if (timeoutInfo !== 0) { clearTimeout(timeoutInfo); }
+            dsasClearTimeout("info");
         } else {
             if (len === 0) {
                 const el = document.createElement("span");
@@ -457,12 +460,12 @@ function dsas_task_info(id, name, len = 0) {
             } else { infoLogs.appendlog(info); }
 
             // Automatically refresh the logs every 5 seconds
-            if (timeoutInfo !== 0) { clearTimeout(timeoutInfo); }
-            timeoutInfo = setTimeout(dsas_task_info, 5000, id, name, infoLogs.logs[0].length);
+            dsasSetTimeout("info", dsas_task_info, 5000, id, name, infoLogs.logs[0].length);
         }
     }).catch((error) => {
         if (fail_loggedin(error)) {
-            clearTimeouts();
+            dsasClearTimeout("tasks");
+            dsasClearTimeout("info");
         } else {
             modal_message(_("Error : {0}", (error.message ? error.message : error)));
         }
@@ -491,7 +494,7 @@ export default function dsas_display_tasks(what = "all") {
             return Promise.reject(new Error(response.statusText));
         }).then((tasks) => {
             let i = 0;
-            clearTimeout(timeoutTasks);
+            dsasClearTimeout("tasks");
             const temp = document.getElementById("tasktemplate");
             const tasksrendered = document.createDocumentFragment();
             if (tasks.task) {
@@ -501,6 +504,7 @@ export default function dsas_display_tasks(what = "all") {
                     const card = item.getElementById("taskcard");
                     const certs = item.getElementById("taskcerts");
                     const tid = document.getElementById("task" + i);
+                    ml.translateHTML(item);
                     let cls = "text-success";
                     if (task.status === "Running") { cls = "text-primary"; }
                     if (task.last === "never") { cls = "text-info"; }
@@ -563,9 +567,12 @@ export default function dsas_display_tasks(what = "all") {
             if (what === "all") {
                 document.getElementById("AddTask").addEventListener("click", () => { dsas_task_new(); });
             }
-            timeoutTasks = setTimeout(dsas_display_tasks, 10000, "status");
+            dsasSetTimeout("tasks", dsas_display_tasks, 10000, "status");
         }).catch((error) => {
-            if (fail_loggedin(error)) { clearTimeouts(); }
+            if (fail_loggedin(error)) {
+                dsasClearTimeout("tasks");
+                dsasClearTimeout("info");
+            }
         });
     }
 }

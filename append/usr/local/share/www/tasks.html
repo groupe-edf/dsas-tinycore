@@ -9,31 +9,32 @@
 
 <dsas-header></dsas-header>
 
-<template id="newtasktemplate">
-  <form>
-    <div class="row">
-      <div class="col-6">
-        <label for="TaskName" data-i18n>Task name :</label>
-        <input type="text" id="TaskName" value="" class="form-control">
-        <div class="invalid-feedback" id="feed_TaskName"></div>
-      </div>
-      <div class="col-6">
-        <label for="TaskDirectory" data-i18n>Folder used by the task :</label>
-        <input type="text" id="TaskDirectory" value="" class="form-control">
-        <div class="invalid-feedback" id="feed_Directory"></div>
-      </div>
-      <div class="col-6">
-        <label for="TaskURI" data-i18n>URI (no download if empty) :</label>
-        <input type="text" id="TaskURI" value="" class="form-control">
-        <div class="invalid-feedback" id="feed_URI"></div>
-      </div>
-      <div class="col-6">
-        <label for="TaskCA" data-i18n>URI Certification Authority</label>
-        <select class="form-select" name="TaskCA" id="TaskCA"></select>
-      </div>
-      <div class="col-6">
-        <label for="TaskRun" data-i18n>Periodicity of the task :</label>
-        <select class="form-select" name="TaskRun" id="TaskRun">
+<!-- Use comments to hide whitespace in layout that would be rendered otherwise -->
+<template id="newtasktemplate"><!--
+--><form><!--
+  --><div class="row"><!--
+    --><div class="col-6"><!--
+     --><label for="TaskName" data-i18n>Task name :</label><!--
+     --><input type="text" id="TaskName" value="" class="form-control"><!--
+     --><div class="invalid-feedback" id="feed_TaskName"></div><!--
+   --></div>
+      <div class="col-6"><!--
+      --><label for="TaskDirectory" data-i18n>Folder used by the task :</label><!--
+      --><input type="text" id="TaskDirectory" value="" class="form-control"><!--
+      --><div class="invalid-feedback" id="feed_Directory"></div><!--
+    --></div>
+      <div class="col-6"><!--
+     --><label for="TaskURI" data-i18n>URI (no download if empty) :</label><!--
+     --><input type="text" id="TaskURI" value="" class="form-control"><!--
+     --><div class="invalid-feedback" id="feed_URI"></div><!--
+   --></div>
+      <div class="col-6"><!--
+     --><label for="TaskCA" data-i18n>URI Certification Authority :</label><!--
+     --><select class="form-select" name="TaskCA" id="TaskCA"></select><!--
+    --></div>
+      <div class="col-6"><!--
+     --><label for="TaskRun" data-i18n>Periodicity of the task :</label><!--
+     --><select class="form-select" name="TaskRun" id="TaskRun">
           <option id="TaskRunNull" value="" data-i18n>Select a period</option>
           <option id="TaskRunNever" value="never" data-i18n>never</option>
           <option id="TaskRunQuarterHourly" value="quarterhourly" data-i18n>quarter hourly</option>
@@ -41,11 +42,11 @@
           <option id="TaskRunDaily" value="daily" data-i18n>daily</option>
           <option id="TaskRunWeekly" value="weekly" data-i18n>weekly</option>
           <option id="TaskRunMonthly" value="monthly" data-i18n>monthly</option>
-        </select>
-      </div>
-      <div class="col-6">
-        <label for="TaskType" data-i18n>Task type :</label>
-        <select class="form-select" name="TaskType" id="TaskType">
+        </select><!--
+   --></div>
+      <div class="col-6"><!--
+     --><label for="TaskType" data-i18n>Task type :</label><!--
+     --><select class="form-select" name="TaskType" id="TaskType">
           <option id="TaskTypeNull" value="" data-i18n>Select a type</option>
           <option id="TaskTypeRPM" value="rpm">rpm</option>
           <option id="TaskTypeRepomd" value="repomd">repomd</option>
@@ -57,67 +58,66 @@
           <option id="TaskTypeGpg" value="gpg">gpg</option>
           <option id="TaskTypeJar" value="jar">jar</option>
           <option id="TaskTypeTrend" value="trend">trend</option>
-        </select>
+        </select><!--
+    --></div>
+      <div class="col-6"><!--
+     --><label for="TaskAddCert" data-i18n>Add a certificate :</label><!--
+     --><select class="form-select" name="TaskAddCert" id="TaskAddCert"></select><!--
+   --></div>
+      <div class="col-6" id="TaskHasArch" style="white-space: normal;" hidden><!--
+     --><div class="form-check form-check-inline"><!--
+       --><input class="form-check-input" id="TaskArchSource" type="checkbox" value="source"><!--
+       --><label class="form-check-label" for="TaskArchSource" data-i18n>Source</label><!--
+     --></div><wbr><!--
+      --><div class="form-check form-check-inline"><!--
+       --><input class="form-check-input" id="TaskArchAll" type="checkbox" value="all><!--
+       --><label class="form-check-label" for="TaskArchAll">all</label><!--
+     --></div><wbr><!--
+     --><div class="form-check form-check-inline"><!--
+       --><input class="form-check-input" id="TaskArchAmd64" type="checkbox" value="amd64"><!--
+       --><label class="form-check-label" for="TaskArchAmd64">amd64</label><!--
+     --></div><wbr><!--
+     --><div class="form-check form-check-inline"><!--
+       --><input class="form-check-input" id="TaskArchArm64" type="checkbox" value="arm64"><!--
+       --><label class="form-check-label" for="TaskArchArm64">arm64</label><!--
+     --></div><wbr><!--
+     --><div class="form-check form-check-inline"><!--
+       --><input class="form-check-input" id="TaskArchArmEL" type="checkbox" value="armel"><!--
+       --><label class="form-check-label" for="TaskArchArmEL">armel</label><!--
+     --></div><wbr><!--
+     --><div class="form-check form-check-inline"><!--
+       --><input class="form-check-input" id="TaskArchArmHF" type="checkbox" value="armhf"><!--
+       --><label class="form-check-label" for="TaskArchArmHF">armhf</label><!--
+     --></div><wbr><!--
+     --><div class="form-check form-check-inline"><!--
+       --><input class="form-check-input" id="TaskArchI386" type="checkbox" value="i386"><!--
+       --><label class="form-check-label" for="TaskArchI386">i386</label><!--
+     --></div><wbr><!--
+     --><div class="form-check form-check-inline"><!--
+       --><input class="form-check-input" id="TaskArchMips64EL" type="checkbox" value="mips64el"><!--
+       --><label class="form-check-label" for="TaskArchMips64EL">mips64el</label><!--
+     --></div><wbr><!--
+     --><div class="form-check form-check-inline"><!--
+       --><input class="form-check-input" id="TaskArchMipsEL" type="checkbox" value="mipsel"><!--
+       --><label class="form-check-label" for="TaskArchMipsEL">mipsel</label><!--
+     --></div><wbr><!--
+     --><div class="form-check form-check-inline"><!--
+       --><input class="form-check-input" id="TaskArchPpc64EL" type="checkbox" value="ppc64el"><!--
+       --><label class="form-check-label" for="TaskArchPpc64EL">ppc64el</label><!--
+     --></div><wbr><!--
+     --><div class="form-check form-check-inline"><!--
+       --><input class="form-check-input" id="TaskArchS390x" type="checkbox" value="s390x"><!--
+       --><label class="form-check-label" for="TaskArchS390x">s390x</label><!--
+     --></div>
       </div>
-      <div class="col-6">
-        <label for="TaskAddCert" data-i18n>Add a certificate :</label>
-        <select class="form-select" name="TaskAddCert" id="TaskAddCert"></select>
-      </div>
-      <div class="col-6" id="TaskHasArch" hidden>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" id="TaskArchSource" type="checkbox" value="source">
-          <label class="form-check-label" for="TaskArchSource" data-i18n>Source</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" id="TaskArchAll" type="checkbox" value="all>
-          <label class="form-check-label" for="TaskArchAll">all</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" id="TaskArchAmd64" type="checkbox" value="amd64">
-          <label class="form-check-label" for="TaskArchAmd64">amd64</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" id="TaskArchArm64" type="checkbox" value="arm64">
-          <label class="form-check-label" for="TaskArchArm64">arm64</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" id="TaskArchArmEL" type="checkbox" value="armel">
-          <label class="form-check-label" for="TaskArchArmEL">armel</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" id="TaskArchArmHF" type="checkbox" value="armhf">
-          <label class="form-check-label" for="TaskArchArmHF">armhf</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" id="TaskArchI386" type="checkbox" value="i386">
-          <label class="form-check-label" for="TaskArchI386">i386</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" id="TaskArchMips64EL" type="checkbox" value="mips64el">
-          <label class="form-check-label" for="TaskArchMips64EL">mips64el</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" id="TaskArchMipsEL" type="checkbox" value="mipsel">
-          <label class="form-check-label" for="TaskArchMipsEL">mipsel</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" id="TaskArchPpc64EL" type="checkbox" value="ppc64el">
-          <label class="form-check-label" for="TaskArchPpc64EL">ppc64el</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" id="TaskArchS390x" type="checkbox" value="s390x">
-          <label class="form-check-label" for="TaskArchS390x">s390x</label>
-        </div>
-      </div>
+    </div><!--
+  --><div class="row">
+      <div class="col-12"><!--
+     --><label for="TaskCert" data-i18n>Certificates</label><!--
+     --><div class="container my-1 border" id="TaskCert"></div><!--
+    --></div>
     </div>
-    <div class="row">
-      <div class="col-12">
-        <label for="TaskCert" data-i18n>Certificates</label>
-        <div class="container my-1 border" id="TaskCert"></div>
-      </div>
-    </div>
-  </form>
-</template>
+   </form></template>
 
 <template id="tasktemplate">
   <p class="my-0">
