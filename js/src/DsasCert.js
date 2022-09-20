@@ -71,7 +71,7 @@ function dsas_cert_real_delete(name, finger) {
 function dsas_cert_delete(name, finger) {
     const modalDSAS = document.getElementById("modalDSAS");
     modal_action(_("Delete the certificate ?"), () => { dsas_cert_real_delete(name, finger); }, true);
-    modalDSAS.setBody(_("&nbsp;&nbsp;Name : {0}\r\n&nbsp;&nbsp;ID : {1}", name, finger.substr(0, 50)));
+    modalDSAS.setBody(_(" Name : {0}\r\n ID : {1}", name, finger.substr(0, 50)));
 }
 
 function cert_body(c) {
@@ -109,6 +109,7 @@ function treat_gpg_certs(certs, node) {
         const name = cert.uid;
         const item = temp.content.cloneNode(true);
         const links = item.querySelectorAll("a");
+        ml.translateHTML(item);
         let cls = "text-info";
         if (cert_expired(cert)) { cls = "text-danger"; }
         if (cert_expiring(cert)) { cls = "text-warning"; }
@@ -137,6 +138,7 @@ function treat_ssl_pubkeys(certs, node) {
         const { name } = cert;
         const item = temp.content.cloneNode(true);
         const links = item.querySelectorAll("a");
+        ml.translateHTML(item);
         links[0].setAttribute("href", "#pubkey" + i);
         links[1].setAttribute("href", url);
         links[2].addEventListener("click", () => { dsas_cert_delete(name.replaceAll("\n", "\\n"), cert.fingerprint); });
@@ -161,6 +163,7 @@ function treat_x509_certs(certs, node, added = false) {
         const name = cert_name(cert);
         const item = temp.content.cloneNode(true);
         const links = item.querySelectorAll("a");
+        ml.translateHTML(item);
         let cls = "text-info";
         if (cert_expired(cert)) {
             cls = "text-danger";

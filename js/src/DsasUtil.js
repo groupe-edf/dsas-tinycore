@@ -2,10 +2,40 @@
 import { ml, _ } from "./MultiLang";
 import { modal_message } from "./DsasModal";
 
-// Timeout variable
-let timeoutLogin = 0;
-export function clearTimeoutLogin() {
-    if (timeoutLogin !== 0) { clearTimeout(timeoutLogin); }
+// Store the references to the timeouts so that they can be cleared
+let timeouts = [];
+
+export function dsasSetTimeout(ref, func, delay, ...args) {
+    const newtimeouts = [];
+    timeouts.forEach((timeout) => {
+        if (timeout[0] === ref) {
+            clearTimeout(timeout[1]);
+        } else {
+            newtimeouts.push(timeout);
+        }
+    });
+    timeouts = newtimeouts;
+    const timer = setTimeout(func, delay, ...args);
+    timeouts.push([ref, timer]);
+}
+
+export function dsasClearTimeout(ref) {
+    const newtimeouts = [];
+    timeouts.forEach((timeout) => {
+        if (timeout[0] === ref) {
+            clearTimeout(timeout[1]);
+        } else {
+            newtimeouts.push(timeout);
+        }
+    });
+    timeouts = newtimeouts;
+}
+
+export function dsasClearAllTimeouts() {
+    timeouts.forEach((timeout) => {
+        clearTimeout(timeout[1]);
+    });
+    timeouts = [];
 }
 
 export function cert_name(cert) {
@@ -83,23 +113,23 @@ export function dsas_loggedin(update_timeout = true, is_admin = true) {
     fetch(uri).then((response) => {
         if (!response.ok) { return Promise.reject(new Error(response.statusText)); }
         // Check if logged in once every 15 seconds, but don't update the timeout
-        if (timeoutLogin !== 0) { clearTimeout(timeoutLogin); }
-        timeoutLogin = setTimeout(dsas_loggedin, 15000, false, is_admin);
+        dsasClearTimeout("login");
+        dsasSetTimeout("login", dsas_loggedin, 15000, false, is_admin);
         return response.text();
     }).catch(() => {
         modal_message(
             _("You are not connected. Click 'Ok' to reconnect."),
-            "window.location='login.html'",
+            () => { window.location = "login.html"; },
         );
     });
 }
 
 export function fail_loggedin(status) {
     if (status && String(status).includes("Forbidden")) {
-        clearTimeoutLogin();
+        dsasClearTimeout("login");
         modal_message(
             _("You are not connected. Click 'Ok' to reconnect."),
-            "window.location='login.html'",
+            () => { window.location = "login.html"; },
         );
         return true;
     } return false;

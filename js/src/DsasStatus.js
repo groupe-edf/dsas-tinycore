@@ -2,19 +2,16 @@
 import DisplayLogs from "./DisplayLogs";
 import { _ } from "./MultiLang";
 import { modal_message } from "./DsasModal";
-import { fail_loggedin, dsas_origin, date_to_locale } from "./DsasUtil";
+import {
+    fail_loggedin,
+    dsas_origin,
+    date_to_locale,
+    dsasClearTimeout,
+    dsasSetTimeout,
+} from "./DsasUtil";
 
 // Global variable for the DisplayLogs instance for status logs
 let statusLogs;
-
-// Global variables for the status and log refresh
-let timeoutStatus;
-let timeoutLogs;
-
-function clearTimeouts() {
-    if (timeoutStatus !== 0) { clearTimeout(timeoutStatus); }
-    if (timeoutLogs !== 0) { clearTimeout(timeoutLogs); }
-}
 
 function format_space(bytes) {
     // Special case zero
@@ -65,11 +62,11 @@ function dsas_refresh_logs(all = false) {
         if (logs) { statusLogs.appendlog(logs); }
 
         // Automatically refresh the logs every 5 seconds
-        if (timeoutLogs !== 0) { clearTimeout(timeoutLogs); }
-        timeoutLogs = setTimeout(dsas_refresh_logs, 5000, all);
+        dsasSetTimeout("logs", dsas_refresh_logs, 5000, all);
     }).catch((error) => {
         if (fail_loggedin(error)) {
-            clearTimeouts();
+            dsasClearTimeout("logs");
+            dsasClearTimeout("status");
         } else {
             modal_message(_("Error ({0}) during the download of the logs : {1}", 0, (error.message ? error.message : error)));
         }
@@ -89,11 +86,11 @@ function dsas_status() {
         }
         machine_status("Upper", obj.haut);
         // Automatically refresh the page
-        if (timeoutStatus !== 0) { clearTimeout(timeoutStatus); }
-        timeoutStatus = setTimeout(dsas_status, 5000);
+        dsasSetTimeout("status", dsas_status, 5000);
     }).catch((error) => {
         if (fail_loggedin(error)) {
-            clearTimeouts();
+            dsasClearTimeout("logs");
+            dsasClearTimeout("status");
         } else {
             modal_message(_("Error ({0}) during the machine detection : {1}", 0, (error.message ? error.message : error)));
         }
@@ -123,15 +120,14 @@ function log_render(line) {
 
 function dsas_togglelogs() {
     const btn = document.getElementById("loghide");
-    if (timeoutLogs !== 0) { clearTimeout(timeoutLogs); }
     if (btn.value === _("All logs")) {
         btn.value = _("Errors only");
         statusLogs.updatefilter(log_filter);
-        timeoutLogs = setTimeout(dsas_refresh_logs, 5000, false);
+        dsasSetTimeout("logs", dsas_refresh_logs, 5000, false);
     } else {
         btn.value = _("All logs");
         statusLogs.updatefilter("");
-        timeoutLogs = setTimeout(dsas_refresh_logs, 5000, true);
+        dsasSetTimeout("logs", dsas_refresh_logs, 5000, true);
     }
 }
 
@@ -149,12 +145,12 @@ function dsas_display_logs() {
             statusLogs = new DisplayLogs("logwind", logs, false, log_highlight, "", log_render);
 
             // Automatically refresh the logs every 5 seconds
-            if (timeoutLogs !== 0) { clearTimeout(timeoutLogs); }
-            timeoutLogs = setTimeout(dsas_refresh_logs, 5000);
+            dsasSetTimeout("logs", dsas_refresh_logs, 5000);
         } else { modal_message(_("No logs returned by the DSAS")); }
     }).catch((error) => {
         if (fail_loggedin(error)) {
-            clearTimeouts();
+            dsasClearTimeout("logs");
+            dsasClearTimeout("status");
         } else {
             modal_message(_("Error ({0}) during the download of the logs : {1}", 0, (error.message ? error.message : error)));
         }

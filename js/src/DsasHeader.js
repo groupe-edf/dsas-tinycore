@@ -1,7 +1,7 @@
 // DSAS functions used in the page header
 import { ml, _ } from "./MultiLang";
 import { modal_message, modal_action, modal_errors } from "./DsasModal";
-import { fail_loggedin, dsas_origin, clearTimeoutLogin } from "./DsasUtil";
+import { fail_loggedin, dsas_origin, dsasClearAllTimeouts } from "./DsasUtil";
 
 function b64toBlob(b64Data, contentType = "", sliceSize = 512) {
     const byteChar = atob(b64Data);
@@ -31,16 +31,22 @@ function dsas_apply() {
     let el = spinner.appendChild(document.createElement("span"));
     el.className = "spinner-border spinner-border-sm";
     el = spinner.appendChild(document.createElement("span"));
-    el.textContent = _("Backup on the configuration in progress");
+    el.textContent = _(" Backup of the configuration in progress");
+    modalApply.removeAttribute("title");
     modalApply.setAttribute("disable", true);
     modalApply.setBody(spinner);
+    modalApply.show();
 
     fetch("api/save.php").then((response) => {
         if (response.ok) { return response.text(); }
         return Promise.reject(new Error(response.statusText));
     }).then(() => {
-        el.textContent = _("&nbsp;Application of the configuration in progress");
-        modalApply.setBody(spinner);
+        const spinner2 = document.createDocumentFragment();
+        let el2 = spinner2.appendChild(document.createElement("span"));
+        el2.className = "spinner-border spinner-border-sm";
+        el2 = spinner2.appendChild(document.createElement("span"));
+        el2.textContent = _(" Application of the configuration in progress");
+        modalApply.setBody(spinner2);
         fetch("api/apply.php").then((response) => {
             if (response.ok) { return response.text(); }
             return Promise.reject(new Error(response.statusText));
@@ -184,17 +190,21 @@ function chkdown(site) {
     return new Promise((response, reject) => {
         (function recurse(s, i) {
             let c = i;
+            // Use a controller to abort fetch every second
+            const controller = new AbortController();
+            const id = setTimeout(() ==> controller.abort(), 1000);
             // favicon because its small and Math.random to avoid the cache
-            fetch(s + "/favicon.ico?rand=" + Math.random()).then((r) => {
+            fetch(s + "/favicon.ico?rand=" + Math.random(), {signal: controller.signal}).then((r) => {
+                clearTimeout(id);
                 if (c === 30) { return reject(r); }
-
                 c += 1;
                 const prog = ((c + 5) * 100) / 30;
                 progress.setAttribute("style", "width: " + prog + "%");
                 progress.setAttribute("aria-valuenow", prog);
-                return setTimeout(() => recurse(s, c), 1000);
+                return setTimeout(recurse, 1000, s, c);
             }).catch((err) => {
                 // Machine is down return success
+                clearTimeout(id);
                 response(err);
             });
         }(site, times));
@@ -208,17 +218,21 @@ function chkup(site) {
     return new Promise((response, reject) => {
         (function recurse(s, i) {
             let c = i;
+            const controller = new AbortController();
+            const id = setTimeout(() ==> controller.abort(), 1000);
             // favicon because its small and Math.random to avoid the cache
-            fetch(s + "/favicon.ico?rand=" + Math.random()).then((r) => {
+            fetch(s + "/favicon.ico?rand=" + Math.random(), {signal: controller.signal}).then((r) => {
                 // Machine is up. Return success
+                clearTimeout(id);
                 response(r);
             }).catch((err) => {
+                clearTimeout(id);
                 if (c === 30) { return reject(err); }
                 c += 1;
                 const prog = ((i + 5) * 100) / 30;
                 progress.setAttribute("style", "width: " + prog + "%");
                 progress.setAttribute("aria-valuenow", prog);
-                return setTimeout(() => recurse(s, c), 1000);
+                return setTimeout(recurse, 1000, s, c);
             });
         }(site, times));
     });
@@ -273,32 +287,32 @@ function waitshutdown(c = 0) {
 function dsas_reboot() {
     const modalReboot = document.getElementById("modalDSAS");
     modalReboot.setAttribute("disable", true);
+    modalReboot.removeAttribute("title");
     const body = document.createElement("div");
     body.className = "row";
     let el = body.appendChild(document.createElement("div"));
     el.className = "col-8";
     let el2 = el.appendChild(document.createElement("span"));
     el2.className = "spinner-border spinner-border-sm";
-    el2 =   el.appendChild(document.createElement("span"));
-    el2.textContent = "&nbsp;" +  _("Rebooting the DSAS")
-    el =  body.appendChild(document.createElement("div"));
-    el.className = "col-4";
-    el2 =  el.appendChild(document.createElement("div"));
+    el2 = el.appendChild(document.createElement("span"));
+    el2.textContent = " " + _("Rebooting the DSAS");
+    el = body.appendChild(document.createElement("div"));
+    el.className = "col-4 my-auto";
+    el2 = el.appendChild(document.createElement("div"));
     el2.className = "progress";
     el2 = el2.appendChild(document.createElement("div"));
     el2.className = "progress-bar";
-    el2.id = "progessReboot";
+    el2.id = "progressReboot";
     el2.setAttribute("role", "progressbar");
     el2.setAttribute("aria-valuemin", "0");
     el2.setAttribute("aria-valuemax", "100");
     modalReboot.setBody(body);
 
     // Clear status, task and login timeouts before continuing
-    clearTimeoutLogin();
-    // FIXME How to clear status and task timeouts here ?
+    dsasClearAllTimeouts();
 
     fetch("api/reboot.php").then((response) => {
-        if (response.ok) { setTimeout(waitreboot, 1000); }
+        if (response.ok) { return setTimeout(waitreboot, 1000); }
         return Promise.reject(new Error(response.statusText));
     }).catch((error) => {
         modalReboot.removeAttribute("disable");
@@ -316,23 +330,22 @@ function dsas_shutdown() {
     el.className = "col-8";
     let el2 = el.appendChild(document.createElement("span"));
     el2.className = "spinner-border spinner-border-sm";
-    el2 =   el.appendChild(document.createElement("span"));
-    el2.textContent = "&nbsp;" +  _("Shutting down the DSAS")
-    el =  body.appendChild(document.createElement("div"));
-    el.className = "col-4";
-    el2 =  el.appendChild(document.createElement("div"));
+    el2 = el.appendChild(document.createElement("span"));
+    el2.textContent = " " + _("Shutting down the DSAS");
+    el = body.appendChild(document.createElement("div"));
+    el.className = "col-4 my-auto";
+    el2 = el.appendChild(document.createElement("div"));
     el2.className = "progress";
     el2 = el2.appendChild(document.createElement("div"));
     el2.className = "progress-bar";
-    el2.id = "progessShutdown";
+    el2.id = "progressShutdown";
     el2.setAttribute("role", "progressbar");
     el2.setAttribute("aria-valuemin", "0");
     el2.setAttribute("aria-valuemax", "100");
     modalShutdown.setBody(body);
 
     // Clear status and login timeouts before continuing
-    clearTimeoutLogin();
-    // FIXME How to clear status and task timeouts here ?
+    dsasClearAllTimeouts();
 
     fetch("api/shutdown.php").then((response) => {
         if (response.ok) { return setTimeout(waitshutdown, 1000); }
@@ -404,13 +417,13 @@ class DSASHeader extends HTMLElement {
     </nav></div></div>
     <dsas-modal id="modalDSAS" tag="DSAS"  type="Ok"></dsas-modal>`;
 
-        this.getElementById("headbackup").addEventListener("click", () => { dsas_backup(); });
-        this.getElementById("headrestore").addEventListener("click", () => { dsas_restore(); });
-        this.getElementById("headreboot").addEventListener("click", () => { modal_action(_("Are you sure you want to restart ?"), dsas_reboot); });
-        this.getElementById("headshutdown").addEventListener("click", () => { modal_action(_("Are you sure you want to shutdown ?"), dsas_shutdown); });
-        this.getElementById("headlogout").addEventListener("click", () => { modal_action(_("Are you sure you want to logout ?"), dsas_logout, true); });
-        this.getElementById("applyDSAS").addEventListener("click", () => { modal_action(_("Are you sure you want to apply ?"), dsas_apply, true); });
-        if (ml.currentLanguage) { this.getElementById("headhelp").href = "help.html?language=" + ml.currentLanguage; }
+        document.getElementById("headbackup").addEventListener("click", () => { dsas_backup(); });
+        document.getElementById("headrestore").addEventListener("click", () => { dsas_restore(); });
+        document.getElementById("headreboot").addEventListener("click", () => { modal_action(_("Are you sure you want to restart ?"), dsas_reboot); });
+        document.getElementById("headshutdown").addEventListener("click", () => { modal_action(_("Are you sure you want to shutdown ?"), dsas_shutdown); });
+        document.getElementById("headlogout").addEventListener("click", () => { modal_action(_("Are you sure you want to logout ?"), dsas_logout, true); });
+        document.getElementById("applyDSAS").addEventListener("click", () => { modal_action(_("Are you sure you want to apply ?"), dsas_apply, true); });
+        if (ml.currentLanguage) { document.getElementById("headhelp").href = "help.html?language=" + ml.currentLanguage; }
     }
 
     static get observedAttributes() {

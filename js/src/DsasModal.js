@@ -129,6 +129,7 @@ export default class DSASModal extends HTMLElement {
         el = view.appendChild(document.createElement("div"));
         el.id = "body" + tag;
         el.className = "modal-body";
+        el.setAttribute("style", "white-space: pre;");
         el = view.appendChild(document.createElement("div"));
         el.className = "modal-footer";
         if (type !== "Ok") {

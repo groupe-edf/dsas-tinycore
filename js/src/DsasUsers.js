@@ -1,5 +1,5 @@
 // The javascript used by the DSAS users.html page
-import { _ } from "./MultiLang";
+import { ml, _ } from "./MultiLang";
 import { modal_message, modal_action, modal_errors } from "./DsasModal";
 import { fail_loggedin, print_obj } from "./DsasUtil";
 
@@ -165,6 +165,7 @@ export default function dsas_display_users() {
         (users.constructor === Object ? [users] : users).forEach((user) => {
             const is_tc = user.username === "tc";
             const line = temp.content.cloneNode(true);
+            ml.translateHTML(line);
             line.querySelector("th").id = "username_" + user.username;
             line.querySelector("th").textContent = user.username;
             const inp = line.querySelectorAll("input");
