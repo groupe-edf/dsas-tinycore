@@ -622,7 +622,7 @@ try {
     feedfn("Setting bad CIDR address 1", "iface_cidr1", "270.0.1.1/24");
     feedfn("Setting bad CIDR address 2", "iface_cidr1", "192.168.0.1");
     feedfn("Setting bad CIDR address 3", "iface_cidr1", "test.example.com");
-    $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_cidr1"))->clear()->sendKeys("192.168.0.1");
+    $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_cidr1"))->clear()->sendKeys("192.168.0.1/24");
     feedfn("Setting bad gateway address 1", "iface_gateway1", "270.0.0.1");
     feedfn("Setting bad gateway address 2", "iface_gateway1", "192.168.0.254/24");
     feedfn("Setting bad gateway address 3", "iface_gateway1", "test.example.com");
@@ -632,8 +632,9 @@ try {
     feedfn("Setting bad nameserver 1", "iface_nameserver1", "example.com");
     feedfn("Setting bad nameserver 2", "iface_nameserver1", "270.0.1.1");
     feedfn("Setting bad nameserver 3", "iface_nameserver1", "8.8.8.0/24");
-    $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_dns_domain1"))->clear()->sendKeys("8.8.8.8" . PHP_EOL . "1.1.1.1");
- 
+    $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_dns_nameserver1"))->clear()->sendKeys("8.8.8.8" . PHP_EOL . "1.1.1.1");
+    save(false);
+
     // Try applying and seeing if network changed on upper machine
     test("Applying network configuration", function () {
         apply();
@@ -1501,12 +1502,12 @@ try {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
         // Toggle visbility of details on page
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#add0']")));
-	modal_delay();
+	modal_delay();  // FIXME this shouldn't be needed
         // Search for added fingerprint
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@href, '#add')]")) as $card)
           $card->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//div[@id='add0']")));
-	modal_delay();
+	modal_delay(); // FIXME This shouldn't be needed
         $found = false;
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'add')]")) as $card) {
           if (str_contains($card->getDomProperty("innerHTML"), $finger)) {
@@ -1561,7 +1562,7 @@ try {
         modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-        modal_delay();
+        modal_delay(); // FIXME This shouldn't be needed
         $found = false;
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::tagName("a")) as $link) {
           if ($link->getAttribute("href") == $GLOBALS["card"]) {
@@ -1596,7 +1597,7 @@ try {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
         // Toggle visbility of details on page
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#pubkey0']")));
-	modal_delay();
+	modal_delay(); // FIXME This shouldn't be needed
         // Search for added fingerprint
         $first = true;
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@href, '#pubkey')]")) as $card) {
@@ -1606,7 +1607,7 @@ try {
             $card->click();
         }
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//div[@id='pubkey0']")));
-	modal_delay();
+	modal_delay(); // FIXME This shouldn't be needed
         $found = false;
         $first = true;
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'pubkey')]")) as $card) {
@@ -1667,7 +1668,7 @@ try {
         modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-        modal_delay();
+        modal_delay(); // FIXME This shouldn't be needed
         $found = false;
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::tagName("a")) as $link) {
           if ($link->getAttribute("href") == $GLOBALS["card"]) {
@@ -1705,7 +1706,7 @@ try {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
         // Toggle visbility of details on page
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#gpg0']")));
-	modal_delay();
+	modal_delay(); // FIXME This shouldn't be needed
         // Search for added fingerprint
         $first = true;
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@href, '#gpg')]")) as $card) {
@@ -1715,7 +1716,7 @@ try {
             $card->click();
         }
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//div[@id='gpg0']")));
-	modal_delay();
+	modal_delay(); // FIXME This shouldn't be needed
         $found = false;
         $first = true;
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'gpg')]")) as $card) {
@@ -1785,7 +1786,7 @@ try {
         modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-        modal_delay();
+        modal_delay(); // FIXME This shouldn't be needed
         $found = false;
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::tagName("a")) as $link) {
           if ($link->getAttribute("href") == $GLOBALS["card"]) {
@@ -1811,7 +1812,7 @@ try {
         modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-	modal_delay();
+	modal_delay(); // FIXME This shouldn't be needed
         return ($ncert == count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'add')]"))));
       });
 
@@ -1828,7 +1829,7 @@ try {
         modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-	modal_delay();
+	modal_delay(); // FIXME This shouldn't be needed
         return ($ncert == count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'pubkey')]"))));
       });
 
@@ -1845,7 +1846,7 @@ try {
         modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-	modal_delay();
+	modal_delay(); // FIXME This shouldn't be needed
         return ($ncert == count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'gpg')]"))));
       });
 
@@ -1887,7 +1888,7 @@ try {
         $tmp->selectByValue($GLOBALS["finger"]);
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-	modal_delay();
+	modal_delay(); // FIXME This shouldn't be needed
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//span[starts-with(@id, 'taskname')]")) as $name) {
           if ($name->getDomProperty("innerHTML") == "Added RPM Task")
             return true;
@@ -1914,7 +1915,7 @@ try {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskArchAmd64"))->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-	modal_delay();
+	modal_delay(); // FIXME This shouldn't be needed
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//span[starts-with(@id, 'taskname')]")) as $name) {
           if ($name->getDomProperty("innerHTML") == "Added Deb Task")
             return true;
@@ -1940,7 +1941,7 @@ try {
         $tmp->selectByValue($GLOBALS["finger"]);
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-	modal_delay();
+	modal_delay(); // FIXME This shouldn't be needed
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//span[starts-with(@id, 'taskname')]")) as $name) {
           if ($name->getDomProperty("innerHTML") == "Added Openssl Task")
             return true;
@@ -1971,7 +1972,7 @@ try {
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
           modal_delay();
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click(); // Click Ok to confirm
-          modal_delay();
+          modal_delay(); // FIXME This shouldn't be needed
         } catch (Exception $e) {
           throw new RuntimeException("No error detected with bad certificate");
         }
@@ -2001,7 +2002,7 @@ try {
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
           modal_delay();
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click(); // Click Ok to confirm
-          modal_delay();
+          modal_delay(); // FIXME This shouldn't be needed
         } catch (Exception $e) {
           throw new RuntimeException("No error detected with bad certificate");
         }
@@ -2028,7 +2029,7 @@ try {
           exec("ps auwx | grep runtask | grep " . $GLOBALS["finger"], $data, $retval);
           if (empty($data))
             throw new RuntimeException("Task failed to start");
-          modal_delay();
+          modal_delay(); // FIXME This shouldn't be needed
           return true;
         }
         throw new RuntimeException("Task to run not found");
@@ -2046,7 +2047,7 @@ try {
             throw new RuntimeException("Task logs not visible");
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("cancelDSAS")));
-          modal_delay();
+          modal_delay(); // FIXME This shouldn't be needed
           return true;
         }
         throw new RuntimeException("Task not found");
@@ -2076,7 +2077,7 @@ try {
           $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskDirectory"))->clear()->sendKeys("tests/dummyRPM2");
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("cancelDSAS")));
-          modal_delay();
+          modal_delay(); // FIXME This shouldn't be needed
           exec("ssh tc@haut sudo test -d /home/dsas/haut/share/tests/dummyRPM2", $data, $retval);
           if ($retval == 0)
             exec("ssh tc@haut sudo test -d /home/dsas/bas/share/tests/dummyRPM2", $data, $retval);
@@ -2102,7 +2103,7 @@ try {
           $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskDeleteFiles"))->click();
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("cancelDSAS")));
-          modal_delay();
+          modal_delay(); // FIXME This shouldn't be needed
           exec("ssh tc@haut sudo test -d /home/dsas/haut/share/tests/dummyRPM2", $data, $retval);
           if ($retval == 0)
             exec("ssh tc@haut sudo test -d /home/dsas/bas/share/tests/dummyRPM2", $data, $retval);
@@ -2144,7 +2145,7 @@ try {
           modal_delay();
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("cancelDSAS")));
-          modal_delay();
+          modal_delay(); // FIXME This shouldn't be needed
           exec("ssh tc@haut sudo test -d home/dsas/haut/share/tests/dummyRPM", $data, $retval);
           if ($retval != 0)
             exec("ssh tc@haut sudo test -d home/dsas/bas/share/tests/dummyRPM", $data, $retval);
@@ -2173,7 +2174,7 @@ try {
           modal_delay();
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("cancelDSAS")));
-          modal_delay();
+          modal_delay(); // FIXME This shouldn't be needed
           exec("ssh tc@haut sudo test -d home/dsas/haut/share/tests/dummyOpenssl", $data, $retval);
           if ($retval != 0)
             exec("ssh tc@haut sudo test -d home/dsas/bas/share/tests/dummyOpenssl", $data, $retval);
