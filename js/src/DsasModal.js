@@ -153,6 +153,9 @@ export default class DSASModal extends HTMLElement {
             }
             if (!this.action || hideonclick !== null) {
                 el2.setAttribute("data-bs-dismiss", "modal");
+                // FIXME Why does bootstrap sometimes leave elements of the class
+                // "modal-backdrop" lying around.... Workaround to always get rid of them
+                el2.addEventListener("click", () => { [...document.getElementsByClassName("modal-backdrop")].forEach((md) => { md.remove(); }); });
             }
             el2.textContent = (type === "Ok" ? _("Ok") : _("Confirm"));
             if (this.action) {
