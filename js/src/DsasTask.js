@@ -430,7 +430,7 @@ function modal_info(name, body) {
     modalDSAS.removeAttribute("disable");
     modalDSAS.setAttribute("static", false);
     modalDSAS.setAttribute("hideonclick", true);
-    modalDSAS.setAction("clearTimeout(timeoutInfo)");
+    modalDSAS.setAction(() => { clearTimeout("info"); });
     modalDSAS.setAttribute("title", _("Info : {0}", name));
     modalDSAS.setAttribute("type", "Ok");
     modalDSAS.setAttribute("size", "xl");
