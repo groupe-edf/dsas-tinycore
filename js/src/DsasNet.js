@@ -71,7 +71,7 @@ export default function dsas_display_net(what = "all") {
             const iface = net[iface2];
             const dhcp = (iface.dhcp === "true");
             let dns_servers = "";
-            document.getElementById("iface_dhcp" + i).setAttribute("checked", "");
+            if (dhcp) document.getElementById("iface_dhcp" + i).setAttribute("checked", "");
             if (what === "all") {
                 const fn = (function _dhcp_(j) { return function _dhcp() { dsas_change_net("dhcp", j); }; }(i));
                 document.getElementById("iface_dhcp" + i).addEventListener("change", fn);
