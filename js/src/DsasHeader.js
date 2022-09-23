@@ -35,6 +35,7 @@ function dsas_apply() {
     modalApply.removeAttribute("title");
     modalApply.setAttribute("disable", true);
     modalApply.setBody(spinner);
+    modalApply.setAction();
     modalApply.show();
 
     fetch("api/save.php").then((response) => {
