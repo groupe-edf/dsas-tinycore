@@ -151,9 +151,9 @@ function dsas_add_task(oldid = "") {
         if (opt.id.substr(0, 7) === "TaskRun" && opt.selected) { run = opt.value; }
         if (opt.id.substr(0, 6) === "TaskCA" && opt.selected) {
             if (opt.id === "TaskCA_Base") {
-                ca = { fingerprint: opt.value, name: "Base" };
+                ca = { fingerprint: "", name: "Base" };
             } else if (opt.id === "TaskCA_Self") {
-                ca = { fingerprint: opt.value, name: "Self-Signed" };
+                ca = { fingerprint: "self", name: "Self-Signed" };
             } else {
                 ca = { fingerprint: opt.value, name: opt.textContent };
             }
@@ -517,7 +517,7 @@ export default function dsas_display_tasks(what = "all") {
                     }
                     item.querySelector("span").id = "taskname" + i;
                     item.querySelector("span").textContent = task.name;
-                    // Need to use an immedaitely evalued function (IIFE)
+                    // Need to use an immediately evaluated function (IIFE)
                     // to ensure 'task' is evaluated here
                     links[1].addEventListener("click", ((t) => (() => dsas_task_modify(t.id, t.name)))(task));
                     links[2].addEventListener("click", ((t) => (() => dsas_task_delete(t.id, t.name)))(task));
