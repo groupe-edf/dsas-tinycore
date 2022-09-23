@@ -2018,10 +2018,12 @@ try {
         exec("ssh tc@haut sudo cp -fpr /home/dsas/haut/share/tests/Openssl /home/dsas/haut/share/tests/dummyOpenssl", $data, $retval);
         if ($retval != 0)
           throw new RuntimeException("Error installing test files on upper machine");
-        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@onclick, 'dsas_task_run')]")) as $run) {
-          if (! str_contains($run->getAttribute("onclick"), "Added Openssl Task"))
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//img[@src='play.svg']")) as $run) {
+          $parent = $run->findElement(WebDriverBy::xpath("./.."));
+          $grandparent = $parent->findElement(WebDriverBy::xpath("./.."));
+          if (! str_contains($grandparent->getText(), "Added Openssl Task"))
             continue;
-          $run->click();
+          $parent->click();
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
           modal_delay();
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
@@ -2037,10 +2039,13 @@ try {
 
     // Examine log of existing task. Careful log needs to exist
     test("Examining log of Openssl task", function() {
-        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@onclick, 'dsas_task_info')]")) as $info) {
-          if (! str_contains($info->getAttribute("onclick"), "Added Openssl Task"))
+        sleep(1); // The task page will refresh after end of task so need to wait
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//img[@src='info.svg']")) as $info) {
+          $parent = $info->findElement(WebDriverBy::xpath("./.."));
+          $grandparent = $parent->findElement(WebDriverBy::xpath("./.."));
+          if (! str_contains($grandparent->getText(), "Added Openssl Task"))
             continue;
-          $info->click();
+          $parent->click();
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
           modal_delay();
           if ($GLOBALS["driver"]->findElement(WebDriverBy::className("modal-title"))->getDomProperty("innerHTML") != "Info : Added Openssl Task")
@@ -2068,16 +2073,18 @@ try {
           exec("sudo chown verif.share /home/dsas/bas/share/tests/dummyRPM", $data, $retval);
         if ($retval != 0)
           throw new RuntimeException("Error creating test directories");
-        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@onclick, 'dsas_task_modify')]")) as $mod) {
-          if (! str_contains($mod->getAttribute("onclick"), "Added RPM Task"))
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//img[@src='pencil-square.svg']")) as $mod) {
+          $parent = $mod->findElement(WebDriverBy::xpath("./.."));
+          $grandparent = $parent->findElement(WebDriverBy::xpath("./.."));
+          if (! str_contains($grandparent->getText(), "Added RPM Task"))
             continue;
-          $mod->click();
+          $parent->click();
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
           modal_delay();
           $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskDirectory"))->clear()->sendKeys("tests/dummyRPM2");
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("cancelDSAS")));
-          modal_delay(); // FIXME This shouldn't be needed
+          modal_delay();
           exec("ssh tc@haut sudo test -d /home/dsas/haut/share/tests/dummyRPM2", $data, $retval);
           if ($retval == 0)
             exec("ssh tc@haut sudo test -d /home/dsas/bas/share/tests/dummyRPM2", $data, $retval);
@@ -2094,16 +2101,18 @@ try {
 
     // Delete an existing task without removing its files and see that the files remain
     test("Delete RPM task leaving files in place", function() {
-        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@onclick, 'dsas_task_delete')]")) as $del) {
-          if (! str_contains($del->getAttribute("onclick"), "Added RPM Task"))
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//img[@src='x-lg.svg']")) as $del) {
+          $parent = $del->findElement(WebDriverBy::xpath("./.."));
+          $grandparent = $parent->findElement(WebDriverBy::xpath("./.."));
+          if (! str_contains($grandparent->getText(), "Added RPM Task"))
             continue;
-          $del->click();
+          $parent->click();
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
           modal_delay();
           $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskDeleteFiles"))->click();
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("cancelDSAS")));
-          modal_delay(); // FIXME This shouldn't be needed
+          modal_delay();
           exec("ssh tc@haut sudo test -d /home/dsas/haut/share/tests/dummyRPM2", $data, $retval);
           if ($retval == 0)
             exec("ssh tc@haut sudo test -d /home/dsas/bas/share/tests/dummyRPM2", $data, $retval);
@@ -2137,15 +2146,17 @@ try {
           exec("sudo chown verif.share /home/dsas/bas/share/tests/dummyDeb", $data, $retval);
         if ($retval != 0)
           throw new RuntimeException("Error creating test directories");
-        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@onclick, 'dsas_task_delete')]")) as $del) {
-          if (! str_contains($del->getAttribute("onclick"), "Added Deb Task"))
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//img[@src='x-lg.svg']")) as $del) {
+          $parent = $del->findElement(WebDriverBy::xpath("./.."));
+          $grandparent = $parent->findElement(WebDriverBy::xpath("./.."));
+          if (! str_contains($grandparent->getText(), "Added Deb Task"))
             continue;
-          $del->click();
+          $parent->click();
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
           modal_delay();
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("cancelDSAS")));
-          modal_delay(); // FIXME This shouldn't be needed
+          modal_delay();
           exec("ssh tc@haut sudo test -d home/dsas/haut/share/tests/dummyRPM", $data, $retval);
           if ($retval != 0)
             exec("ssh tc@haut sudo test -d home/dsas/bas/share/tests/dummyRPM", $data, $retval);
@@ -2166,15 +2177,17 @@ try {
 
     // Delete the Openssl task that should now be finished running
     test("Delete Openssl task removing files", function() {
-        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@onclick, 'dsas_task_delete')]")) as $del) {
-          if (! str_contains($del->getAttribute("onclick"), "Added Openssl Task"))
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//img[@src='x-lg.svg']")) as $del) {
+          $parent = $del->findElement(WebDriverBy::xpath("./.."));
+          $grandparent = $parent->findElement(WebDriverBy::xpath("./.."));
+          if (! str_contains($grandparent->getText(), "Added Openssl Task"))
             continue;
-          $del->click();
+          $parent->click();
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
           modal_delay();
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("cancelDSAS")));
-          modal_delay(); // FIXME This shouldn't be needed
+          modal_delay();
           exec("ssh tc@haut sudo test -d home/dsas/haut/share/tests/dummyOpenssl", $data, $retval);
           if ($retval != 0)
             exec("ssh tc@haut sudo test -d home/dsas/bas/share/tests/dummyOpenssl", $data, $retval);
