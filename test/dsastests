@@ -228,10 +228,10 @@ while (true) {
   echo "[5] Web configuration page tests" . PHP_EOL;
   echo "[6] Network configuration page tests" . PHP_EOL;
   echo "[7] Service configuration page tests" . PHP_EOL;
-  echo "[8] Certificate configuration page tests" . PHP_EOL;
-  echo "[9] Task configuration page tests" . PHP_EOL;
-  echo "[A] User configuration page tests" . PHP_EOL;
-  echo "[B] Backup/Restore tests" . PHP_EOL;
+  echo "[8] User configuration page tests" . PHP_EOL;
+  echo "[9] Backup/Restore tests" . PHP_EOL;
+  echo "[A] Certificate configuration page tests" . PHP_EOL;
+  echo "[B] Task configuration page tests" . PHP_EOL;
   switch ($x = readline("Select a value : ")) {
     case"":
     case "0": $what = "all"; break 2; 
@@ -632,7 +632,7 @@ try {
     feedfn("Setting bad nameserver 1", "iface_nameserver1", "example.com");
     feedfn("Setting bad nameserver 2", "iface_nameserver1", "270.0.1.1");
     feedfn("Setting bad nameserver 3", "iface_nameserver1", "8.8.8.0/24");
-    $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_dns_nameserver1"))->clear()->sendKeys("8.8.8.8" . PHP_EOL . "1.1.1.1");
+    $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_nameserver1"))->clear()->sendKeys("8.8.8.8" . PHP_EOL . "1.1.1.1");
     save(false);
 
     // Try applying and seeing if network changed on upper machine
@@ -1114,46 +1114,60 @@ try {
     // Test changing to a bad password
     test("Test bad password for added user", function () {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("description_testuser")));
-        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@onclick=\"dsas_user_passwd('testuser');\"]"))->click();
-        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("UserPassword")));
-        modal_delay();
-        $GLOBALS["driver"]->findElement(WebDriverBy::id("UserPassword"))->clear()->sendKeys("bad");
-        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
-        try {
-          $GLOBALS["driver"]->wait(1, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-          $GLOBALS["driver"]->wait(1, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("okDSAS")));
-        } catch (Exception $e) {
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//img[@src='lock.svg']")) as $run) {
+          $parent = $run->findElement(WebDriverBy::xpath("./.."));
+          $grandparent = $parent->findElement(WebDriverBy::xpath("./../.."));
+          if (! str_contains($grandparent->getText(), "testuser"))
+            continue;
+          $parent->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("UserPassword")));
+          modal_delay();
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("UserPassword"))->clear()->sendKeys("bad");
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
-          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-          return true;
+          try {
+            $GLOBALS["driver"]->wait(1, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+            $GLOBALS["driver"]->wait(1, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("okDSAS")));
+          } catch (Exception $e) {
+            $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+            $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+            return true;
+          }
+          throw  new RuntimeException("Error changing to bad password");
         }
-        return false;
+        throw  new RuntimeException("User 'testuser' not found");
       });
 
     // Change the password of the test user. Examine /etc/passwd
     test("Test good password for added user", function () {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("description_testuser")));
-        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@onclick=\"dsas_user_passwd('testuser');\"]"))->click();
-        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("UserPassword")));
-        modal_delay();
-        $GLOBALS["driver"]->findElement(WebDriverBy::id("UserPassword"))->clear()->sendKeys("T3stPassw0rd!"); 
-        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
-        try {
-          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-        } catch (Exception $e) {
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//img[@src='lock.svg']")) as $run) {
+          $parent = $run->findElement(WebDriverBy::xpath("./.."));
+          $grandparent = $parent->findElement(WebDriverBy::xpath("./../.."));
+          if (! str_contains($grandparent->getText(), "testuser"))
+            continue;
+          $parent->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("UserPassword")));
+          modal_delay();
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("UserPassword"))->clear()->sendKeys("T3stPassw0rd!"); 
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
-          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-          return false;
+          try {
+            $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+          } catch (Exception $e) {
+            $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+            $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+            return false;
+          }
+          // Examine /etc/passwd to see if the user is really there
+          exec("grep testuser /etc/passwd", $data, $retval);
+          return ($retval == 0);
         }
-        // Examine /etc/passwd to see if the user is really there
-        exec("grep testuser /etc/passwd", $data, $retval);
-        return ($retval == 0);
+        throw  new RuntimeException("User 'testuser' not found");
       });
 
     // Logout via navbar 
     test("Logging out via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
-        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[contains(@onclick,'dsas_logout();')]"))->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("headlogout"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
         modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
@@ -1204,7 +1218,7 @@ try {
     // Logout via navbar 
     test("Logging out via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
-        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[contains(@onclick,'dsas_logout();')]"))->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("headlogout"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
         modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
@@ -1233,7 +1247,7 @@ try {
     // Logout via navbar 
     test("Logging out via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
-        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[contains(@onclick,'dsas_logout();')]"))->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("headlogout"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
         modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
@@ -1282,7 +1296,7 @@ try {
     // Logout via navbar 
     test("Logging out via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
-        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[contains(@onclick,'dsas_logout();')]"))->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("headlogout"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
         modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
@@ -1331,21 +1345,28 @@ try {
     // Delete test user and examine /etc/passwd and /home
     test("Delete the added user", function () {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("description_testuser")));
-        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@onclick=\"dsas_user_delete('testuser');\"]"))->click();
-        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
-        modal_delay();
-        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
-        try {
-          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-        } catch (Exception $e) {
-          // Modal visible so there is an error
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//img[@src='x-lg.svg']")) as $run) {
+          $parent = $run->findElement(WebDriverBy::xpath("./.."));
+          $grandparent = $parent->findElement(WebDriverBy::xpath("./../.."));
+          if (! str_contains($grandparent->getText(), "testuser"))
+            continue;
+          $parent->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
+          modal_delay();
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
-          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-          return false;
+          try {
+            $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+          } catch (Exception $e) {
+            // Modal visible so there is an error
+            $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+            $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+            return false;
+          }
+          // Examine /etc/passwd to see if the user is really deleted
+          exec("grep testuser /etc/passwd", $data, $retval);
+          return ($retval != 0);
         }
-        // Examine /etc/passwd to see if the user is really deleted
-        exec("grep testuser /etc/passwd", $data, $retval);
-        return ($retval != 0);
+        throw  new RuntimeException("User 'testuser' not found");
       });
   }
 
@@ -1380,8 +1401,9 @@ try {
     test("Backing up the configuration via navbar", function () {
         if (file_exists("/home/tc/dsas_backup.tgz"))
           unlink("/home/tc/dsas_backup.tgz");
+        modal_delay(); // FIXME Why is this needed ?
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
-        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[contains(@onclick,'dsas_backup();')]"))->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("headbackup"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
         modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
@@ -1394,21 +1416,28 @@ try {
     // Delete the added user
     test("Delete the added user", function () {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("description_testuser")));
-        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@onclick=\"dsas_user_delete('testuser');\"]"))->click();
-        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
-        modal_delay();
-        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
-        try {
-          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-        } catch (Exception $e) {
-          // Modal visible so there is an error
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//img[@src='x-lg.svg']")) as $run) {
+          $parent = $run->findElement(WebDriverBy::xpath("./.."));
+          $grandparent = $parent->findElement(WebDriverBy::xpath("./../.."));
+          if (! str_contains($grandparent->getText(), "testuser"))
+            continue;
+          $parent->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
+          modal_delay();
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
-          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-          return false;
+          try {
+            $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+          } catch (Exception $e) {
+            // Modal visible so there is an error
+            $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+            $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+            return false;
+          }
+          // Examine /etc/passwd to see if the user is really deleted
+          exec("grep testuser /etc/passwd", $data, $retval);
+          return ($retval != 0);
         }
-        // Examine /etc/passwd to see if the user is really deleted
-        exec("grep testuser /etc/passwd", $data, $retval);
-        return ($retval != 0);
+        throw  new RuntimeException("User 'testuser' not found");
       });
 
     // Restore the configuration. Can't do this via the navbar as no
@@ -1437,21 +1466,29 @@ try {
     test("Delete the added user", function () {
         $GLOBALS["driver"]->navigate()->refresh();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("description_testuser")));
-        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@onclick=\"dsas_user_delete('testuser');\"]"))->click();
-        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
-        modal_delay();
-        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
-        try {
-          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-        } catch (Exception $e) {
-          // Modal visible so there is an error
+
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//img[@src='x-lg.svg']")) as $run) {
+          $parent = $run->findElement(WebDriverBy::xpath("./.."));
+          $grandparent = $parent->findElement(WebDriverBy::xpath("./../.."));
+          if (! str_contains($grandparent->getText(), "testuser"))
+            continue;
+          $parent->click();
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
+          modal_delay();
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
-          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-          return false;
+          try {
+            $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+          } catch (Exception $e) {
+            // Modal visible so there is an error
+            $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+            $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
+            return false;
+          }
+          // Examine /etc/passwd to see if the user is really deleted
+          exec("grep testuser /etc/passwd", $data, $retval);
+          return ($retval != 0);
         }
-        // Examine /etc/passwd to see if the user is really deleted
-        exec("grep testuser /etc/passwd", $data, $retval);
-        return ($retval != 0);
+        throw  new RuntimeException("User 'testuser' not found");
       });
   }
 
