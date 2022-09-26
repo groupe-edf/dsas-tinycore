@@ -1043,6 +1043,10 @@ docker)
   if [ "$testcode" = "1" ]; then
     # Install test files. Force remove temporary PKG file
     if test ! -f "$tcz_dir/dsastestfiles.tcz"; then
+      # FIXME Test code to try and figure out why this is sometimes rebuilt
+      echo -e "\033[1;31m BUILDING dsastestfiles.tcz \033[1;39m"
+      sleep 5
+
       make -C "$testdir" clean
       make -C "$testdir" pkg
       install_tcz dsastestfiles
@@ -1050,6 +1054,11 @@ docker)
       t0=$(stat -c '%Y' "$tcz_dir/dsastestfiles.tcz")
       t1=$(find "$testdir" -type f -exec stat -c '%Y' "{}" \; | sort -nr  | head -1)
       if [ "$t1" -gt "$t0" ] ; then
+        # FIXME Test code to try and figure out why this is sometimes rebuilt
+        echo -e "\033[1;31m REBUILDING dsastestfiles.tcz \033[1;39m"
+        echo $t0 $t1
+        sleep 5
+
         # The test files are newer than the existing version. Rebuild
         rm -f "$tcz_dir/dsastestfiles.tcz"
         make -C "$testdir" clean
