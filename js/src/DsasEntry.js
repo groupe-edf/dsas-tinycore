@@ -16,63 +16,53 @@ import dsas_display_tasks from "./DsasTask"; // For the "tasks.html" page
 import dsas_display_web from "./DsasWeb"; // For the "web.html" page
 
 // Main initialisation code
-export default function dsas_entry(_page = null) {
-    let page;
-    if (_page) {
-        page = _page;
-    } else {
-        page = String(window.location).substring(String(window.location).lastIndexOf("/") + 1);
-        if (page.indexOf("?") > 0) page = page.substring(0, page.indexOf("?"));
-    }
-    switch (page) {
-    case "help.html":
-        dsas_loggedin();
-        dsas_check_warnings();
-        dsas_display_help();
-        break;
-    case "cert.html":
-        dsas_loggedin();
-        dsas_check_warnings();
-        dsas_display_cert();
-        break;
-    case "net.html":
-        dsas_loggedin();
-        dsas_check_warnings();
-        dsas_display_net("all");
-        break;
-    case "service.html":
-        dsas_loggedin();
-        dsas_check_warnings();
-        dsas_display_service("all");
-        break;
-    case "tasks.html":
-        dsas_loggedin();
-        dsas_check_warnings();
-        dsas_display_tasks();
-        break;
-    case "web.html":
-        dsas_loggedin();
-        dsas_check_warnings();
-        dsas_display_web("all");
-        break;
-    case "login.html":
-        dsas_init_loggedin();
-        break;
-    case "passwd.html":
-        dsas_loggedin(true, false);
-        dsas_display_passwd();
-        break;
-    case "users.html":
-        dsas_loggedin();
-        dsas_loggedin(true, false);
-        dsas_display_users();
-        break;
-    default:
-        // Assume on "index.html"
-        dsas_loggedin();
-        dsas_check_warnings();
-        dsas_display_status();
-        break;
-    }
+switch (document.title) {
+case "Help":
+    dsas_loggedin();
+    dsas_check_warnings();
+    dsas_display_help();
+    break;
+case "Certificates":
+    dsas_loggedin();
+    dsas_check_warnings();
+    dsas_display_cert();
+    break;
+case "Net":
+    dsas_loggedin();
+    dsas_check_warnings();
+    dsas_display_net("all");
+    break;
+case "Service":
+    dsas_loggedin();
+    dsas_check_warnings();
+    dsas_display_service("all");
+    break;
+case "Tasks":
+    dsas_loggedin();
+    dsas_check_warnings();
+    dsas_display_tasks();
+    break;
+case "Web":
+    dsas_loggedin();
+    dsas_check_warnings();
+    dsas_display_web("all");
+    break;
+case "DSAS Login":
+    dsas_init_loggedin();
+    break;
+case "Password":
+    dsas_loggedin(true, false);
+    dsas_display_passwd();
+    break;
+case "Users":
+    dsas_loggedin();
+    dsas_loggedin(true, false);
+    dsas_display_users();
+    break;
+default:
+    // Assume on "index.html"
+    dsas_loggedin();
+    dsas_check_warnings();
+    dsas_display_status();
+    break;
 }
-window.dsas_entry = dsas_entry;
