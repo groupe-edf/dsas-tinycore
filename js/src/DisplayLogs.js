@@ -162,7 +162,15 @@ export default class DisplayLogs {
                 this.tab = matches[found].tab;
                 this.highlight = { tab: this.tab, line: matches[found].line };
                 if (this.tab !== curTab) {
-                    document.querySelector("#navlog" + this.tab).click();
+                    // If possible return focus to the element after changing tabs
+                    // Allows repeated searches after changing tabs
+                    if (document.activeElement) {
+                        const act = document.activeElement;
+                        document.querySelector("#navlog" + this.tab).click();
+                        act.focus();
+                    } else {
+                        document.querySelector("#navlog" + this.tab).click();
+                    }
                     this.nitems = this.numberOfItems();
                 }
                 this.refreshWindow();
