@@ -242,12 +242,12 @@ while (true) {
     case "5": $what = "web"; break 2; 
     case "6": $what = "net"; break 2; 
     case "7": $what = "serv"; break 2; 
-    case "8": $what = "cert"; break 2; 
-    case "9": $what = "task"; break 2; 
-    case"a":
-    case "A": $what = "user"; break 2; 
+    case "8": $what = "user"; break 2; 
+    case "9": $what = "backup"; break 2; 
+    case "a":
+    case "A": $what = "cert"; break 2; 
     case "b":
-    case "B": $what = "backup"; break 2; 
+    case "B": $what = "task"; break 2; 
     default : echo "Unrecognized option '" . $x . "'" . PHP_EOL; break;
   }
 }
