@@ -133,14 +133,9 @@ export default function dsas_restore_core(file, passwd = "") {
         // might restart the web server. Need to use use apply JS function
         // dsas_apply with a pre setup modal
             const modalDSAS = document.getElementById("modalDSAS");
-            modalDSAS.removeAttribute("disable");
-            modalDSAS.setBody("");
             modalDSAS.removeAttribute("size");
             modalDSAS.removeAttribute("hideonclick");
-            modalDSAS.setAction();
-            modalDSAS.setAttribute("title", _("Apply the configuration"));
             modalDSAS.setAttribute("type", "Ok");
-            modalDSAS.show();
             dsas_apply();
         }
     }).catch((error) => {
