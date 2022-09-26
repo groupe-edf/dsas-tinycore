@@ -91,7 +91,7 @@ function dsasRealBackup() {
                 window.URL.revokeObjectURL(backupurl);
             };
         })();
-        saveBase64(backup, "dsasBackup.tgz");
+        saveBase64(backup, "dsas_backup.tgz");
     }).catch((error) => {
         if (!failLoggedin(error)) { modalMessage(_("Error : {0}", (error.message ? error.message : error))); }
     });
