@@ -63,8 +63,8 @@ export function modal_errors(errors, feedback = false) {
             if (typeof err === "string" || err instanceof String) { body = body + "<p>" + _(errors) + "</p>"; } else {
                 const key = Object.keys(err)[0];
                 if (key === "error" || !feedback) {
-                    if (body) body = body + "\r\n"
-                    body = body + _(err[Object.keys(err)]);
+                    if (body) body += "\r\n";
+                    body += _(err[Object.keys(err)]);
                 } else {
                     document.getElementById(key).setAttribute("class", "form-control is-invalid");
                     document.getElementById("feed_" + key).textContent = _(err[key]);
