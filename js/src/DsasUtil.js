@@ -1,6 +1,6 @@
 // DSAS utility functions used almost everywhere
 import { ml, _ } from "./MultiLang";
-import { modal_message } from "./DsasModal";
+import { modalMessage } from "./DsasModal";
 
 // Store the references to the timeouts so that they can be cleared
 let timeouts = [];
@@ -38,7 +38,7 @@ export function dsasClearAllTimeouts() {
     timeouts = [];
 }
 
-export function cert_name(cert) {
+export function certName(cert) {
     if (cert.subject.CN) { return cert.subject.CN; }
     if (cert.subject.OU) { return cert.subject.OU; }
     if (cert.subject.O) { return cert.subject.O; }
@@ -46,13 +46,13 @@ export function cert_name(cert) {
     return "name";
 }
 
-export function empty_obj(obj) {
+export function emptyObj(obj) {
     if (!obj || Object.keys(obj).length === 0 || obj === "undefined") { return true; }
     return false;
 }
 
-export function print_obj(obj) {
-    return (empty_obj(obj) ? "" : _(obj));
+export function printObj(obj) {
+    return (emptyObj(obj) ? "" : _(obj));
 }
 
 export function escapeHtml(unsafe) {
@@ -64,7 +64,7 @@ export function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
-export function date_to_locale(d) {
+export function dateToLocale(d) {
     if (d === "never") { return _("never"); }
     const c = new Intl.DateTimeFormat(ml.currentLanguage, {
         year: "numeric",
@@ -95,39 +95,39 @@ export function date_to_locale(d) {
     return ret;
 }
 
-export function clear_feedback() {
+export function clearFeedback() {
     // eslint-disable-next-line no-param-reassign
     [...document.getElementsByClassName("invalid-feedback")].forEach((feed) => { feed.textContent = ""; });
     [...document.getElementsByClassName("form-control")].forEach((feed) => { feed.setAttribute("class", "form-control"); });
 }
 
-export function dsas_origin() {
+export function dsasOrigin() {
     // Can't just use window.location.origin as we might be wrapped in a WebSSL portal
     const s = String(window.location);
     return s.substring(0, s.lastIndexOf("/") + 1);
 }
 
-export function dsas_loggedin(update_timeout = true, is_admin = true) {
-    const uri = new URL("api/login.php", dsas_origin());
-    uri.search = new URLSearchParams({ timeout: update_timeout, admin: is_admin });
+export function dsasLoggedin(updateTimeout = true, isAdmin = true) {
+    const uri = new URL("api/login.php", dsasOrigin());
+    uri.search = new URLSearchParams({ timeout: updateTimeout, admin: isAdmin });
     fetch(uri).then((response) => {
         if (!response.ok) { return Promise.reject(new Error(response.statusText)); }
         // Check if logged in once every 15 seconds, but don't update the timeout
         dsasClearTimeout("login");
-        dsasSetTimeout("login", dsas_loggedin, 15000, false, is_admin);
+        dsasSetTimeout("login", dsasLoggedin, 15000, false, isAdmin);
         return response.text();
     }).catch(() => {
-        modal_message(
+        modalMessage(
             _("You are not connected. Click 'Ok' to reconnect."),
             () => { window.location = "login.html"; },
         );
     });
 }
 
-export function fail_loggedin(status) {
+export function failLoggedin(status) {
     if (status && String(status).includes("Forbidden")) {
         dsasClearTimeout("login");
-        modal_message(
+        modalMessage(
             _("You are not connected. Click 'Ok' to reconnect."),
             () => { window.location = "login.html"; },
         );
@@ -135,14 +135,14 @@ export function fail_loggedin(status) {
     } return false;
 }
 
-export function dsas_check_warnings(disablenav = false, redirect = true) {
+export function dsasCheckWarnings(disablenav = false, redirect = true) {
     fetch("api/dsas-users.php").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((obj) => {
         if ((obj.first === "true") && redirect) { window.location = "passwd.html"; }
     }).catch((error) => {
-        fail_loggedin(error);
+        failLoggedin(error);
     });
 
     fetch("api/dsas-get-warning.php").then((response) => {
@@ -168,16 +168,16 @@ export function dsas_check_warnings(disablenav = false, redirect = true) {
                 document.getElementsByTagName("dsas-header")[0].setAttribute("disablenav", "disabled");
             }
             if (body.firstChild) {
-                modal_message(_("Error :"));
+                modalMessage(_("Error :"));
                 document.getElementById("modalDSAS").setBody(body);
             }
         }
     }).catch((error) => {
-        fail_loggedin(error);
+        failLoggedin(error);
     });
 }
 
-export function cert_is_ca(cert) {
+export function certIsCa(cert) {
     if (!cert.extensions.authorityKeyIdentifier
             || cert.extensions.authorityKeyIdentifier
                 .indexOf(cert.extensions.subjectKeyIdentifier) >= 0) { return true; }

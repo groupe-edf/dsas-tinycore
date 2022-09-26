@@ -28,6 +28,5 @@ module.exports = {
       "always"
     ],
     "prefer-template": 0,
-    "camelcase": 0,
   },
 };

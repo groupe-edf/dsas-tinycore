@@ -1,7 +1,7 @@
 // DSAS functions used in the page header
 import { ml, _ } from "./MultiLang";
-import { modal_message, modal_action, modal_errors } from "./DsasModal";
-import { fail_loggedin, dsas_origin, dsasClearAllTimeouts } from "./DsasUtil";
+import { modalMessage, modalAction, modalErrors } from "./DsasModal";
+import { failLoggedin, dsasOrigin, dsasClearAllTimeouts } from "./DsasUtil";
 
 function b64toBlob(b64Data, contentType = "", sliceSize = 512) {
     const byteChar = atob(b64Data);
@@ -25,7 +25,7 @@ function b64toBlob(b64Data, contentType = "", sliceSize = 512) {
 // This needed to be exposed so test code can use it
 window.b64toBlob = b64toBlob;
 
-function dsas_apply() {
+function dsasApply() {
     const modalApply = document.getElementById("modalDSAS");
     const spinner = document.createDocumentFragment();
     let el = spinner.appendChild(document.createElement("span"));
@@ -55,24 +55,24 @@ function dsas_apply() {
             modalApply.removeAttribute("disable");
             modalApply.setBody("");
             modalApply.hide();
-            modal_message(_("Configuration applied"));
+            modalMessage(_("Configuration applied"));
         }).catch(() => {
             modalApply.removeAttribute("disable");
             modalApply.setBody("");
             modalApply.hide();
-            modal_message(_("Error during application of the configuration"));
+            modalMessage(_("Error during application of the configuration"));
         });
     }).catch((error) => {
         modalApply.removeAttribute("disable");
         modalApply.setBody("");
         modalApply.hide();
-        if (!fail_loggedin(error)) { modal_message(_("Error during save of the configuration")); }
+        if (!failLoggedin(error)) { modalMessage(_("Error during save of the configuration")); }
     });
 }
 
-function dsas_real_backup() {
+function dsasRealBackup() {
     const passwd = document.getElementById("BackupPassword").value;
-    const uri = new URL("api/backup.php", dsas_origin());
+    const uri = new URL("api/backup.php", dsasOrigin());
     uri.search = new URLSearchParams({ passwd });
     fetch(uri).then((response) => {
         if (response.ok) { return response.text(); }
@@ -91,16 +91,16 @@ function dsas_real_backup() {
                 window.URL.revokeObjectURL(backupurl);
             };
         })();
-        saveBase64(backup, "dsas_backup.tgz");
+        saveBase64(backup, "dsasBackup.tgz");
     }).catch((error) => {
-        if (!fail_loggedin(error)) { modal_message(_("Error : {0}", (error.message ? error.message : error))); }
+        if (!failLoggedin(error)) { modalMessage(_("Error : {0}", (error.message ? error.message : error))); }
     });
 }
 
-function dsas_backup() {
+function dsasBackup() {
     const modalDSAS = document.getElementById("modalDSAS");
     const body = document.createDocumentFragment();
-    modal_action(_("Backup the DSAS configuration"), () => { dsas_real_backup(); }, true);
+    modalAction(_("Backup the DSAS configuration"), () => { dsasRealBackup(); }, true);
     const el = body.appendChild(document.createElement("div"));
     el.className = "col-9 d-flex justify-content-center";
     let el2 = el.appendChild(document.createElement("label"));
@@ -109,11 +109,11 @@ function dsas_backup() {
     el2 = el.appendChild(document.createElement("input"));
     el2.className = "form-control";
     el2.id = "BackupPassword";
-    el2.addEventListener("keypress", (e) => { if (e.key === "Enter") { modalDSAS.hide(); dsas_real_backup(); } });
+    el2.addEventListener("keypress", (e) => { if (e.key === "Enter") { modalDSAS.hide(); dsasRealBackup(); } });
     modalDSAS.setBody(body);
 }
 
-export default function dsas_restore_core(file, passwd = "") {
+export default function dsasRestoreCore(file, passwd = "") {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("passwd", passwd);
@@ -127,34 +127,34 @@ export default function dsas_restore_core(file, passwd = "") {
     }).then((text) => {
         try {
             const errors = JSON.parse(text);
-            modal_errors(errors);
+            modalErrors(errors);
         } catch (e) {
         // Can't apply directly from the restore script as the application
         // might restart the web server. Need to use use apply JS function
-        // dsas_apply with a pre setup modal
+        // dsasApply with a pre setup modal
             const modalDSAS = document.getElementById("modalDSAS");
             modalDSAS.removeAttribute("size");
             modalDSAS.removeAttribute("hideonclick");
             modalDSAS.setAttribute("type", "Ok");
-            dsas_apply();
+            dsasApply();
         }
     }).catch((error) => {
-        if (!fail_loggedin(error)) { modal_message(_("Error : {0}", (error.message ? error.message : error))); }
+        if (!failLoggedin(error)) { modalMessage(_("Error : {0}", (error.message ? error.message : error))); }
     });
 }
 // This needs to be exposed so test code can use it
-window.dsas_restore_core = dsas_restore_core;
+window.dsasRestoreCore = dsasRestoreCore;
 
-function dsas_real_restore() {
+function dsasRealRestore() {
     const passwd = document.getElementById("RestorePassword").value;
     const file = document.getElementById("RestoreSelectFile").files[0];
-    dsas_restore_core(file, passwd);
+    dsasRestoreCore(file, passwd);
 }
 
-function dsas_passwd_restore() {
+function dsasPasswdRestore() {
     const modalDSAS = document.getElementById("modalDSAS");
     const body = document.createDocumentFragment();
-    modal_action(_("Restoration of the DSAS configuration"), dsas_real_restore, true);
+    modalAction(_("Restoration of the DSAS configuration"), dsasRealRestore, true);
 
     const el = body.appendChild(document.createElement("div"));
     el.className = "col-9 d-flex justify-content-center";
@@ -164,18 +164,18 @@ function dsas_passwd_restore() {
     el2 = el.appendChild(document.createElement("input"));
     el2.className = "form-control";
     el2.id = "RestorePassword";
-    el2.addEventListener("keypress", (e) => { if (e.key === "Enter") { modalDSAS.hide(); dsas_real_restore(); } });
+    el2.addEventListener("keypress", (e) => { if (e.key === "Enter") { modalDSAS.hide(); dsasRealRestore(); } });
     modalDSAS.setBody(body);
 }
 
-function dsas_restore() {
+function dsasRestore() {
     const inp = document.createElement("input");
     document.body.appendChild(inp);
     inp.style = "display: none";
     inp.type = "file";
     inp.accept = "application/gzip";
     inp.id = "RestoreSelectFile";
-    inp.addEventListener("change", dsas_passwd_restore, true);
+    inp.addEventListener("change", dsasPasswdRestore, true);
     inp.click();
 }
 
@@ -251,7 +251,7 @@ function waitreboot(c = 0) {
         }).catch(() => {
             modalReboot.removeAttribute("disable");
             modalReboot.hide();
-            modal_message(_("Timeout during restart"));
+            modalMessage(_("Timeout during restart"));
         });
     }
 }
@@ -271,16 +271,16 @@ function waitshutdown(c = 0) {
         chkdown(window.location.host).then(() => {
             modalShutdown.removeAttribute("disable");
             modalShutdown.hide();
-            modal_message(_("The DSAS has shutdown. You can close this window"));
+            modalMessage(_("The DSAS has shutdown. You can close this window"));
         }).catch(() => {
             modalShutdown.removeAttribute("disable");
             modalShutdown.hide();
-            modal_message(_("Timeout during shutdown"));
+            modalMessage(_("Timeout during shutdown"));
         });
     }
 }
 
-function dsas_reboot() {
+function dsasReboot() {
     const modalReboot = document.getElementById("modalDSAS");
     modalReboot.setAttribute("disable", true);
     modalReboot.removeAttribute("title");
@@ -313,11 +313,11 @@ function dsas_reboot() {
     }).catch((error) => {
         modalReboot.removeAttribute("disable");
         modalReboot.hide();
-        if (!fail_loggedin(error)) { modal_message(_("Error during reboot")); }
+        if (!failLoggedin(error)) { modalMessage(_("Error during reboot")); }
     });
 }
 
-function dsas_shutdown() {
+function dsasShutdown() {
     const modalShutdown = document.getElementById("modalDSAS");
     modalShutdown.setAttribute("disable", true);
     const body = document.createElement("div");
@@ -349,11 +349,11 @@ function dsas_shutdown() {
     }).catch((error) => {
         modalShutdown.removeAttribute("disable");
         modalShutdown.hide();
-        if (!fail_loggedin(error)) { modal_message(_("Error during shutdown")); }
+        if (!failLoggedin(error)) { modalMessage(_("Error during shutdown")); }
     });
 }
 
-function dsas_logout() {
+function dsasLogout() {
     // No error checking because, only possible error is that already logged out
     fetch("api/logout.php").then(() => {
         window.location.href = "login.html";
@@ -413,12 +413,12 @@ class DSASHeader extends HTMLElement {
     </nav></div></div>
     <dsas-modal id="modalDSAS" tag="DSAS"  type="Ok"></dsas-modal>`;
 
-        document.getElementById("headbackup").addEventListener("click", () => { dsas_backup(); });
-        document.getElementById("headrestore").addEventListener("click", () => { dsas_restore(); });
-        document.getElementById("headreboot").addEventListener("click", () => { modal_action(_("Are you sure you want to restart ?"), dsas_reboot); });
-        document.getElementById("headshutdown").addEventListener("click", () => { modal_action(_("Are you sure you want to shutdown ?"), dsas_shutdown); });
-        document.getElementById("headlogout").addEventListener("click", () => { modal_action(_("Are you sure you want to logout ?"), dsas_logout, true); });
-        document.getElementById("applyDSAS").addEventListener("click", () => { modal_action(_("Are you sure you want to apply ?"), dsas_apply, true); });
+        document.getElementById("headbackup").addEventListener("click", () => { dsasBackup(); });
+        document.getElementById("headrestore").addEventListener("click", () => { dsasRestore(); });
+        document.getElementById("headreboot").addEventListener("click", () => { modalAction(_("Are you sure you want to restart ?"), dsasReboot); });
+        document.getElementById("headshutdown").addEventListener("click", () => { modalAction(_("Are you sure you want to shutdown ?"), dsasShutdown); });
+        document.getElementById("headlogout").addEventListener("click", () => { modalAction(_("Are you sure you want to logout ?"), dsasLogout, true); });
+        document.getElementById("applyDSAS").addEventListener("click", () => { modalAction(_("Are you sure you want to apply ?"), dsasApply, true); });
         if (ml.currentLanguage) { document.getElementById("headhelp").href = "help.html?language=" + ml.currentLanguage; }
     }
 

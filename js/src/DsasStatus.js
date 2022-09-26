@@ -1,11 +1,11 @@
 // The javascript used by the DSAS index.html page
 import DisplayLogs from "./DisplayLogs";
 import { _ } from "./MultiLang";
-import { modal_message } from "./DsasModal";
+import { modalMessage } from "./DsasModal";
 import {
-    fail_loggedin,
-    dsas_origin,
-    date_to_locale,
+    failLoggedin,
+    dsasOrigin,
+    dateToLocale,
     dsasClearTimeout,
     dsasSetTimeout,
 } from "./DsasUtil";
@@ -13,7 +13,7 @@ import {
 // Global variable for the DisplayLogs instance for status logs
 let statusLogs;
 
-function format_space(bytes) {
+function formatSpace(bytes) {
     // Special case zero
     if (bytes === 0) { return "0 B"; }
 
@@ -23,17 +23,17 @@ function format_space(bytes) {
     return (bytes / 1024 ** Math.floor(exp)).toFixed(2) + " " + symbols[exp];
 }
 
-function machine_status(name, obj) {
+function machineStatus(name, obj) {
     let p = 100.0 - (100.0 * obj.disk_free) / obj.disk_total;
     document.getElementById(name + "Disk").textContent = _("Disk : {0}", obj.disk);
-    document.getElementById(name + "DiskSize").textContent = format_space(obj.disk_total
-        - obj.disk_free) + " / " + format_space(obj.disk_total);
+    document.getElementById(name + "DiskSize").textContent = formatSpace(obj.disk_total
+        - obj.disk_free) + " / " + formatSpace(obj.disk_total);
     document.getElementById(name + "DiskBar").setAttribute("style", "width: " + p.toFixed() + "%");
     document.getElementById(name + "DiskBar").setAttribute("aria-valuenow", p.toFixed());
     document.getElementById(name + "DiskBar").textContent = p.toFixed(1) + "%";
     p = (100.0 * obj.memory_used) / obj.memory_total;
-    document.getElementById(name + "Memory").textContent = format_space(obj.memory_used)
-        + " / " + format_space(obj.memory_total);
+    document.getElementById(name + "Memory").textContent = formatSpace(obj.memory_used)
+        + " / " + formatSpace(obj.memory_total);
     document.getElementById(name + "MemoryBar").setAttribute("style", "width: " + p.toFixed() + "%");
     document.getElementById(name + "MemoryBar").setAttribute("aria-valuenow", p.toFixed());
     document.getElementById(name + "MemoryBar").textContent = p.toFixed(1) + "%";
@@ -50,9 +50,9 @@ function machine_status(name, obj) {
     document.getElementById(name + "LoadBar").textContent = obj.loadavg;
 }
 
-function dsas_refresh_logs(all = false) {
+function dsasRefreshLogs(all = false) {
     // Only get the lines that have changed in the most recent log"
-    const uri = new URL("api/dsas-verif-logs.php", dsas_origin());
+    const uri = new URL("api/dsas-verif-logs.php", dsasOrigin());
     uri.search = new URLSearchParams({ REFRESH_LEN: statusLogs.logs[0].length });
 
     fetch(uri).then((response) => {
@@ -62,55 +62,55 @@ function dsas_refresh_logs(all = false) {
         if (logs) { statusLogs.appendlog(logs); }
 
         // Automatically refresh the logs every 5 seconds
-        dsasSetTimeout("logs", dsas_refresh_logs, 5000, all);
+        dsasSetTimeout("logs", dsasRefreshLogs, 5000, all);
     }).catch((error) => {
-        if (fail_loggedin(error)) {
+        if (failLoggedin(error)) {
             dsasClearTimeout("logs");
             dsasClearTimeout("status");
         } else {
-            modal_message(_("Error ({0}) during the download of the logs : {1}", 0, (error.message ? error.message : error)));
+            modalMessage(_("Error ({0}) during the download of the logs : {1}", 0, (error.message ? error.message : error)));
         }
     });
 }
 
-function dsas_status() {
+function dsasStatus() {
     fetch("api/dsas-status.php").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((obj) => {
-        machine_status("Lower", obj.bas);
+        machineStatus("Lower", obj.bas);
         if (obj.haut.status === "down") {
             document.getElementById("Upper").className = "col-6 container p-3 border text-muted";
         } else {
             document.getElementById("Upper").className = "col-6 container p-3 border";
         }
-        machine_status("Upper", obj.haut);
+        machineStatus("Upper", obj.haut);
         // Automatically refresh the page
-        dsasSetTimeout("status", dsas_status, 5000);
+        dsasSetTimeout("status", dsasStatus, 5000);
     }).catch((error) => {
-        if (fail_loggedin(error)) {
+        if (failLoggedin(error)) {
             dsasClearTimeout("logs");
             dsasClearTimeout("status");
         } else {
-            modal_message(_("Error ({0}) during the machine detection : {1}", 0, (error.message ? error.message : error)));
+            modalMessage(_("Error ({0}) during the machine detection : {1}", 0, (error.message ? error.message : error)));
         }
     });
 }
 
-function log_filter(line) {
+function logFilter(line) {
     return (line.substr(0, 2) !== "  ");
 }
 
-function log_highlight(line) {
+function logHighlight(line) {
     return (line.substr(0, 2) === "  " ? 0 : 7);
 }
 
-function log_render(line) {
+function logRender(line) {
     try {
         const res = _(line.substr(4, 15).trim()).padEnd(15);
         const sa = line.substr(20).split(/(\s+)/);
         const hash = sa[0];
-        const date = date_to_locale(sa[2]).padEnd(25);
+        const date = dateToLocale(sa[2]).padEnd(25);
         const path = line.substr(19 + sa[0].length + sa[1].length + sa[2].length + sa[3].length);
         return res + " " + hash + " " + date + " " + path;
     } catch (e) {
@@ -118,46 +118,46 @@ function log_render(line) {
     }
 }
 
-function dsas_togglelogs() {
+function dsasToggleLogs() {
     const btn = document.getElementById("loghide");
     if (btn.value === _("All logs")) {
         btn.value = _("Errors only");
-        statusLogs.updatefilter(log_filter);
-        dsasSetTimeout("logs", dsas_refresh_logs, 5000, false);
+        statusLogs.updatefilter(logFilter);
+        dsasSetTimeout("logs", dsasRefreshLogs, 5000, false);
     } else {
         btn.value = _("All logs");
         statusLogs.updatefilter("");
-        dsasSetTimeout("logs", dsas_refresh_logs, 5000, true);
+        dsasSetTimeout("logs", dsasRefreshLogs, 5000, true);
     }
 }
 
-function dsas_display_logs() {
+function dsasDisplayLogs() {
     fetch("api/dsas-verif-logs.php").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((logs) => {
-        document.getElementById("loghide").addEventListener("click", () => { dsas_togglelogs(); });
+        document.getElementById("loghide").addEventListener("click", () => { dsasToggleLogs(); });
         document.getElementById("logsearch").addEventListener("keypress", (event) => {
             if (event.key === "Enter") statusLogs.search(document.getElementById("logsearch").value);
         });
 
         if (logs) {
-            statusLogs = new DisplayLogs("logwind", logs, false, log_highlight, "", log_render);
+            statusLogs = new DisplayLogs("logwind", logs, false, logHighlight, "", logRender);
 
             // Automatically refresh the logs every 5 seconds
-            dsasSetTimeout("logs", dsas_refresh_logs, 5000);
-        } else { modal_message(_("No logs returned by the DSAS")); }
+            dsasSetTimeout("logs", dsasRefreshLogs, 5000);
+        } else { modalMessage(_("No logs returned by the DSAS")); }
     }).catch((error) => {
-        if (fail_loggedin(error)) {
+        if (failLoggedin(error)) {
             dsasClearTimeout("logs");
             dsasClearTimeout("status");
         } else {
-            modal_message(_("Error ({0}) during the download of the logs : {1}", 0, (error.message ? error.message : error)));
+            modalMessage(_("Error ({0}) during the download of the logs : {1}", 0, (error.message ? error.message : error)));
         }
     });
 }
 
-export default function dsas_display_status() {
-    dsas_status();
-    dsas_display_logs("all");
+export default function dsasDisplayStatus() {
+    dsasStatus();
+    dsasDisplayLogs("all");
 }

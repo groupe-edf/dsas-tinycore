@@ -1,15 +1,15 @@
 // The javascript used by the DSAS task.html page
 import DisplayLogs from "./DisplayLogs";
 import { ml, _ } from "./MultiLang";
-import { modal_message, modal_errors, modal_action } from "./DsasModal";
+import { modalMessage, modalErrors, modalAction } from "./DsasModal";
 import {
-    fail_loggedin,
-    clear_feedback,
-    print_obj,
-    empty_obj,
-    date_to_locale,
-    cert_name,
-    cert_is_ca,
+    failLoggedin,
+    clearFeedback,
+    printObj,
+    emptyObj,
+    dateToLocale,
+    certName,
+    certIsCa,
     dsasSetTimeout,
     dsasClearTimeout,
 } from "./DsasUtil";
@@ -17,7 +17,7 @@ import {
 // Global variable for the DisplayLog instance for the task log files
 let infoLogs;
 
-function dsas_task_real_delete(id) {
+function dsasTaskRealDelete(id) {
     const formData = new FormData();
     const deleteFiles = document.getElementById("TaskDeleteFiles").checked;
     formData.append("op", "delete");
@@ -29,25 +29,25 @@ function dsas_task_real_delete(id) {
     }).then((text) => {
         try {
             const errors = JSON.parse(text);
-            modal_errors(errors);
+            modalErrors(errors);
         } catch (e) {
         // Its text => here always just "Ok"
-            clear_feedback();
+            clearFeedback();
             // Circular referencing between these function is deliberate
             // eslint-disable-next-line no-use-before-define
-            dsas_display_tasks("tasks");
+            dsasDisplayTasks("tasks");
         }
     }).catch((error) => {
-        if (fail_loggedin(error)) {
+        if (failLoggedin(error)) {
             dsasClearTimeout("tasks");
             dsasClearTimeout("info");
         } else {
-            modal_message(_("Error : {0}", (error.message ? error.message : error)));
+            modalMessage(_("Error : {0}", (error.message ? error.message : error)));
         }
     });
 }
 
-function dsas_task_delete(id, name) {
+function dsasTaskDelete(id, name) {
     const modalDSAS = document.getElementById("modalDSAS");
     const body = document.createDocumentFragment();
     body.append(_(" Name : {0}\r\n ID : {1}", name, id) + "\r\n");
@@ -62,11 +62,11 @@ function dsas_task_delete(id, name) {
     el.setAttribute("for", "TaskDeleteFiles");
     el.textContent = " " + _("Delete task files");
     body.append(el);
-    modal_action(_("Delete the task ?"), () => { dsas_task_real_delete(id); }, true);
+    modalAction(_("Delete the task ?"), () => { dsasTaskRealDelete(id); }, true);
     modalDSAS.setBody(body);
 }
 
-function dsas_task_real_kill(id) {
+function dsasTaskRealKill(id) {
     const formData = new FormData();
     formData.append("op", "kill");
     formData.append("id", id);
@@ -76,34 +76,34 @@ function dsas_task_real_kill(id) {
     }).then((text) => {
         try {
             const errors = JSON.parse(text);
-            modal_errors(errors);
+            modalErrors(errors);
         } catch (e) {
         // Its text => here always just "Ok"
-            clear_feedback();
+            clearFeedback();
             // eslint-disable-next-line no-use-before-define
-            dsas_display_tasks("status");
+            dsasDisplayTasks("status");
         }
     }).catch((error) => {
-        if (fail_loggedin(error)) {
+        if (failLoggedin(error)) {
             dsasClearTimeout("tasks");
             dsasClearTimeout("info");
         } else {
-            modal_message(_("Error : {0}", (error.message ? error.message : error)));
+            modalMessage(_("Error : {0}", (error.message ? error.message : error)));
         }
     });
 }
 
-function dsas_task_kill(id, name) {
+function dsasTaskKill(id, name) {
     const modalDSAS = document.getElementById("modalDSAS");
-    modal_action(_("Kill the task?"), () => { dsas_task_real_kill(id); }, true);
+    modalAction(_("Kill the task?"), () => { dsasTaskRealKill(id); }, true);
     modalDSAS.setBody(_(" Name : {0}\r\n ID : {1}", name, id));
 }
 
-function has_arch(archs, arch) {
+function hasArch(archs, arch) {
     return (archs.constructor === Object ? [archs] : archs).includes(arch);
 }
 
-function task_arch_body(type, archs) {
+function taskArchBody(type, archs) {
     if (type !== "deb") {
         document.getElementById("TaskHasArch").setAttribute("hidden", "");
     } else {
@@ -119,7 +119,7 @@ function task_arch_body(type, archs) {
             ["MipsEL", "mipsel"],
             ["Ppc64EL", "ppc64el"],
             ["S390x", "s390x"]].forEach((arch) => {
-            if (has_arch(archs, arch[1])) {
+            if (hasArch(archs, arch[1])) {
                 document.getElementById("TaskArch" + arch[0]).setAttribute("checked", "");
             } else {
                 document.getElementById("TaskArch" + arch[0]).removeAttribute("checked");
@@ -128,15 +128,15 @@ function task_arch_body(type, archs) {
     }
 }
 
-function dsas_add_task_arch(archs = []) {
+function dsasAddTaskArch(archs = []) {
     let type = "";
     [...document.getElementsByTagName("option")].forEach((opt) => {
         if (opt.id.substr(0, 8) === "TaskType" && opt.selected) { type = opt.value; }
     });
-    task_arch_body(type, archs);
+    taskArchBody(type, archs);
 }
 
-function dsas_add_task(oldid = "") {
+function dsasAddTask(oldid = "") {
     const name = document.getElementById("TaskName").value;
     const directory = document.getElementById("TaskDirectory").value;
     const uri = document.getElementById("TaskURI").value;
@@ -187,24 +187,24 @@ function dsas_add_task(oldid = "") {
     }).then((text) => {
         try {
             const errors = JSON.parse(text);
-            modal_errors(errors);
+            modalErrors(errors);
         } catch (e) {
         // Its text => here always just "Ok"
-            clear_feedback();
+            clearFeedback();
             // eslint-disable-next-line no-use-before-define
-            dsas_display_tasks("status");
+            dsasDisplayTasks("status");
         }
     }).catch((error) => {
-        if (fail_loggedin(error)) {
+        if (failLoggedin(error)) {
             dsasClearTimeout("tasks");
             dsasClearTimeout("info");
         } else {
-            modal_message(_("Error : {0}", (error.message ? error.message : error)));
+            modalMessage(_("Error : {0}", (error.message ? error.message : error)));
         }
     });
 }
 
-function dsas_add_task_cert() {
+function dsasAddTaskCert() {
     const taskCert = document.getElementById("TaskCert");
     const opt = [...document.getElementsByTagName("option")]
         .filter((o) => o.id.substr(0, 7) !== "TaskRun"
@@ -225,7 +225,7 @@ function dsas_add_task_cert() {
     }
 }
 
-function modal_task(action = () => { dsas_add_task(); }, ca = "", taskchange = () => { dsas_add_task_arch(); }) {
+function modalTask(action = () => { dsasAddTask(); }, ca = "", taskchange = () => { dsasAddTaskArch(); }) {
     const modalDSAS = document.getElementById("modalDSAS");
     const temp = document.getElementById("newtasktemplate");
     const b = temp.content.cloneNode(true);
@@ -242,7 +242,7 @@ function modal_task(action = () => { dsas_add_task(); }, ca = "", taskchange = (
     modalDSAS.setAttribute("title", _("Add a task"));
     modalDSAS.setAttribute("size", "lg");
     b.getElementById("TaskType").addEventListener("change", taskchange);
-    b.getElementById("TaskAddCert").addEventListener("change", () => { dsas_add_task_cert(); });
+    b.getElementById("TaskAddCert").addEventListener("change", () => { dsasAddTaskCert(); });
     modalDSAS.show();
     modalDSAS.setBody(b);
 
@@ -262,7 +262,7 @@ function modal_task(action = () => { dsas_add_task(); }, ca = "", taskchange = (
             opt = certopt.appendChild(document.createElement("option"));
             opt.id = "TaskAddCert" + i;
             opt.value = cert.fingerprint;
-            opt.textContent = cert_name(cert);
+            opt.textContent = certName(cert);
             i += 1;
         });
         certs[0].dsas.pubkey.forEach((cert) => {
@@ -283,12 +283,12 @@ function modal_task(action = () => { dsas_add_task(); }, ca = "", taskchange = (
             opt = certopt.appendChild(document.createElement("option"));
             opt.id = "TaskAddCert" + i;
             opt.value = cert.fingerprint;
-            opt.textContent = cert_name(cert);
+            opt.textContent = certName(cert);
             i += 1;
         });
         opt = certca.appendChild(document.createElement("option"));
         opt.id = "TaskCA_Base";
-        if (empty_obj(ca)) { opt.setAttribute("selected", ""); }
+        if (emptyObj(ca)) { opt.setAttribute("selected", ""); }
         opt.textContent = _("Base CA");
         opt = certca.appendChild(document.createElement("option"));
         opt.id = "TaskCA_Self";
@@ -296,25 +296,25 @@ function modal_task(action = () => { dsas_add_task(); }, ca = "", taskchange = (
         if (ca === "self") { opt.setAttribute("selected", ""); }
         opt.textContent = _("Self-signed");
         certs[0].dsas.x509.forEach((cert) => {
-            if (cert_is_ca(cert)) {
+            if (certIsCa(cert)) {
                 opt = certca.appendChild(document.createElement("option"));
                 opt.id = "TaskCACert_" + cert.fingerprint;
                 opt.value = cert.fingerprint;
                 if (ca === cert.fingerprint) { opt.setAttribute("selected", ""); }
-                opt.textContent = cert_name(cert);
+                opt.textContent = certName(cert);
             }
         });
     }).catch((error) => {
-        if (fail_loggedin(error)) {
+        if (failLoggedin(error)) {
             dsasClearTimeout("tasks");
             dsasClearTimeout("info");
         } else {
-            modal_message(_("Error while loading the certificates : {0}", (error.message ? error.message : error)));
+            modalMessage(_("Error while loading the certificates : {0}", (error.message ? error.message : error)));
         }
     });
 }
 
-function dsas_modify_task(oldname = "", oldid = "") {
+function dsasModifyTask(oldname = "", oldid = "") {
     const name = document.getElementById("TaskName").value;
 
     // If the old name is not empty and different than the new name, then we're
@@ -328,23 +328,23 @@ function dsas_modify_task(oldname = "", oldid = "") {
             id: oldid,
         }));
         fetch("api/dsas-task.php", { method: "POST", body: formData }).then((response) => {
-            if (response.ok) { dsas_add_task(oldid); }
+            if (response.ok) { dsasAddTask(oldid); }
             return Promise.reject(new Error(response.statusText));
         }).catch((error) => {
-            if (fail_loggedin(error)) {
+            if (failLoggedin(error)) {
                 dsasClearTimeout("tasks");
                 dsasClearTimeout("info");
             } else {
-                modal_message(_("Error : {0}", (error.message ? error.message : error)));
+                modalMessage(_("Error : {0}", (error.message ? error.message : error)));
             }
         });
-    } else { dsas_add_task(oldid); }
+    } else { dsasAddTask(oldid); }
 }
 
 // The argument name to this function is not used but added to be consistent
 // with the other dsas_task_* functions to make other code easier to use
 // eslint-disable-next-line no-unused-vars
-function dsas_task_modify(id, name) {
+function dsasTaskModify(id, name) {
     fetch("api/dsas-task.php").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
@@ -352,14 +352,14 @@ function dsas_task_modify(id, name) {
         if (tasks.task) {
             (tasks.task.constructor === Object ? [tasks.task] : tasks.task)
                 .filter((task) => id === task.id).forEach((task) => {
-                    modal_task(
-                        () => { dsas_modify_task(task.name, task.id); },
+                    modalTask(
+                        () => { dsasModifyTask(task.name, task.id); },
                         task.ca.fingerprint,
-                        () => { dsas_add_task_arch(task.archs); },
+                        () => { dsasAddTaskArch(task.archs); },
                     );
-                    document.getElementById("TaskName").value = print_obj(task.name);
-                    document.getElementById("TaskDirectory").value = print_obj(task.directory);
-                    document.getElementById("TaskURI").value = print_obj(task.uri);
+                    document.getElementById("TaskName").value = printObj(task.name);
+                    document.getElementById("TaskDirectory").value = printObj(task.directory);
+                    document.getElementById("TaskURI").value = printObj(task.uri);
 
                     [...document.getElementsByTagName("option")].forEach((opt) => {
                         // eslint-disable-next-line no-param-reassign
@@ -380,18 +380,18 @@ function dsas_task_modify(id, name) {
                             el.setAttribute("fingerprint", cert.fingerprint);
                         });
                     }
-                    task_arch_body(task.type, task.archs.arch);
+                    taskArchBody(task.type, task.archs.arch);
                 });
         }
     }).catch((error) => {
-        if (fail_loggedin(error)) {
+        if (failLoggedin(error)) {
             dsasClearTimeout("tasks");
             dsasClearTimeout("info");
         }
     });
 }
 
-function dsas_task_real_run(id) {
+function dsasTaskRealRun(id) {
     const formData = new FormData();
     formData.append("op", "run");
     formData.append("id", id);
@@ -401,31 +401,31 @@ function dsas_task_real_run(id) {
     }).then((text) => {
         try {
             const errors = JSON.parse(text);
-            modal_errors(errors);
+            modalErrors(errors);
         } catch (e) {
         // Its text => here always just "Ok"
-            clear_feedback();
+            clearFeedback();
             // Delay update of task status 0,5 seconds to allow runlog file to be updated first
             // eslint-disable-next-line no-use-before-define
-            dsasSetTimeout("tasks", dsas_display_tasks, 500, "status");
+            dsasSetTimeout("tasks", dsasDisplayTasks, 500, "status");
         }
     }).catch((error) => {
-        if (fail_loggedin(error)) {
+        if (failLoggedin(error)) {
             dsasClearTimeout("tasks");
             dsasClearTimeout("info");
         } else {
-            modal_message(_("Error : {0}", (error.message ? error.message : error)));
+            modalMessage(_("Error : {0}", (error.message ? error.message : error)));
         }
     });
 }
 
-function dsas_task_run(id, name) {
+function dsasTaskRun(id, name) {
     const modalDSAS = document.getElementById("modalDSAS");
-    modal_action(_("Run the task ?"), () => { dsas_task_real_run(id); }, true);
+    modalAction(_("Run the task ?"), () => { dsasTaskRealRun(id); }, true);
     modalDSAS.setBody(_(" Name : {0}\r\n ID : {1}", name, id));
 }
 
-function modal_info(name, body) {
+function modalInfo(name, body) {
     const modalDSAS = document.getElementById("modalDSAS");
     modalDSAS.removeAttribute("disable");
     modalDSAS.setAttribute("static", false);
@@ -438,7 +438,7 @@ function modal_info(name, body) {
     modalDSAS.show();
 }
 
-function dsas_task_info(id, name, len = 0) {
+function dsasTaskInfo(id, name, len = 0) {
     const formData = new FormData();
     formData.append("op", "info");
     formData.append("id", id);
@@ -449,31 +449,31 @@ function dsas_task_info(id, name, len = 0) {
     }).then((text) => {
         const info = JSON.parse(text);
         if (info && (info[0].constructor === Object) && (Object.keys(info[0])[0] === "error")) {
-            modal_errors(info);
+            modalErrors(info);
             dsasClearTimeout("info");
         } else {
             if (len === 0) {
                 const el = document.createElement("span");
                 el.id = "logwind";
-                modal_info(name, el);
+                modalInfo(name, el);
                 infoLogs = new DisplayLogs("logwind", info);
             } else { infoLogs.appendlog(info); }
 
             // Automatically refresh the logs every 5 seconds
-            dsasSetTimeout("info", dsas_task_info, 5000, id, name, infoLogs.logs[0].length);
+            dsasSetTimeout("info", dsasTaskInfo, 5000, id, name, infoLogs.logs[0].length);
         }
     }).catch((error) => {
-        if (fail_loggedin(error)) {
+        if (failLoggedin(error)) {
             dsasClearTimeout("tasks");
             dsasClearTimeout("info");
         } else {
-            modal_message(_("Error : {0}", (error.message ? error.message : error)));
+            modalMessage(_("Error : {0}", (error.message ? error.message : error)));
         }
     });
 }
 
-function dsas_task_new() {
-    modal_task();
+function dsasTaskNew() {
+    modalTask();
     document.getElementById("TaskName").value = "";
     document.getElementById("TaskDirectory").value = "";
     document.getElementById("TaskURI").value = "";
@@ -487,7 +487,7 @@ function dsas_task_new() {
     document.getElementById("TaskCert").textContent = "";
 }
 
-export default function dsas_display_tasks(what = "all") {
+export default function dsasDisplayTasks(what = "all") {
     if (what === "all" || what === "tasks" || what === "status") {
         fetch("api/dsas-task.php").then((response) => {
             if (response.ok) { return response.json(); }
@@ -519,32 +519,32 @@ export default function dsas_display_tasks(what = "all") {
                     item.querySelector("span").textContent = task.name;
                     // Need to use an immediately evaluated function (IIFE)
                     // to ensure 'task' is evaluated here
-                    links[1].addEventListener("click", ((t) => (() => dsas_task_modify(t.id, t.name)))(task));
-                    links[2].addEventListener("click", ((t) => (() => dsas_task_delete(t.id, t.name)))(task));
-                    links[3].addEventListener("click", ((t) => (() => dsas_task_run(t.id, t.name)))(task));
-                    links[4].addEventListener("click", ((t) => (() => dsas_task_info(t.id, t.name)))(task));
+                    links[1].addEventListener("click", ((t) => (() => dsasTaskModify(t.id, t.name)))(task));
+                    links[2].addEventListener("click", ((t) => (() => dsasTaskDelete(t.id, t.name)))(task));
+                    links[3].addEventListener("click", ((t) => (() => dsasTaskRun(t.id, t.name)))(task));
+                    links[4].addEventListener("click", ((t) => (() => dsasTaskInfo(t.id, t.name)))(task));
                     if (task.status === "Running") {
                         links[5].removeAttribute("hidden");
-                        links[5].addEventListener("click", ((t) => (() => dsas_task_kill(t.id, t.name)))(task));
+                        links[5].addEventListener("click", ((t) => (() => dsasTaskKill(t.id, t.name)))(task));
                     }
                     if (tid && what === "status") {
                         item.querySelector("div").className = tid.className;
                     }
                     item.querySelector("div").id = "task" + i;
-                    [["Directory :", print_obj(task.directory)],
-                        ["URI : ", print_obj(task.uri)],
-                        ["URI Certification Authority :", (empty_obj(task.ca.name) ? _("Base") : print_obj(task.ca.name))],
-                        ["Task type :", print_obj(task.type)],
-                        ["Periodicity :", print_obj(task.run)],
-                        ["Last :", date_to_locale(task.last)],
-                        ["Status :", print_obj(task.status)],
-                        ["Task type :", print_obj(task.type)]].forEach((tt) => {
+                    [["Directory :", printObj(task.directory)],
+                        ["URI : ", printObj(task.uri)],
+                        ["URI Certification Authority :", (emptyObj(task.ca.name) ? _("Base") : printObj(task.ca.name))],
+                        ["Task type :", printObj(task.type)],
+                        ["Periodicity :", printObj(task.run)],
+                        ["Last :", dateToLocale(task.last)],
+                        ["Status :", printObj(task.status)],
+                        ["Task type :", printObj(task.type)]].forEach((tt) => {
                         const line = card.appendChild(document.createElement("p"));
                         line.className = "my-0";
                         line.textContent = _(tt[0]) + " " + tt[1];
                     });
 
-                    if (empty_obj(task.cert)) {
+                    if (emptyObj(task.cert)) {
                         const line = certs.appendChild(document.createElement("p"));
                         line.className = "my-0";
                     } else if (task.cert.constructor === Object) {
@@ -565,11 +565,11 @@ export default function dsas_display_tasks(what = "all") {
             document.getElementById("Tasks").textContent = "";
             document.getElementById("Tasks").appendChild(tasksrendered);
             if (what === "all") {
-                document.getElementById("AddTask").addEventListener("click", () => { dsas_task_new(); });
+                document.getElementById("AddTask").addEventListener("click", () => { dsasTaskNew(); });
             }
-            dsasSetTimeout("tasks", dsas_display_tasks, 10000, "status");
+            dsasSetTimeout("tasks", dsasDisplayTasks, 10000, "status");
         }).catch((error) => {
-            if (fail_loggedin(error)) {
+            if (failLoggedin(error)) {
                 dsasClearTimeout("tasks");
                 dsasClearTimeout("info");
             }
@@ -577,7 +577,7 @@ export default function dsas_display_tasks(what = "all") {
     }
 }
 
-function dsas_task_cert_delete(fingerprint) {
+function dsasTaskCertDelete(fingerprint) {
     [...document.getElementsByTagName("dsas-task-cert")]
         .filter((line) => line.getAttribute("fingerprint") === fingerprint)
         .forEach((line) => { line.remove(); });
@@ -601,7 +601,7 @@ class DSASTaskCert extends HTMLElement {
         el = el.appendChild(document.createElement("a"));
         el.setAttribute("data-toggle", "tooltip");
         el.title = _("Delete");
-        el.addEventListener("click", () => { dsas_task_cert_delete(fingerprint); });
+        el.addEventListener("click", () => { dsasTaskCertDelete(fingerprint); });
         el = el.appendChild(document.createElement("img"));
         el.src = "x-lg.svg";
     }

@@ -5,8 +5,8 @@ import "./github-markdown.min.css";
 import "./dsas.css";
 import { setOptions, parse } from "marked";
 import { _ } from "./MultiLang";
-import { modal_message } from "./DsasModal";
-import { fail_loggedin, dsas_origin } from "./DsasUtil";
+import { modalMessage } from "./DsasModal";
+import { failLoggedin, dsasOrigin } from "./DsasUtil";
 
 // DSAS version variable
 const dsasVersion = "1.2.0";
@@ -21,7 +21,7 @@ function dsasHeadings() {
     return ph;
 }
 
-function dsas_display_version() {
+function dsasDisplayVersion() {
     document.getElementById("Version").textContent = _("DSAS Version") + " : " + dsasVersion;
 }
 
@@ -70,12 +70,12 @@ function dsasHelpTOC() {
     document.getElementById("toc").innerHTML = body + "<ul>";
 }
 
-export default function dsas_display_help() {
+export default function dsasDisplayHelp() {
     const urlParams = new URLSearchParams(window.location.search);
     const lang = urlParams.get("language");
     const uri = (lang ? "Documentation_" + lang + ".md" : "Documentation_en.md");
 
-    dsas_display_version();
+    dsasDisplayVersion();
     fetch(uri).then((response) => {
         if (response.ok) { return response.text(); }
         return Promise.reject(new Error(response.statusText));
@@ -84,11 +84,11 @@ export default function dsas_display_help() {
         // If user text was passed here we'd need to sanitize it, but the
         // documentation is supplied with the DSAS.
         // FIXME Fortigate SSL VPN F***'s up here. Kludge to fix it.
-        setOptions({ baseUrl: dsas_origin() });
+        setOptions({ baseUrl: dsasOrigin() });
         document.getElementById("Documentation").innerHTML = "<article class=\"markdown-body\">"
         + parse(text).replace(/fgt_sslvpn.url_rewrite\(/g, "") + "</article>";
         dsasHelpTOC();
     }).catch((error) => {
-        if (!fail_loggedin(error)) { modal_message(_("Error during documentation download : ") + (error.message ? error.message : error)); }
+        if (!failLoggedin(error)) { modalMessage(_("Error during documentation download : ") + (error.message ? error.message : error)); }
     });
 }

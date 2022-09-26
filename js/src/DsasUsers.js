@@ -1,9 +1,9 @@
 // The javascript used by the DSAS users.html page
 import { ml, _ } from "./MultiLang";
-import { modal_message, modal_action, modal_errors } from "./DsasModal";
-import { fail_loggedin, print_obj } from "./DsasUtil";
+import { modalMessage, modalAction, modalErrors } from "./DsasModal";
+import { failLoggedin, printObj } from "./DsasUtil";
 
-function dsas_real_user_passwd(user) {
+function dsasRealUserPasswd(user) {
     const passwd = document.getElementById("UserPassword").value;
     const formData = new FormData();
     formData.append("op", "passwd");
@@ -14,18 +14,18 @@ function dsas_real_user_passwd(user) {
     }).then((text) => {
         try {
             const errors = JSON.parse(text);
-            modal_errors(errors);
+            modalErrors(errors);
         } catch (e) {
         // Its text => here always just "Ok". Do nothing
         }
     }).catch((error) => {
-        if (!fail_loggedin(error)) { modal_message(_("Error during password change : {0}", (error.message ? error.message : error))); }
+        if (!failLoggedin(error)) { modalMessage(_("Error during password change : {0}", (error.message ? error.message : error))); }
     });
 }
 
-function dsas_user_passwd(user) {
+function dsasUserPasswd(user) {
     const modalDSAS = document.getElementById("modalDSAS");
-    modal_action(_("Set password for user '{0}'", user), () => { dsas_real_user_passwd(user); }, true);
+    modalAction(_("Set password for user '{0}'", user), () => { dsasRealUserPasswd(user); }, true);
     const body = document.createElement("div");
     body.class = "col-9 d-flex justify-content-center";
     const el1 = body.appendChild(document.createElement("label"));
@@ -38,13 +38,13 @@ function dsas_user_passwd(user) {
     el2.addEventListener("keypress", (event) => {
         if (event.key === "Enter") {
             modalDSAS.hide();
-            dsas_real_user_passwd(user);
+            dsasRealUserPasswd(user);
         }
     });
     modalDSAS.setBody(body);
 }
 
-function dsas_real_user_delete(user) {
+function dsasRealUserDelete(user) {
     const formData = new FormData();
     formData.append("op", "delete");
     formData.append("data", JSON.stringify({ username: user }));
@@ -54,21 +54,21 @@ function dsas_real_user_delete(user) {
     }).then((text) => {
         try {
             const errors = JSON.parse(text);
-            modal_errors(errors);
+            modalErrors(errors);
         } catch (e) {
         // Its text => here always just "Ok".
             window.location.reload();
         }
     }).catch((error) => {
-        if (!fail_loggedin(error)) { modal_message(_("Error during user deletion : {0}", (error.message ? error.message : error))); }
+        if (!failLoggedin(error)) { modalMessage(_("Error during user deletion : {0}", (error.message ? error.message : error))); }
     });
 }
 
-function dsas_user_delete(user) {
-    modal_action(_("Delete the user '{0}' ?", user), () => { dsas_real_user_delete(user); }, true);
+function dsasUserDelete(user) {
+    modalAction(_("Delete the user '{0}' ?", user), () => { dsasRealUserDelete(user); }, true);
 }
 
-function dsas_real_user_new() {
+function dsasRealUserNew() {
     const username = document.getElementById("NewUser").value;
     const formData = new FormData();
     formData.append("op", "add");
@@ -79,19 +79,19 @@ function dsas_real_user_new() {
     }).then((text) => {
         try {
             const errors = JSON.parse(text);
-            modal_errors(errors);
+            modalErrors(errors);
         } catch (e) {
         // Its text => here always just "Ok".
             window.location.reload();
         }
     }).catch((error) => {
-        if (!fail_loggedin(error)) { modal_message(_("Error during user creation : {0}", (error.message ? error.message : error))); }
+        if (!failLoggedin(error)) { modalMessage(_("Error during user creation : {0}", (error.message ? error.message : error))); }
     });
 }
 
-function dsas_user_new() {
+function dsasUserNew() {
     const modalDSAS = document.getElementById("modalDSAS");
-    modal_action(_("New username"), () => { dsas_real_user_new(); }, true);
+    modalAction(_("New username"), () => { dsasRealUserNew(); }, true);
     const body = document.createElement("div");
     body.class = "col-9 d-flex justify-content-center";
     const el1 = body.appendChild(document.createElement("label"));
@@ -104,13 +104,13 @@ function dsas_user_new() {
     el2.addEventListener("keypress", (event) => {
         if (event.key === "Enter") {
             modalDSAS.hide();
-            dsas_real_user_new();
+            dsasRealUserNew();
         }
     });
     modalDSAS.setBody(body);
 }
 
-function dsas_change_users() {
+function dsasChangeUsers() {
     fetch("api/dsas-users.php").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
@@ -141,20 +141,20 @@ function dsas_change_users() {
         }).then((text) => {
             try {
                 const errors = JSON.parse(text);
-                modal_errors(errors);
+                modalErrors(errors);
             } catch (e) {
             // Its text => here always just "Ok".
-                modal_message(_("Changes successfully saved"));
+                modalMessage(_("Changes successfully saved"));
             }
         }).catch((error) => {
-            if (!fail_loggedin(error)) { modal_message(_("Error during user creation : {0}", (error.message ? error.message : error))); }
+            if (!failLoggedin(error)) { modalMessage(_("Error during user creation : {0}", (error.message ? error.message : error))); }
         });
     }).catch((error) => {
-        if (!fail_loggedin(error)) { modal_message(_("Error ({0}) during the download of users : {1}", 0, (error.message ? error.message : error))); }
+        if (!failLoggedin(error)) { modalMessage(_("Error ({0}) during the download of users : {1}", 0, (error.message ? error.message : error))); }
     });
 }
 
-export default function dsas_display_users() {
+export default function dsasDisplayUsers() {
     fetch("api/dsas-users.php").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
@@ -163,15 +163,15 @@ export default function dsas_display_users() {
         const users = obj.user;
         document.getElementById("Users").textContent = ""; // Clear old content
         (users.constructor === Object ? [users] : users).forEach((user) => {
-            const is_tc = user.username === "tc";
+            const isTc = user.username === "tc";
             const line = temp.content.cloneNode(true);
             ml.translateHTML(line);
             line.querySelector("th").id = "username_" + user.username;
             line.querySelector("th").textContent = user.username;
             const inp = line.querySelectorAll("input");
             inp[0].id = "description_" + user.username;
-            inp[0].value = print_obj(user.description);
-            if (is_tc) {
+            inp[0].value = printObj(user.description);
+            if (isTc) {
                 inp[0].setAttribute("disabled", "");
                 inp[0].setAttribute("readonly", "");
             } else {
@@ -180,7 +180,7 @@ export default function dsas_display_users() {
             }
             line.querySelector("select").name = "UserType_" + user.username;
             line.querySelector("select").id = "UserType_" + user.username;
-            if (is_tc) {
+            if (isTc) {
                 line.querySelector("select").setAttribute("disabled", "");
             } else {
                 line.querySelector("select").removeAttribute("disabled");
@@ -213,25 +213,25 @@ export default function dsas_display_users() {
             } else {
                 inp[1].removeAttribute("checked", "");
             }
-            line.querySelectorAll("a")[0].addEventListener("click", () => { dsas_user_passwd(user.username); });
-            if (is_tc) {
+            line.querySelectorAll("a")[0].addEventListener("click", () => { dsasUserPasswd(user.username); });
+            if (isTc) {
                 line.querySelectorAll("a")[1].setAttribute("hidden", "");
                 line.querySelectorAll("a")[1].setAttribute("disabled", "");
             } else {
                 line.querySelectorAll("a")[1].removeAttribute("hidden");
                 line.querySelectorAll("a")[1].removeAttribute("disabled");
-                line.querySelectorAll("a")[1].addEventListener("click", () => { dsas_user_delete(user.username); });
+                line.querySelectorAll("a")[1].addEventListener("click", () => { dsasUserDelete(user.username); });
             }
             document.getElementById("Users").appendChild(line);
         });
-        document.getElementById("AddUser").addEventListener("click", () => { dsas_user_new(); });
+        document.getElementById("AddUser").addEventListener("click", () => { dsasUserNew(); });
         document.getElementById("ChangeUsers").addEventListener("click", () => {
-            dsas_change_users();
+            dsasChangeUsers();
             return false;
         });
     }).catch((error) => {
-        if (!fail_loggedin(error)) {
-            modal_message(_("Error ({0}) during the download of users : {1}", 0, (error.message ? error.message : error)));
+        if (!failLoggedin(error)) {
+            modalMessage(_("Error ({0}) during the download of users : {1}", 0, (error.message ? error.message : error)));
         }
     });
 }

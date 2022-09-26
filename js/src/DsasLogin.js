@@ -1,11 +1,11 @@
 // The javascript used by the DSAS login.html page
-import { dsas_origin } from "./DsasUtil";
+import { dsasOrigin } from "./DsasUtil";
 import { _ } from "./MultiLang";
 
-function dsas_login() {
+function dsasLogin() {
     const username = document.getElementById("inp_user").value;
     const password = document.getElementById("inp_pass").value;
-    const uri = new URL("api/login.php", dsas_origin());
+    const uri = new URL("api/login.php", dsasOrigin());
 
     // Remove existing errors
     document.getElementById("inp_user").setAttribute("class", "form-control");
@@ -52,8 +52,8 @@ function dsas_login() {
 }
 
 // Ensure dsas_init_logdedin is publically available
-export default function dsas_init_loggedin() {
-    const uri = new URL("api/login.php", dsas_origin());
+export default function dsasInitLoggedin() {
+    const uri = new URL("api/login.php", dsasOrigin());
 
     document.getElementById("inp_pass").addEventListener("keyup", (e) => {
         document.getElementById("feed_pass").textContent = (
@@ -65,9 +65,9 @@ export default function dsas_init_loggedin() {
         document.getElementById("inp_user").setAttribute("class", "form-control");
     });
 
-    document.getElementById("login").addEventListener("click", () => { dsas_login(); return false; });
+    document.getElementById("login").addEventListener("click", () => { dsasLogin(); return false; });
     document.getElementById("inp_pass").addEventListener("keypress", (evt) => {
-        if (evt.key === "Enter") { dsas_login(); }
+        if (evt.key === "Enter") { dsasLogin(); }
         return false;
     });
 

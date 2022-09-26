@@ -2,7 +2,7 @@
 import { Modal } from "bootstrap";
 import { _ } from "./MultiLang";
 
-export function modal_message(text, action = null, hide = false) {
+export function modalMessage(text, action = null, hide = false) {
     const modalDSAS = document.getElementById("modalDSAS");
     if (modalDSAS) {
         modalDSAS.removeAttribute("disable");
@@ -25,7 +25,7 @@ export function modal_message(text, action = null, hide = false) {
     }
 }
 
-export function modal_action(text, action = null, hide = false) {
+export function modalAction(text, action = null, hide = false) {
     const modalDSAS = document.getElementById("modalDSAS");
     if (modalDSAS) {
         modalDSAS.removeAttribute("disable");
@@ -49,9 +49,9 @@ export function modal_action(text, action = null, hide = false) {
     }
 }
 
-export function modal_errors(errors, feedback = false) {
+export function modalErrors(errors, feedback = false) {
     if (feedback) {
-        // Clear old invalid feedbacks. Don't use clear_feedback to avoid circular reference
+        // Clear old invalid feedbacks. Don't use clearFeedback to avoid circular reference
         // eslint-disable-next-line no-param-reassign
         [...document.getElementsByClassName("invalid-feedback")].forEach((feed) => { feed.textContent = ""; });
         [...document.getElementsByClassName("form-control")].forEach((feed) => { feed.setAttribute("class", "form-control"); });
@@ -71,7 +71,7 @@ export function modal_errors(errors, feedback = false) {
                 }
             }
         });
-        if (body) { modal_message(body); }
+        if (body) { modalMessage(body); }
         return true;
     }
     return false;

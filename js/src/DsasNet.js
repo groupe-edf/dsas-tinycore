@@ -1,14 +1,14 @@
 // The javascript used by the DSAS service.html page
 import { _ } from "./MultiLang";
-import { modal_message, modal_errors } from "./DsasModal";
+import { modalMessage, modalErrors } from "./DsasModal";
 import {
-    fail_loggedin,
-    clear_feedback,
-    print_obj,
-    empty_obj,
+    failLoggedin,
+    clearFeedback,
+    printObj,
+    emptyObj,
 } from "./DsasUtil";
 
-function dsas_change_net(what = "all", i = 0) {
+function dsasChangeNet(what = "all", i = 0) {
     if (what === "dhcp") {
         const chk = document.getElementById("iface_dhcp" + i).checked;
         document.getElementById("iface_cidr" + i).disabled = chk;
@@ -45,23 +45,23 @@ function dsas_change_net(what = "all", i = 0) {
             }).then((text) => {
                 try {
                     const errors = JSON.parse(text);
-                    modal_errors(errors, true);
+                    modalErrors(errors, true);
                 } catch (e) {
                     // Its text => here always just "Ok"
-                    clear_feedback();
+                    clearFeedback();
                     /* eslint-disable-next-line no-use-before-define */
-                    dsas_display_net("ifaces");
+                    dsasDisplayNet("ifaces");
                 }
             }).catch((error) => {
-                modal_message(_("Error while loading the page : {0}", (error.message ? error.message : error)));
+                modalMessage(_("Error while loading the page : {0}", (error.message ? error.message : error)));
             });
         }).catch((error) => {
-            fail_loggedin(error);
+            failLoggedin(error);
         });
     }
 }
 
-export default function dsas_display_net(what = "all") {
+export default function dsasDisplayNet(what = "all") {
     fetch("api/dsas-net.php").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
@@ -70,34 +70,34 @@ export default function dsas_display_net(what = "all") {
         ["bas", "haut"].forEach((iface2) => {
             const iface = net[iface2];
             const dhcp = (iface.dhcp === "true");
-            let dns_servers = "";
+            let dnsServers = "";
             if (dhcp) document.getElementById("iface_dhcp" + i).setAttribute("checked", "");
             if (what === "all") {
-                const fn = (function _dhcp_(j) { return function _dhcp() { dsas_change_net("dhcp", j); }; }(i));
+                const fn = (function _dhcp_(j) { return function _dhcp() { dsasChangeNet("dhcp", j); }; }(i));
                 document.getElementById("iface_dhcp" + i).addEventListener("change", fn);
             }
             document.getElementById("iface_cidr" + i).disabled = dhcp;
-            document.getElementById("iface_cidr" + i).value = print_obj(iface.cidr);
+            document.getElementById("iface_cidr" + i).value = printObj(iface.cidr);
             document.getElementById("iface_gateway" + i).disabled = dhcp;
-            document.getElementById("iface_gateway" + i).value = print_obj(iface.gateway);
+            document.getElementById("iface_gateway" + i).value = printObj(iface.gateway);
             document.getElementById("iface_dns_domain" + i).disabled = dhcp;
-            document.getElementById("iface_dns_domain" + i).value = print_obj(iface.dns.domain);
+            document.getElementById("iface_dns_domain" + i).value = printObj(iface.dns.domain);
             document.getElementById("iface_nameserver" + i).disabled = dhcp;
-            if (!empty_obj(iface.dns.nameserver)) {
+            if (!emptyObj(iface.dns.nameserver)) {
                 (iface.dns.nameserver.constructor === Array
                     ? iface.dns.nameserver : [iface.dns.nameserver]).forEach((ns) => {
-                    dns_servers += ns + "\n";
+                    dnsServers += ns + "\n";
                 });
             }
-            document.getElementById("iface_nameserver" + i).value = dns_servers;
+            document.getElementById("iface_nameserver" + i).value = dnsServers;
             i += 1;
         });
         if (what === "all") {
-            document.getElementById("netsubmit").addEventListener("click", () => { dsas_change_net(); });
+            document.getElementById("netsubmit").addEventListener("click", () => { dsasChangeNet(); });
         }
     }).catch((error) => {
-        if (!fail_loggedin(error)) {
-            modal_message(_("Error while loading the page : {0}", (error.message ? error.message : error)));
+        if (!failLoggedin(error)) {
+            modalMessage(_("Error while loading the page : {0}", (error.message ? error.message : error)));
         }
     });
 }
