@@ -780,7 +780,7 @@ clean)
   exit 0
   ;;
 realclean)
-  make -C "$testdir" clean
+  make -C "$testdir" realclean
   [ -e $work ] || exit 0
   rm -fr "${work:?}/?*"
   exit 0
