@@ -10,12 +10,10 @@ package.json:
 	which npm >& /dev/null || { echo "Install Node.js before continuing"; exit 1; }
 	npm init -y || { rm -fr node_modules package-lock.json package.json; exit 1; }
 	npm install --save marked || { rm -fr node_modules package-lock.json package.json; exit 1; }
-	npm install --save-dev webpack webpack-cli eslint eslint-webpack-plugin || { rm -fr node_modules package-lock.json package.json; exit 1; }
-	npm install -save-dev autoprefixer css-loader postcss-loader sass sass-loader style-loader || { rm -fr node_modules package-lock.json package.json; exit 1; }
-	# FIXME Ignore error "Exit handler never called" during install of module install-peerdeps. It'll still work
-	npm install --save-dev install-peerdeps || true
-	npx install-peerdeps bootstrap || { rm -fr node_modules package-lock.json package.json; exit 1; }        
-	npx install-peerdeps --dev eslint-config-airbnb-base || { rm -fr node_modules package-lock.json package.json; exit 1; }
+	npm install --save bootstrap @popperjs/core || { rm -fr node_modules package-lock.json package.json; exit 1; }
+	npm install --save-dev webpack webpack-cli || { rm -fr node_modules package-lock.json package.json; exit 1; }
+	npm install --save-dev autoprefixer css-loader postcss-loader sass sass-loader style-loader || { rm -fr node_modules package-lock.json package.json; exit 1; }
+	npm install --save-dev eslint-config-airbnb-base eslint eslint-plugin-import  eslint-webpack-plugin || { rm -fr node_modules package-lock.json package.json; exit 1; }
 	sed -i -e 's/\("scripts": {\)/\1\n    "build": "webpack",/' package.json
 	sed -i -e 's/"main":.*/"private": true,/' package.json
 	sed -i -e 's/"name":.*/"name": "dsas",/' package.json
