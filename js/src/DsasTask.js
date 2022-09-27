@@ -506,9 +506,9 @@ export default function dsasDisplayTasks(what = "all") {
                     const tid = document.getElementById("task" + i);
                     ml.translateHTML(item);
                     let cls = "text-success";
-                    if (task.status === "Running") { cls = "text-primary"; }
                     if (task.last === "never") { cls = "text-info"; }
                     if (task.status === "Failed") { cls = "text-danger"; }
+                    if (task.status === "Running") { cls = "text-primary"; }
                     item.querySelector("p").className = "my-0 " + cls;
                     links[0].href = "#task" + i;
                     links[0].setAttribute("aria-controls", "task" + i);

@@ -713,6 +713,8 @@ install_dsas_js() {
       tar cf - --exclude tmp --exclude=work --exclude=.git . | tar -C $extract/home/tc/dsas -xvf - 
       chown -R tc.staff $extract/home/tc
 
+      mkdir -p "$extract/tmp"
+      chmod 1777 "$extract/tmp" 
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 export http_proxy=${http_proxy:=}
@@ -800,7 +802,7 @@ upgrade)
     pkg_file=${pkg_file%-doc}.pkg
     [ -f "$pkg_file" ] && continue   # Locally built package
     [ "$_file" = "dsastestfiles.tcz" ] && continue  # Locally built file
-    [ "$_file" = "dsas_js.tcz" ] && continue  # Locally built file
+    [ "$_file" = "dsasphpstan.tcz" ] && continue  # Locally built file
     [ "$_file" = "dsaswebdriver.tcz" ] && { msg "Removing $_file"; rm -f "$file"; continue; } # Remove to force rebuild
     [ "$_file" = "firefox.tcz" ] && { msg "Removing $_file"; rm -f "$file"; continue; } # Remove to force a rebuild
     read -r hash < "$file.md5.txt"
