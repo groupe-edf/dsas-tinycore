@@ -675,7 +675,7 @@ New user names must be valid POSIX usernames. That is they must
 
 Here we have added the user `ua12345`.
 
-![DSAS user configuration menu]](en/DSAS37.png)
+![DSAS user configuration menu](en/DSAS37.png)
 
 For each users several modifications or actions are possible
 
