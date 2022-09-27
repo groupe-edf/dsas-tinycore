@@ -51,10 +51,10 @@ export default class DisplayLogs {
                 div.className = "container tab-pane " + (i === 0 ? "active" : "fade");
             }
         }
-        this.init_holder();
+        this.initHolder();
     }
 
-    init_holder() {
+    initHolder() {
         let i;
         this.holder = document.getElementById("logpane");
         this.height = this.itemHeight();
@@ -71,7 +71,7 @@ export default class DisplayLogs {
                     for (i = 0; i < this.logs.length; i += 1) { document.getElementById("navlog" + i).attachEvent("click", this.changeTab.bind(this)); }
                 }
             }
-        } else { window.requestAnimationFrame(this.init_holder.bind(this)); }
+        } else { window.requestAnimationFrame(this.initHolder.bind(this)); }
     }
 
     delayingHandler() {

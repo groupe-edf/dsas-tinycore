@@ -50,7 +50,7 @@ function dsasChangeNet(what = "all", i = 0) {
                     // Its text => here always just "Ok"
                     clearFeedback();
                     /* eslint-disable-next-line no-use-before-define */
-                    dsasDisplayNet("ifaces");
+                    modalMessage(_("Changes successfully saved"), () => { dsasDisplayNet("ifaces"); }, true);
                 }
             }).catch((error) => {
                 modalMessage(_("Error while loading the page : {0}", (error.message ? error.message : error)));

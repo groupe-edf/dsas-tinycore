@@ -37,7 +37,7 @@ function dsasRenewCertReal() {
             // Its text => here always just "Ok"
                 clearFeedback();
                 // eslint-disable-next-line no-use-before-define
-                dsasDisplayWeb("cert");
+                modalMessage(_("Certificate successfully renewed"), () => { dsasDisplayWeb("cert"); }, true);
             }
         });
     }).catch((error) => {
@@ -46,11 +46,7 @@ function dsasRenewCertReal() {
 }
 
 function dsasRenewCert() {
-    modalAction(
-        _("Are you sure you want to renew the certificate ?"),
-        () => { dsasRenewCertReal(); },
-        true,
-    );
+    modalAction(_("Are you sure you want to renew the certificate ?"), dsasRenewCertReal, true,);
 }
 
 function dsasUploadCrt() {

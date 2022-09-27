@@ -155,10 +155,11 @@ function feedfn($msg, $fld, $value) {
       try { 
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className("is-invalid")));
       } catch (TimeoutException $e) {
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click(); // Click Ok to confirm
         throw new RuntimeException("Undetected bad feedback value");
       }
       return (str_contains($GLOBALS["driver"]->findElement(WebDriverBy::id($fld))->getAttribute("class"), "is-invalid"));
-    }); 
+    });
 }
 
 // Apply and clear modals
@@ -602,7 +603,7 @@ try {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_gateway1"))->clear()->sendKeys("192.168.0.254");
         $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_dns_domain1"))->clear()->sendKeys("example.com");
         $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_nameserver1"))->clear()->sendKeys("8.8.8.8" . PHP_EOL . "1.1.1.1");
-        save(false);
+        save(true);
         // Refresh page and reread values
         $GLOBALS["driver"]->navigate()->refresh();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#iface1']")));
@@ -633,7 +634,7 @@ try {
     feedfn("Setting bad nameserver 2", "iface_nameserver1", "270.0.1.1");
     feedfn("Setting bad nameserver 3", "iface_nameserver1", "8.8.8.0/24");
     $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_nameserver1"))->clear()->sendKeys("8.8.8.8" . PHP_EOL . "1.1.1.1");
-    save(false);
+    save(true);
 
     // Try applying and seeing if network changed on upper machine
     test("Applying network configuration", function () {
@@ -690,7 +691,7 @@ try {
           $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_dns_domain1"))->clear()->sendKeys($GLOBALS["net1"]["domain"]);
           $GLOBALS["driver"]->findElement(WebDriverBy::id("iface_nameserver1"))->clear()->sendKeys($GLOBALS["net1"]["nameserver"]);
         }
-        save(false);
+        save(true);
         apply();
         return true;
       }, true);
