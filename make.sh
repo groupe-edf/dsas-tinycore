@@ -559,6 +559,9 @@ install_webdriver(){
    if test ! -f "$target"; then
       # Install PHP composer
       download -f "https:/getcomposer.org/installer" "$src_dir"
+      mkdir -p "$extract/home/tc"
+      chown tc.staff "$extract/home/tc"
+      chmod 750 "$extract/home/tc"
       cp "$src_dir/installer" "$extract/home/tc"
       chmod a+rx "$extract/home/tc/installer"
       chroot "$extract" chown -R tc.staff "/home/tc/"
@@ -1073,9 +1076,6 @@ docker)
     # Install PHP
     install_tcz php-8.0-cli
 
-    # Install PHP webdriver via composer             
-    install_webdriver
-
     # Download and install the gecko (firefox) webdriver
     download "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux${arch}.tar.gz" "$src_dir"
     tar xCzf "$extract/usr/local/bin" "$src_dir/geckodriver-v0.31.0-linux${arch}.tar.gz"   
@@ -1099,6 +1099,9 @@ docker)
     sed -i -e "s/;extension=iconv/extension=iconv/" $extract/usr/local/etc/php/php.ini
     sed -i -e "s/;extension=curl/extension=curl/" $extract/usr/local/etc/php/php.ini
     sed -i -e "s/;extension=zip/extension=zip/" $extract/usr/local/etc/php/php.ini
+
+    # Install PHP webdriver via composer. Needs php.ini configured
+    install_webdriver
   fi
 
   # prevent autologin of tc user
