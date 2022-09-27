@@ -91,7 +91,7 @@ function dsasRealUserNew() {
 
 function dsasUserNew() {
     const modalDSAS = document.getElementById("modalDSAS");
-    modalAction(_("New username"), () => { dsasRealUserNew(); }, true);
+    modalAction(_("New username"), dsasRealUserNew, true);
     const body = document.createElement("div");
     body.class = "col-9 d-flex justify-content-center";
     const el1 = body.appendChild(document.createElement("label"));
@@ -224,7 +224,7 @@ export default function dsasDisplayUsers() {
             }
             document.getElementById("Users").appendChild(line);
         });
-        document.getElementById("AddUser").addEventListener("click", () => { dsasUserNew(); });
+        document.getElementById("AddUser").addEventListener("click", dsasUserNew);
         document.getElementById("ChangeUsers").addEventListener("click", () => {
             dsasChangeUsers();
             return false;

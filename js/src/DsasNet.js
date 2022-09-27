@@ -93,7 +93,7 @@ export default function dsasDisplayNet(what = "all") {
             i += 1;
         });
         if (what === "all") {
-            document.getElementById("netsubmit").addEventListener("click", () => { dsasChangeNet(); });
+            document.getElementById("netsubmit").addEventListener("click", dsasChangeNet);
         }
     }).catch((error) => {
         if (!failLoggedin(error)) {

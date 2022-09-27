@@ -100,7 +100,7 @@ function dsasRealBackup() {
 function dsasBackup() {
     const modalDSAS = document.getElementById("modalDSAS");
     const body = document.createDocumentFragment();
-    modalAction(_("Backup the DSAS configuration"), () => { dsasRealBackup(); }, true);
+    modalAction(_("Backup the DSAS configuration"), dsasRealBackup, true);
     const el = body.appendChild(document.createElement("div"));
     el.className = "col-9 d-flex justify-content-center";
     let el2 = el.appendChild(document.createElement("label"));
@@ -413,8 +413,8 @@ class DSASHeader extends HTMLElement {
     </nav></div></div>
     <dsas-modal id="modalDSAS" tag="DSAS"  type="Ok"></dsas-modal>`;
 
-        document.getElementById("headbackup").addEventListener("click", () => { dsasBackup(); });
-        document.getElementById("headrestore").addEventListener("click", () => { dsasRestore(); });
+        document.getElementById("headbackup").addEventListener("click", dsasBackup);
+        document.getElementById("headrestore").addEventListener("click", dsasRestore);
         document.getElementById("headreboot").addEventListener("click", () => { modalAction(_("Are you sure you want to restart ?"), dsasReboot); });
         document.getElementById("headshutdown").addEventListener("click", () => { modalAction(_("Are you sure you want to shutdown ?"), dsasShutdown); });
         document.getElementById("headlogout").addEventListener("click", () => { modalAction(_("Are you sure you want to logout ?"), dsasLogout, true); });

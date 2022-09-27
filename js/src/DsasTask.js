@@ -225,7 +225,7 @@ function dsasAddTaskCert() {
     }
 }
 
-function modalTask(action = () => { dsasAddTask(); }, ca = "", taskchange = () => { dsasAddTaskArch(); }) {
+function modalTask(action = dsasAddTask, ca = "", taskchange = dsasAddTaskArch) {
     const modalDSAS = document.getElementById("modalDSAS");
     const temp = document.getElementById("newtasktemplate");
     const b = temp.content.cloneNode(true);
@@ -242,7 +242,7 @@ function modalTask(action = () => { dsasAddTask(); }, ca = "", taskchange = () =
     modalDSAS.setAttribute("title", _("Add a task"));
     modalDSAS.setAttribute("size", "lg");
     b.getElementById("TaskType").addEventListener("change", taskchange);
-    b.getElementById("TaskAddCert").addEventListener("change", () => { dsasAddTaskCert(); });
+    b.getElementById("TaskAddCert").addEventListener("change", dsasAddTaskCert);
     modalDSAS.show();
     modalDSAS.setBody(b);
 
@@ -565,7 +565,7 @@ export default function dsasDisplayTasks(what = "all") {
             document.getElementById("Tasks").textContent = "";
             document.getElementById("Tasks").appendChild(tasksrendered);
             if (what === "all") {
-                document.getElementById("AddTask").addEventListener("click", () => { dsasTaskNew(); });
+                document.getElementById("AddTask").addEventListener("click", dsasTaskNew);
             }
             dsasSetTimeout("tasks", dsasDisplayTasks, 10000, "status");
         }).catch((error) => {

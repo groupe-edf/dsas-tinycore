@@ -136,7 +136,7 @@ function dsasDisplayLogs() {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((logs) => {
-        document.getElementById("loghide").addEventListener("click", () => { dsasToggleLogs(); });
+        document.getElementById("loghide").addEventListener("click", dsasToggleLogs);
         document.getElementById("logsearch").addEventListener("keypress", (event) => {
             if (event.key === "Enter") statusLogs.search(document.getElementById("logsearch").value);
         });
@@ -159,5 +159,5 @@ function dsasDisplayLogs() {
 
 export default function dsasDisplayStatus() {
     dsasStatus();
-    dsasDisplayLogs("all");
+    dsasDisplayLogs();
 }
