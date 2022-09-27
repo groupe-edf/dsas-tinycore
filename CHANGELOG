@@ -1,6 +1,6 @@
 Log of the principal changes to the DSAS
 
-Version 1.2.0 (XX XXX XXX)
+Version 1.2.0 (28 Sep 2022)
 - Add Node.js package version 16.17.0
 - Make dsas.js modular for easier developpement, based on Node.js/webpack
 - Eliminate use of innerHTML where posisble, which eliminates the risk of XSS
