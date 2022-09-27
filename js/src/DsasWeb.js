@@ -46,7 +46,7 @@ function dsasRenewCertReal() {
 }
 
 function dsasRenewCert() {
-    modalAction(_("Are you sure you want to renew the certificate ?"), dsasRenewCertReal, true,);
+    modalAction(_("Are you sure you want to renew the certificate ?"), dsasRenewCertReal, true);
 }
 
 function dsasUploadCrt() {
