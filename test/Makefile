@@ -48,6 +48,8 @@ setup :
 clean : $(SUBDIRS)
 	rm -fr $(BASE) dsas_conf.xml tests.zip eicar
 	rm -f $(SRC)/dsastestfiles_$(VERSION).tgz $(PKG)/dsastestfiles.pkg
+
+realclean : clean
 	rm -f $(TCZ)*/dsastestfiles.tcz
 
 $(SUBDIRS):

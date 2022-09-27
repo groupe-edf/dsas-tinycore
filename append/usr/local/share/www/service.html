@@ -4,19 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Service</title>
-    <link rel="stylesheet" type="text/css" href="bootstrap-5.0.2.min.css" />
-    <script src="bootstrap-5.0.2.bundle.min.js"></script>
-    <script src="dsas.js"></script>
-    <link rel="stylesheet" type="text/css" href="dsas.css" />
 </head>
 <body>
 
 <dsas-header></dsas-header>
-<script>
-  dsas_loggedin();
-  dsas_check_warnings();
-</script>
-
 <div class="container p-3 my-3 border">
   <h5 data-i18n>Service configuration :</h5>
   <form class="g-2">
@@ -24,7 +15,7 @@
       <div class="col-6">
         <div class="row">
           <div class="col-12">
-            <input class="form-check-input" type="checkbox" value="" id="ssh" onchange="dsas_change_service('ssh');">
+            <input class="form-check-input" type="checkbox" value="" id="ssh">
             <label class="form-check-label" for="ssh" data-i18n>SSH server active</label>
           </div>
           <div class="col-12">
@@ -47,7 +38,7 @@
           </div>
           <div class="col-12"><hr /></div>
           <div class="col-12">
-            <input class="form-check-input" type="checkbox" value="" id="snmp" onchange="dsas_change_service('snmp');">
+            <input class="form-check-input" type="checkbox" value="" id="snmp">
             <label class="form-check-label" for="snmp" data-i18n>SNMPv3</label>
           </div>
           <div class="col-12">
@@ -93,7 +84,7 @@
       <div class="col-6">
         <div class="row">
           <div class="col-12">
-            <input class="form-check-input" type="checkbox" value="" id="syslog" onchange="dsas_change_service('syslog');">
+            <input class="form-check-input" type="checkbox" value="" id="syslog">
             <label class="form-check-label" for="syslog" data-i18n>Syslogd</label>
           </div>
           <div class="col-12">
@@ -103,7 +94,7 @@
           </div>
           <div class="col-12"><hr /></div>
           <div class="col-12">
-            <input class="form-check-input" type="checkbox" value="" id="ntp" onchange="dsas_change_service('ntp');">
+            <input class="form-check-input" type="checkbox" value="" id="ntp">
             <label class="form-check-label" for="ntp" data-i18n>NTP service for the host on 'bas' interface</label>
           </div>
           <div class="form-check col-12">
@@ -113,7 +104,7 @@
           </div>
           <div class="col-12"><hr /></div>
           <div class="col-12">
-            <input class="form-check-input" type="checkbox" value="" id="antivirus" onchange="dsas_change_service('antivirus');">
+            <input class="form-check-input" type="checkbox" value="" id="antivirus">
             <label class="form-check-label" for="antivirus" data-i18n>Antivirus</label>
           </div>
           <div class="col-12">
@@ -123,7 +114,7 @@
           </div>
           <div class="col-12"><hr /></div>
           <div class="col-12">
-            <input class="form-check-input" type="checkbox" value="" id="repo" onchange="dsas_change_service('repo');">
+            <input class="form-check-input" type="checkbox" value="" id="repo">
             <label class="form-check-label" for="repo" data-i18n>HTTPS repository</label>
           </div>
           <!-- 
@@ -132,7 +123,7 @@
           capable of PAP.... If you're fine with that can just uncomment below to activate radius
           <div class="col-12"><hr /></div>
           <div class="col-12">
-            <input class="form-check-input" type="checkbox" value="" id="radius" onchange="dsas_change_service('radius');">
+            <input class="form-check-input" type="checkbox" value="" id="radius">
             <label class="form-check-label" for="radius" data-i18n>Radius client active</label>
           </div>
           <div class="col-12">
@@ -149,13 +140,11 @@
         </div>
       </div>
       <div class="form-group">
-        <input type="submit" class="btn btn-primary" value="Save changes" onclick="dsas_change_service(); return false;" data-i18n-value>
+        <input type="button" id="save" class="btn btn-primary" value="Save changes" data-i18n-value>
       </div>
     </div>
   </form>
-  <script>dsas_display_service("all");</script>
 </div>
-
-
+<script src="dsas.js"></script>
 </body>
 </html>

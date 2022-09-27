@@ -1,5 +1,15 @@
 Log of the principal changes to the DSAS
 
+Version 1.2.0 (28 Sep 2022)
+- Add Node.js package version 16.17.0
+- Make dsas.js modular for easier developpement, based on Node.js/webpack
+- Eliminate use of innerHTML where posisble, which eliminates the risk of XSS
+- Add better static testing phpstan/eslint/shellcheck
+- Add testing framework
+- Keep focus on search button while searching logs
+- Properly clear timeout functions when rebooting to avoid unnecessary error messages
+- Update rpm 14.17.1 -> 4.17.1.1
+
 Version 1.1.3 (16 Sept 2022)
 - Don't create log files as root in rotatelogs script. Let the apps do it
 

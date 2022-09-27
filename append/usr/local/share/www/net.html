@@ -4,21 +4,104 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Net</title>
-    <link rel="stylesheet" type="text/css" href="bootstrap-5.0.2.min.css" />
-    <script src="bootstrap-5.0.2.bundle.min.js"></script>
-    <script src="dsas.js"></script>
-    <link rel="stylesheet" type="text/css" href="dsas.css" />
 </head>
 <body>
 
 <dsas-header></dsas-header>
-<script>
-  dsas_loggedin();
-  dsas_check_warnings();
-</script>
-
-<div class="container p-3 my-3 border" id="network"></div>
-<script>dsas_display_net("all");</script>
-
+<div class="container p-3 my-3 border" id="network">
+  <h5 data-i18n>Network configuration</h5>
+  <form class="row g-2">
+    <div class="container p-3 my-3 border" id="IFaces">
+      <p class="my-0">
+        <a class="text-toggle" data-bs-toggle="collapse" href="#iface0" role="button" aria-controls="iface0" aria-expanded="false"><i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded"><img src="caret-down.svg"/></i></a>
+        <span data-i18n>Lower Machine</span>
+      </p>
+      <div class="collapse" id="iface0">
+        <div class="card card-body">
+          <div class="row">
+            <div class="col-6">
+              <div class="row">
+                <div class="col-12">
+                  <input class="form-check-input" type="checkbox" id="iface_dhcp0">
+                  <label class="form-check-label" for="iface_dhcp0" data-i18n>Use DHCP</label>
+                </div>
+                <div class="col-12">
+                  <label for="iface_cidr0" data-i18n>IP address and mask (CIDR format)</label>
+                  <input type="text" id="iface_cidr0" class="form-control">
+                  <div class="invalid-feedback" id="feed_iface_cidr0"></div>
+                </div>
+                <div class="col-12">
+                  <label for="iface_gateway0" data-i18n>Gateway</label>
+                  <input type="text" id="iface_gateway0" class="form-control">
+                  <div class="invalid-feedback" id="feed_iface_gateway0"></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="row">
+                <div class="col-12">
+                  <label for="iface_dns_domain0" data-i18n>DNS domain</label>
+                  <input type="text" id="iface_dns_domain0" class="form-control">
+                  <div class="invalid-feedback" id="feed_iface_dns_domain0"></div>
+                </div>
+                <div class="form-check col-12">
+                  <label for="iface_nameserver0" data-i18n>DNS name servers</label>
+                  <textarea name="iface_nameserver0" rows="3" id="iface_nameserver0" class="form-control"></textarea>
+                  <div class="invalid-feedback" id="feed_iface_nameserver0"></div>
+                </div>
+              </div>
+            </div>
+           </div>
+        </div>
+      </div>
+      <p class="my-0">
+        <a class="text-toggle" data-bs-toggle="collapse" href="#iface1" role="button" aria-controls="iface1" aria-expanded="false"><i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded"><img src="caret-down.svg"/></i></a>
+        <span data-i18n>Upper Machine</span>
+      </p>
+      <div class="collapse" id="iface1">
+        <div class="card card-body">
+          <div class="row">
+            <div class="col-6">
+              <div class="row">
+                <div class="col-12">
+                  <input class="form-check-input" type="checkbox" id="iface_dhcp1">
+                  <label class="form-check-label" for="iface_dhcp1" data-i18n>Use DHCP</label>
+                </div>
+                <div class="col-12">
+                  <label for="iface_cidr1" data-i18n>IP address and mask (CIDR format)</label>
+                  <input type="text" id="iface_cidr1" class="form-control">
+                  <div class="invalid-feedback" id="feed_iface_cidr1"></div>
+                </div>
+                <div class="col-12">
+                  <label for="iface_gateway1" data-i18n>Gateway</label>
+                  <input type="text" id="iface_gateway1" class="form-control">
+                  <div class="invalid-feedback" id="feed_iface_gateway1"></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="row">
+                <div class="col-12">
+                  <label for="iface_dns_domain1" data-i18n>DNS domain</label>
+                  <input type="text" id="iface_dns_domain1" class="form-control">
+                  <div class="invalid-feedback" id="feed_iface_dns_domain1"></div>
+                </div>
+                <div class="form-check col-12">
+                  <label for="iface_nameserver1" data-i18n>DNS name servers</label>
+                  <textarea name="iface_nameserver1" rows="3" id="iface_nameserver1" class="form-control"></textarea>
+                  <div class="invalid-feedback" id="feed_iface_nameserver1"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <input type="button" id="netsubmit" class="btn btn-primary" value="Save the changes" data-i18n-value>
+    </div>
+  </form>
+</div>
+<script src="dsas.js"></script>
 </body>
 </html>

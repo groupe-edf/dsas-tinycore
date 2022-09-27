@@ -1,7 +1,21 @@
 #!/bin/sh
 #
+# Shellcheck configuration to test for POSIX shell plus the Busybox/ASH extensions I use
 # shellcheck shell=sh
-# shellcheck disable=SC2039
+# Allow process subsitution with "<()"
+# shellcheck disable=SC3001
+# Allow "[["
+# shellcheck disable=SC3010
+# Allow variable icrement
+# shellcheck disable=SC3018
+# Allow echo flags
+# shellcheck disable=SC3037
+# Allow "read -d"
+# shellcheck disable=SC3045
+# Allow string indexing like "${1:3}"
+# shellcheck disable=SC3057
+# Allow string replacement like "${1// }
+# shellcheck disable=SC3060
 
 RED="$(echo -e '\033[1;31m')"
 GREEN="$(echo -e '\033[1;32m')"
@@ -189,7 +203,7 @@ get_dsas(){
   fi
 
   TCE=$(readlink /etc/sysconfig/tcedir)
-  if [ -z "$TCE" ] || [ "${TCE:0:8}" == "/tmp/tce" ]; then
+  if [ -z "$TCE" ] || [ "${TCE:0:8}" = "/tmp/tce" ]; then
     TCE=$(echo "$DSAS" | sed -e "s:/dsas::")
     echo "Setting up TCE directory on ${GREEN}$TCE${NORMAL}"
     /usr/bin/tce-setdrive -s "$TCE"
@@ -203,7 +217,7 @@ audit_perms(){
   while IFS= read -r -d '' _d; do
     _d=$(basename "$_d")
     for _user in bas haut log; do
-       [ "$_d" == "$_user" ] && break 2
+       [ "$_d" = "$_user" ] && break 2
     done
     chgrp -R users "$_d"
     chmod go-rwx "$_d"
@@ -217,8 +231,8 @@ audit_perms(){
     chown $_user.$_user "$DSAS/$_user/share"
     chmod 770 "$DSAS/$_user/share"
     while IFS= read -r -d '' _d; do
-      [ "$_user" == "bas" ] || chown haut.haut "$_d"
-      [ "$_user" == "bas" ] && chown verif.share "$_d"
+      [ "$_user" = "bas" ] || chown haut.haut "$_d"
+      [ "$_user" = "bas" ] && chown verif.share "$_d"
       chmod 770 "$_d"
     done < <(find "$DSAS/$_user/share" -mindepth 1 -type d -print0)
   done
@@ -352,14 +366,14 @@ valid_domain(){
 
 config_network(){
   d=$(xmllint --xpath 'string(dsas/config/network/bas/dhcp)' "$VAR/dsas_conf.xml")
-  if [ "$d" == "true" ]; then
+  if [ "$d" = "true" ]; then
     d="on"
   else
     d="off"
   fi
   DHCP="$(dialog --stdout --no-cancel --checklist 'Interface Bas:' 0 0 0 on 'DHCP' $d)"
   if [ "$DHCP" != "$d" ]; then
-    if [ "$DHCP" == "on" ]; then
+    if [ "$DHCP" = "on" ]; then
       echo -e "cd /dsas/config/network/bas/dhcp\nset true\nsave" | xmllint --shell $VAR/dsas_conf.xml
     else
       echo -e "cd /dsas/config/network/bas/dhcp\nset false\nsave" | xmllint --shell $VAR/dsas_conf.xml
@@ -448,7 +462,7 @@ start_network(){
 
   if [ -z "$NO_INTERCO" ]; then
     echo "Using static IP for ${GREEN}$ETH1${NORMAL}."
-    if [ "$TYP" == "bas" ]; then
+    if [ "$TYP" = "bas" ]; then
       /sbin/ifconfig "$ETH1" "$INTERCO_BAS" netmask "$INTERCO_MASK_BAS" up
       if [ -z "$INTERCO_GW_BAS" ]; then
         /sbin/route add "$INTERCO_HAUT" "$ETH1" &
@@ -466,7 +480,7 @@ start_network(){
   fi
 
   dhcp=$(xmllint --xpath "string(dsas/config/network/${TYP}/dhcp)" "$VAR/dsas_conf.xml")
-  if [ "$dhcp" == "true" ]; then
+  if [ "$dhcp" = "true" ]; then
     echo -n "Using DHCP broadcast for ${GREEN}$ETH0${NORMAL}..."
     /sbin/udhcpc -b -i "$ETH0" -x "hostname:$(/bin/hostname)" -p "/var/run/udhcpc.$ETH0.pid" > /dev/null 2>&1 &
     CNT=0
@@ -511,8 +525,8 @@ stop_network(){
   /sbin/ifconfig "$ETH0" down
 
   if [ -z "$NO_INTERCO" ]; then
-    [ "$TYP" == "bas" ] && /sbin/route del "$INTERCO_HAUT"
-    [ "$TYP" == "haut" ] && /sbin/route del "$INTERCO_BAS"
+    [ "$TYP" = "bas" ] && /sbin/route del "$INTERCO_HAUT"
+    [ "$TYP" = "haut" ] && /sbin/route del "$INTERCO_BAS"
 
     /sbin/ifconfig "$ETH1" down
   fi
@@ -529,7 +543,7 @@ start_web_admin(){
   echo "Binding webserver to ${GREEN}$ETH0${NORMAL} and address ${GREEN}$ip${NORMAL}." 
   echo "server.bind = \"$ip\"" >> $VAR/admin.conf
   echo "Starting administration web server"
-  $as_tc lighttpd -Df "$VAR/admin.conf" >& /dev/null &
+  $as_tc lighttpd -Df "$VAR/admin.conf" > /dev/null 2>&1 &
 }
 
 stop_web_admin(){
@@ -537,8 +551,8 @@ stop_web_admin(){
 }
 
 start_sshd(){
-  if [ "$TYP" == "bas" ]; then
-    [ "$(xmllint --xpath "string(dsas/config/ssh/active)" "$VAR/dsas_conf.xml")" == "false" ] && { stop_sshd; return 0; }
+  if [ "$TYP" = "bas" ]; then
+    [ "$(xmllint --xpath "string(dsas/config/ssh/active)" "$VAR/dsas_conf.xml")" = "false" ] && { stop_sshd; return 0; }
     USER_TC=$(xmllint --xpath "string(dsas/config/ssh/user_tc)" "$VAR/dsas_conf.xml") 
     USER=$(xmllint --xpath "string(dsas/config/ssh/user_bas)" "$VAR/dsas_conf.xml")
     UID_TC=""
@@ -548,7 +562,7 @@ start_sshd(){
       [ -z "${_username// }" ] && break
       _active=$(xmllint --xpath "string(dsas/config/users/user[$i]/active)" "$VAR/dsas_conf.xml")
       _type=$(xmllint --xpath "string(dsas/config/users/user[$i]/type)" "$VAR/dsas_conf.xml")
-      if [ "$_active" == "true" ] && [ "$_type" == "admin" ]; then
+      if [ "$_active" = "true" ] && [ "$_type" = "admin" ]; then
         if [ -z "$UID_TC" ]; then
           UID_TC="$_username"
         else
@@ -564,7 +578,7 @@ start_sshd(){
       [ -z "${_username// }" ] && break
       _active=$(xmllint --xpath "string(dsas/config/users/user[$i]/active)" "$VAR/dsas_conf.xml")
       _type=$(xmllint --xpath "string(dsas/config/users/user[$i]/type)" "$VAR/dsas_conf.xml")
-      if [ "$_active" == "true" ] && [ "$_type" == "$TYP" ]; then
+      if [ "$_active" = "true" ] && [ "$_type" = "$TYP" ]; then
         if [ -z "$UID_TYP" ]; then
           UID_TYP="$_username"
         else
@@ -587,7 +601,7 @@ start_sshd(){
       [ -z "${_username// }" ] && break
       _active=$(xmllint --xpath "string(dsas/config/users/user[$i]/active)" "$VAR/dsas_conf.xml")
       _type=$(xmllint --xpath "string(dsas/config/users/user[$i]/type)" "$VAR/dsas_conf.xml")
-      if [ "$_active" == "true" ] && [ "$_type" == "$TYP" ]; then
+      if [ "$_active" = "true" ] && [ "$_type" = "$TYP" ]; then
         if [ -z "$UID_TYP" ]; then
           UID_TYP="$_username"
         else
@@ -642,7 +656,7 @@ Match User $UID_TYP Address $USER
 EOF
   fi
 
-  if [ "$TYP" == "haut" ]; then
+  if [ "$TYP" = "haut" ]; then
     cat << EOF >> /usr/local/etc/ssh/sshd_config
 Match User bas Address $INTERCO_BAS
 	PasswordAuthentication yes
@@ -672,7 +686,7 @@ EOF
 }
 
 config_sshd(){
-  if [ "$TYP" == "bas" ]; then
+  if [ "$TYP" = "bas" ]; then
     # Wait for machine haut to become available
     i=0
     echo -ne "Waiting for SSH server on machine haut /"
@@ -758,7 +772,7 @@ start_repo(){
   echo "Starting repository web server"
   # Start as root to allow use of port 443. But after change to user bas.repo
   # via options in repo.conf
-  lighttpd -Df "$VAR/repo.conf" >& /dev/null &
+  lighttpd -Df "$VAR/repo.conf" > /dev/null 2>&1 &
 }
 
 stop_repo(){
@@ -769,8 +783,8 @@ start_syslog(){
   syslog=$(xmllint --xpath "string(dsas/config/syslog/active)" "$VAR/dsas_conf.xml")
   server=$(xmllint --xpath "string(dsas/config/syslog/server)" "$VAR/dsas_conf.xml")
 
-  if [ "$syslog" == "true" ]; then
-    [ "$TYP" == "bas" ] && [ -n "$server" ] && sopts=" -R $server -L "
+  if [ "$syslog" = "true" ]; then
+    [ "$TYP" = "bas" ] && [ -n "$server" ] && sopts=" -R $server -L "
     sopts=" -l 5 $sopts"
     echo "${sopts}" | xargs /sbin/syslogd && echo "${GREEN}syslogd started.${NORMAL}"
     /sbin/klogd && echo "${GREEN}klogd started.${NORMAL}"
@@ -787,7 +801,7 @@ start_ntp(){
   ntp=$(xmllint --xpath "string(dsas/config/ntp/active)" "$VAR/dsas_conf.xml")
   next=$(xmllint --xpath "string(dsas/config/ntp/server[1])" "$VAR/dsas_conf.xml")
 
-  if [ "$ntp" == "true" ] && [ "$next" != "" ]; then
+  if [ "$ntp" = "true" ] && [ "$next" != "" ]; then
     i=2
     opts=""
     while [ -n "$next" ]; do
@@ -814,17 +828,17 @@ start_radius(){
   [ -z "$secret" ] && return
   echo "# server[:port]                   shared_secret                 timeout(s)    source_ip      vrf" > $RADIUS_SERVER
   printf "%-32s %-32s %-4s" "$server" "$secret" "3" >> $RADIUS_SERVER
-  sed -i -e '1s:^:auth            sufficient        pam_radius_auth.so localifdown conf=/etc/raddb/server:' /usr/local/etc/pam.d/common-auth
-}
+  sed -i -e '1s:^:auth           sufficient        pam_radius_auth.so localifdown conf=/etc/raddb/server\n:' /usr/local/etc/pam.d/common-auth
+} 
 
 stop_radius(){
-  sed -i -e ':a;N;s/^.*pam_radius_server.so.*\n//' /usr/local/etc/pam.d/common-auth
-  rm $RADIUS_SERVER >& /dev/null
+  sed -i -e ':a;N;s/^.*pam_radius_auth.so.*\n//' /usr/local/etc/pam.d/common-auth
+  rm $RADIUS_SERVER > /dev/null 2>&1
 }
 
 start_antivirus(){
   antivirus=$(xmllint --xpath "string(dsas/config/antivirus/active)" "$VAR/dsas_conf.xml")
-  if [ "$antivirus" == "true" ]; then
+  if [ "$antivirus" = "true" ]; then
     ClamAVDir="/etc/sysconfig/tcedir/../dsas/bas/share/ClamAV"
     if [ -n "$ClamAVDir" ]; then
       mkdir -p $ClamAVDir
@@ -832,7 +846,7 @@ start_antivirus(){
     fi
     # Start up is slow. So need to background. Also send output to /dev/null so that
     # web UI doesn't block waiting for clamd to fork after the initialisation
-    sudo -u verif /usr/local/sbin/clamd >& /dev/null &
+    sudo -u verif /usr/local/sbin/clamd > /dev/null 2>&1 &
   fi
 }
 
@@ -842,7 +856,7 @@ stop_antivirus(){
 
 start_snmp(){
   snmp=$(xmllint --xpath "string(dsas/config/snmp/active)" "$VAR/dsas_conf.xml")
-  if [ "$snmp" == "true" ]; then
+  if [ "$snmp" = "true" ]; then
     NETDEVICES=$(getnetdevices)
     ETH0=$(echo "$NETDEVICES" | cut -d" " -f1)
     ip=$(ifconfig "$ETH0" | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p") 
@@ -884,8 +898,8 @@ start_chroot(){
    # Don't mount /home/haut as this will give the user the capacity to create an executable
    [ -d "/opt/lftp/home/haut/.ssh" ] || mkdir -p /opt/lftp/home/haut/.ssh
    chmod 0550 /opt/lftp/home/haut /opt/lftp/home/haut/.ssh
-   if [ "$TYP" == "bas" ]; then
-     if [ "$1" == "--force" ]; then
+   if [ "$TYP" = "bas" ]; then
+     if [ "$1" = "--force" ]; then
        (umask 227; cp /home/haut/.ssh/ /opt/lftp/home/haut/.ssh)
      else
        for _f in /home/haut/.ssh/*; do
@@ -1008,7 +1022,7 @@ check_xml_version(){
 
   if [ "$VER_MAJOR" -eq "0" ] && [ "$VER_MINOR" -lt "13" ]; then
     # The version 0.13 of the DSAS needs the authorized_keys of "bas" copied to "tc"
-    if [ -f "$VAR/dsas_typ" ] && [ "$(cat $VAR/dsas_typ)" == "haut" ]; then
+    if [ -f "$VAR/dsas_typ" ] && [ "$(cat $VAR/dsas_typ)" = "haut" ]; then
       cat /home/bas/.ssh/authorized_keys >> /home/tc/.ssh/authorized_keys
       chown -R tc.staff /home/tc/.ssh
       chmod -R 700 /home/tc/.ssh
@@ -1056,19 +1070,19 @@ case "${1}" in
       echo "Machine configured as type: ${GREEN}$TYP${NORMAL}"
       config_interco
       # The machine "haut" is configured from the web admin of "bas"
-      [ "$TYP" == "bas" ] && config_network
+      [ "$TYP" = "bas" ] && config_network
       CONFIG_SSH="true"
     fi
     setup_interco
     [ -z "$ISDOCKER" ] && /usr/bin/sethostname "$TYP"
     echo "# Hardcoded address of other DSAS machine" >> /etc/hosts
-    [ "$TYP" == "bas" ] && echo "$INTERCO_HAUT haut" >> /etc/hosts
-    [ "$TYP" == "haut" ] && echo "$INTERCO_BAS bas" >> /etc/hosts
+    [ "$TYP" = "bas" ] && echo "$INTERCO_HAUT haut" >> /etc/hosts
+    [ "$TYP" = "haut" ] && echo "$INTERCO_BAS bas" >> /etc/hosts
     /bin/chmod a+r /etc/hosts
     start_network
     start_sshd
     start_syslog
-    if [ "$TYP" == "bas" ]; then
+    if [ "$TYP" = "bas" ]; then
       [ -n "$CONFIG_SSH" ] && config_sshd
       start_web_admin
       start_repo
@@ -1094,7 +1108,7 @@ case "${1}" in
       TYP="haut"
     fi
     stop_chroot
-    if [ "$TYP" == "bas" ]; then
+    if [ "$TYP" = "bas" ]; then
       stop_cron
       stop_snmp
       stop_antivirus
@@ -1121,7 +1135,7 @@ case "${1}" in
     echo "Machine configured as type: ${GREEN}$TYP${NORMAL}"
     config_interco
     setup_interco
-    [ "$TYP" == "bas" ] && config_network
+    [ "$TYP" = "bas" ] && config_network
     config_sshd
     start_chroot --force
     $0 restart
@@ -1150,7 +1164,7 @@ case "${1}" in
     # The other services can be restarted without risk
     stop_syslog
     start_syslog
-    if [ "$TYP" == "bas" ]; then
+    if [ "$TYP" = "bas" ]; then
       stop_snmp
       start_snmp
       stop_antivirus

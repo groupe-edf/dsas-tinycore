@@ -4,25 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Users</title>
-    <link rel="stylesheet" type="text/css" href="bootstrap-5.0.2.min.css" />
-    <script src="bootstrap-5.0.2.bundle.min.js"></script>
-    <script src="dsas.js"></script>
-    <link rel="stylesheet" type="text/css" href="dsas.css" />
 </head>
 <body>
 
 <dsas-header></dsas-header>
-<script>
-  dsas_loggedin();
-  dsas_check_warnings(true, false);
-  dsas_display_users();
-</script>
+
+<template id="usertemplate">
+  <tr>
+    <th scope="row"></th>
+    <td><input type="text" class="form-control"></td>
+    <td><select class="form-select">
+        <option value="admin" data-i18n>administrator</option>
+        <option value="bas" data-i18n>lower</option>
+        <option value="haut" data-i18n>upper</option>
+    </select></td>
+    <td style="text-align:center"><input type="checkbox" class="form-check-input"></td>
+    <td>
+      <a data-toggle="tooltip" title="Change Password" data-i18n-title><img src="lock.svg"></a>
+      &nbsp;<a data-toggle="tooltip" title="Delete" data-i18n-title><img src="x-lg.svg"></a>
+    <td>
+  </tr>
+</template>
 
 <div class="container p-3 my-3 border">
   <div class="row">
     <div class="col-md-10"><h5 data-i18n>Users</h5></div>
     <div class="col-md-2 text-end">
-      <img id="AddUser" src="plus-lg.svg" data-toggle="tooltip" title="Add" onclick="dsas_user_new();" data-i18n-title>
+      <img id="AddUser" src="plus-lg.svg" data-toggle="tooltip" title="Add" data-i18n-title>
     </div>
   </div>
   <form class="g-2">
@@ -41,10 +49,10 @@
       </table>
     </div>
     <div class="form-group">
-      <input type="submit" class="btn btn-primary" value="Save changes" onclick="dsas_change_users(); return false;" data-i18n-value>
+      <input type="button" id="ChangeUsers" class="btn btn-primary" value="Save changes" data-i18n-value>
     </div>
   </form>
 </div>
-
+<script src="dsas.js"></script>
 </body>
 </html>

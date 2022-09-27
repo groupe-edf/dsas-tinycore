@@ -82,8 +82,10 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
               $found = true;
               unset($dsas->config->users->user[$i]);
               $output = dsas_exec(["sudo", "deluser", "--remove-home", (string)$data["username"]]);
-              if ($output["retval"] != 0)
+              if ($output["retval"] != 0) {
                 $errors[] = ["error" => ["Error during user deletion '{0}'", (string)$output["stderr"]]];
+                $dsas->asXml(_DSAS_XML); // Even if there is as error here, want to get rid of the user
+              }
               break;
             }
             $i++;

@@ -1,6 +1,14 @@
 #!/bin/sh
 #
-# shellcheck disable=SC2039
+# Shellcheck configuration to test for POSIX shell plus the Busybox/ASH extensions I use
+# Allow process subsitution with "<()"
+# shellcheck disable=SC3001
+# Allow echo flags
+# shellcheck disable=SC3037
+# Allow "read -d"
+# shellcheck disable=SC3045
+# Allow string indexing like "${1:3}"
+# shellcheck disable=SC3057
 
 # If not running as root and/or running /bin/dash restart as root with a compatible shell
 readlink /proc/$$/exe | grep -q dash && _shell="/bin/bash"
@@ -47,7 +55,8 @@ while [ "$#" -gt 0 ]; do
       echo "     check           Run test code to test correct function of checkfiles" 
       echo "     iso             Build the DSAS ISO file. This the default command"
       echo "     static          Run static analysis on the DSAS source code"
-      echo "     upgrade         Upgrade the TCZ packages to their latest versiosn"
+      echo "     upgrade         Upgrade the TCZ packages to their latest version"
+      echo "     work            Set the work directory"
       echo "Valid options are"
       echo "     -r|--rebuild    Force the rebuild of source packages"
       echo "     -f|--download   Force the source packages to be re-downloaded"
@@ -197,6 +206,7 @@ get_tcz() {
 }
 
 install_tcz() {
+    # Want array splitting here
     # shellcheck disable=SC2068
     get_tcz $@
     exit_if_nonroot
@@ -252,27 +262,28 @@ download() {
 }
 
 unpack() {
+  msg "Unpacking $1 to $2"
   case $(echo "$1" | sed -e "s/.*\(\..*\)$/\1/g") in
-    .tgz) tar xvzCf "$2" "$1"; ;;
-    .tbz) tar xvjCf "$2" "$1"; ;;
-    .tar) tar xvCf "$2" "$1"; ;;
+    .tgz) tar xzCf "$2" "$1" || return 1; ;;
+    .tbz) tar xjCf "$2" "$1" || return 1; ;;
+    .tar) tar xCf "$2" "$1" || return 1; ;;
     .gz)
       if [ "${1: -7}" = ".tar.gz" ]; then
-        tar xvzCf "$2" "$1";
+        tar xzCf "$2" "$1" || return 1
       else
         error "An archive can not be a gzip"
       fi
       ;;
     .bz2) 
       if [ "${1: -8}" = ".tar.bz2" ]; then
-        tar xvjCf "$2" "$1";
+        tar xjCf "$2" "$1" || return 1
       else
         error "An archive can not be a bzip2"
       fi
       ;;
     .xz)
       if [ "${1: -7}" = ".tar.xz" ]; then
-        tar xvJCf "$2" "$1";
+        tar xJCf "$2" "$1" || return 1
       else
         error "An archive can not be a xz"
       fi
@@ -340,10 +351,13 @@ build_pkg() {
 
         mkdir -p "$extract/$builddir"
         mkdir -p "$extract/$destdir"
-        unpack "$src_dir/$_src" "$extract/$builddir"
+        unpack "$src_dir/$_src" "$extract/$builddir" || error "Can not unpack $_src"
         chroot "$extract" chown -R tc.staff /home/tc
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
+export HOME=/home/tc
 $_pre_config
 exit \$?
 EOF
@@ -354,6 +368,9 @@ EOF
         msg "Configuring $_pkg"
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
+export HOME=/home/tc
 cd $builddir/$_pkg_path
 $_conf_cmd
 exit \$?
@@ -363,6 +380,8 @@ EOF
         msg "Building $_pkg"
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 export HOME=/home/tc
 cd $builddir/$_pkg_path
 $_make_cmd
@@ -374,6 +393,8 @@ EOF
         cat << EOF > "$extract/tmp/script"
 export DESTDIR=$destdir
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 export HOME=/home/tc
 cd $builddir/$_pkg_path
 $_install_cmd$destdir
@@ -383,6 +404,9 @@ EOF
         [  -z "$_install_cmd" ] || chroot "$extract" /tmp/script || { umount "$extract/proc"; error "Unexpected error ($?) in install"; }
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
+export HOME=/home/tc
 destdir=$destdir
 builddir=$builddir
 _pkg_path=$_pkg_path
@@ -489,7 +513,7 @@ install_firefox(){
       ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libdl.so.2 libdl.so; )
 
       # Force install of coreutils as always needed for install_tcz
-      # In seperate sheel to avoid modifiying local variables
+      # In seperate shell to avoid modifiying local variables
       ( install_tcz coreutils )
       ( install_tcz "$latest" )
 
@@ -497,14 +521,14 @@ install_firefox(){
       mkdir -p "$extract/etc"
       cp -p /etc/resolv.conf "$extract/etc/resolv.conf"
 
-      mkdir -p $extract/home/tc
-      chown tc.staff $extract/home/tc
-      echo tc > $extract/etc/sysconfig/tcuser
+      mkdir -p "$extract/home/tc"
+      chown tc.staff "$extract/home/tc"
+      echo tc > "$extract/etc/sysconfig/tcuser"
 
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 export USER=tc
 mkdir /tmp/tce
 sudo tce-setup
@@ -535,16 +559,19 @@ install_webdriver(){
    if test ! -f "$target"; then
       # Install PHP composer
       download -f "https:/getcomposer.org/installer" "$src_dir"
+      mkdir -p "$extract/home/tc"
+      chown tc.staff "$extract/home/tc"
+      chmod 750 "$extract/home/tc"
       cp "$src_dir/installer" "$extract/home/tc"
       chmod a+rx "$extract/home/tc/installer"
       chroot "$extract" chown -R tc.staff "/home/tc/"
       cp /etc/resolv.conf "$extract/etc/resolv.conf" && msg "copy resolv.conf"
-      # http_proxy is imported (or not) from the environment 
-      # shellcheck disable=SC2154
+      # http_proxy is imported (or not) from the environment. Shellcheck 
+      # complains if we don't force a default value here
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 cd /home/tc
 env HOME=/home/tc php installer || exit 1
 rm installer
@@ -556,9 +583,8 @@ EOF
       # Install Facebook Webdriver
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-# shellcheck disable=SC2154
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 cd /home/tc
 env HOME=/home/tc php composer.phar require php-webdriver/webdriver
 EOF
@@ -593,16 +619,17 @@ install_phpstan(){
    if test ! -f "$target"; then
       # Install PHP composer
       download -f "https:/getcomposer.org/installer" "$src_dir"
+      mkdir -p "$extract/home/tc"
+      chown tc.staff "$extract/home/tc"
+      chmod 750 "$extract/home/tc"
       cp "$src_dir/installer" "$extract/home/tc"
       chmod a+rx "$extract/home/tc/installer"
       chroot "$extract" chown -R tc.staff "/home/tc/"
       cp /etc/resolv.conf "$extract/etc/resolv.conf" && msg "copy resolv.conf"
-      # http_proxy is imported (or not) from the environment 
-      # shellcheck disable=SC2154
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 cd /home/tc
 env HOME=/home/tc php installer || exit 1
 rm installer
@@ -614,9 +641,8 @@ EOF
       # Install PHPSTAN
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-# shellcheck disable=SC2154
-export http_proxy=$http_proxy
-export https_proxy=$https_proxy
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
 cd /home/tc
 env HOME=/home/tc php composer.phar require --dev phpstan/phpstan
 EOF
@@ -644,6 +670,78 @@ EOF
     install_tcz $package
 }
 
+install_dsas_js() {
+   package=dsas_js
+   target=$tcz_dir/$package.tcz
+   dep=$target.dep
+
+   # Remove old TCZ if JS file is newer
+   while IFS= read -r -d '' file; do
+     if [ "$(stat -c '%Y' "$target")" -lt "$(stat -c '%Y' "$file")" ]; then
+       rm -f "$target"
+       break;
+     fi
+   done < <(find ./js -name "*.js" -print0)
+
+   if test  ! -f "$target"; then
+      _old=$extract
+      extract="$build"
+      if [ -d "$extract" ]; then
+        umount "$extract/proc"
+        rm -fr "$extract"
+      fi
+      mkdir -p "$extract"
+      zcat "$squashfs" | { cd "$extract" || exit 1; cpio -i -H newc -d; }
+      mount -t proc /proc "$extract/proc"
+
+      # FIXME : Fix missing links
+      # It appears that certain links are missings with the base intsall
+      # and they need to be forced
+      ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libpthread.so.0 libpthread.so; )
+      ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libdl.so.2 libdl.so; )
+
+      # Force install of coreutils as always needed for install_tcz
+      # In seperate shell to avoid modifiying local variables
+      ( install_tcz coreutils compiletc curl node )
+
+      # Copy /etc/resolv.conf file
+      mkdir -p "$extract/etc"
+      cp -p /etc/resolv.conf "$extract/etc/resolv.conf"
+
+      # Copy DSAS files to build tree
+      mkdir -p $extract/home/tc/dsas
+      tar cf - --exclude tmp --exclude=work --exclude=.git . | tar -C $extract/home/tc/dsas -xvf - 
+      chown -R tc.staff $extract/home/tc
+
+      cat << EOF > "$extract/tmp/script"
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
+export HOME=/home/tc
+export USER=tc
+cd /home/tc/dsas/js
+make prod
+EOF
+      chmod a+x "$extract/tmp/script"
+      msg "Building  $package"
+      HOME=/home/tc chroot --userspec=tc "$extract" /tmp/script || error error constructing $package
+
+      msg "Constructing package $package"
+      # Create the package for next use
+      tempdir=$(mktemp -d)
+      chmod 755 "$tempdir"
+      mkdir -p "$tempdir/usr/local/share/www"
+      chmod -R 755 "$tempdir/usr"
+      cp "$extract/home/tc/dsas/js/dist/dsas.js" "$tempdir/usr/local/share/www"
+      mksquashfs "$tempdir" "$target"
+      rm -fr "$tempdir"
+      md5sum "$target" | sed -e "s:  $target$::g" > "$target.md5.txt"
+      echo -n "" > "$target.dep"
+      extract="$_old"
+   fi
+   install_tcz $package
+}
+
 get_unpack_livecd(){
   test -f $livecd0 || msg Downloading $livecd_url
   test -f $livecd0 || cmd "$curl_cmd" -o "$livecd0" "$livecd_url" || exit 1
@@ -659,37 +757,52 @@ get_unpack_livecd(){
 startdate=$(date +%s)
 
 case $cmd in
+work)
+  pkgs=$(echo "$pkgs" | xargs)
+  if [ -z "$pkgs" ]; then
+    [ -L "$work" ] && rm "$work"
+    mkdir -p "$work"
+  else
+    [ -d "$pkgs" ] || mkdir "$pkgs"
+    [ -d "$work" ] && mv "$work" "$work.old"
+    [ -L "$work" ] && rm "$work"
+    ln -s "$pkgs" "$work"
+  fi 
+  ;;
 source)
-  tar cvzf $source --exclude=tmp --exclude=work --exclude=.git .
+  tar cvzf $source --exclude=tmp --exclude=work --exclude=.git* .
   exit 0
   ;;
 clean)
   make -C "$testdir" clean
-  [ -d "$extract/proc" ] && umount "$extract/proc"
+  [ -e $work ] || exit 0
+  [ -d "$image/proc" ] && umount "$image/proc"
   [ -d "$build/proc" ] && umount "$build/proc"
   rm -fr $image $build $newiso $mnt $dsascd $rootfs64 $dsascd.md5 \
       $docker $dockimage $source $work/dsas_pass.txt
   exit 0
   ;;
 realclean)
-  make -C "$testdir" clean
-  rm -fr $work
+  make -C "$testdir" realclean
+  [ -e $work ] || exit 0
+  rm -fr "${work:?}/?*"
   exit 0
   ;;
-
 upgrade)
+  [ -e $work ] || error work directory does not exit. run \'./make.sh work ...\'
   msg Fecthing md5.db.gz
   $curl_cmd -o "$tcz_dir/md5.db.gz" "$tcz_url/md5.db.gz" || error failed to download md5.db.gz
   gzip -f -d $tcz_dir/md5.db.gz
   while IFS= read -r -d '' file; do
-    _file=${file#$tcz_dir/}
+    _file=${file#"$tcz_dir"/}
     pkg_file=$pkg_dir/${_file%.tcz}
     pkg_file=${pkg_file%-dev}
     pkg_file=${pkg_file%-doc}.pkg
     [ -f "$pkg_file" ] && continue   # Locally built package
-    [ "$_file" == "dsastestfiles.tcz" ] && continue  # Locally built file
-    [ "$_file" == "dsaswebdriver.tcz" ] && { msg "Removing $_file"; rm -f "$file"; continue; } # Remove to force rebuild
-    [ "$_file" == "firefox.tcz" ] && { msg "Removing $_file"; rm -f "$file"; continue; } # Remove to force a rebuild
+    [ "$_file" = "dsastestfiles.tcz" ] && continue  # Locally built file
+    [ "$_file" = "dsas_js.tcz" ] && continue  # Locally built file
+    [ "$_file" = "dsaswebdriver.tcz" ] && { msg "Removing $_file"; rm -f "$file"; continue; } # Remove to force rebuild
+    [ "$_file" = "firefox.tcz" ] && { msg "Removing $_file"; rm -f "$file"; continue; } # Remove to force a rebuild
     read -r hash < "$file.md5.txt"
     if ! grep -q "^$hash  $_file" $tcz_dir/md5.db; then
       # Don't use get_tcz as don't want to use local TCZ files
@@ -702,44 +815,146 @@ upgrade)
   ;;
 
 static)
-  if [ -x "vendor/bin/phpstan" ]; then
-    msg "Running PHPStan on usr/local/share/www/api"
-    vendor/bin/phpstan
-  else
-    msg "### Install phpstan via composer before continuing"
+  extract=$image
+
+  # Get the ISO
+  [ -e $work ] || error work directory does not exit. run \'./make.sh work ...\'
+  get_unpack_livecd
+
+  # Unpack squashfs
+  if ! ls $extract/proc > /dev/null 2> /dev/null; then
+    cmd mkdir -p $extract
+    zcat "$squashfs" | { cd "$extract" || exit 1; cpio -i -H newc -d; }
   fi
-  if which eslint > /dev/null 2>&1; then
-    msg "Running eslint on usr/local/share/www/dsas.js"
-    eslint $append/usr/local/share/www/dsas.js
-  else
-    msg "### Install eslint before continuing"
-  fi
+
+  # Install the needed packages
+  install_tcz compiletc
+  install_tcz openssl-1.1.1
+  install_tcz libxml2
+  install_tcz libssh2
+  install_tcz libzip
+  install_tcz bzip2-lib
+  install_tcz php-8.0-cgi
+  install_tcz php-8.0-ext
+  install_tcz php-pam
+  install_tcz curl
+  install_tcz rsync
+  install_tcz node
+
+  # FIXME Tinycore 32bit doesn't include the right pcre dependance and 64bit uses a
+  # a difference dependance. Only install PCRE2 on 32bit platforms
+  [ "$arch" != 64 ] && install_tcz pcre2
+
+  # Install PHP cli and add iconv and phar extension
+  install_tcz php-8.0-cli
+ 
+  # Copy /etc/resolv.conf file 
+  mkdir -p "$extract/etc"
+  cp -p /etc/resolv.conf "$extract/etc/resolv.conf"
+
+  cp $append/usr/local/etc/php/php.ini $extract/usr/local/etc/php/php.ini
+  sed -i -e "s/;extension=phar/extension=phar/" $extract/usr/local/etc/php/php.ini
+  sed -i -e "s/;extension=iconv/extension=iconv/" $extract/usr/local/etc/php/php.ini
+  sed -i -e "s/;extension=curl/extension=curl/" $extract/usr/local/etc/php/php.ini
+  sed -i -e "s/;extension=zip/extension=zip/" $extract/usr/local/etc/php/php.ini
+  sed -i -e "s/;extension=tokenizer/extension=tokenizer/" $extract/usr/local/etc/php/php.ini
+
+  # Install PHP webdriver via composer             
+  install_phpstan
+  
+  mkdir -p $extract/home/tc/dsas
+  tar cf - --exclude tmp --exclude=work --exclude=.git . | tar -C $extract/home/tc/dsas -xvf - 
+  cat << EOF > $extract/home/tc/phpstan.neon
+parameters:
+  level: 9
+  paths:
+    - dsas/append/usr/local/share/www/api
+EOF
+  chown -R tc.staff $extract/home/tc
+
+  cat << EOF > $extract/tmp/script
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+cd /home/tc
+env HOME=/home/tc vendor/bin/phpstan
+EOF
+  chmod a+x "$extract/tmp/script"
+  msg "Running PHPStan on usr/local/share/www/api"
+  chroot --userspec=tc "$extract" /tmp/script || error error running phpstan
+
+  cat << EOF > $extract/tmp/script
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export http_proxy=${http_proxy:=}
+export https_proxy=${https_proxy:=}
+export HOME=/home/tc
+cd /home/tc/dsas/js
+make dev
+EOF
+  chmod a+x "$extract/tmp/script"
+  msg "Running eslint on js/..."
+  chroot --userspec=tc "$extract" /tmp/script || error error running eslint
+
+  # Shellcheck needs Haskell/Cabal to rebuild. For now only allow on a 64bit platform
+  # and download a static binary, or use shellchek if it is installed
   if which shellcheck > /dev/null 2>&1; then
     msg "Running shellcheck on shell code"
-    shellcheck -x "$append/usr/local/sbin/checkfiles" \
-                  "$append/usr/local/sbin/dsaspasswd" \
-                  "$append/usr/local/sbin/getcertificate" \
-                  "$append/usr/local/sbin/getfiles" \
-                  "$append/usr/local/sbin/killtask" \
-                  "$append/usr/local/sbin/rotatelogs" \
-                  "$append/usr/local/sbin/runtask" \
-                  "$append/usr/local/sbin/snmpdsas" \
-                  "$append/usr/local/sbin/sysloghaut" \
-                  "$append/etc/init.d/services/dsas" \
-                  "$append/etc/init.d/rcS.docker" \
+    shellcheck -x "append/usr/local/sbin/checkfiles" \
+                  "append/usr/local/sbin/dsaspasswd" \
+                  "append/usr/local/sbin/getcertificate" \
+                  "append/usr/local/sbin/getfiles" \
+                  "append/usr/local/sbin/killtask" \
+                  "append/usr/local/sbin/rotatelogs" \
+                  "append/usr/local/sbin/runtask" \
+                  "append/usr/local/sbin/snmpdsas" \
+                  "append/usr/local/sbin/sysloghaut" \
+                  "append/etc/init.d/services/dsas" \
+                  "append/etc/init.d/rcS.docker" \
                   "make.sh"
   else
-    msg "### Install shellcheck before continuing"
+    [ "$(uname -m)" = "x86_64" ] || error "shellcheck can only be run on a 64bit machine"
+    _uri="https://github.com/koalaman/shellcheck/releases/download/v0.8.0/shellcheck-v0.8.0.linux.x86_64.tar.xz"
+    _src=$(basename "$_uri")
+    download "$_uri" "$src_dir"
+    unpack "$src_dir/$_src" "$extract/home/tc" || error "Can not unpack $_src"
+
+    cat << EOF > $extract/tmp/script
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
+export HOME=/home/tc
+export USER=tc
+cd /home/tc
+shellcheck=\$(find /home/tc -type f -name "shellcheck")
+echo SHELLCHECK : \$shellcheck
+[ -z \"\$shellcheck\" ] && { echo "shellcheck not found"; exit 1; }
+\$shellcheck -x "dsas/append/usr/local/sbin/checkfiles" \
+                "dsas/append/usr/local/sbin/dsaspasswd" \
+                "dsas/append/usr/local/sbin/getcertificate" \
+                "dsas/append/usr/local/sbin/getfiles" \
+                "dsas/append/usr/local/sbin/killtask" \
+                "dsas/append/usr/local/sbin/rotatelogs" \
+                "dsas/append/usr/local/sbin/runtask" \
+                "dsas/append/usr/local/sbin/snmpdsas" \
+                "dsas/append/usr/local/sbin/sysloghaut" \
+                "dsas/append/etc/init.d/services/dsas" \
+                "dsas/append/etc/init.d/rcS.docker" \
+                "dsas/make.sh"
+EOF
+    chmod a+x "$extract/tmp/script"
+    msg "Running shellcheck on shell code"
+    chroot --userspec=tc "$extract" /tmp/script || error error running shellcheck
   fi
+
+  if [ "$keep" = "0" ]; then
+    rm -fr $image $newiso $mnt
+  fi
+
   ;;
+
 build)
   shift
   extract=$build
-  mkdir -p $work
+  [ -e $work ] || error work directory does not exit. run \'./make.sh work ...\'
   get_unpack_livecd
 
   [ -d "$extract" ] || mkdir -p "$extract"
-  [ -d "$builddir" ] || mkdir -p "$builddir"
   [ -z "$pkgs" ] && error "No package to build given"
   # shellcheck disable=SC2086
   build_pkg $pkgs
@@ -779,7 +994,7 @@ docker)
   extract=$image
 
   # Get the ISO
-  mkdir -p $work
+  [ -e $work ] || error work directory does not exit. run \'./make.sh work ...\'
   get_unpack_livecd
 
   # Unpack squashfs
@@ -812,7 +1027,6 @@ docker)
   install_tcz php-8.0-cgi
   install_tcz php-8.0-ext
   install_tcz php-pam
-  install_tcz pcre2
   install_tcz dialog
   install_tcz rpm
   install_tcz p7zip         # Needed by LiveUpdate
@@ -823,14 +1037,10 @@ docker)
   install_tcz libpam-radius-auth
   install_tcz sed           # Needed for 'sed -z'
 
-  # Copy the pre-extracted packages to work dir. This must be after packages
-  # are installed to allow for files to be overwritten. Run as root 
-  # and correct the ownership of files 
-  msg Append DSAS files
-  rsync -rlptv "$append/" "$extract/"
-  mkdir -p "$extract/home/tc"
-  chown root.root "$extract"
-  chmod 755 "$extract/home"
+  # FIXME Tinycore 32bit doesn't include the right pcre dependance and 64bit uses a
+  # a difference dependance. 
+  [ "$arch" != 64 ] && install_tcz pcre2
+  [ "$arch" = 64 ] && install_tcz pcre21032
 
   if [ "$testcode" = "1" ]; then
     # Install test files. Force remove temporary PKG file
@@ -862,19 +1072,35 @@ docker)
     install_tcz xfonts-unifont
     install_tcz unifont 
 
-    # Install PHP cli and add iconv and phar extension
+    # Install PHP
     install_tcz php-8.0-cli
+
+    # Download and install the gecko (firefox) webdriver
+    download "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux${arch}.tar.gz" "$src_dir"
+    tar xCzf "$extract/usr/local/bin" "$src_dir/geckodriver-v0.31.0-linux${arch}.tar.gz"   
+  fi
+
+  # Install/build dsas.js 
+  install_dsas_js
+
+  # Copy the pre-extracted packages to work dir. This must be after packages
+  # are installed to allow for files to be overwritten. Run as root 
+  # and correct the ownership of files 
+  msg Append DSAS files
+  rsync -rlptv "$append/" "$extract/"
+  mkdir -p "$extract/home/tc"
+  chown root.root "$extract"
+  chmod 755 "$extract/home"
+
+  # Now that phop.ini is copied, if in test mode add iconv, phar, etc 
+  if [ "$testcode" = "1" ]; then
     sed -i -e "s/;extension=phar/extension=phar/" $extract/usr/local/etc/php/php.ini
     sed -i -e "s/;extension=iconv/extension=iconv/" $extract/usr/local/etc/php/php.ini
     sed -i -e "s/;extension=curl/extension=curl/" $extract/usr/local/etc/php/php.ini
     sed -i -e "s/;extension=zip/extension=zip/" $extract/usr/local/etc/php/php.ini
 
-    # Install PHP webdriver via composer             
+    # Install PHP webdriver via composer. Needs php.ini configured
     install_webdriver
-
-    # Download and install the gecko (firefox) webdriver
-    download "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux${arch}.tar.gz" "$src_dir"
-    tar xCzf "$extract/usr/local/bin" "$src_dir/geckodriver-v0.31.0-linux${arch}.tar.gz"   
   fi
 
   # prevent autologin of tc user
@@ -950,15 +1176,16 @@ chown -R tc.staff /home/tc
 chmod -R o-rwx /home/tc /home/haut /home/bas /home/verif 
 chown -R root.staff /var/dsas
 chmod 775 /var/dsas          # Write perm for verif
-chmod 640 /var/dsas/*.csr /var/dsas/*.pem /var/dsas/*.dsas
+chmod 640 /var/dsas/dsas.csr /var/dsas/?*.pem /var/dsas/?*.dsas
 chmod 660 /var/dsas/dsas_conf.xml
-chown tc.repo /var/dsas/*.csr /var/dsas/*.pem
+chown tc.repo /var/dsas/dsas.csr /var/dsas/?*.pem
 chown tc.verif /var/dsas/dsas_conf.xml
-chown root.repo /var/dsas/repo.conf*
+chown root.repo /var/dsas/repo.conf.dsas
 chown -R root.staff /opt
 chmod 770 /opt
 chmod 770 /opt/.filetool.lst
-chmod 644 /usr/local/share/www/?* /usr/local/share/www/api/?* /usr/local/share/www/en/?* /usr/local/share/www/fr/?*
+chmod 644 /usr/local/share/www/?* /usr/local/share/www/api/?* /usr/local/share/www/en/?* /usr/local/share/www/fr/?
+*
 chmod 755 /usr/local/share/www/en /usr/local/share/www/fr /usr/local/share/www/api
 sed -i "s/umask 0[0-7][0-7]/umask 027/" /etc/profile
 echo "
@@ -974,7 +1201,7 @@ EOF
   # Special case, very limited busybox for chroot with only /bin/ash and /usr/bin/env installed
   _old=$extract
   extract=$extract/opt/lftp
-  install_tcz ash
+  ( install_tcz ash )
   extract=$_old
 
   # Install lftp and dependencies in /opt so that they can be available in chroot jail

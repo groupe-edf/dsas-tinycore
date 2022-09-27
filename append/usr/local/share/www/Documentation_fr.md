@@ -1357,7 +1357,7 @@ Logiciels impactés par ce risque
 | openssl      | [1.1.1q](https://www.openssl.org/source/openssl-1.1.1q.tar.gz) | Utilisé pour la vérification authenticode, LiveUpdate et OpenSSL |
 | gnupg        | [2.2.27](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.27.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
 | libgcrypt    | [1.10.1](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.1.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
-| rpm          | [4.17.1](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.17.x/rpm-4.17.1.tar.bz2) | Utilisé pour la vérification RPM |
+| rpm          | [4.17.1.1](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.17.x/rpm-4.17.1.1.tar.bz2) | Utilisé pour la vérification RPM |
 | osslsigncode | [2.5.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.5/osslsigncode-2.5.tar.gz) | Utilisé pour la vérification authenicode |
 | clamav | [0.105.1](https://www.clamav.net/downloads/production/clamav-0.105.1.tar.gz) | Utilisé pour des tests antivirale |
 
@@ -1431,7 +1431,7 @@ export https_proxy=http://vip-users.proxy.edf.fr:3131
 configuré à chaque fois. Après, la commande
 
 ```shell
-tce-load -wi Xorg-7.7 compiletc rsync coreutils mkisofs-tools squashfs-tools git curl ncursesw-dev
+tce-load -wi Xorg-7.7 compiletc rsync coreutils mkisofs-tools squashfs-tools git curl ncursesw-dev tar node
 ```
 va installer l'ensemble des outils nécessaire pour la build 
 
@@ -1474,7 +1474,16 @@ Maintenant, nous sommes prêts à récupérer l'arbre de code source du DSAS ave
 git clone https://gitlab.devops-unitep.edf.fr/dsao-cyber/dsas---tinycore.git
 ```
 
-La version de `less` installé par défaut n'accepte pas l'option `-R` nécessaire pour la 
+Nous pourrions configurer les prochaines actions sur cet arbre à ignorer le proxy http avec
+les commandes
+
+```shell
+cd dsas---tinycore
+git config --add remote.origin.proxy ""
+```
+
+Nous pourrions maintenant rétablir les valeurs des variables d'environnement du proxy. Finalement, 
+la version de `less` installé par défaut n'accepte pas l'option `-R` nécessaire pour la 
 colorisation des avec la commande `git diff`. Afin d'avoir les changement proprement montré,
 il faut faire les commandes
 
@@ -1482,16 +1491,6 @@ il faut faire les commandes
 tce-load -wi less
 git config core.pager /usr/local/bin/less
 ``` 
-
-Finalement, nous pourrions configurer les prochaines actions sur cet arbre à ignorer
-le proxy http avec les commandes
-
-```shell
-cd dsas---tinycore
-git config --add remote.origin.proxy ""
-```
-
-Nous pourrions maintenant rétablir les valeurs des variables d'environnement du proxy.
 
 ### Souche de build autre que TinyCore
 

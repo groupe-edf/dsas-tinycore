@@ -3,7 +3,10 @@
 # ash extensions I use
 #
 # shellcheck shell=sh
-# shellcheck disable=SC2039
+# Allow process subsitution with "<()"
+# shellcheck disable=SC3001
+# Allow "read -d"
+# shellcheck disable=SC3045
 
 if [ -f "$(dirname "$0")/dsas_common.sh" ]; then
   # Only the $LOG variable is needed

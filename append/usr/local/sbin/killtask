@@ -3,7 +3,8 @@
 # ash extensions I use
 #
 # shellcheck shell=sh
-# shellcheck disable=SC2039
+# Allow "[["
+# shellcheck disable=SC3010
 
 # Only need $CONF from common functions
 if [ -f "$(dirname "$0")/dsas_common.sh" ]; then
@@ -52,7 +53,7 @@ for _id in $ids; do
     while :; do
       _task_id=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" "$CONF")
       [ -z "$_task_id" ] && break
-      [ "$_id" == "$_task_id" ] && _idx=$_task_id && break
+      [ "$_id" = "$_task_id" ] && _idx=$_task_id && break
       i=$((i + 1))
     done
     [ -z "$_idx" ] && { 1>&2 echo "Task id ($_id) does not exist"; exit 1; }
@@ -64,12 +65,12 @@ for _id in $idx; do
   # Don't kill runtask to allow for runtask run from cron
   for p in getfiles checkfile; do
     for pid in $(pgrep -f "$p.*$_id"); do
-      [ "$dryrun" == "1" ] && { 1>&2 echo "$0 : pkill -P $pid"; }
-      [ "$dryrun" == "1" ] || sudo pkill -P "$pid" > /dev/null 2>&1
+      [ "$dryrun" = "1" ] && { 1>&2 echo "$0 : pkill -P $pid"; }
+      [ "$dryrun" = "1" ] || sudo pkill -P "$pid" > /dev/null 2>&1
     done
     # Need to pkill again to ensure a subshell hasn't been respawned
     # This should be sufficient as lftp will be killed above
-    [ "$dryrun" == "1" ] && { 1>&2 echo "$0 : pkill -f $p.*$_id"; }
-    [ "$dryrun" == "1" ] || sudo pkill -f "$p.*$_id" > /dev/null 2>&1
+    [ "$dryrun" = "1" ] && { 1>&2 echo "$0 : pkill -f $p.*$_id"; }
+    [ "$dryrun" = "1" ] || sudo pkill -f "$p.*$_id" > /dev/null 2>&1
   done
 done

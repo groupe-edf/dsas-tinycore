@@ -3,7 +3,16 @@
 # ash extensions I use
 #
 # shellcheck shell=sh
-# shellcheck disable=SC2039
+# Allow process subsitution with "<()"
+# shellcheck disable=SC3001
+# Allow "[["
+# shellcheck disable=SC3010
+# Allow local variables
+# shellcheck disable=SC3043
+# Allow "read -d"
+# shellcheck disable=SC3045
+# Allow string indexing like "${1:3}"
+# shellcheck disable=SC3057
 
 # if not user tc, quit
 [ "$(whoami)" != "tc" ] && { 1>&2 echo "$0: Must be run as user 'tc'"; exit 1; }
@@ -39,7 +48,7 @@ myecho(){
 }
 
 rm() {
-  if [ "$dryrun" == "0" ]; then
+  if [ "$dryrun" = "0" ]; then
     #FIXME is there a better way of handling spaces in the args ?
     while [ "$#" -gt 0 ]; do
       /bin/rm -fr "$1"
@@ -78,7 +87,7 @@ task_id_to_idx(){
   while :; do
     _task_id=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" "$CONF")
     [ -z "$_task_id" ] && return 1;
-    [ "$1" == "$_task_id" ] && echo $i && return 
+    [ "$1" = "$_task_id" ] && echo $i && return 
     i=$((i + 1))
   done
 }
@@ -111,15 +120,15 @@ get_uri(){
 }
 
 lftp_ca_options() {
-  local id=$1
+  local id="$1"
   local opt=""
 
   # Change to a directory where the user 'haut' has write permissions
   opt="lcd $DSAS_HAUT;"
 
-  if [ "$TYP" == "haut" ]; then
+  if [ "$TYP" = "haut" ]; then
     opt="$opt set sftp:auto-confirm true; set net:timeout 60; set net:max-retries 3;" 
-    if [ "$clamav" == "1" ]; then
+    if [ "$clamav" = "1" ]; then
       # Set ClamAV User-Agent including our ClamAV client UUID to get around anti DDOS protections
       uuid=$(xmllint --xpath "string(dsas/config/antivirus/uuid)" "$CONF")
       opt="$opt set http:user-agent 'CVDUPDATE/1.0.2 ($uuid)'; "
@@ -127,8 +136,8 @@ lftp_ca_options() {
 
     # Setup the LFTP CA if needed. If ClamAv force self_signed for now
     # ClamAV signatures are verified elsewhere before use
-    [ "$clamav" == "1" ] && ca_finger="self"
-    [ "$clamav" == "1" ] || ca_finger=$(xmllint --xpath "string(dsas/tasks/task[$id]/ca/fingerprint)" "$CONF")
+    [ "$clamav" = "1" ] && ca_finger="self"
+    [ "$clamav" = "1" ] || ca_finger=$(xmllint --xpath "string(dsas/tasks/task[$id]/ca/fingerprint)" "$CONF")
 
     case $ca_finger in
       "")  : ;;
@@ -151,9 +160,9 @@ getclamav() {
   opt=$(lftp_ca_options)
 
   # Return if antivirus is not active
-  [ "$(xmllint --xpath "string(dsas/config/antivirus/active)" "$CONF")" == "true" ] || return
+  [ "$(xmllint --xpath "string(dsas/config/antivirus/active)" "$CONF")" = "true" ] || return
 
-  if [ "$TYP" == "haut" ]; then
+  if [ "$TYP" = "haut" ]; then
     uri=$(xmllint --xpath "string(dsas/config/antivirus/uri)" "$CONF") 
   else
     local _uri="$DSAS_HOME/bas"
@@ -171,7 +180,7 @@ getclamav() {
 
   # Download the CVD files. Can't mirror as can't do ls on directory database.clamav.net 
   for _file in main.cvd daily.cvd bytecode.cvd; do
-    [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
+    [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" > /dev/null 2>&1
     [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
   done
 
@@ -209,11 +218,11 @@ getdirectory() {
   if [ -z "$isdir" ]; then
     myecho "Downloading file : $(basename "$uri")"
     # FIXME shouldn't always download here !!!
-    [ "$verbose" -eq 0 ] && ($chroot_lftp -c "$opt mget -e -O '${DSAS_HAUT}/${dir}' '$uri'" >& /dev/null)
+    [ "$verbose" -eq 0 ] && ($chroot_lftp -c "$opt mget -e -O '${DSAS_HAUT}/${dir}' '$uri'" > /dev/null 2>&1)
     [ "$verbose" -eq 0 ] || ($chroot_lftp -c "$opt mget -e -O '${DSAS_HAUT}/${dir}' '$uri'")
   else
     myecho "Mirroring site : $uri"
-    [ "$verbose" -eq 0 ] && ($chroot_lftp -c "$opt open '$uri'; mirror --delete-first -e -O '$DSAS_HAUT/$dir'" >& /dev/null)
+    [ "$verbose" -eq 0 ] && ($chroot_lftp -c "$opt open '$uri'; mirror --delete-first -e -O '$DSAS_HAUT/$dir'" > /dev/null 2>&1)
     [ "$verbose" -eq 0 ] || ($chroot_lftp -c "$opt open '$uri'; mirror --delete-first -e -O '$DSAS_HAUT/$dir'")
 
     # Correct directory permissions
@@ -238,7 +247,7 @@ get_packages() {
   local opt="$3"
   shift 3
   while [ "$#" -gt 2 ]; do
-    if [ "${1: -3}" == "rpm" ]; then
+    if [ "${1: -3}" = "rpm" ]; then
       file=$1
       chktype=$2
       chksum=$3
@@ -251,17 +260,17 @@ get_packages() {
       if check_checksum "$dest/$file" "$chksum" "$chktype"; then
         # Checksum of file is different redownload the file
         myecho "Downloading file $file [Checksum different!!]"
-        if [ "$dryrun" == "0" ]; then
+        if [ "$dryrun" = "0" ]; then
           [ -d "$(dirname "$dest/$file")" ] || mkdir "$(dirname "$dest/$file")"
-          [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" >& /dev/null
+          [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" > /dev/null 2>&1
           [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'"
         fi
       fi
     else
       myecho "Downloading file $file"
-      if [ "$dryrun" == "0" ]; then
+      if [ "$dryrun" = "0" ]; then
         [ -d "$(dirname "$dest/$file")" ] || mkdir "$(dirname "$dest/$file")"
-        [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" >& /dev/null
+        [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'" > /dev/null 2>&1
         [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$file' -o '$dest/$file'"
       fi
     fi
@@ -298,14 +307,14 @@ getrepo() {
        echo "$_stderr" | grep -q "Fatal" && { 1>&2 echo "Fatal: Server '$uri' not found"; exit 1; }
        echo "$_stderr" | grep -q "failed" && { 1>&2 echo "Fatal: file '$uri/repodata/repomd.xml' not found"; exit 1; }
 
-       [ "$type" == "rpm" ] || $chroot_lftp -c "$opt get -e '$uri/repodata/repomd.xml.asc' -o '$DSAS_HAUT/$dir/repodata/repomd.xml.asc'" >& /dev/null
+       [ "$type" = "rpm" ] || $chroot_lftp -c "$opt get -e '$uri/repodata/repomd.xml.asc' -o '$DSAS_HAUT/$dir/repodata/repomd.xml.asc'" > /dev/null 2>&1
 
        # Remove files in repodata not listed in repomd.xml
        for _file in $($as_haut find "$DSAS_HAUT/$dir/repodata" -type f) ; do
          _f=$(basename "$_file")
          [[ "$_f" =~ repomd.xml$ ]] && continue
          [[ "$_f" =~ repomd.xml.asc$ ]] && continue
-         $as_haut grep -q "$_f" "$DSAS_HAUT/$dir/repodata/repomd.xml" >& /dev/null && continue
+         $as_haut grep -q "$_f" "$DSAS_HAUT/$dir/repodata/repomd.xml" > /dev/null 2>&1 && continue
          myecho "Removing stale file repodata/${_f}"
          $as_haut rm -f "$_file"
        done
@@ -329,7 +338,7 @@ getrepo() {
          if $as_haut [ ! -f "$DSAS_HAUT/$dir/$f" ] ||
              check_checksum "$DSAS_HAUT/$dir/$f" "$chksum" "$chktype"; then
            myecho "Downloading file $f listed in repomd.xml for $name"
-           [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$f' -o '$DSAS_HAUT/$dir/$f'" >& /dev/null
+           [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$f' -o '$DSAS_HAUT/$dir/$f'" > /dev/null 2>&1
            [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$f' -o '$DSAS_HAUT/$dir/$f'"
 
            # Verify its checksum
@@ -416,9 +425,9 @@ getdeb() {
 
        myecho "Downloading Release/Release.gpg from $name"
        if [ "$verbose" -eq 0 ]; then
-         $chroot_lftp -c "$opt get -e '$uri/Release' -o '$DSAS_HAUT/$dir/Release'" >& /dev/null
-         $chroot_lftp -c "$opt get -e '$uri/Release.gpg' -o '$DSAS_HAUT/$dir/Release.gpg'" >& /dev/null
-         $chroot_lftp -c "$opt get -e '$uri/InRelease' -o '$DSAS_HAUT/$dir/InRelease'" >& /dev/null
+         $chroot_lftp -c "$opt get -e '$uri/Release' -o '$DSAS_HAUT/$dir/Release'" > /dev/null 2>&1
+         $chroot_lftp -c "$opt get -e '$uri/Release.gpg' -o '$DSAS_HAUT/$dir/Release.gpg'" > /dev/null 2>&1
+         $chroot_lftp -c "$opt get -e '$uri/InRelease' -o '$DSAS_HAUT/$dir/InRelease'" > /dev/null 2>&1
        else
          $chroot_lftp -c "$opt get -e '$uri/Release' -o '$DSAS_HAUT/$dir/Release'"
          $chroot_lftp -c "$opt get -e '$uri/Release.gpg' -o '$DSAS_HAUT/$dir/Release.gpg'"
@@ -433,11 +442,11 @@ getdeb() {
        pool_local=$(dirname "$dir")
        have_pool="0"
        while [ -n "$pool" ] && [ "${pool: -3}" != "://" ]; do
-         $chroot_lftp -c "$opt open '$pool/pool'" >& /dev/null && have_pool="1" && break
+         $chroot_lftp -c "$opt open '$pool/pool'" > /dev/null 2>&1 && have_pool="1" && break
          pool=$(dirname "$pool")
          pool_local=$(dirname "$pool_local")
        done
-       [ "$have_pool" == "0" ] && { 1>&2 echo "Debian pool directory not found"; exit 1; }
+       [ "$have_pool" = "0" ] && { 1>&2 echo "Debian pool directory not found"; exit 1; }
 
        # Identify if the Release file has SHA256 et/ou MD5 hashes
        $as_haut grep -qx "MD5Sum:" "$DSAS_HAUT/$dir/Release" && hashtyp="MD5Sum:" && chktyp="md5"
@@ -459,9 +468,9 @@ getdeb() {
        $as_haut cat "$DSAS_HAUT/$dir/Release" | while read -r line; do
          # Assume that each hash is listed after the correct flag and has
          # a leading space
-         [ "$inhash" == "0" ] && [[ "$line" =~ ^${hashtyp}$ ]] && inhash="1" && continue
-         [ "$inhash" == "1" ] && [[ "$line" =~ ":$" ]] && inhash="0" && continue
-         [ "$inhash" == "0" ] && continue
+         [ "$inhash" = "0" ] && [[ "$line" =~ ^${hashtyp}$ ]] && inhash="1" && continue
+         [ "$inhash" = "1" ] && [[ "$line" =~ ":$" ]] && inhash="0" && continue
+         [ "$inhash" = "0" ] && continue
 
          # Ignore second value, use "_" variable 
          IFS=' ' read -r _hash _ _file << EOF
@@ -469,14 +478,14 @@ $line
 EOF
          # Only download Package, Package.gz and Package.xz files if desired architecture 
          _f=$(basename "$_file")
-         if [ "$_f" == "Release" ] || [ "$_f" == "Packages" ] || [ "$_f" == "Packages.gz" ] || [ "$_f" == "Packages.xz" ]; then
+         if [ "$_f" = "Release" ] || [ "$_f" = "Packages" ] || [ "$_f" = "Packages.gz" ] || [ "$_f" = "Packages.xz" ]; then
            _f=$(dirname "$_file")
            [[ "$archs" =~ ${_f##*-} ]] || continue
          fi
 
          # Only download Contents* files if desired architecture
          _f=$(basename "$_file")
-         if [ "${_f:0:8}" == "Contents" ]; then
+         if [ "${_f:0:8}" = "Contents" ]; then
            _arch=${_f:9}
            _arch=${_arch#*udeb-}
            _arch=${_arch%%.gz}
@@ -487,7 +496,7 @@ EOF
          # Only download installers if desired architecture
          _f=${_file##/}
          _f=$(echo "$_f" | cut -d/ -f2)
-         if [ "${_f:0:9}" == "installer" ]; then
+         if [ "${_f:0:9}" = "installer" ]; then
            _arch=${_f:10}
            [[ "$archs" =~ $_arch ]] || continue
          fi
@@ -495,20 +504,20 @@ EOF
          if $as_haut [ -f "$DSAS_HAUT/$dir/$_file" ]; then
            if check_checksum "$DSAS_HAUT/$dir/$_file" "$_hash" "$chktyp"; then
              myecho "Downloading file $_file [Checksum different!!]"
-             [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
+             [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" > /dev/null 2>&1
              [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
            fi
          else
            myecho "Downloading file $_file"
            [ -d "$(dirname "$DSAS_HAUT/$dir/$_file")" ] || mkdir "$(dirname "$DSAS_HAUT/$dir/$_file")"
-           [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
+           [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" > /dev/null 2>&1
            if [ "$verbose" -ne 0 ]; then
              # Only print verbose for uncompressed files without compressed versions. Debian
              # doesn't always have uncompressed versions if compressed versions exist
-             if [[ "$_file" == "*.gz" ]] ||  [[ "$_file" == "*.xz" ]] ||  [[ "$_file" == "*.bz2" ]]; then
+             if [[ "$_file" = "*.gz" ]] ||  [[ "$_file" = "*.xz" ]] ||  [[ "$_file" = "*.bz2" ]]; then
                $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
              elif $as_haut grep "$_file" "$DSAS_HAUT/$dir/Release" | grep -o "...$" | grep -q ".gz\|.xz\|bz2"; then
-               $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" >& /dev/null
+               $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" > /dev/null 2>&1
              else
                $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
              fi
@@ -544,13 +553,13 @@ EOF
                # shellcheck disable=SC2181
                if [ "$?" -eq 0 ]; then
                  myecho "Downloading file $_file [Checksum different!!]"
-                 [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'" >& /dev/null
+                 [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'" > /dev/null 2>&1
                  [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'"
                fi
              elif [ -n "$_file" ]; then
                myecho "Downloading file $_file"
                [ -d "$(dirname "$DSAS_HAUT/$pool_local/$_file")" ] || mkdir "$(dirname "$DSAS_HAUT/$pool_local/$_file")"
-               [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'" >& /dev/null
+               [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'" > /dev/null 2>&1
                [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$pool/$_file' -o '$DSAS_HAUT/$pool_local/$_file'"
              fi
              _file=""
@@ -611,7 +620,7 @@ $as_haut [ -d "$DSAS_HAUT" ] || { echo "DSAS haut directory missing"; exit 1; }
 [ $dryrun -ne 0 ] && verbose=1
 
 # If ClamAV download request do it now and exit
-[ "$clamav" == "1" ] && (getclamav; exit 0)
+[ "$clamav" = "1" ] && (getclamav; exit 0)
 
 # Check that all ids are valid before doing anything
 idx=""

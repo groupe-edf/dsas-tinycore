@@ -4,56 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Certificates</title>
-    <link rel="stylesheet" type="text/css" href="bootstrap-5.0.2.min.css" />
-    <script src="bootstrap-5.0.2.bundle.min.js"></script>
-    <script src="dsas.js"></script>
-    <link rel="stylesheet" type="text/css" href="dsas.css" />
 </head>
 <body>
 
 <dsas-header></dsas-header>
-<script>
-  dsas_loggedin();
-  dsas_check_warnings();
-</script>
-
 <!-- hidden form for file upload -->
 <form id ="x509upload">
   <input type="file" name="x509file" id="x509file" style="display: none"
-         accept="text/plain,application/x-x509-user-cert,application/x-x509-ca-cert" onchange="dsas_upload_cert();">
+         accept="text/plain,application/x-x509-user-cert,application/x-x509-ca-cert">
 </form>
+<template id="certtemplate">
+  <p class="my-0">
+    <a class="text-toggle" data-bs-toggle="collapse" role="button" aria-expanded="false"><i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded"><img src="caret-down.svg"/></i></a>
+    <span></span>
+    &nbsp;<a data-toggle="tooltip" title="Download" data-i18n-title ><img src="save.svg"></a>
+    &nbsp;<a data-toggle="tooltip" title="Delete" data-i18n-title hidden><img src="x-lg.svg"></a>
+  </p>
+  <div class="collapse"><div class="card card-body">
+    <pre style="height : 300px"></pre>
+  </div></div>
+</template>
+
 <div class="container p-3 my-3 border">
     <div class="row"><div class="col-md-10"><h5><a class="text-toggle" data-bs-toggle="collapse" href="#cert"
     role="button" aria-controls="cert" aria-expanded="false">
     <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded">
     <img src="caret-down.svg"/></i></a><span data-i18n>X509 certificates added :</span></h5></div>
-    <div class="col-md-2 text-end"><img src="plus-lg.svg" data-toggle="tooltip" title="Add" onclick="document.getElementById('x509file').click();" data-i18n-title></div></div>
+    <div class="col-md-2 text-end"><img src="plus-lg.svg" id="x509add" data-toggle="tooltip" title="Add" data-i18n-title></div></div>
     <div class="collapse" id="cert"></div>
 </div>
 
 <form id ="pubkeyupload">
   <input type="file" name="pubkeyfile" id="pubkeyfile" style="display: none"
-         accept="text/plain,application/x-pem-file" onchange="dsas_pubkey_name();">
+         accept="text/plain,application/x-pem-file">
 </form>
 <div class="container p-3 my-3 border">
     <div class="row"><div class="col-md-6"><h5><a class="text-toggle" data-bs-toggle="collapse" href="#pubkey"
     role="button" aria-controls="pubkey" aria-expanded="false">
     <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded">
     <img src="caret-down.svg"/></i></a><span data-i18n>SSL public keys added :</h5></div>
-    <div class="col-md-6 text-end"><img src="plus-lg.svg"  data-toggle="tooltip" title="Add" onclick="document.getElementById('pubkeyfile').click();" data-i18n-title></div></div>
+    <div class="col-md-6 text-end"><img src="plus-lg.svg"  id="pubkeyadd" data-toggle="tooltip" title="Add" data-i18n-title></div></div>
     <div class="collapse" id="pubkey"></div></div>
 </div>
 
 <form id ="gpgupload">
   <input type="file" name="gpgfile" id="gpgfile" style="display: none"
-         accept="text/plain,application/pgp-keys" onchange="dsas_upload_cert('gpg');">
+         accept="text/plain,application/pgp-keys">
 </form>
 <div class="container p-3 my-3 border">
     <div class="row"><div class="col-md-6"><h5><a class="text-toggle" data-bs-toggle="collapse" href="#gpg"
     role="button" aria-controls="gpg" aria-expanded="false">
     <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded">
     <img src="caret-down.svg"/></i></a><span data-i18n>GPG certificates added :</h5></div>
-    <div class="col-md-6 text-end"><img src="plus-lg.svg"  data-toggle="tooltip" title="Add" onclick="document.getElementById('gpgfile').click();" data-i18n-title></div></div>
+    <div class="col-md-6 text-end"><img src="plus-lg.svg"  id="gpgadd" data-toggle="tooltip" title="Add" data-i18n-title></div></div>
     <div class="collapse" id="gpg"></div></div>
 </div>
 
@@ -66,10 +69,9 @@
 </div>
 
 <div class="container p-3 my-3 border">
-  <h5 data-i18n>Legend : <span class="text">Certification Authority</span> - <span class="text-info">Intermediate Certificate</span> - <span class="text-warning">Less than 6 months before expiry</span> - <span class="text-danger">Expired</span></h5>
+  <h5><span data-i18n>Legend :</span>&nbsp;<span class="text" data-i18n">Certification Authority</span>&nbsp;-&nbsp;<span class="text-info" data-i18n>Intermediate Certificate</span>&nbsp;-&nbsp;<span class="text-warning" data-i18n>Less than 6 months before expiry</span>&nbsp;-&nbsp;<span class="text-danger" data-i18n>Expired</span></h5>
 </div>
 
-<script>dsas_display_cert();</script>
-
+<script src="dsas.js"></script>
 </body>
 </html>

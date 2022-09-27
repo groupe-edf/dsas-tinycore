@@ -675,7 +675,7 @@ New user names must be valid POSIX usernames. That is they must
 
 Here we have added the user `ua12345`.
 
-![DSAS user configuration menu]](en/DSAS37.png)
+![DSAS user configuration menu](en/DSAS37.png)
 
 For each users several modifications or actions are possible
 
@@ -1318,7 +1318,7 @@ Software impacted by this risk
 | openssl | [1.1.1q](https://www.openssl.org/source/openssl-1.1.1q.tar.gz) | Used for authenticode, LiveUpdate and OpenSSL verification |
 | gnupg | [2.2.27](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.27.tar.bz2) | Used for RPM, DEB and GPG verification |
 | libgcrypt | [1.10.1](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.1.tar.bz2) | Used for RPM, DEB and GPG verification |
-| rpm | [4.17.1](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.17.x/rpm-4.17.1.tar.bz2) | Used for RPM checking |
+| rpm | [4.17.1.1](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.17.x/rpm-4.17.1.1.tar.bz2) | Used for RPM checking |
 | osslsigncode | [2.5.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.5/osslsigncode-2.5.tar.gz) | Used for authenicode verification |
 | clamav | [0.105.1](https://www.clamav.net/downloads/production/clamav-0.105.1.tar.gz) | Used for antivirus tests |
 
@@ -1392,7 +1392,7 @@ It will be useful to add these two lines to the `~/.profile` file so that it is
 configured at each login. After the command
 
 ```shell
-tce-load -wi Xorg-7.7 compiletc rsync coreutils mkisofs-tools squashfs-tools git curl ncursesw-dev
+tce-load -wi Xorg-7.7 compiletc rsync coreutils mkisofs-tools squashfs-tools git curl ncursesw-dev tar node
 ```
 
 will install all the tools necessary for the build
@@ -1436,23 +1436,24 @@ Now we are ready to download the DSAS source code with the command
 git clone https://gitlab.devops-unitep.edf.fr/dsao-cyber/dsas---tinycore.git
 ```
 
-The version of `less` that is installed by default doesn't accept the option `-R` needed to
-correctly colour the output of the commande `git diff`. To allow this the commandes 
-
-```
-tce-load -wi less
-git config core.pager /usr/local/bin/less
-```
-
-is needed. Finally, we can configure the next actions on the source tree to ignore the http
-proxy with the commands
+We can configure the next actions on the source tree to ignore the http proxy with the 
+commands
 
 ```shell
 cd dsas---tinycore
 git config --add remote.origin.proxy ""
 ```
 
-Can we now restore the values of the proxy environment variables.
+Can we now restore the values of the proxy environment variables. Finally the version of
+`less` that is installed by default doesn't accept the option `-R` needed to correctly colour 
+the output of the command `git diff`. To allow this the commands 
+
+```
+tce-load -wi less
+git config core.pager /usr/local/bin/less
+```
+
+are needed.
 
 ### Building with a differnt distribution than TinyCore
 

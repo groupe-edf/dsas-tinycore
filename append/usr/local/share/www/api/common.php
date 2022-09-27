@@ -409,7 +409,10 @@ function ip_valid(string $addr, int $nomask) : string{
   } else {
     $arr = explode("/", $addr, 2);
     $net = $arr[0];
-    $mask = $arr[1];
+    if (count($arr) == 2)
+      $mask = $arr[1];
+    else
+      $mask = "";
     if (is_numeric($mask)){
       // Check for float value
       if (!empty(strpos($mask, ".")))

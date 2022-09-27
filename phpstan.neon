@@ -1,4 +1,0 @@
-parameters:
-  level: 9
-  paths:
-    - append/usr/local/share/www/api

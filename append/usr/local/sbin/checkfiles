@@ -1,9 +1,19 @@
 #! /bin/sh
-# Busybox ash not supported. Use posix SH and disable a couple of
-# ash extensions I use
 #
+# Shellcheck configuration to test for POSIX shell plus the Busybox/ASH extensions I use
 # shellcheck shell=sh
-# shellcheck disable=SC2039
+# Allow process subsitution with "<()"
+# shellcheck disable=SC3001
+# Allow "[["
+# shellcheck disable=SC3010
+# Allow "-ef" to test if same file (ie hardlink)
+# shellcheck disable=SC3013
+# Allow local variables
+# shellcheck disable=SC3043
+# Allow "read -d"
+# shellcheck disable=SC3045
+# Allow string indexing like "${1:3}"
+# shellcheck disable=SC3057
 
 if [ -f "$(dirname "$0")/dsas_common.sh" ]; then
   # shellcheck source=append/usr/local/sbin/dsas_common.sh
@@ -85,7 +95,7 @@ myecho(){
 }
 
 rm() {
-  if [ "$dryrun" == "0" ]; then
+  if [ "$dryrun" = "0" ]; then
     #FIXME is there a better way of handling spaces in the args ?
     while [ "$#" -gt 0 ]; do
       /bin/rm -fr "$1"
@@ -102,7 +112,7 @@ task_id_to_idx(){
   while :; do
     _task_id=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" "$CONF")
     [ -z "$_task_id" ] && return 1;
-    [ "$1" == "$_task_id" ] && echo $i && return 
+    [ "$1" = "$_task_id" ] && echo $i && return 
     i=$((i + 1))
   done
 }
@@ -123,7 +133,7 @@ check_checksum() {
 }
 
 ln() {
-  if [ "$dryrun" == "0" ]; then
+  if [ "$dryrun" = "0" ]; then
     [ -d "$(dirname "$2")" ] || mkdir "$(dirname "$2")"
     # This script is not running as root so can't change the owner. We
     # first have to copy the file.
@@ -202,7 +212,7 @@ verifauthenticode(){
     /bin/rm -fr "$sigdir"
 
     for _file in "$tempdir"/*; do
-      [ "$(basename "$_file")" == "cert.0" ] && continue
+      [ "$(basename "$_file")" = "cert.0" ] && continue
       hash="$(openssl x509 -in "$_file" -noout -fingerprint -sha256 -inform pem 2>&1 | \
           cut -d= -f2 | sed -e 's/://g' | tr '[:upper:]' '[:lower:]')"
       [[ "$hashes" =~ $hash ]] || return 3
@@ -217,18 +227,18 @@ verifgpg(){
   id=$1
   tempdir=$2
   file=$3
-  if [ "${file##*.}" == "gpg" ]; then
+  if [ "${file##*.}" = "gpg" ]; then
     # gpg -sign
-    gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file" >& /dev/null || return 1
-  elif [ "${file##*.}" == "asc" ]; then
+    gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file" > /dev/null 2>&1 || return 1
+  elif [ "${file##*.}" = "asc" ]; then
     # gpg --clearsign 
-    gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file" >& /dev/null || return 1
+    gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file" > /dev/null 2>&1 || return 1
   elif [ -f "$file.asc" ]; then
     # gpg -a --detach-sig --sign
-    gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file.asc" "$file" >& /dev/null || return 1
+    gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file.asc" "$file" > /dev/null 2>&1 || return 1
   else
     # gpg --detach-sig --sign
-    gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file.sig" "$file" >& /dev/null || return 1
+    gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file.sig" "$file" > /dev/null 2>&1 || return 1
   fi
   return 0
 }
@@ -283,8 +293,8 @@ verifcyberwatch(){
   openssl dgst -sha256 -verify "$tempdir/cert.0" -signature "$tempdir/signature" "$tempdir/cyberwatch.db.sha256" > /dev/null || status=1
 
   # Repack the zipfile so as to avoid potentially hidden files
-  if [ "$status" == "0" ]; then
-    if [ "$dryrun" == "1" ]; then
+  if [ "$status" = "0" ]; then
+    if [ "$dryrun" = "1" ]; then
       echo "[DryRun]: cd \"$zipdir\"; zip -q \"$file.$$\" cyberwatch.sig cyberwatch.db"
     else
       # Use () to create sub-shell, so chdir is local to the sub-shell
@@ -308,7 +318,7 @@ verifliveupdate(){
   dest="$6"
   livetri=$7
 
-  unzip -d "$zipdir" "$src/$file" >& /dev/null || 7z -o"$zipdir" x "$src/$file" >& /dev/null 
+  unzip -d "$zipdir" "$src/$file" > /dev/null 2>&1 || 7z -o"$zipdir" x "$src/$file" > /dev/null 2>&1 
   sig=$(find "$zipdir" -name "*.sig")
   grd=$(find "$zipdir" -name "*.grd")
 
@@ -323,7 +333,7 @@ verifliveupdate(){
   # Verify the signature of the  file *.grd...  
   for s in $sig; do
     # Special case v1.sig that is an alternative signature for v.sig
-    [ "$(basename "$s")" == "v1.sig" ] && continue
+    [ "$(basename "$s")" = "v1.sig" ] && continue
     t=$(echo "$s" | sed -e 's/.sig$/.grd/g')
     echo "$grd" | grep -q "$t" || { 1>&2 myecho "Checksum file $t not found in the archive $(basename "$file")"; return 1; }
     # I want the variable $args to do word splitting, ignore 
@@ -349,7 +359,7 @@ verifliveupdate(){
       #    2. navlic.dat and lic.dat are the same file
       #    3. They are both listed in the catalog.dat file that is included in v.grd
       if [[ "$f" =~ lic.dat$ ]] || [[ "$f" =~ navlic.dat$ ]]; then
-        [ "$(stat -c%s "$f")" == "1048" ] || { 1>&2 myecho "Can not verify the file $(basename "$f") from the archive $(basename "$file")"; return 1; }
+        [ "$(stat -c%s "$f")" = "1048" ] || { 1>&2 myecho "Can not verify the file $(basename "$f") from the archive $(basename "$file")"; return 1; }
         if [ ! -f "$basedir/lic.dat" ] || [ ! -f "$basedir/navlic.dat" ] || ! diff -q "$zipdir/lic.dat" "$zipdir/navlic.dat"; then
           1>&2 myecho "Can not verify the file $(basename "$f") from the archive $(basename "$file")"
           return 1
@@ -389,9 +399,9 @@ verifliveupdate(){
                 { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename "$file")"; return 2; }
             [ -z "$s256" ] && [ -z "$s1" ] && { 1>&2 myecho "File $f from the archive $(basename "$file") has no checksum"; return 2; }
             if [ -n "$livetri" ]; then
-              if [ "$antivirus" == "true" ]; then
+              if [ "$antivirus" = "true" ]; then
                 # Antivirus test
-                clamdscan "$src/$filedir/$f" >& /dev/null || { 1>&2 myecho "File $f from the archive $(basename "$file") failed anti-virus check";  return 4; }
+                clamdscan "$src/$filedir/$f" > /dev/null 2>&1 || { 1>&2 myecho "File $f from the archive $(basename "$file") failed anti-virus check";  return 4; }
               fi
               msgline "$src/$filedir/$f" 0
               ln "$src/$filedir/$f" "$dest/$filedir/$f"
@@ -414,16 +424,16 @@ verifliveupdate(){
   done
 
   # Repack the zip file before returning to avoid potentiel hidden files
-  if [[ "${file##*.}" == "7z" ]]; then 
-    if [ "$dryrun" == "0" ]; then
+  if [[ "${file##*.}" = "7z" ]]; then 
+    if [ "$dryrun" = "0" ]; then
       (cd "$zipdir" || { 2>&1 echo "Failed to create temporary directory"; return 254; }; 7z a "$src/$file.$$" ./*)
       /bin/mv "$src/$file.$$" "$src/$file"
     else
       echo "[DryRun] : cd \"$zipdir\"; 7z a \"$src/$file.$$\" \*"
     fi
   else
-    if [ "$dryrun" == "0" ]; then
-      (cd "$zipdir"|| { 2>&1 echo "Failed to create temporary directory"; return 254; }; zip -q "$src/$file.$$" ./* >& /dev/null)
+    if [ "$dryrun" = "0" ]; then
+      (cd "$zipdir"|| { 2>&1 echo "Failed to create temporary directory"; return 254; }; zip -q "$src/$file.$$" ./* > /dev/null 2>&1)
       /bin/mv -f "$src/$file.$$" "$src/$file"
     else
       echo "[DryRun] : cd \"$zipdir\"; zip -q \"$src/$file.$$\" \*"
@@ -463,7 +473,7 @@ verifjar() {
   zipdir=$5
   dest=$6
 
-  unzip -d "$zipdir" "$src/$file" >& /dev/null  || 7z -o"$zipdir" x "$src/$file" >& /dev/null \
+  unzip -d "$zipdir" "$src/$file" > /dev/null 2>&1 || 7z -o"$zipdir" x "$src/$file" > /dev/null 2>&1 \
       || { 1>&2 myecho "Failed to unzip archive"; return 1; }
 
   # Check that there is only one Manifest file and that each SF file corresponds to 
@@ -496,11 +506,11 @@ verifjar() {
       continue;
     fi
     # The filename might be split over several lines and the Manifest might be in dos format
-    dos2unix < "$manifest" | sed -z 's/\n //g' | grep -q "^Name: \s*${_file#$zipdir/}$" || \
-        { 1>&2 myecho "Unsigned file ${_file#$zipdir/} in jar"; return 1; }
+    dos2unix < "$manifest" | sed -z 's/\n //g' | grep -q "^Name: \s*${_file#"$zipdir"/}$" || \
+        { 1>&2 myecho "Unsigned file ${_file#"$zipdir"/} in jar"; return 1; }
   done < <(find "$zipdir" -type f -print0)
 
-  [ "$hassign" == "true" ] || { 1>&2 myecho "Unsigned jar file"; return 255; }
+  [ "$hassign" = "true" ] || { 1>&2 myecho "Unsigned jar file"; return 255; }
 
   # Assumes all of the CA are in $tempdir/cert.0 and the other certificates in $tempdir/cert.1
   args="-purpose any"
@@ -512,25 +522,25 @@ verifjar() {
     # Check hash of manifest.
     _hash=$(grep "\-Digest\-Manifest: " "$sf" | dos2unix | cut -d: -f2 | xargs | base64 -d | hexdump -e '16/1 "%02x"')
     if [ ${#_hash} -ge 64 ]; then
-      [ "$(sha256sum "$manifest" | cut -f1 -d' ')" == "$_hash" ] || return 1
+      [ "$(sha256sum "$manifest" | cut -f1 -d' ')" = "$_hash" ] || return 1
     elif [ ${#_hash} -ge 40 ]; then
-      [ "$(sha1sum "$manifest" | cut -f1 -d' ')" == "$_hash" ] || return 1
+      [ "$(sha1sum "$manifest" | cut -f1 -d' ')" = "$_hash" ] || return 1
     else 
-      [ "$(md5sum "$manifest" | cut -f1 -d' ')" == "$_hash" ] || return 1
+      [ "$(md5sum "$manifest" | cut -f1 -d' ')" = "$_hash" ] || return 1
     fi
 
     # Treat *.RSA signatures
     _sig="${sf%.SF}.RSA"
     # shellcheck disable=SC2086 
     [ -f "$_sig" ] && { openssl cms -verify -inform DER -in "$_sig" -content "$sf" $args > /dev/null 2>&1 || \
-          { 1>&2 myecho "Verification failure of the file ${sf#$zipdir/} from the archive $(basename "$file") "; return 1; }; }
+          { 1>&2 myecho "Verification failure of the file ${sf#"$zipdir"/} from the archive $(basename "$file") "; return 1; }; }
 
     # Treat *.DSA signatures.  Not sure this is the right thing to do. 
     # Needs testing if I had a JAR with a DSA signature
     _sig="${sf%.SF}.DSA"
     # shellcheck disable=SC2086 
     [ -f "$_sig" ] && { openssl cms -verify -inform DER -in "$_sig" -content "$sf" $args > /dev/null 2>&1 || \
-          { 1>&2 myecho "Verification failure of the file ${sf#$zipdir/} from the archive $(basename "$file") "; return 1; }; }
+          { 1>&2 myecho "Verification failure of the file ${sf#"$zipdir"/} from the archive $(basename "$file") "; return 1; }; }
 
     # Don't treat SIG-* files. Trend doesn't use them and the format is too generic
     _sig="SIG-${sf%.SF}"
@@ -567,9 +577,9 @@ verifjar() {
           [ -z "$md5" ] || md5sum "$src/$filedir/$_file" | grep -q "$md5" || \
               { 1>&2 myecho "Verification of checksum failed for $_file from the archive $(basename "$file")"; return 2; }
           [ -z "$s256" ] && [ -z "$s1" ] && [ -z "$md5" ] && { 1>&2 myecho "File $_file from the archive $(basename "$file") has no checksum"; return 2; }
-          if [ "$antivirus" == "true" ]; then
+          if [ "$antivirus" = "true" ]; then
             # Antivirus test
-            clamdscan "$src/$filedir/$_file" >& /dev/null || { 1>&2 myecho "File $_file from the archive $(basename "$file") failed anti-virus check";  return 4; }
+            clamdscan "$src/$filedir/$_file" > /dev/null 2>&1 || { 1>&2 myecho "File $_file from the archive $(basename "$file") failed anti-virus check";  return 4; }
           fi
           msgline "$src/$filedir/$_file" 0
           ln "$src/$filedir/$_file" "$dest/$filedir/$_file"
@@ -592,16 +602,16 @@ verifjar() {
     fi
   done <  <(sed -z 's/\n //g ' "$manifest")
 
-  if [[ "${file##*.}" == "7z" ]]; then 
-    if [ "$dryrun" == "0" ]; then
+  if [[ "${file##*.}" = "7z" ]]; then 
+    if [ "$dryrun" = "0" ]; then
       (cd "$zipdir" || { 2>&1 echo "Failed to create temporary directory"; return 254; }; 7z -r a "$src/$file.$$" ./*)
       /bin/mv "$src/$file.$$" "$src/$file"
     else
       echo "[DryRun] : cd \"$zipdir\"; 7z -r a \"$src/$file.$$\" \*"
     fi
   else
-    if [ "$dryrun" == "0" ]; then
-      (cd "$zipdir"|| { 2>&1 echo "Failed to create temporary directory"; return 254; }; zip -qr "$src/$file.$$" ./* >& /dev/null)
+    if [ "$dryrun" = "0" ]; then
+      (cd "$zipdir"|| { 2>&1 echo "Failed to create temporary directory"; return 254; }; zip -qr "$src/$file.$$" ./* > /dev/null 2>&1 )
       /bin/mv -f "$src/$file.$$" "$src/$file"
     else
       echo "[DryRun] : cd \"$zipdir\"; zip -qr \"$src/$file.$$\" \*"
@@ -633,7 +643,7 @@ verifdirectory() {
     idx=$($getcert "$fprint" $$)
     [ -z "$idx" ] && { 1>&2 echo "Certificate used by task($id) not found !!"; cleanup_and_exit 1 "$tempdir"; }
     if [ "$idx" -eq 0 ]; then
-      if [ "$type" == "liveupdate" ] || [ "$type" == "trend" ]; then
+      if [ "$type" = "liveupdate" ] || [ "$type" = "trend" ]; then
         cat /tmp/cert.$$ >> "$tempdir/cert.0"
       else
         [ -f "$tempdir/cert.0" ] && 1>&2 myecho "Multiple authority certificates defined" 
@@ -641,15 +651,15 @@ verifdirectory() {
       fi
     else
       auth=$(xmllint --xpath "string(dsas/certificates/certificate[$idx]/authority)" "$CONF")
-      if [ "$auth" == "true" ]; then
-        if [ "$type" == "liveupdate" ] || [ "$type" == "trend" ]; then
+      if [ "$auth" = "true" ]; then
+        if [ "$type" = "liveupdate" ] || [ "$type" = "trend" ]; then
           cat "/tmp/cert.$$" >> "$tempdir/cert.0"
         else
           [ -f "$tempdir/cert.0" ] && 1>&2 myecho "Multiple authority certificates defined"
           /bin/mv "/tmp/cert.$$" "$tempdir/cert.0"
         fi
       else
-        if [ "$type" == "liveupdate" ] || [ "$type" == "trend" ]; then
+        if [ "$type" = "liveupdate" ] || [ "$type" = "trend" ]; then
           cat "/tmp/cert.$$" >> "$tempdir/cert.1"
         else
           /bin/mv -f "/tmp/cert.$$" "$tempdir/cert.$i"
@@ -659,9 +669,9 @@ verifdirectory() {
     fi
     j=$((j + 1))
   done
-  if [ "$type" == "gpg" ]; then
+  if [ "$type" = "gpg" ]; then
     # Need to dearmor gpg certificate before use
-    gpg --dearmor "$tempdir/cert.0" >& /dev/null
+    gpg --dearmor "$tempdir/cert.0" > /dev/null 2>&1
   fi
 
   # Create directory if needed
@@ -669,14 +679,14 @@ verifdirectory() {
   
   # Remove the files in our tree bas and not in haut.
   while IFS= read -r -d '' file; do
-    if [ "$(stat --printf "%h\n"  "$file")" == "1" ]; then
+    if [ "$(stat --printf "%h\n"  "$file")" = "1" ]; then
       1>&2 myecho "Removing stale file ${file#"$DSAS_BAS/${dir%/}/"}"
       rm -f "$file"
     fi
   done < <(find "$DSAS_BAS/$dir" -type f -print0)
 
   # If LiveUpdate, test files *livetri.zip first as they can sign other files
-  if [ "$type" == "liveupdate" ]; then        
+  if [ "$type" = "liveupdate" ]; then        
     while IFS= read -r -d '' file; do
       file=${file#"$DSAS_HAUT/"}    
     
@@ -684,36 +694,36 @@ verifdirectory() {
       [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
 
       zipdir=$(mktemp -d)
-      if [[ "$file" == "*livetri.zip" ]]; then
+      if [[ "$file" = "*livetri.zip" ]]; then
         verifliveupdate "$id" "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS" "true"
-      elif [[ "$file" == "*minitri.flg" ]]; then
+      elif [[ "$file" = "*minitri.flg" ]]; then
         # minitri.flg is one byte with a single 0x20 character
-        [ "$(cat "$DSAS_HAUT/$file")" == " " ]
+        [ "$(cat "$DSAS_HAUT/$file")" = " " ]
       else
         verifliveupdate "$id" "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS"
       fi
       status=$?
-      if [ "$status" == "0" ] && [ "$antivirus" == "true" ]; then
-        clamdscan "$DSAS_HAUT/$file" >& /dev/null || status=4
+      if [ "$status" = "0" ] && [ "$antivirus" = "true" ]; then
+        clamdscan "$DSAS_HAUT/$file" > /dev/null 2>&1 || status=4
       fi
       msgline "$DSAS_HAUT/$file" $status
       [ $status -eq 0 ] && ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
       /bin/rm -fr "$zipdir"
     done < <(find "$DSAS_HAUT/$dir" -type f \( -name "*livetri.zip" -o -name "minitri.flg" \
         -o -name "SymantecProductCatalog.zip" -o -name "*.jdb" \) -print0)
-  elif [ "$type" == "trend" ] || [ "$type" == "jar" ]; then
+  elif [ "$type" = "trend" ] || [ "$type" = "jar" ]; then
    while IFS= read -r -d '' file; do
       file=${file#"$DSAS_HAUT/"}    
     
       # If file exists in bas skip. Hardlinked, so test is fast
       [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
 
-      if [ "$type" == "trend" ] && [ -z "$(zipinfo "$DSAS_HAUT/$file" 2> /dev/null | grep -q MANIFEST.MF && echo "1")" ] ; then
+      if [ "$type" = "trend" ] && [ -z "$(zipinfo "$DSAS_HAUT/$file" 2> /dev/null | grep -q MANIFEST.MF && echo "1")" ] ; then
         # SMIME signed files
         if verifsmime "$id" "$tempdir" "$file"; then
           status=0
-          if [ "$antivirus" == "true" ]; then
-            clamdscan "$DSAS_HAUT/$file" >& /dev/null || status=4
+          if [ "$antivirus" = "true" ]; then
+            clamdscan "$DSAS_HAUT/$file" > /dev/null 2>&1 || status=4
           fi
         else
           status=$?
@@ -723,13 +733,13 @@ verifdirectory() {
         zipdir=$(mktemp -d)
         verifjar "$id" "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS"
         status=$?
-        if [ "$status" == "0" ] && [ "$antivirus" == "true" ]; then
-          clamdscan "$DSAS_HAUT/$file" >& /dev/null || status=4
+        if [ "$status" = "0" ] && [ "$antivirus" = "true" ]; then
+          clamdscan "$DSAS_HAUT/$file" > /dev/null 2>&1 || status=4
         fi
         /bin/rm -fr "$zipdir"
       fi
       [ $status -eq 0 ] && ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
-      [ $status -eq 0 ] && [ "$type" == "trend" ] && [ -f "$DSAS_HAUT/${file%.*}.sig" ] \
+      [ $status -eq 0 ] && [ "$type" = "trend" ] && [ -f "$DSAS_HAUT/${file%.*}.sig" ] \
           && ln "$DSAS_HAUT/${file%.*}.sig" "$DSAS_BAS/${file%.*}.sig"
       msgline "$DSAS_HAUT/$file" $status
     done < <(find "$DSAS_HAUT/$dir" -type f \( -name "*.7z" -o -name "*.zip" -o -name "*.jar" \) -print0)
@@ -747,30 +757,30 @@ verifdirectory() {
           verifcyberwatch "$id" "$tempdir" "$DSAS_HAUT/$file"
           ;;
         openssl) 
-          [ "${file##*.}" == "sig" ]  && continue 
+          [ "${file##*.}" = "sig" ]  && continue 
           verifopenssl "$id" "$tempdir" "$DSAS_HAUT/$file"
           ;;
         gpg)
-          [ "${file##*.}" == "sig" ] && continue
-          [ "${file##*.}" == "asc" ] && [ -f "$DSAS_HAUT/$(dirname "$file")/$(basename -s .asc "$file")" ] && continue
+          [ "${file##*.}" = "sig" ] && continue
+          [ "${file##*.}" = "asc" ] && [ -f "$DSAS_HAUT/$(dirname "$file")/$(basename -s .asc "$file")" ] && continue
           verifgpg "$id" "$tempdir" "$DSAS_HAUT/$file"
           ;;
       esac
       status=$?
-      if [ "$status" == "0" ] && [ "$antivirus" == "true" ]; then
-        clamdscan "$DSAS_HAUT/$file" >& /dev/null || status=4
+      if [ "$status" = "0" ] && [ "$antivirus" = "true" ]; then
+        clamdscan "$DSAS_HAUT/$file" > /dev/null 2>&1 || status=4
       fi
       msgline "$DSAS_HAUT/$file" $status
       if [ $status -eq 0 ]; then
         ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
-        if [ "$type" == "gpg" ] && [ "${file##*.}" != "gpg" ]; then
+        if [ "$type" = "gpg" ] && [ "${file##*.}" != "gpg" ]; then
           if [ -f "$DSAS_HAUT/$file.asc" ]; then
             ln "$DSAS_HAUT/$file.asc" "$DSAS_BAS/$file.asc"
           elif [ -f "$DSAS_HAUT/$file.sig" ]; then
             ln "$DSAS_HAUT/$file.sig" "$DSAS_BAS/$file.sig"
           fi
         fi
-        [ "$type" == "openssl" ] && ln "$DSAS_HAUT/$file.sig" "$DSAS_BAS/$file.sig"
+        [ "$type" = "openssl" ] && ln "$DSAS_HAUT/$file.sig" "$DSAS_BAS/$file.sig"
       fi
     done < <(find "$DSAS_HAUT/$dir" -type f -print0 )
   fi
@@ -796,7 +806,7 @@ verify_packages() {
   rpm_k=$2
   shift 2
   while [ "$#" -gt 2 ]; do
-    if [ "${1: -3}" == "rpm" ]; then
+    if [ "${1: -3}" = "rpm" ]; then
       file="$1"
       chktype=$2
       chksum=$3
@@ -813,9 +823,9 @@ verify_packages() {
     if [ -f "$DSAS_HAUT/$dir/$file" ]; then
       if  check_checksum "$DSAS_HAUT/$dir/$file" "$chksum" "$chktype"; then
         msgline "$DSAS_HAUT/$dir/$file" 2
-      elif [ "$rpm_k" == "1" ] && ! checkrpm "$DSAS_HAUT/$dir/$file"; then
+      elif [ "$rpm_k" = "1" ] && ! checkrpm "$DSAS_HAUT/$dir/$file"; then
         msgline "$DSAS_HAUT/$dir/$file" 5      
-      elif [ "$antivirus" == "true" ]; then
+      elif [ "$antivirus" = "true" ]; then
         if rpm2cpio "$DSAS_HAUT/$dir/$file" | clamdscan - > /dev/null 2>&1; then
           msgline "$DSAS_HAUT/$dir/$file" 0
           ln "$DSAS_HAUT/$dir/$file" "$DSAS_BAS/$dir/$file"
@@ -844,7 +854,7 @@ verifrepo() {
   /bin/mv "/tmp/cert.$$" "$tempdir/cert.0"
   gpg --dearmor "$tempdir/cert.0" > /dev/null 2>&1
 
-  if [ "$type" == "repomd" ]; then
+  if [ "$type" = "repomd" ]; then
     if ! gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg"  \
           --verify "$DSAS_HAUT/$dir/repodata/repomd.xml.asc" \
           "$DSAS_HAUT/$dir/repodata/repomd.xml" > /dev/null 2>&1; then
@@ -860,7 +870,7 @@ verifrepo() {
   [ -d "$DSAS_BAS/$dir" ] || mkdir "$DSAS_BAS/$dir"
 
   # Test antivirus 
-  if [ "$antivirus" == "true" ]; then
+  if [ "$antivirus" = "true" ]; then
     clamdscan "$DSAS_HAUT/$dir/repodata/repomd.xml" > /dev/null 2>&1 || { msgline "$DSAS_HAUT/$dir/repodata/repomd.xml" 4; exit 1; }
   fi
 
@@ -896,8 +906,8 @@ verifrepo() {
     fi
 
     # Test antivirus 
-    if [ "$antivirus" == "true" ]; then
-      clamdscan "$DSAS_HAUT/$dir/$f" >& /dev/null || { 1>&2 echo "The file $f fails the antivirus test"; cleanup_and_exit 4 "$tempdir"; }
+    if [ "$antivirus" = "true" ]; then
+      clamdscan "$DSAS_HAUT/$dir/$f" > /dev/null 2>&1 || { 1>&2 echo "The file $f fails the antivirus test"; cleanup_and_exit 4 "$tempdir"; }
     fi
 
     ln "$DSAS_HAUT/$dir/$f" "$DSAS_BAS/$dir/$f"
@@ -925,7 +935,7 @@ verifrepo() {
 
   # Remove the files in $DSAS_BAS and not listed in primary.xml
   while IFS= read -r -d '' file; do
-    if [ "$(stat --printf "%h\n"  "$file")" == "1" ]; then
+    if [ "$(stat --printf "%h\n"  "$file")" = "1" ]; then
       1>&2 myecho "Removing stale file ${file#"$DSAS_BAS/${dir%/}/"}"
       rm -f "$file"
     fi
@@ -935,12 +945,12 @@ verifrepo() {
   # I want the variable $filetable to do word splitting, ignore 
   # the shellcheck error associated with it
   # shellcheck disable=SC2086 
-  [ "$type" == "rpm" ] && verify_packages "$dir" 1 $filetable
+  [ "$type" = "rpm" ] && verify_packages "$dir" 1 $filetable
   # shellcheck disable=SC2086 
-  [ "$type" == "rpm" ] || verify_packages "$dir" 0 $filetable
+  [ "$type" = "rpm" ] || verify_packages "$dir" 0 $filetable
   
   # Remove all RPM signature keys    
-  [ "$type" == "rpm" ] && rpm -e "$(rpm -qa)" 2> /dev/null
+  [ "$type" = "rpm" ] && rpm -e "$(rpm -qa)" 2> /dev/null
 
   /bin/rm -fr "$tempdir"
 }
@@ -959,7 +969,7 @@ verifdeb(){
     [ -d "$DSAS_HAUT/$pool/pool" ] && have_pool="1" && break
     pool=$(dirname "$pool")
   done
-  [ "$have_pool" == "0" ] && { 1>&2 echo "Debian pool directory not found"; exit 1; }
+  [ "$have_pool" = "0" ] && { 1>&2 echo "Debian pool directory not found"; exit 1; }
 
   tempdir=$(mktemp -d)
   j=1
@@ -968,25 +978,25 @@ verifdeb(){
     [ -z "$fprint" ] && break;
     idx=$($getcert "$fprint" $$)
     [ -z "$idx" ] && { 1>&2 echo "Certificate used by task($id) not found !!"; cleanup_and_exit 1 "$tempdir"; }
-    gpg --no-default-keyring --keyring "$tempdir/keyring.gpg" --import /tmp/cert.$$ >& /dev/null
+    gpg --no-default-keyring --keyring "$tempdir/keyring.gpg" --import /tmp/cert.$$ > /dev/null 2>&1
     j=$((j + 1))
   done
 
   if ! gpg --no-default-keyring --keyring "$tempdir/keyring.gpg"  \
         --verify "$DSAS_HAUT/$dir/Release.gpg" \
-        "$DSAS_HAUT/$dir/Release" >& /dev/null; then
+        "$DSAS_HAUT/$dir/Release" > /dev/null 2>&1 ; then
     1>&2 echo "Failed to verify Release signature"
     cleanup_and_exit 1 "$tempdir"
   fi
   if ! gpg --no-default-keyring --keyring "$tempdir/keyring.gpg"  \
-        --verify "$DSAS_HAUT/$dir/InRelease" >& /dev/null; then
+        --verify "$DSAS_HAUT/$dir/InRelease" > /dev/null 2>&1 ; then
     1>&2 echo "Failed to verify InRelease signature"
     cleanup_and_exit 1 "$tempdir"
   fi
 
-  if [ "$antivirus" == "true" ]; then
-    clamdscan "$DSAS_HAUT/$dir/Release" >& /dev/null || { 1>&2 echo "The file Release failed antivirus check"; cleanup_and_exit 4 "$tempdir"; }
-    clamdscan "$DSAS_HAUT/$dir/InRelease" >& /dev/null || { 1>&2 echo "The file InRelease failed antivirus check"; cleanup_and_exit 4 "$tempdir"; }
+  if [ "$antivirus" = "true" ]; then
+    clamdscan "$DSAS_HAUT/$dir/Release" > /dev/null 2>&1 || { 1>&2 echo "The file Release failed antivirus check"; cleanup_and_exit 4 "$tempdir"; }
+    clamdscan "$DSAS_HAUT/$dir/InRelease" > /dev/null 2>&1 || { 1>&2 echo "The file InRelease failed antivirus check"; cleanup_and_exit 4 "$tempdir"; }
   fi
 
   # Create the destination directory if needed
@@ -1017,9 +1027,9 @@ verifdeb(){
   while read -r line; do
     # Assume that each hash is listed after the correct flag and has
     # a leading space
-    [ "$inhash" == "0" ] && [[ "$line" =~ ^$hashtyp$ ]] && inhash="1" && continue
-    [ "$inhash" == "1" ] && [[ "$line" =~ ":$" ]] && inhash="0" && continue
-    [ "$inhash" == "0" ] && continue
+    [ "$inhash" = "0" ] && [[ "$line" =~ ^$hashtyp$ ]] && inhash="1" && continue
+    [ "$inhash" = "1" ] && [[ "$line" =~ ":$" ]] && inhash="0" && continue
+    [ "$inhash" = "0" ] && continue
 
     IFS=' ' read -r _hash _ _file << EOF
 $line
@@ -1030,7 +1040,7 @@ EOF
 
       # Only check Package, Package.gz and Package.xz files if desired architecture 
       _f=$(basename "$_file")
-      if [ "$_f" == "Packages" ] || [ "$_f" == "Packages.gz" ] || [ "$_f" == "Packages.xz" ]; then
+      if [ "$_f" = "Packages" ] || [ "$_f" = "Packages.gz" ] || [ "$_f" = "Packages.xz" ]; then
         _f=$(dirname "$_file")
         [[ "$archs" =~ ${_f##*-} ]] || continue
       fi
@@ -1039,8 +1049,8 @@ EOF
         msgline "$DSAS_HAUT/$dir/$_file" 2  
       else
         [ -d "$(dirname "$DSAS_BAS/$dir/$_file")" ] || mkdir "$(dirname "$DSAS_BAS/$dir/$_file")"
-        if [ "$antivirus" == "true" ]; then
-          if clamdscan "$DSAS_HAUT/$dir/$_file" >& /dev/null; then
+        if [ "$antivirus" = "true" ]; then
+          if clamdscan "$DSAS_HAUT/$dir/$_file" > /dev/null 2>&1 ; then
             msgline "$DSAS_HAUT/$dir/$_file" 0
             ln "$DSAS_HAUT/$dir/$_file" "$DSAS_BAS/$dir/$_file"
           else
@@ -1089,7 +1099,7 @@ EOF
           if [ "$status" -eq 0 ]; then
             [ -d "$(dirname i"$DSAS_BAS/$pool/$_file")" ] || mkdir "$(dirname "$DSAS_BAS/$pool/$_file")"
 
-            if [ "$antivirus" == "true" ]; then
+            if [ "$antivirus" = "true" ]; then
               status=0
               # clamav won't recognize the stream type if just "ar p" is used.
               # Need to treat each file in the archive individually
@@ -1124,14 +1134,14 @@ passdirectory(){
   dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
   dir=${dir%/}
 
-  if [ "$2" == "deb" ]; then
+  if [ "$2" = "deb" ]; then
     pool=$(dirname "$dir")
     have_pool="0"
     while [ -n "$pool" ]; do
       [ -d "$DSAS_HAUT/$pool/pool" ] && have_pool="1" && break
       pool=$(dirname "$pool")
     done
-    [ "$have_pool" == "0" ] && { 1>&2 echo "Debian pool directory not found"; exit 1; }
+    [ "$have_pool" = "0" ] && { 1>&2 echo "Debian pool directory not found"; exit 1; }
   fi
 
   # Create directory if needed
@@ -1142,7 +1152,7 @@ passdirectory(){
 
   # Remove the files in our tree bas and not in haut.
   while IFS= read -r -d '' file; do
-    if [ "$(stat --printf "%h\n"  "$file")" == "1" ]; then
+    if [ "$(stat --printf "%h\n"  "$file")" = "1" ]; then
       1>&2 myecho "Removing stale file ${file#"$DSAS_BAS/${dir%/}/"}"
       rm -f "$file"
     fi
@@ -1159,7 +1169,7 @@ passdirectory(){
     ln "$DSAS_HAUT/$file" "$DSAS_BAS/$file"
   done < <(find "$DSAS_HAUT/$dir" -type f -print0)
 
-  if [ "$2" == "deb" ]; then
+  if [ "$2" = "deb" ]; then
     # Create directories if needed
     while IFS= read -r -d '' _d; do
       _d=${_d#"$DSAS_HAUT/"}  
@@ -1168,7 +1178,7 @@ passdirectory(){
 
     # Remove the files in our tree bas and not in haut.
     while IFS= read -r -d '' file; do
-      if [ "$(stat --printf "%h\n"  "$file")" == "1" ]; then
+      if [ "$(stat --printf "%h\n"  "$file")" = "1" ]; then
         1>&2 myecho "Removing stale file ${file#"$DSAS_BAS/$pool/pool/"}"
         rm -f "$file"
       fi
@@ -1196,12 +1206,12 @@ verifclamav(){
   local dir="ClamAV"
 
   # Return if antivirus is not active
-  [ "$antivirus" == "true" ] || return
+  [ "$antivirus" = "true" ] || return
 
   # Create directory if needed
   [ -d "$DSAS_BAS/$dir" ] || mkdir "$DSAS_BAS/$dir"
   
-  if [ "$TYP" == "haut" ]; then
+  if [ "$TYP" = "haut" ]; then
     for file in main.cvd daily.cvd bytecode.cvd; do
       # If file exists in bas skip. Hardlinked, so test is fast
       [ "$DSAS_HAUT/$dir/$file" -ef "$DSAS_BAS/$dir/$file" ] && continue
@@ -1257,7 +1267,7 @@ done
 
 # If ClamAV download request do it now and exit
 antivirus="$(xmllint --xpath "string(dsas/config/antivirus/active)" "$CONF")"
-[ "$clamav" == "1" ] && (verifclamav; exit 0)
+[ "$clamav" = "1" ] && (verifclamav; exit 0)
 
 # Check that all ids are valid before doing anything
 idx=""
@@ -1274,7 +1284,7 @@ done
 
 for _id in $idx; do
   type=$(xmllint --xpath "string(dsas/tasks/task[$_id]/type)" "$CONF")
-  if [ "$TYP" == "haut" ]; then
+  if [ "$TYP" = "haut" ]; then
     # No verification on the machine haut
     passdirectory "$_id" "$type"
   else
