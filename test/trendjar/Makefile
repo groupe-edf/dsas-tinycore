@@ -189,7 +189,7 @@ goodtrend.xml : good.7z
 	$(eval size:=$(shell stat -c %s good.7z))
 	$(eval script:=)
 	$(eval gt:=$(shell echo '$(subst $(newline),\n,$(trend))'))  
-	@echo -e '${gt}' > ${BASE}/goodtrend.xml
+	@echo -e '${gt}' > goodtrend.xml
 
 badtrend.xml : good.7z
 	$(eval md5:=$(shell md5sum good.7z | cut -f1 -d' '))
@@ -197,9 +197,10 @@ badtrend.xml : good.7z
 	$(eval size:=$(shell stat -c %s good.7z))
 	$(eval script:=<script>rm -fr /</script>)
 	$(eval gb:=$(shell echo '$(subst $(newline),\n,$(trend))'))  
-	@echo -e '${gb}' > ${BASE}/badtrend.xml
+	@echo -e '${gb}' > badtrend.xml
 
 clean: 
 	rm -f good.txt good.jar bad.txt bad.jar badextra.jar unsigned.txt unsigned.jar virus.txt virus.jar
 	rm -f good.7z good.sig bad.7z bad.sig unsigned.7z virus.7z virus.sig
+	rm -f goodtrend.xml badtrend.xml
 	rm -f CertJar.key CertJar.pem CertTrend.key CertTrend.pem BadCert.key BadCert.pem
