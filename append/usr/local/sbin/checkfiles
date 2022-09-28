@@ -720,7 +720,7 @@ verifdirectory() {
 
       if [ "$type" = "trend" ] &&  [ "${file##.*} = "xml" ]; then
         # Trend micro XML files must adhere to a strict XSD Schema
-        if xmllint --nout --schema "$SCHEMA" "$DSAS_HAUT/$file" > /dev/null 2>&1; then
+        if xmllint --noout --schema "$SCHEMA" "$DSAS_HAUT/$file" > /dev/null 2>&1; then
           status=0
           if [ "$antivirus" = "true" ]; then
             clamdscan "$DSAS_HAUT/$file" > /dev/null 2>&1 || status=4
