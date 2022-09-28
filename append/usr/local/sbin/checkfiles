@@ -718,7 +718,17 @@ verifdirectory() {
       # If file exists in bas skip. Hardlinked, so test is fast
       [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
 
-      if [ "$type" = "trend" ] && [ -z "$(zipinfo "$DSAS_HAUT/$file" 2> /dev/null | grep -q MANIFEST.MF && echo "1")" ] ; then
+      if [ "$type" = "trend" ] &&  [ "${file##.*} = "xml" ]; then
+        # Trend micro XML files must adhere to a strict XSD Schema
+        if xmllint --nout --schema "$SCHEMA" "$DSAS_HAUT/$file" > /dev/null 2>&1; then
+          status=0
+          if [ "$antivirus" = "true" ]; then
+            clamdscan "$DSAS_HAUT/$file" > /dev/null 2>&1 || status=4
+          fi
+        else
+          status=$?
+        fi
+      elif [ "$type" = "trend" ] && [ -z "$(zipinfo "$DSAS_HAUT/$file" 2> /dev/null | grep -q MANIFEST.MF && echo "1")" ] ; then
         # SMIME signed files
         if verifsmime "$id" "$tempdir" "$file"; then
           status=0

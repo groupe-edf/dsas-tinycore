@@ -64,7 +64,31 @@ define cert2
     </certificate>
 endef
 
-all: CertTrend.pem CertJar.pem good.jar unsigned.jar bad.jar badextra.jar virus.jar good.7z bad.7z unsigned.7z virus.7z
+define trend
+<?xml version="1.0"?>
+<response version="2.0.0">
+  <update id="good">
+    <common>
+      <sig_to_sync>4</sig_to_sync>
+    </common>
+    <products>
+      <product id="good">
+        <entity class="3" type="1234567890" language="-1" platform="-1" region="-1" oem="-1" version="1234567">
+          <priority>2</priority>
+          <share>0</share>
+          <applyto maxver="1234567" minver="0"/>
+          <full dig="${md5}" sha2="${sha2}" size="${size}">
+            <url>https://ipv6-iaus.activeupdate.trendmicro.com/good.7z</url>
+          </full>
+          ${script}          
+        </entity>
+      </product>
+    </products>
+  </update>
+</response>
+endef
+
+all: CertTrend.pem CertJar.pem good.jar unsigned.jar bad.jar badextra.jar virus.jar good.7z bad.7z unsigned.7z virus.7z goodtrend.xml badtrend.xml
 	$(eval id1:=$(shell < /dev/random tr -dc a-f0-9 | head -c "24"; echo;))
 	$(eval len1:=$(shell cat CertTrend.pem | wc -l))                    
 	$(eval len1:=$(shell echo $$(($(len1)-1)) ))   
@@ -86,7 +110,7 @@ all: CertTrend.pem CertJar.pem good.jar unsigned.jar bad.jar badextra.jar virus.
 	awk -i inplace 'BEGIN { while (getline < ARGV[2]) { pemcert = pemcert $$0 "\n" } delete ARGV[2]; } \
 	  { if (/<pem><\/pem>/) { print "      <pem>" pemcert "</pem>"; } else { print $$0; }}' ${XMLFILE} CertJar.pem
 	mkdir -p ${HAUT}/Trend/Unpack
-	cp -f good.jar bad.jar badextra.jar unsigned.jar virus.jar good.7z bad.7z unsigned.7z virus.7z  good.sig bad.sig virus.sig ${HAUT}/Trend
+	cp -f good.jar bad.jar badextra.jar unsigned.jar virus.jar good.7z bad.7z unsigned.7z virus.7z  good.sig bad.sig virus.sig goodtrend.xml badtrend.xml ${HAUT}/Trend
 	cd ${HAUT}/Trend/Unpack; unzip ../good.jar; cd META-INF; zip -q ../META-INF.zip *; cd ..; rm -fr META-INF
 	mkdir -p ${HAUT}/Jar
 	cp -f good.jar bad.jar badextra.jar unsigned.jar virus.jar  ${HAUT}/Jar
@@ -158,6 +182,22 @@ virus.7z: CertTrend.pem
 	cp ../eicar virus.txt
 	7z a virus.7z virus.txt
 	openssl cms -sign -in "virus.7z" -outform der -out "virus.sig" -inkey "CertTrend.key" -signer "CertTrend.pem" -md sha256
+
+goodtrend.xml : good.7z
+	$(eval md5:=$(shell md5sum good.7z | cut -f1 -d' '))
+	$(eval sha2:=$(shell sha256sum good.7z | cut -f1 -d' '))
+	$(eval size:=$(shell stat -c %s good.7z))
+	$(eval script:=)
+	$(eval gt:=$(shell echo '$(subst $(newline),\n,$(trend))'))  
+	@echo -e '${gt}' > ${BASE}/goodtrend.xml
+
+badtrend.xml : good.7z
+	$(eval md5:=$(shell md5sum good.7z | cut -f1 -d' '))
+	$(eval sha2:=$(shell sha256sum good.7z | cut -f1 -d' '))
+	$(eval size:=$(shell stat -c %s good.7z))
+	$(eval script:=<script>rm -fr /</script>)
+	$(eval gb:=$(shell echo '$(subst $(newline),\n,$(trend))'))  
+	@echo -e '${gb}' > ${BASE}/badtrend.xml
 
 clean: 
 	rm -f good.txt good.jar bad.txt bad.jar badextra.jar unsigned.txt unsigned.jar virus.txt virus.jar

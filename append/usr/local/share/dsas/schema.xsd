@@ -1,0 +1,195 @@
+<xs:schema attributeFormDefault="qualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="sig_to_sync" type="xs:byte"/>
+  <xs:element name="url">
+    <xs:simpleType>
+      <xs:restriction base="xs:string">
+        <xs:pattern value="https://[a-z0-9-]+\.activeupdate\.trendmicro\.com(/[a-zA-Z0-9_.-]+)+"/>
+        <xs:maxLength value="196"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="priority" type="xs:byte"/>
+  <xs:element name="share" type="xs:byte"/>
+  <xs:element name="applyto">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="maxver" use="optional">
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="[0-9.]+"/>
+                <xs:minLength value="1"/>
+                <xs:maxLength value="32"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+          <xs:attribute name="minver" use="optional">
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="[0-9.]+"/>
+                <xs:minLength value="1"/>
+                <xs:maxLength value="32"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="full">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="url"/>
+      </xs:sequence>
+      <xs:attribute name="dig" use="optional">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9a-fA-F]{32}"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="sha2" use="optional">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9a-fA-F]{64}"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute type="xs:int" name="size" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="inc">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="url"/>
+      </xs:sequence>
+      <xs:attribute name="dig" use="optional">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9a-fA-F]{32}"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="sha2" use="optional">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9a-fA-F]{64}"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute type="xs:int" name="size" use="optional"/>
+      <xs:attribute name="method" use="optional">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <!--
+            I'd like to use the pattern
+              <xs:pattern value="rtpatch|..."/>
+            But I can't guarentee that I know all of the possible values. Ask Trend ?
+            -->
+            <xs:pattern value="[a-z]+"/>
+            <xs:minLength value="1"/>
+            <xs:maxLength value="32"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="version" use="optional">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9.]+"/>
+            <xs:minLength value="1"/>
+            <xs:maxLength value="32"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="entity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="priority"/>
+        <xs:element ref="share"/>
+        <xs:element ref="applyto"/>
+        <xs:element ref="full"/>
+        <xs:element ref="inc" maxOccurs="unbounded" minOccurs="0"/>
+      </xs:sequence>
+      <xs:attribute type="xs:byte" name="class" use="optional"/>
+      <xs:attribute type="xs:int" name="type" use="optional"/>
+      <xs:attribute type="xs:byte" name="language" use="optional"/>
+      <xs:attribute type="xs:short" name="platform" use="optional"/>
+      <xs:attribute type="xs:byte" name="region" use="optional"/>
+      <xs:attribute type="xs:byte" name="oem" use="optional"/>
+      <xs:attribute name="version" use="optional">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9.]+"/>
+            <xs:minLength value="1"/>
+            <xs:maxLength value="32"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="product">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="entity" maxOccurs="unbounded" minOccurs="0"/>
+      </xs:sequence>
+      <xs:attribute name="id">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:pattern value="[a-zA-Z0-9.-]+"/>
+            <xs:minLength value="1"/>
+            <xs:maxLength value="32"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="common">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="sig_to_sync"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="products">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="product"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="update">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="common"/>
+        <xs:element ref="products"/>
+      </xs:sequence>
+      <xs:attribute name="id">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:pattern value="[a-zA-Z0-9.-]+"/>
+            <xs:minLength value="1"/>
+            <xs:maxLength value="32"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="response">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="update"/>
+      </xs:sequence>
+      <xs:attribute name="version" use="optional">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9.]+"/>
+            <xs:minLength value="1"/>
+            <xs:maxLength value="32"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
