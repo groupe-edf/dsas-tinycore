@@ -10,7 +10,7 @@ DSAS_BAS=$DSAS_HOME/bas/share
 
 # Trend Micro XSD Schema to validate their XML files
 # This schema needs to be as strict as possible to limit the risques
-SCHEMA="/usr/local/shara/dsas/schema.xsd"
+SCHEMA="/usr/local/share/dsas/schema.xsd"
 
 # Hostnames listed in /etc/hosts for "bas and "haut"
 INTERCO_HAUT="haut"
