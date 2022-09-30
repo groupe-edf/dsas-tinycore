@@ -712,7 +712,11 @@ install_dsas_js() {
       mkdir -p $extract/home/tc/dsas
       tar cf - --exclude tmp --exclude=work --exclude=.git . | tar -C $extract/home/tc/dsas -xvf - 
       chown -R tc.staff $extract/home/tc
-
+      if [ "$testcode" = "1" ]; then
+         maketype="dev"
+      else
+         maketype="prod"
+      fi
       mkdir -p "$extract/tmp"
       chmod 1777 "$extract/tmp" 
       cat << EOF > "$extract/tmp/script"
@@ -722,7 +726,7 @@ export https_proxy=${https_proxy:=}
 export HOME=/home/tc
 export USER=tc
 cd /home/tc/dsas/js
-make prod
+make ${maketype}
 EOF
       chmod a+x "$extract/tmp/script"
       msg "Building  $package"
