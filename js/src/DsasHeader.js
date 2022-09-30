@@ -34,6 +34,7 @@ function dsasApply() {
     el.textContent = _(" Backup of the configuration in progress");
     modalApply.removeAttribute("title");
     modalApply.setAttribute("disable", true);
+    modalDSAS.setAttribute("type", "Ok");
     modalApply.setBody(spinner);
     modalApply.setAction();
     modalApply.show();
