@@ -16,9 +16,11 @@ use Facebook\WebDriver\WebDriverWait;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\WebDriverSelect;
 use Facebook\WebDriver\WebDriverExpectedCondition;
+use Facebook\WebDriver\Exception\StaleElementReferenceException;
 
 // Modifiable constants
-$sshot = true;
+$sshot = true;   // Take screenshots
+$trace = false;  // Print backtrace
 define("_user", "tc");
 define("_pass", "dSaO2021cTf");
 define("_delay", 5);  // 5 seconds
@@ -86,12 +88,15 @@ function test(string $_msg, callable $_fn, bool $_fatal = false, $sshot = -1) {
     }
   } catch (Throwable $e) {
     if ($_fatal) {
-      fatal(); 
+      fatal();
       echo $e->getMessage() . PHP_EOL;
       throw $e;
     } else {
       fail();
       echo $e->getMessage() . PHP_EOL;
+      if ($trace) {
+        echo $e->getTraceAsString() . PHP_EOL;
+      }
       if ($sshot)
         screenshot();
     }
@@ -169,7 +174,14 @@ function apply() {
   $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click(); // Click Ok to confirm
   // Extra long delay here during apply
   $GLOBALS["driver"]->wait(4 * _delay, _retry)->until(function () {
-    return $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->getAttribute("disable") === null;
+    $el = $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"));
+    // FIXME Don't know why but sometimes the element is stale here, even
+    // though its only just been found. Wrap in try/catch to avoid problems
+    try {
+      return $el->getAttribute("disable") === null;
+    } catch (StaleElementReferenceException $e) {
+      return false;
+    }
   });
   $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
   modal_delay();
@@ -1540,14 +1552,7 @@ try {
         modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-        // Toggle visbility of details on page
-        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#add0']")));
-	modal_delay();  // FIXME this shouldn't be needed
         // Search for added fingerprint
-        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@href, '#add')]")) as $card)
-          $card->click();
-        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//div[@id='add0']")));
-	modal_delay(); // FIXME This shouldn't be needed
         $found = false;
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'add')]")) as $card) {
           if (str_contains($card->getDomProperty("innerHTML"), $finger)) {
@@ -1639,15 +1644,6 @@ try {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#pubkey0']")));
 	modal_delay(); // FIXME This shouldn't be needed
         // Search for added fingerprint
-        $first = true;
-        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@href, '#pubkey')]")) as $card) {
-          if ($first)
-            $first = false;
-          else
-            $card->click();
-        }
-        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//div[@id='pubkey0']")));
-	modal_delay(); // FIXME This shouldn't be needed
         $found = false;
         $first = true;
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'pubkey')]")) as $card) {
@@ -1748,15 +1744,6 @@ try {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//a[@href='#gpg0']")));
 	modal_delay(); // FIXME This shouldn't be needed
         // Search for added fingerprint
-        $first = true;
-        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//a[starts-with(@href, '#gpg')]")) as $card) {
-          if ($first)
-            $first = false;
-          else
-            $card->click();
-        }
-        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath("//div[@id='gpg0']")));
-	modal_delay(); // FIXME This shouldn't be needed
         $found = false;
         $first = true;
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'gpg')]")) as $card) {
@@ -2246,6 +2233,10 @@ try {
 } catch (Exception $e) {
   // Catch other errors here so that firefox is shut down cleanly
   echo $e->getMessage() . PHP_EOL;
+  echo $e->getMessage() . PHP_EOL;
+  if ($trace) {
+    echo $e->getTraceAsString() . PHP_EOL;
+  }
   if (array_key_exists("driver", $GLOBALS)) screenshot();
 } finally {
   // Restore original XML configure file and apply it
