@@ -11,7 +11,7 @@ function dsasRenewCertReal() {
         const formData = new FormData();
         formData.append("op", "renew");
         ["countryName", "stateOrProvinceName", "localityName", "organizationName",
-            "organizationalUnitName", "commonName", "emailAddress"].ForEach((fld) => {
+            "organizationalUnitName", "commonName", "emailAddress"].forEach((fld) => {
             formData.append(fld, document.getElementById(fld).value);
         });
         let valid = 0;
