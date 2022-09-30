@@ -168,7 +168,9 @@ function apply() {
   $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
   $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click(); // Click Ok to confirm
   // Extra long delay here during apply
-  $GLOBALS["driver"]->wait(4 * _delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::id("cancelDSAS")));
+  $GLOBALS["driver"]->wait(4 * _delay, _retry)->until(function () {
+    $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->getAttribute("disable") === null;
+  });
   $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
   modal_delay();
   $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click(); // Click Ok to confirm
