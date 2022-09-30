@@ -33,6 +33,7 @@ function dsasApply() {
     el = spinner.appendChild(document.createElement("span"));
     el.textContent = _(" Backup of the configuration in progress");
     modalApply.removeAttribute("title");
+    modalApply.setAttribute("hideonclick", false);
     modalApply.setAttribute("disable", true);
     modalApply.setAttribute("type", "Ok");
     modalApply.setBody(spinner);
@@ -53,17 +54,20 @@ function dsasApply() {
             if (response.ok) { return response.text(); }
             return Promise.reject(new Error(response.statusText));
         }).then(() => {
+            modalApply.removeAttribute("hideonclick");
             modalApply.removeAttribute("disable");
             modalApply.setBody("");
             modalApply.hide();
             modalMessage(_("Configuration applied"));
         }).catch(() => {
+            modalApply.removeAttribute("hideonclick");
             modalApply.removeAttribute("disable");
             modalApply.setBody("");
             modalApply.hide();
             modalMessage(_("Error during application of the configuration"));
         });
     }).catch((error) => {
+        modalApply.removeAttribute("hideonclick");
         modalApply.removeAttribute("disable");
         modalApply.setBody("");
         modalApply.hide();
