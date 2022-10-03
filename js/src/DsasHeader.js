@@ -374,16 +374,13 @@ class DSASHeader extends HTMLElement {
     }
 
     render() {
-        const disablenav = (this.getAttribute("disablenav") ? this.getAttribute("disablenav") : "");
-
         // FIXME Remove innerHTML ?
         // This isn't a security risk as there are no user defined fields in the html below
-        // Maybe at least remove disablenav and treat seperately in JS ?
         this.innerHTML = `    <div class="row g-0 sticky-top"><div class="col-8"><nav class="navbar navbar-expand-sm bg-dark navbar-dark">
-      <a class="navbar-brand px-2"` + ((disablenav !== "disabled") ? " href=\"/\"" : "") + `>DSAS</a>
+      <a class="navbar-brand px-2" href=\"/\">DSAS</a>
       <ul class="navbar-nav">
       <li class="nav-item dropdown">
-        <a class="nav-link ` + disablenav + ` dropdown-toggle" data-bs-toggle="dropdown" data-i18n>Configuration</a>
+        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" data-i18n>Configuration</a>
         <div class="dropdown-menu">
           <a class="dropdown-item" href="tasks.html" data-i18n>Tasks</a>
           <a class="dropdown-item" href="cert.html" data-i18n>Certificates</a>
@@ -396,15 +393,15 @@ class DSASHeader extends HTMLElement {
         <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" data-i18n>System</a>
         <div class="dropdown-menu">
           <a class="dropdown-item" href="users.html" data-i18n>Users</a>
-          <a class="dropdown-item ` + disablenav + `" id="headbackup" data-i18n>Backup</a>
+          <a class="dropdown-item" id="headbackup" data-i18n>Backup</a>
           <a class="dropdown-item" id="headrestore" data-i18n>Restore</a>
-          <a class="dropdown-item ` + disablenav + `" id="headreboot" data-i18n>Restart</a>
-          <a class="dropdown-item ` + disablenav + `" id="headshutdown" data-i18n>Shutdown</a>
-          <a class="dropdown-item ` + disablenav + `" id="headlogout" data-i18n>Logout</a>
+          <a class="dropdown-item" id="headreboot" data-i18n>Restart</a>
+          <a class="dropdown-item" id="headshutdown" data-i18n>Shutdown</a>
+          <a class="dropdown-item" id="headlogout" data-i18n>Logout</a>
         </div>
       </li>
       <li class="nav-item">
-        <a class="nav-link ` + disablenav + `" id="headhelp" href="help.html" data-i18n>Documentation</a>
+        <a class="nav-link" id="headhelp" href="help.html" data-i18n>Documentation</a>
       </li>
       </ul>
     </nav></div>
@@ -412,7 +409,7 @@ class DSASHeader extends HTMLElement {
       <ul class="navbar-nav ms-auto">
       <span data-i18n-navbar-lang></span>
       <li class="nav-item px-2">
-        <a class="btn ` + disablenav + ` btn-danger" id="applyDSAS" data-i18n>Apply</a>
+        <a class="btn btn-danger" id="applyDSAS" data-i18n>Apply</a>
       </li>
       </ul>
     </nav></div></div>
@@ -428,7 +425,7 @@ class DSASHeader extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ["disablenav"];
+        return [];
     }
 
     attributeChangedCallback() {

@@ -30,12 +30,12 @@ case "Certificates":
 case "Net":
     dsasLoggedin();
     dsasCheckWarnings();
-    dsasDisplayNet("all");
+    dsasDisplayNet();
     break;
 case "Service":
     dsasLoggedin();
     dsasCheckWarnings();
-    dsasDisplayService("all");
+    dsasDisplayService();
     break;
 case "Tasks":
     dsasLoggedin();
@@ -45,7 +45,7 @@ case "Tasks":
 case "Web":
     dsasLoggedin();
     dsasCheckWarnings();
-    dsasDisplayWeb("all");
+    dsasDisplayWeb();
     break;
 case "DSAS Login":
     dsasInitLoggedin();
@@ -56,7 +56,7 @@ case "Password":
     break;
 case "Users":
     dsasLoggedin();
-    dsasCheckWarnings(true, false);
+    dsasCheckWarnings();
     dsasDisplayUsers();
     break;
 default:

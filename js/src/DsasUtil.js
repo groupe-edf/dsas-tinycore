@@ -136,12 +136,12 @@ export function failLoggedin(status) {
     } return false;
 }
 
-export function dsasCheckWarnings(disablenav = false, redirect = true) {
+export function dsasCheckWarnings() {
     fetch("api/dsas-users.php").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((obj) => {
-        if ((obj.first === "true") && redirect) { window.location = "passwd.html"; }
+        if (obj.first === "true") { window.location = "passwd.html"; }
     }).catch((error) => {
         failLoggedin(error);
     });
@@ -165,9 +165,6 @@ export function dsasCheckWarnings(disablenav = false, redirect = true) {
                     error = true;
                 }
             });
-            if (error && disablenav) {
-                document.getElementsByTagName("dsas-header")[0].setAttribute("disablenav", "disabled");
-            }
             if (body.firstChild) {
                 modalMessage(_("Error :"));
                 document.getElementById("modalDSAS").setBody(body);
