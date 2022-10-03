@@ -1,5 +1,9 @@
 Log of the principal changes to the DSAS
 
+Version 1.2.3 (XX XXX XXXX)
+- Name of Upper machine incorrect on status page
+- Mark upper machine unavailable in the same manner as version 1.1.x
+
 Version 1.2.2 (30 Sep 2022)
 - Fix minor error in web certificate renewal
 - Add Trend Micro XML validation
