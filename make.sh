@@ -815,7 +815,7 @@ upgrade)
       rm -f "$file"
       msg "Fetching package $_file ..."
       $curl_cmd -o "$file" "$tcz_url/$_file" || exit 1
-      md5sum "$file" | sed -e "s:  $file$::g" > "$file.tcz.md5.txt"
+      md5sum "$file" | sed -e "s:  $file$::g" > "$file.md5.txt"
     fi
   done < <(find $tcz_dir -name "*.tcz" -print0)
   ;;
