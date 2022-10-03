@@ -271,9 +271,13 @@ while (true) {
 try {
   // Save XML configure file for restoration at the end
   msg("Save current configuration");
-  if (copy("/var/dsas/dsas_conf.xml", "/var/dsas/dsas_conf.xml.test"))
-    pass();
-  else
+  if (copy("/var/dsas/dsas_conf.xml", "/var/dsas/dsas_conf.xml.test")) {
+      exec("ssh tc@haut cp -f /var/dsas/dsas_conf.xml /var/dsas/dsas_conf.xml.test", $data, $retval);
+      if ($retval == 0)
+        pass();
+      else
+        fatal();
+  } else
     fatal();
 
   // Setup default test conditions
@@ -2244,8 +2248,15 @@ try {
       copy("/var/dsas/dsas_conf.xml.test", "/var/dsas/dsas_conf.xml"); 
       unlink("/var/dsas/dsas_conf.xml.test");
       exec("sudo /etc/init.d/services/dsas apply", $data, $retval);
-      if ($retval == 0)
-        return true;
+      if ($retval == 0) {
+        exec("ssh tc@haut mv -f /var/dsas/dsas_conf.xml.test /var/dsas/dsas_conf.xml", $data, $retval);
+        if ($retval != 0)
+          return false;
+        exec("ssh tc@haut sudo /etc/init.d/services/dsas apply", $data, $retval))
+        if ($retval == 0)
+          return true;
+      }
+      return false;
     });
 
   // Remove 'testuser' if still active
