@@ -56,7 +56,7 @@ case "Password":
     break;
 case "Users":
     dsasLoggedin();
-    dsasLoggedin(true, false);
+    dsasCheckWarnings(true, false);
     dsasDisplayUsers();
     break;
 default:
