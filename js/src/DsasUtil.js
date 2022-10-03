@@ -117,6 +117,7 @@ export function dsasLoggedin(updateTimeout = true, isAdmin = true) {
         dsasSetTimeout("login", dsasLoggedin, 15000, false, isAdmin);
         return response.text();
     }).catch(() => {
+        dsasClearAllTimeouts();
         modalMessage(
             _("You are not connected. Click 'Ok' to reconnect."),
             () => { window.location = "login.html"; },
@@ -126,7 +127,7 @@ export function dsasLoggedin(updateTimeout = true, isAdmin = true) {
 
 export function failLoggedin(status) {
     if (status && String(status).includes("Forbidden")) {
-        dsasClearTimeout("login");
+        dsasClearAllTimeouts();
         modalMessage(
             _("You are not connected. Click 'Ok' to reconnect."),
             () => { window.location = "login.html"; },
