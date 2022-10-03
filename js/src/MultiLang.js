@@ -94,7 +94,7 @@ export default class MultiLang {
     }
 
     translateHTML(target = document) {
-        // The eslint aribnb style is too annoying for the next 3 lines.
+        // The eslint aribnb style is too annoying for the next 4 lines.
         // eslint-disable-next-line no-param-reassign
         target.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = this.translate(el.textContent); });
         // eslint-disable-next-line no-param-reassign
