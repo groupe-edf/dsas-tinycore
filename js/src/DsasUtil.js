@@ -151,7 +151,6 @@ export function dsasCheckWarnings() {
         return Promise.reject(new Error(response.statusText));
     }).then((obj) => {
         if (obj !== null) {
-            let error = false;
             const body = document.createDocumentFragment();
             obj.forEach((line) => {
                 if (line.type === "warn") {
@@ -162,7 +161,6 @@ export function dsasCheckWarnings() {
                     const el = body.append(document.createElement("p"));
                     el.textContent = _(line.msg);
                     el.className = "text-danger";
-                    error = true;
                 }
             });
             if (body.firstChild) {
