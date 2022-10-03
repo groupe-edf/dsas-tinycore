@@ -1,5 +1,11 @@
 {
   "en" : {
+    "B" : "",
+    "kB" : "",
+    "MB" : "",
+    "GB" : "",
+    "TB" : "",
+    "PB" : "",
     "DSAS Version" : "",
     "Search" : "",
     "Error : {0}" : "",
@@ -272,6 +278,12 @@
     "&lt;Empty&gt;" : ""
   },
   "fr" : {
+    "B" : "o",
+    "kB" : "ko",
+    "MB" : "Mo",
+    "GB" : "Go",
+    "TB" : "To",
+    "PB" : "Po",
     "DSAS Version" : "Version du DSAS",
     "Search" : "Rechercher",
     "Error : {0}" : "Erreur : {0}",

@@ -18,9 +18,9 @@ function formatSpace(bytes) {
     if (bytes === 0) { return "0 B"; }
 
     // FIXME : Should I translate the units here ?
-    const symbols = ["B", "KB", "MB", "GB", "TB", "PB"];
+    const symbols = ["B", "kB", "MB", "GB", "TB", "PB"];
     const exp = Math.floor(Math.log(bytes) / Math.log(1024));
-    return (bytes / 1024 ** Math.floor(exp)).toFixed(2) + " " + symbols[exp];
+    return (bytes / 1024 ** Math.floor(exp)).toFixed(2) + " " + _(symbols[exp]);
 }
 
 function machineStatus(name, obj) {
