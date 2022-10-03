@@ -80,8 +80,12 @@ function dsasStatus() {
     }).then((obj) => {
         machineStatus("Lower", obj.bas);
         if (obj.haut.status === "down") {
+            document.getElementById("UpperName").className = "text-danger";
+            document.getElementById("UpperName").textContent = _("Upper Machine :") + " " + _("UNAVAILABLE");
             document.getElementById("Upper").className = "col-6 container p-3 border text-muted";
         } else {
+            document.getElementById("UpperName").className = "";
+            document.getElementById("UpperName").textContent = _("Upper Machine :");
             document.getElementById("Upper").className = "col-6 container p-3 border";
         }
         machineStatus("Upper", obj.haut);
