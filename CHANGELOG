@@ -2,7 +2,9 @@ Log of the principal changes to the DSAS
 
 Version 1.2.3 (XX XXX XXXX)
 - Name of Upper machine incorrect on status page
+- Table of contents problem in documentation
 - Mark upper machine unavailable in the same manner as version 1.1.x
+- Tag the source code with the GPLv2 licence
 
 Version 1.2.2 (30 Sep 2022)
 - Fix minor error in web certificate renewal
