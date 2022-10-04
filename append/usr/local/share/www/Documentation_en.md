@@ -485,7 +485,7 @@ a search domain "example.com" is used
 
 ![DNS configuration with a static IP](en/init8.png)
 
-with this search domain the hosts "ntp1" and "ntp1.edf.fr" will be equivalent.
+with this search domain the hosts "ntp1" and "ntp1.example.com" will be equivalent.
 Then you have to define name servers, responsible for converting DNS names to 
 IP addresses. For example
 
@@ -1362,7 +1362,7 @@ Software impacted by this risk
 | php-cgi | [8.0.1](http://tinycorelinux.net/12.x/x86/tcz/php-8.0-cgi.tcz) | Backend of the administration site |
 | lighttpd | [1.4.58](http://tinycorelinux.net/12.x/x86/tcz/lighttpd.tcz) | Backend of the administration site |
 | Linux PAM | [1.5.2](https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz) | Authentication on the administration site |
-| DSAS website | [1.2.3](https://gitlab.devops-unitep.edf.fr/dsao-cyber/dsas---tinycore) | Backend and frontend of the administration site |
+| DSAS website | [1.2.3](https://gitlab.com/adb014/dsas-tinycore) | Backend and frontend of the administration site |
 
 The DSAS website is specially developed for this project. Static analyse of the code and a test suite is
 used on this code before each release to minimise the risk. 
@@ -1409,7 +1409,7 @@ to the `~/.xession` file or run this command from an X11 console.
 
 
 ```shell
-git clone https://gitlab.com/adb014/dsas---tinycore.git
+git clone https://gitlab.com/adb014/dsas-tinycore.git
 ```
 
 #### Preparing the DSAS source tree for a private git
@@ -1452,7 +1452,7 @@ We can configure the next actions on the source tree to ignore the http proxy wi
 commands
 
 ```shell
-cd dsas---tinycore
+cd dsas-tinycore
 git config --add remote.origin.proxy ""
 ```
 
