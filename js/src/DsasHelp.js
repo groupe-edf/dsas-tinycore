@@ -31,7 +31,7 @@ const dsasVersion = "1.2.3";
 function dsasHeadings() {
     const hs = Array.prototype.slice.call(document.querySelectorAll("h1, h2, h3"));
     const ph = hs.map((h) => ({
-        title: h.innerText,
+        title: h.textContent,
         depth: h.nodeName.replace(/\D/g, ""),
         id: h.getAttribute("id"),
     }));
@@ -70,9 +70,9 @@ function dsasHelpTOC() {
             + "class=\"dropdown-toggle dropdown-toggle-split\"></a>"
             + "<ul class=\"list-unstyled small collapse\" id=\"toc_submenu" + c + "\">";
             c += 1;
-        } else if (lvl === 1) {
+        } else if (lvl === "1") {
             body += "<li><a href=\"#" + h.id + "\">" + h.title + "</a></li>";
-        } else if (lvl === 2) {
+        } else if (lvl === "2") {
             body += "<li class=\"ms-2\"><a href=\"#" + h.id + "\">" + h.title + "</a></li>";
         } else {
             body += "<li class=\"ms-4\"><a href=\"#" + h.id + "\">" + h.title + "</a></li>";
