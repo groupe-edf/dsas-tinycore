@@ -1736,7 +1736,7 @@ With the package defined, it is possible to create a binary package with the com
 ./make.sh build openssl-1.1.1
 ```
 
-The next build of the DSAS with take into account this package in its build.
+The next build of the DSAS will take into account this package in its build.
 
 # Detailed architecture
 
@@ -1849,7 +1849,7 @@ adapted to respect these conditions. These permissions are audited at each reboo
 
 ## Means of Verification
 
-There are 3 types of linux repository verificatop,
+There are 3 types of linux repository verification,
 
 * rpm - The signature of each RPM file is verified with "rpm -K"
 * repomd - The repomd.xml file is verified and only the hashes of each file are checked
@@ -2162,12 +2162,6 @@ MANIFEST.MF - A file containg teh names and hashes of all of the files in (or ne
 JAVA.SF - A file containing the hash of the manifest
 JAVA.RSA - A SMIME signature file of the file JAVA.SF
 
-
-
-MANIFEST.MF - Un fichier contenant les noms et hashes de l'ensemble des fichiers dans (ou à côté) le JAR
-JAVA.SF - Un fichier avec le hash des fichiers et manifest
-JAVA.RSA - Un fichier de signature SMIME du fichier JAVA.SF
-
 All of the certificates needed for the signature of the JAR files can be recovered with  
 
 ```shell
@@ -2263,7 +2257,7 @@ it is just required that the positions of the compressed objects are correct
 zone of the index itself.
 
 Verifiying only the contents of the zip file, none of these areas will be controlled. However, if we let 
-the zip file pass someone in the sensitive one could abuse this behavior in order to pass unverified files
+the zip file pass someone in the sensitive network could abuse this behavior in order to pass unverified files
 through DSAS.
 
 This only applies to unsigned zip files, as someone able to sign the zip is also
@@ -2300,7 +2294,7 @@ L'ensemble des flux ssh possible est
 |-------------------|-----------------|-------------|----------|-----------|
 | sensitive network | lower           | tc          | ssh      | optional  |
 | sensitive network | lower           | bas         | sftp     | optional  |
-| lower             | upper           | tc          | ssh      | required  |
+| lower             | upper           | tc, haut    | ssh      | required  |
 | lower             | upper           | bas         | sftp     | required    |
 | open netwoek      | upper           | haut        | sftp     | not reco. |
 
@@ -2308,7 +2302,7 @@ where the `ssh` service corresponds to the set of ssh services (ssh, scp and sft
 first option of hardening the sshd service, except in case of the presence of the stream
 not recommended from the open network, the service only listens to the connections from the
 more sensitive network with OpenSSH's `Listen` configuration option. By default, all user
-access if forbidden, and eac user must be explicitly added. The configuration for `tc` users
+access if forbidden, and each user must be explicitly added. The configuration for `tc` users
 are of the form 
 
 ```

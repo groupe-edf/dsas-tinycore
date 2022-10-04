@@ -2349,7 +2349,7 @@ L'ensemble des flux ssh possible est
 |-----------------|-----------------|-------------|----------|-----------|
 | réseau sensible | bas             | tc          | ssh      | optionnel |
 | réseau sensible | bas             | bas         | sftp     | optionnel |
-| bas             | haut            | tc          | ssh      | requis    |
+| bas             | haut            | tc, haut    | ssh      | requis    |
 | bas             | haut            | bas         | sftp     | requis    |
 | réseau ouverte  | haut            | haut        | sftp     | non reco. |
 
@@ -2425,7 +2425,7 @@ les deux machines du DSAS sur deux machine physique disctinct.
 
 ### ulimit sur Docker
 
-Les conteneur Docker utilise un systeme de dicker en couche, avec plusieurs systeme
+Les conteneur Docker utilise un systeme de fichier en couche, avec plusieurs systeme
 les uns sur les autres en utilisant 
 [le systme de fichier FuseFS](https://en.wikipedia.org/wiki/Filesystem_in_Userspace). 
 Ceci aurait un impact sur la vitesse de certain `ioctl` utilisé dans les conteneurs. Un
@@ -2441,7 +2441,7 @@ afin d'assurer que tous les fichiers sont correctement fermés. Dans un installa
 Docker par défaut la valeur de `FD_MAX` est `1024*1024`. Dans un installation standard,
 un appel d'ioctl sur un fichier non ouvert est tellement vite que cette code se termine
 en quelques milliseconds, En revanche, avec Docker et plus d'un million de descripteur 
-de fichier, il va prendre plus que 2 seconds pour le code co-dessus sur un installation
+de fichier, il va prendre plus que 2 seconds pour le code ci-dessus sur un installation
 de Docker par défaut.
 
 Parce que le DSAS utilise SSH pour plusieurs opérations, cette delai pourrait
@@ -2456,7 +2456,7 @@ de création d'image Docker.
 Actuellement le seul privilege nécessaire pour le DSAS sur Docker est CAP_NET_ADMIN.
 Ceci est nécessaire parce que le DSAS a besoin de configurer ses reseaux, plutot que
 le model de Docker ou le conteneur est déjà pré-configuré avec ses réseaux. En revanche,
-des implication de sécurité sont associé avec l'usage de CAP_NET_ADMIN qui doit-être
+des implications de sécurité sont associé avec l'usage de CAP_NET_ADMIN qui doit-être
 adressé.
 
 Comme discuté dan l'article [Docker running an app with NET_ADMIN capability: involved risks](https://unix.stackexchange.com/questions/508809/docker-running-an-app-with-net-admin-capability-involved-risks), 
