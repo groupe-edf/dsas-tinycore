@@ -14,7 +14,7 @@ Organizational means could be put in place to control USB keys each time they
 are used, but the risk of contamination is impossible to exclude.
 
 So, a means of transfering files from a non-sensitive area to our industral
-infrastructure is needed, that including the sytematic control of all files
+infrastructure is needed, that includes the systematic control of all files
 transfered in order to eliminate the risk of malicious files. The "Dynamic 
 Security Access Service" (DSAS) aims to be this means of secure transfer.
 
@@ -25,7 +25,6 @@ and therefore the DSAS includes the ability to transfer files signed by
 authorized people. Finally, the DSAS ensures a protocol break between the various
 security zones in a defense in depth strategy.
 
-
 ## The principal of signature verification
 
 The principal means of file verification of the DSAS is the verification of
@@ -34,11 +33,11 @@ cryptographic signature.
 
 The DSAS is not the first proposal to use cryptographique signatures in a 
 file transfer system and for example [a product by SECLAB implements this.](https://www.seclab-security.com/seclab-securing-systems/)
-The problem is that these existing systems require human intervention to verifier
+The problem is that these existing systems require human intervention to verify
 and sign every file received and to be transfered by the DSAS. A program like
 Symantec End Point Manager produces approximately 4000 files a day to transfer.
 It is therefore an illusion to consider that a human control of these files is
-possible before their transmission
+possible before their transmission.
 
 The DSAS takes another approach, by assigning confidence to the existing signatures
 of certain software editors, thus allowing their transfer. However, there exists
@@ -52,13 +51,13 @@ To this ends it is important to understand the chain of trust of the signature. 
 chain can be rooted in a "Certification Authority" (or CA) in this case of X509 certifcates,
 or a distributed confidence with the certificates themselves signed amongst themselves in
 the case of PGP certificates. For PGP certificates, the "web of trust" is implcit and passes
-by certificate signing ceremonies in the phase before the inclusion of the certiciate in the
-DSAS. For X509 certiciates, the chain of trust is explicitly included in every signed file.
+by certificate signing ceremonies in the phase before the inclusion of the certificate in the
+DSAS. For X509 certificates, the chain of trust is explicitly included in every signed file.
 For example, the certificate used to sign a file is itself signed by an intermediate
 certificate which is signed by a certification authority. The DSAS allows verification tasks
 to be defined limiting the files allowed to pass to have a particular chain of trust and to
 not just verify the file is signed by a valid certification authority. Unfortunately, 
-[malicious actors can also buy signing certiciates](https://duo.com/decipher/attackers-are-signing-malware-with-valid-certificates)
+[malicious actors can also buy signing certificates](https://duo.com/decipher/attackers-are-signing-malware-with-valid-certificates)
 and a verification solely based on the certification authority is not a strict guarantee 
 that a file is not malicious. The DSAS, if correctly configured, allows the transfers to be
 strictly limited to a single software editor, or even a particular division of this editor,
@@ -75,7 +74,7 @@ uninstalled
 - The DSAS must implement a complete break in the protocol between the two zones
 of sensitivity. This is implemented by the DSAS being implemented on two different
 machines, each dedicated to the connections towards one of the two differents zones
-of sensitivity, so as that compromission of the machine attached to the non sensitive
+of sensitivity, so that the compromission of the machine attached in the non sensitive
 zone does not put the machine in the sensitive zone at risk.
 - Several user accounts are used on the DSAS with different access rights, so that 
 the compromission of an account will not expose all of the internal zones of each
@@ -108,7 +107,7 @@ to the less sensitive machine. In this manner, while the more senstive machine c
 from the less sensitive machine, the less senistive machine can not send them directly.
 - All of the administration is performed form the sensitive zone. No adminsitration is posisble
 from the non sensitive zone.
-- Their are several service accounts created on each machine, with the account "haut" being 
+- There are several service accounts created on each machine, with the account "haut" being 
 the only one with the rights to download from a less sensitive zone, the account "verif" being
 the only one with the rights to transfer files between zones on each machine and the account
 "bas"  being the only one with exposed towards the more sensitive zone. The account "verif" is
@@ -159,7 +158,7 @@ Space = D1 + D2 + ... Dn + max(D1, D2, ..., Dn) + (IsDocker ? 150Mbytes : 60Mbyt
 
 where `Di` is the space needed for the repository `Di`. As there can temporarily be 
 two copies of the repository additional space is needed, `max(D1, D2, ..., Dn)` 
-additional disk is needed. The installation of the DSAS of Docker runs form a uncompressed 
+additional disk is needed. The installation of the DSAS of Docker runs from a uncompressed 
 copy of the ISO image, where the other cases was a copy the the DSAS compressed ISO only.
 
 The Windows "Patch Tuesday" updates are often a hundred or so megabytes, so we multiply
@@ -482,7 +481,7 @@ to DSAS from outside the subnet.
 ![Gateway configuration with a static IP](en/init7.png)
 
 Two items are required for DNS configuration. First the search domain, where here
-a search domain "edf.fr" is used
+a search domain "example.com" is used
 
 ![DNS configuration with a static IP](en/init8.png)
 
@@ -509,8 +508,8 @@ with the message
 
 ![Lower machine waiting for the upper machine](en/init11.png)
 
-The main reason for seeing this screen could be that the upper machine has not
-been started. However, the network interconnection between the two machines could also be
+The main reason to see this screen could be that the upper machine has not been 
+started. However, the network interconnection between the two machines could also be
 at fault.
 
 In the initial phase, there is no SSH key for SSH without a password. So the privileged
@@ -657,7 +656,7 @@ configuration screen is as follows
 
 At the first connection only the default user `tc` is configured. It is recommanded to create 
 nominative users account for each user and to deactivate the account `tc`. The user `tc` is
-the only one with the rights to become `root` on the DSAS. Even though the account is deactivate
+the only one with the rights to become `root` on the DSAS. Even though the account is deactivated
 it remains usable from the console of the DSAS and other adminsitrative users, knowing the 
 password for the account `tc` can use this knowledge to become `root`.
 
@@ -681,16 +680,16 @@ For each users several modifications or actions are possible
 
 - __Description__ - Information about the user can be freely added in this field
 - __Type__ _ Three types of users are possible 
-  * __tc__ - An administration user of the DSAS. It has all the privileges on the 
-DSAS, and if `ssh` is active for adminsitrateurs, it can used to connect with `ssh` 
+  * __administrator__ - An administration user of the DSAS. It has all the privileges on the 
+DSAS, and if `ssh` is active for adminsitrateurs, it can be used to connect with `ssh` 
 for advanced maintenance on the DSAS.
-- __bas__ - This type of user has only one role. If the DSAS is configured with
+  * __lower__ - This type of user has only one role. If the DSAS is configured with
 `ssh` for the user __bas__ it will have the right to connect via `sftp` and only via 
 `sftp` from the sensitive zone. This could be useful for the recovery of transmitted files.
 by DSAS in certain scenarios. Only verified files will be shown to this user
 by DSAS and a [chroot](https://fr.m.wikipedia.org/wiki/Chroot) is used to prevent
 the user from seeing anything else.
-- __haut__ - This type of user, like user __bas__, is used for an `sftp` connection
+  * __upper__ - This type of user, like user __lower__, is used for an `sftp` connection
 from the non-sensitive area to allow files to be uploaded directly to the DSAS. It is 
 also isolated with chroot and can only see the zone where files should be deposited. The
 use of this feature is strongly discouraged as it opens up the possibility of attacks 
@@ -762,11 +761,11 @@ The fields to be filled in for the renewal are fields defined by the standard
 [RFC5280](https://datatracker.ietf.org/doc/html/rfc5280.html).
 
 - __C__ - This field is the country of the organization responsible for the server. It 
-is must be two letters encoded as defined in RFC5280. The code for France is __FR__.
-- __O__ - The organization responsible for the server. In France, the
+is must be two letters encoded as defined in RFC5280. For example, the code for France is __FR__.
+- __O__ - The organization responsible for the server. In France, it is generally the
 name of the company registered with INSEE and must be all capital letters.
 - __OU__ - An identifier of the sub organization responsible for the server. Certificates
-signed in France must include a KBIS, for example here '0002 552081317', is the KBIS of EDF.
+signed in France must include a KBIS, for example here '0002 552081317', is a valid KBIS.
 - __CN__ - For a server, like the DSAS this must be the DNS name of the server
 - __S__ - A free field for the region of the Company's head office. It is optional
 - __L__ - A free field for the city of the company's head office. It is optional
@@ -785,7 +784,7 @@ which could be started on the DSAS;
 - An HTTPS repository for the files verified by the DSAS,
 - An ntpd client for setting the time of the machines,
 - A syslogd client for local and remote administration logs,
-- A server SNMPD to supply the status logs of the DSAS, and
+- A SNMPD server to supply the status logs of the DSAS, and
 - An antivirus server
 
 ![Web server configuration menu](en/DSAS16.png)
@@ -887,7 +886,7 @@ The DSAS includes an antivirus server based on `ClamAV`. If the option `Antiviru
 a server `clamd` will be started, and the files transfered by the DSAS will be checked with
 the antivirus.
 
-However, these verifications need updated virale signatures. The files `main.cvd`, `daily.cvd`
+However, these verifications need updated viral signatures. The files `main.cvd`, `daily.cvd`
 and `bytecode.cvd` must be installed on the DSAS. These files are available on the URL
 
 ```
@@ -896,8 +895,8 @@ https://database.clamav.net/daily.cvd
 https://database.clamav.net/bytecode.cvd
 ```
 
-and the URI to configure on the DSAS can not be `https://database.clamav.net/` but rather
-a mirror for example on the local network. The DSAS will update these files from this URI once a day.
+and the URI to configure on the DSAS could be `https://database.clamav.net/` but a local
+mirror should be prefered. The DSAS will update these files from this URI once a day.
 
 # DSAS Operation
 

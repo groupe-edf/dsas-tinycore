@@ -497,7 +497,7 @@ au DSAS depuis l'extérieur du sous-réseau.
 ![Configuration du passerelle avec une IP statique](fr/init7.png)
 
 Deux éléments sont nécessaires pour la configuration du DNS. Premièrement le domaine
-de recherche. Ici un domaine de recherche "edf.fr" est utilisé
+de recherche. Ici un domaine de recherche "example.com" est utilisé
 
 ![Configuration DNS avec une IP statique](fr/init8.png)
 
@@ -920,9 +920,9 @@ https://database.clamav.net/daily.cvd
 https://database.clamav.net/bytecode.cvd
 ```
 
-et dans ce cas, la configuration du URI du DSAS ne pourrait pas être `https://database.clamav.net/`
-mais plutôt une site de replication, par exemple sur le reseau local. Le DSAS mettra à jour ces 
-signatures un fois par jour.
+et dans ce cas, la configuration du URI du DSAS pourrait être `https://database.clamav.net/`
+mais une site de replication locale est préferable. Le DSAS mettra à jour ces  signatures un 
+fois par jour.
 
 # Exploitation du DSAS
 
