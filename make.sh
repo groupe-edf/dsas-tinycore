@@ -330,10 +330,13 @@ build_pkg() {
           (build_pkg "$dep") || error "Building package $dep" 
         done
         msg "Creating build image"
-        #if [ -d "$extract" ]; then
-        #  umount "$extract/proc"
-        #  rm -fr "$extract"
-        #fi
+        if [ -d "$extract" ]; then
+          while IFS= read -r -d '' _dir; do
+            umount "$_dir"
+          done < <(find "$extract/tmp/tcloop" -type "d" -print0)
+          umount "$extract/proc"
+          rm -fr "$extract"
+        fi
         mkdir -p "$extract"
         zcat "$squashfs" | { cd "$extract" || exit 1; cpio -i -H newc -d; }
         mount -t proc /proc "$extract/proc"
@@ -508,6 +511,9 @@ install_firefox(){
       _old=$extract
       extract="$build"
       if [ -d "$extract" ]; then
+        while IFS= read -r -d '' _dir; do
+          umount "$_dir"
+        done < <(find "$extract/tmp/tcloop" -type "d" -print0)
         umount "$extract/proc"
         rm -fr "$extract"
       fi
@@ -555,6 +561,12 @@ EOF
         cp "$extract/tmp/tce/optional/$package.tcz.dep" "$target.dep"
       fi
       md5sum "$target" | sed -e "s:  $target$::g" > "$target.md5.txt"
+
+      while IFS= read -r -d '' _dir; do
+        umount "$_dir"
+      done < <(find "$extract/tmp/tcloop" -type "d" -print0)
+      umount "$extract/proc"
+      rm -fr "$extract"
       extract="$_old"
     fi
   fi
@@ -696,6 +708,9 @@ install_dsas_js() {
       _old=$extract
       extract="$build"
       if [ -d "$extract" ]; then
+        while IFS= read -r -d '' _dir; do
+          umount "$_dir"
+        done < <(find "$extract/tmp/tcloop" -type "d" -print0)
         umount "$extract/proc"
         rm -fr "$extract"
       fi
@@ -791,6 +806,11 @@ source)
 clean)
   make -C "$testdir" clean
   [ -e $work ] || exit 0
+  if [ -d "$build/tmp/tcloop" ]; then
+      while IFS= read -r -d '' _dir; do
+        umount "$_dir"
+      done < <(find "$build/tmp/tcloop" -type "d" -print0)
+  fi
   [ -d "$image/proc" ] && umount "$image/proc"
   [ -d "$build/proc" ] && umount "$build/proc"
   rm -fr $image $build $newiso $mnt $dsascd $rootfs64 $dsascd.md5 \
@@ -1306,6 +1326,11 @@ EOF
   (cd "$work" || exit 1; md5sum "$(basename "$dsascd")"; ) > "$dsascd.md5"
 
   if [ "$keep" = "0" ]; then
+    if [ -d "$build/tmp/tcloop" ]; then
+      while IFS= read -r -d '' _dir; do
+        umount "$_dir"
+      done < <(find "$extract/tmp/tcloop" -type "d" -print0)
+    fi
     rm -fr $image $newiso $mnt
   fi
   exit 0
