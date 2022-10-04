@@ -903,9 +903,9 @@ mirror should be prefered. The DSAS will update these files from this URI once a
 ## Status of machines
 
 The status page of tasks and machines is the entry and main page of the DSAS. It is accessed by
-clicking on `DSAS` in the menu at the top of the pages and is resembles
+clicking on `DSAS` in the menu at the top of the pages and resembles
 
-![Tasks and machines status page](en/DSAS14.png)
+![Tasks and machine status page](en/DSAS14.png)
 
 The page is divided into two sections; at the top the status of the DSAS machines at the bottom 
 the status DSAS tasks. Three statistics are given for the two DSAS machines.
@@ -914,12 +914,12 @@ the status DSAS tasks. Three statistics are given for the two DSAS machines.
 are full it will be impossible to properly download and verify files. So the disks
 should be periodically monitored. Logically if the tasks have not changed,
 the use of the disks should not change either, but if one of the tasks suddenly
-increases its disk usage it will be easy to lack disk space. A disk that more than
+increases its disk usage it will be easy to lack disk space. A disk that is more than
 80 or 90% full could easily be saturated.
 - __Memory usage__ - Each task on the DSAS occupies machine memory. If the memory is full, 
 the performance of the tasks will be impacted. It is necessary to watch that memory is saturated, 
-but as long as it is below 90% it should not be  a problem. With the DSAS architecture, almost 
-200MB is used by the operating system.
+but as long as it is below 90% it should not be a problem. With the DSAS architecture, almost 
+200MB is also used by the operating system.
 - __Loadavg__ - The "Load average" is a concept of Unix giving an idea on the occupation of
 computational resources of the machine. A "Load Average" of "1" means that the equivalent
 of a processor core is completely occupied. So the total occupation of resources
@@ -929,9 +929,9 @@ with the number of processor cores at 50% of the length of the status bar. If th
 is longer than half, DSAS might have insufficient computing resources. The first thing
 to do again in this case is to restart the DSAS in order to see if the problem disappears.
 
-If the DSAS lower machine is not available you will be unable to connect
-at the administration interface. On the other hand, if the upper machine is faulty, the page
-status informs you with the following screen
+If the DSAS lower machine is not available you will be unable to connect to the administration
+interface. On the other hand, if the upper machine is faulty, the page status informs you with
+the following screen
 
 ![Status page, upper machine unavailable](en/DSAS15.png) 
 
@@ -949,7 +949,7 @@ the second tab last week, etc.
 The status of each verified file is given on a line of the page, and each line is
 composed of 4 elements
 
-- __Statut__: In the first position we find the status of the verification
+- __Status__: In the first position we find the status of the verification
 - __Hash__: In second position is the MD5 hash of the file. This could be useful when a threat
 has been identified, to see if it has been passed by the DSAS or not.
 - __Date__: The date of the verification is given in the third position. Dates are always given
@@ -964,24 +964,24 @@ on the lower machine.
 - `** Bad Sig`: One of the requested verifications reported a bad signature
 - `** Bad Interm Sig`: The verification of an intermediate certificate failed
 - `** Bad RPM Sig`: The signature verification of an RPM file failed
-- `** Bad DEB Sig`: The signature verification of an RPM file failed
+- `** Bad DEB Sig`: The signature verification of an DEB file failed
 - `** Not signed`: The file is not signed and could not be verified
 
 the blue button at the top of the verification logs allow to switch between a mode or "all logs"
-are visible or a mode or "that errors" are visible. This will allow you to quickly identify
+are visible or a mode or that "errors only" are visible. This will allow you to quickly identify
 the files that had problems.
 
 ### Search in verification logs 
 
 In the case of a problem or a vulnerability being identified it might be necessary to examine
 the verification logs, for either the name of a file or its MD5 signature as an indicator of
-compromission. The DSAS includes a search dialog allowing matches log lines to be found. type
+compromission. The DSAS includes a search dialog allowing matching log lines to be found. Type
 the string value to be found in the verification logs as shown below and the next matching line
 will be highlighted.
 
 ![Search in the verification logs](en/DSAS33.png)
 
-Type `Return` allows the next matching line to be found. If there is no matching line between
+Typing `Return` allows the next matching line to be found. If there is no matching line between
 the actual position in the logs and the end of the logs, the DSAS will recommence the search 
 starting at the beginning. If no matching line is found, no line will be highlighted.
 
@@ -1009,7 +1009,7 @@ a self-signed certificate. The two types of certificate are similar with the dif
 being whether the certificate is trusted or not.
 - __Intermediate Certificate__ - With blue text. This certificate is not
 a root certificate, but it is signed by another certificate
-- __ Less than 6 months at expiration__ - With orange/yellow text. This certificate is at
+- __ Less than 6 months to expiration__ - With orange/yellow text. This certificate is
 less than 6 months from expiration
 - __Expired__ - With red text. The certificate has already expired. This does not mean
 that it is no longer usable, but it is not valid for files signed after the date of
@@ -1019,7 +1019,7 @@ Preinstalled root certifications could be used for verifications on the DSAS. Bu
 these certificates alone is not sufficient, because
 
 - Preinstalled certificates do not include GPG certificates used by linux repositories
-- Verification only against a root certificate does not have a completemy guarantee the
+- Verification only against a root certificate does not completely guarantee the
 absence of malware. [Code signing certificates have been abused]https://duo.com/decipher/attackers-are-signing-malware-with-valid-certificates)
 in the past in order to sign malware.
 
@@ -1049,7 +1049,7 @@ see the following menu
 
 ![Properties menu of a signed binary](en/CERT1.png)
 
-By clicking on `Details` and after` Display the certificate` we could see the chain of trust
+By clicking on `Details` and after` Display the certificate` we can see the chain of trust
 
 ![Chain of trust of a signed binary](en/CERT4.png)
 
@@ -1058,8 +1058,8 @@ This allows the root certificate and all the certificates used to sign the file 
 #### Preparation of X509 certificates
 
 The most important point for the preparation of a certificate for importation into the DSAS
-is to know the provenance of the certificate. Ideally the certificate directly by the software
-editor via a secure method. A usual means of recovering a certificate is directly from the
+is to know the provenance of the certificate. Ideally the certificate is supplied directly by 
+the software editor via a secure method. A usual means of recovering a certificate is directly from the
 editors website use https. However, this is not always possible, especially for Symantec as above.
 
 In the absence of distribution via a website, all the certificates used for
@@ -1111,12 +1111,10 @@ in [the attached certificate bundle](Certificates.zip).
 
 #### Special case Trend Micro certificates
 
-
 The files supplied by Trend Micro are signed in two different ways; In signed JAR files, or in
 files signed in SMIME. The certificates used for the SMIME signatures can be recovered in a similar 
 maniere to the the certificates of Symantec LiveUpdate. For the certificates used for the JAR
 files, the JAR file must first be unzip to obtain the certificats like,
-
 
 ```shell
 $ unzip file.zip
@@ -1130,7 +1128,7 @@ used for signature verification or decryption. No information on the organizatio
 for the keys or limitations on their use are included in SSL public keys. These keys are used 
 in the __openssl__ or __cyberwatch__ tasks
 
-Because there is no chain of trust for public keys, it is essential have a trusted means of
+Because there is no chain of trust for public keys, it is essential to  have a trusted means of
 retrieving them.
 
 ### Managing GPG certificates
@@ -1187,18 +1185,18 @@ for each task.
 - `URI (no loading if empty)` - The address where the DSAS will look for the files
 associated with a task. Leaving this empty is permissible and in this case it
 is assumed that the files associated with the tasks must be deposited on the DSAS
-by the user. the `URI` must be of the form` protocol://site/folder/ `or else
-`protocol://site/folder/ file`. Allowed protocols are `sftp:`, `ftp:`, `ftps:` 
-`http:` and `https:`. For example `ftp://noeysep3.noe.edf.fr/LiveUpdate/`. The `/` 
+by the user. the `URI` must be of the form `protocol://site/folder/` or else
+`protocol://site/folder/file`. Allowed protocols are `sftp:`, `ftp:`, `ftps:` 
+`http:` and `https:`. For example `ftp://example.com/LiveUpdate/`. The `/` 
 at the end of the `URI` with a folder is optional but recommended.
 - `URI Certification Authority` - If the `URI` uses `https`, then the DSAS will
 refuse to download files from the URI unless a validation certiciate is used 
 for the server. Three choices are possible
   * `Base CA` - The integrated cerificate authorities are used the validate the
   server
-  * `Self-signed` - The DSAS will not validate the certificated used by the server.
+  * `Self-signed` - The DSAS will not validate the certificate used by the server.
   In this case a "Man in the Middle" attack is possible, and other means of ensuring
-  protection ahainst this might be needed. All files recovered are verified by the 
+  protection against this might be needed. All files recovered are verified by the 
   DSAS so the risk is minimized.
   * Uploaded certificates - The X509 root certificates that have been uploaded can
   also be used as the certification authority for the verification of the server.
@@ -1219,6 +1217,7 @@ Symantec LiveUpdate.
   * `trend` - Task for the verification of Trend Micro DSP and Package files.
 - `Periodicity of the task` - How often is the task executed
   * `never` - The task is never executed automatically, but can be executed manually
+  * `quarter hourly` - The task is executed 4 times an hour
   * `per hour` - The task is executed once per hour
   * `per day` - The task is executed once per day
   * `per week` - The task is executed once per week
@@ -1246,8 +1245,8 @@ execution of the task is visible by opening the task as
 ### Debian and Redhat architecture selection
 
 The Debian and Redhat style repositories can be very large. One means of reducing their size is 
-to only download the files for archiectures that you will really be using. For instance if you 
-don't have `arm64` debian machines in your infrastructure their is no point is downloading the
+to only download the files for architectures that you will really be using. For instance if you 
+don't have `arm64` debian machines in your infrastructure there is no point in downloading the
 files for this architecture.
 
 Both Debian and Redhat permit the files to be downloaded to be restricted, but the manner in which
@@ -1363,10 +1362,10 @@ Software impacted by this risk
 | php-cgi | [8.0.1](http://tinycorelinux.net/12.x/x86/tcz/php-8.0-cgi.tcz) | Backend of the administration site |
 | lighttpd | [1.4.58](http://tinycorelinux.net/12.x/x86/tcz/lighttpd.tcz) | Backend of the administration site |
 | Linux PAM | [1.5.2](https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz) | Authentication on the administration site |
-| DSAS website | [1.1.0](https://gitlab.devops-unitep.edf.fr/dsao-cyber/dsas---tinycore) | Backend and frontend of the administration site |
+| DSAS website | [1.2.3](https://gitlab.devops-unitep.edf.fr/dsao-cyber/dsas---tinycore) | Backend and frontend of the administration site |
 
-The DSAS website is specially developed for this project. A code audit is in progress
-and proposed fixes will be applied. 
+The DSAS website is specially developed for this project. Static analyse of the code and a test suite is
+used on this code before each release to minimise the risk. 
 
 ## DSAS build process
 
@@ -1383,22 +1382,22 @@ At this point, if you are behind a proxy for internet access, you must configure
 access via the environment variables `http_proxy` and` https_proxy` like
 
 ```shell
-export http_proxy=http://vip-users.proxy.edf.fr:3131
-export https_proxy=http://vip-users.proxy.edf.fr:3131
+export http_proxy=http://<hostanme>:<port>
+export https_proxy=http://<hostname>:<port>
 ```
 
 It will be useful to add these two lines to the `~/.profile` file so that it is
 configured at each login. After the command
 
 ```shell
-tce-load -wi Xorg-7.7 compiletc rsync coreutils mkisofs-tools squashfs-tools git curl ncursesw-dev tar node
+tce-load -wi Xorg-7.7 compiletc rsync coreutils mkisofs-tools squashfs-tools git curl ncursesw-dev tar
 ```
 
-will install all the tools necessary for the build
+will install all the tools necessary for the build. 
 
-#### French keyboard
+#### Non-english keyboard
 
-If you have a French keyboard, the easiest is to add
+If you have a non english keyboard, the easiest solution is to add a command like
 
 ```shell
 /usr/local/bin/setxkmap fr
@@ -1406,19 +1405,31 @@ If you have a French keyboard, the easiest is to add
 
 to the `~/.xession` file or run this command from an X11 console. 
 
-#### Preparing the DSAS source tree
+#### Preparing the DSAS source tree 
 
-For the next step, we have to temporarily disable the http proxy like 
+
+```shell
+git clone https://gitlab.com/adb014/dsas---tinycore.git
+```
+
+#### Preparing the DSAS source tree for a private git
+
+The build of the DSAS requires packages to be downloaded from the internet. In the case where
+the main git repository used by the DSAS is on the private network, a bit a git magic will
+be needed to ensure that access to both the git repository and the internet is assured. This
+step is only needed for this case and can be safely skipped otherwise
+
+We first have to temporarily disable the http proxy like 
 
 ```shell
 unset http_proxy
 unset https_proxy
 ```
 
-EDF's gitlab is used to host the DSAS source code. The certificate SSL used for 
-this site is signed by the EDF certification authority, which is not not installed 
-by default on the build machine. It can be retrieved and installed for our needs 
-with the commands
+Taking the example of the gitlab used by my own company, the TLS certificate used is
+signed by a private certification authority, which is not installed by default on the
+build machine. An example of the means to download the CA and install it for use with 
+git might be 
 
 ```shell
 mkdir ~/.git-certs
@@ -1429,10 +1440,12 @@ cat >> ~/.gitconfig << EOF
 EOF
 ```
 
+where the site used for the CA and location of the git should be adapted to your needs. 
+
 Now we are ready to download the DSAS source code with the command
 
 ```shell
-git clone https://gitlab.devops-unitep.edf.fr/dsao-cyber/dsas---tinycore.git
+git clone https://gitlab.devops-unitep.edf.fr/dsao-cyber/dsas-tinycore.git
 ```
 
 We can configure the next actions on the source tree to ignore the http proxy with the 
@@ -1443,9 +1456,12 @@ cd dsas---tinycore
 git config --add remote.origin.proxy ""
 ```
 
-Can we now restore the values of the proxy environment variables. Finally the version of
-`less` that is installed by default doesn't accept the option `-R` needed to correctly colour 
-the output of the command `git diff`. To allow this the commands 
+Can we now restore the values of the proxy environment variables.
+
+### Colouring `git diff` commands
+
+The version of `less` that is installed by default doesn't accept the option `-R` needed to 
+correctly colour  the output of the command `git diff`. To allow this the commands 
 
 ```
 tce-load -wi less
@@ -1462,15 +1478,55 @@ install will depend on the distribution. At a minimum the tools
 - The build essential including make, gcc, etc
 - rsync
 - genisoimage ou mkisofs
-- squashfs-tolls
+- squashfs-tools
 - curl
 - git
-- nwcurses
 
 are needed. After, the instructions above should be used to inspire the means to configure the
-build tree for use. A different distribution than TinyCore is needed to build a `Docker` image.
+build tree for use. The equivalent command to install the needed packages for a debian machine is
+
+```shell
+apt-get install build-essential rsync genisoimage squashfs-tools git curl
+``` 
+
+It should be noted that the DSAS build makes extensive use of the chroot command to create
+dediciate build environments for each package using native TinyCore code. This implies that
+
+- The distribution used must have a compatible architecture to that used for the DSAS. Only x86
+and AMD64 architectures are currently supported.
+- The kernel and glibc must be compatiable with the TinyCore distribution and most notably its
+shell. If you receive the message "Kernel too old" during the build process, the distirbution
+is too old to support the current DSAS build
 
 ### DSAS build commands
+
+
+```shell
+% ./make.sh -h
+Usage: make.sh  [Options] [Command]
+Build DSAS packages and distributions. Valid commands are
+     build pkg       Build the package 'pkg' from source code
+     source          Package DSAS source code
+     docker          Build a docker distribution package
+     clean           Remove the distribution files
+     realclean       Remove all files, leaving a clean build tree
+     check           Run test code to test correct function of checkfiles
+     iso             Build the DSAS ISO file. This the default command
+     static          Run static analysis on the DSAS source code
+     upgrade         Upgrade the TCZ packages to their latest version
+     work            Set the work directory
+Valid options are
+     -r|--rebuild    Force the rebuild of source packages
+     -f|--download   Force the source packages to be re-downloaded
+     -t|--test       Include test code in DSAS build
+     -k|--keep       Keep intermediate build files for debugging
+     -32             Force the build for 32 bit architectures
+     -64             Force the build for 64 bit architectures
+     -h|--help       Print this help
+```
+
+
+
 
 Next, the build is performed with the command
 

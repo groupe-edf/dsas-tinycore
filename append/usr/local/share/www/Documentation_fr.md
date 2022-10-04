@@ -786,7 +786,7 @@ codé sur deux lettres comme défini dans le RFC5280. Le code pour la France est
 - __O__ - L'organisation responsable pour le serveur. En France est obligatoirement le
 nom du société enregistré avec INSEE et doit être tout en majuscule.
 - __OU__ - Un identifiant of le sous organisation responsable pour le serveur. Les certificats
-signés en France doit inclure les KBIS, par exemple ici '0002 552081317' est un KBIS d'EDF.
+signés en France doit inclure les KBIS, par exemple ici '0002 552081317' est un KBIS valable.
 - __CN__ - Pour un serveur, comme le DSAS ceci est obligatoirement le nom DNS du serveur
 - __S__ - Un champ libre pour la région du siège social de L'entreprise. Il est optionnel
 - __L__ - Un champ libre pour la ville du siège social de L'entreprise. Il est optionnel
@@ -1229,7 +1229,7 @@ associés avec une tâche. De laisser vide est permissible et dans ce cas il est
 que les fichiers associés avec le taches doit-être déposé sur la DSAS par l'utilisateur.
 le `URI` doit-être de la forme `protocole://site/dossier/` ou bien 
 `protocole://site/dossier/fichier`. Les protocoles permis sont `sftp:`, `ftp:`, `ftps:`, 
-`http:` et `https:`. Par exemple `ftp://noeysep3.noe.edf.fr/LiveUpdate/`. Le `/` à la
+`http:` et `https:`. Par exemple `ftp://example.com/LiveUpdate/`. Le `/` à la
 fin des `URI` avec un dossier est optionnelle mais recommandé.
 - `Autorité de certificate d'URI` - Si `https` est utilisé pour le `URI`, le DSAS va
 refuser de télécharger des fichier depuis l'URI si le certificat utilisé par le 
@@ -1259,6 +1259,7 @@ Symantec LiveUpdate.
   * `trend` - Tâche permettant le transfert de fichier DSP and PAckage de Trend Micro
 - `Périodicité de la tâche` - A quel rythme est-ce que la tâche est exécuté
   * `jamais` - La tâche n'est jamais exécuté automatique, mais peut-être exécuté manuellement
+  * `tous les quarts d'heure` - La tâche est exécuté 4 fois par heure
   * `par heure` - La tâche est exécuté un fois par heure
   * `par jour` - La tâche est exécuté un fois par jour
   * `par semaine` - La tâche est exécuté un fois par semaine
@@ -1403,10 +1404,10 @@ Logiciels impactés par ce risque
 | php-cgi     | [8.0.1](http://tinycorelinux.net/12.x/x86/tcz/php-8.0-cgi.tcz) | Backend de la site d'administration |
 | lighttpd    | [1.4.58](http://tinycorelinux.net/12.x/x86/tcz/lighttpd.tcz) | Backend de la site d'administration |
 | Linux PAM | [1.5.2](https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz) | Authentification sur la site d'administration |
-| site web DSAS | [1.1.2](https://gitlab.devops-unitep.edf.fr/dsao-cyber/dsas---tinycore) | Backend et frontend de la site d'administration |
+| site web DSAS | [1.2.3](https://gitlab.devops-unitep.edf.fr/dsao-cyber/dsas---tinycore) | Backend et frontend de la site d'administration |
 
-La site web du DSAS est développé spécialement pour ce projet. Un audit de code est en
-cours et des correctifs proposé sera appliqué.
+La site web du DSAS est développé spécialement pour ce projet. An anyalse statique et suite de 
+test de la code est utilisé à chaque version de la code afin de limiter les risques.
 
 ## Processus de build du DSAS
 
@@ -1423,17 +1424,18 @@ A ce point si vous êtes derrière un proxy pour l'accès à l'internet, il faut
 l'accès les variable d'environnement `http_proxy` et `https_proxy` comme 
 
 ```shell
-export http_proxy=http://vip-users.proxy.edf.fr:3131
-export https_proxy=http://vip-users.proxy.edf.fr:3131
+export http_proxy=http://<hostname>:<port>
+export https_proxy=http://<hostname>:<port>
 ```
 
 Ça sera utile à ajouter ces deux lignes au fichier `~/.profile`  afin qu'il soit
 configuré à chaque fois. Après, la commande
 
 ```shell
-tce-load -wi Xorg-7.7 compiletc rsync coreutils mkisofs-tools squashfs-tools git curl ncursesw-dev tar node
+tce-load -wi Xorg-7.7 compiletc rsync coreutils mkisofs-tools squashfs-tools git curl ncursesw-dev tar
 ```
-va installer l'ensemble des outils nécessaire pour la build 
+
+va installer l'ensemble des outils nécessaire pour la build.
 
 #### Clavier français
 
@@ -1447,6 +1449,23 @@ au fichier `~/.xession` ou d'exécuter cette commande depuis un console en X11.
 
 #### Préparation d'un arbre de source DSAS
 
+```shell
+git clone https://gitlab.devops-unitep.edf.fr/dsao-cyber/dsas---tinycore.git
+```
+
+#### Preparation d'un arbre de source DSAS avec un git privée
+
+The build of the DSAS requires packages to be downloaded from the internet. In the case where
+the main git repository used by the DSAS is on the private network, a bit a git magic will
+be needed to ensure that access to both the git repository and the internet is assured. This
+step is only needed for this case and can be safely skipped otherwise
+
+Le complitation du DSAS a besoin que des packages seraient télécharger depuis l'internet. Dans le
+cas ou le dépot de git princial utilisé par le DSAS est sur le réseau privée, il va falloir utiliser
+un peu de magie de git afin d'assurer un acces à la fois à l'internet et le dêpot de git. Cet 
+étape n'est utile que dans ce cas specifique.
+
+
 Pour cette étape il faut temporairement désactiver le proxy http en faisant
 
 ```shell
@@ -1454,10 +1473,10 @@ unset http_proxy
 unset https_proxy
 ```
 
-Le gitlab d'EDF est utilisé afin d'héberger la code source du DSAS. Le certificat
-SSL utilisé pour ce site est signé par l'autorité de certification d'EDF, qui n'est 
-pas installé par défaut dans la souche de build. Il pourrait être récupérer et installé
-pour nos besoins avec les commandes
+Prenant l'exemple du gitlab de mon propre entreprise, le certificat TLS utilisé par le dêpot
+est signé par un autorité de certification privée, ce qui n'est pas installé par défaut sur
+la machine de compilation. Un exemple de la manière de télécharger et de rendre disponible à 
+git pourrait être 
 
 ```shell
 mkdir ~/.git-certs
@@ -1467,6 +1486,8 @@ cat >> ~/.gitconfig << EOF
   sslCAInfo = ~/.git-certs/autorite_racine_groupe_edf.cer
 EOF
 ```
+
+Ou le site utilisé pour l téléchargement du CA et la location du git est a adapter à vos besoin.
 
 Maintenant, nous sommes prêts à récupérer l'arbre de code source du DSAS avec la commande
 
@@ -1482,8 +1503,11 @@ cd dsas---tinycore
 git config --add remote.origin.proxy ""
 ```
 
-Nous pourrions maintenant rétablir les valeurs des variables d'environnement du proxy. Finalement, 
-la version de `less` installé par défaut n'accepte pas l'option `-R` nécessaire pour la 
+Nous pourrions maintenant rétablir les valeurs des variables d'environnement du proxy.
+
+### Utilisation de colour avec `git diff`
+
+Finalement, la version de `less` installé par défaut n'accepte pas l'option `-R` nécessaire pour la 
 colorisation des avec la commande `git diff`. Afin d'avoir les changement proprement montré,
 il faut faire les commandes
 
@@ -1503,10 +1527,23 @@ noms de packages à installer va deprendre sur la souche. La minimum d'outil né
 - squashfs-tolls
 - curl
 - git
-- nwcurses
 
-Après il faut inspiré des instructions ci-dessus afin de configured la build. Une souche different 
-que TinyCore est nécessaire afin de compiler le DSAS sous `Docker`
+sont nécessaire. Après il faut inspiré des instructions ci-dessus afin de configured la build. 
+L'equivalente commande sur debian est
+
+```shell
+apt-get install build-essential rsync genisoimage squashfs-tools git curl
+``` 
+
+Il devrait êtré noté que la compilation du DSAS utilise largement la commande chroot afin de
+créer des environment de build cloisonné pour chaque package. Le code de TinyCore est utilisé
+dans ces `chroot`. Ceci veut dire que
+
+- Le distribution utilisé doit avoir un architecture compatible are ce utilisé par le DSAS. 
+Seulement x86 et AMD64 sont actuellement supporté
+- Le noyau et bibliothèque glibc doit-être compatible avec le distribution de TinyCore, et 
+particulerement le shell. Si vous recevez la message "Kernel too old" pendant la compilation,
+le distribution est trop vieux afin de supporté la compilation du DSAS.
 
 ### Commande de build du DSAS
 
