@@ -1500,6 +1500,9 @@ is too old to support the current DSAS build
 
 ### DSAS build commands
 
+All of the DSAS build process is preformed from the command line with the script `make.sh`. The
+usage string of this script is available via the command `./make.sh -h` 
+
 
 ```shell
 % ./make.sh -h
@@ -1525,10 +1528,8 @@ Valid options are
      -h|--help       Print this help
 ```
 
+To build the ISO image of the DSAS the command is 
 
-
-
-Next, the build is performed with the command
 
 ```
 ./make.sh
@@ -1536,7 +1537,10 @@ Next, the build is performed with the command
 
 An ISO image is created in the file `work/dsao.iso`. We can keep the temporary files 
 with the option "-keep". This is useful to examine why something is badly installed on
-the DSAS without needed to start a server with the DSAS installed.
+the DSAS without needed to start a server with the DSAS installed. The compilation time 
+of the `node` and `clamav` packages is extremely long and so, this compilation will 
+take several hours the first time it is performed. 
+
 
 To build a source package (see the files `pkg/*.pkg`) a command like 
 
@@ -1566,20 +1570,84 @@ A compilation of the `Docker` image is performed with the command
 This creates a package `work/docker.tgz` contains a Makefile that needs to be adjusted to 
 the parameters needed for the Docker installation.
 
-## Binary upgrade
+## Process to create a release
 
-For a binary upgrade of the DSAS, the build machine ust first be upgraded and
-the DSAS completely rebuilt with the commands
+The release process must ensure the qulaity of the release and that changes made since the last
+release do not result in regressions in the functionality or security of the DSAS. The process
+is separated into two phases; a test phase and a phase to build and create the release.
+
+### Release test process
+
+Before the tests, it is necessary to ensure that the latest versions of TinyCore packages are
+used with the commands
 
 ```
-sudo tce-update
-cd dsas-tinycore
-./make.sh -realclean
-./make.sh
-``` 
+./make.sh clean
+./make.sh upgrade
+sudo rm work/tcz*/dsas_js.tcz*
+```
 
-In the file `work/dsao.iso` un new ISO image of the DSAS will be available. Next,
-the upgrade of the VM is a simple remplacement of te existing ISO with the new image,
+Before continuing, a static analysis of the source code (javascript, shell and php) of the DSAS
+is performed with the command
+
+```
+./make.sh static
+```
+
+The identified errors should be resolved or accepted before continuing. After, the build of a 
+test version of the DSAS is performed with the command 
+
+```
+./make.sh -t
+```
+
+An ISO with the test version of teh DSAS is available in the file `work/dsas-test.iso`. This ISP
+includes additional code and services  to test all of the functions of the DSAS. To use this test
+ISO, you need to have two virtual machines configured and from the machine configured as the `lower`
+machine run as the user ètc` the command 
+
+```
+dsastests
+```
+
+This is a PHP script using a webdriver based en geeko to test all of the function of the DSAS and 
+ensure that the DSAS correctly performs it rôle to filter the files. An example of the feedback from
+this script is 
+
+![Example of passed tests from the script `dsastest`](en/DSAS44.png)
+
+When errors are returned by this script, they must be resolved before continuing. An error can be
+due to a change in the manner the DSAS functions and require a modification of the test script, or
+it could indicate a real error in the DSAS code requiring a correction.
+
+Ensure that all tests pass in the script `dsastests` before continuing.
+
+### Processus de compilation une release
+
+Now that you are ready to create a release, you must ensure that 
+
+- The CHANGELOG file is updated, including the release version and date of release
+- Le release version is updated in the files
+  * DsasHelp.js: The `dsasVersion` variable
+  * Documentation_en.md: In the section `Security Maintenance`
+  * Documentation_fr.md: In the section `Security Maintenance`
+- The git is tagged with the version like `git tag -a v1.0.0`
+
+You can now proceed with the build of the ISO with the commands
+
+```
+./make.sh clean
+sudo rm work/tcz*/dsas_js.tcz*
+./make.sh
+```
+
+The ISO is then available in the file `work/dsas.iso`. At this point you can create the release
+on gitlab.
+
+
+### Binary upgrade of the virtual machines
+
+The upgrade of the VM is a simple remplacement of te existing ISO with the new image,
 like
 
 ![Upgrading the ISO with VirtualBox](en/vbox3.png)
@@ -1612,12 +1680,13 @@ the source code. We already have several packages made from source code
 minus the `.pkg` extension
 - `_version` [Optional] - The software version number
 -`_uri` [Required] - The address to look for the source software package
-- `_deps` [Optional] - The dependencies necessary for the software as long as it is
+- `_dep` [Optional] - The dependencies necessary for the software as long as it is
 is installed
 - `_build_dep` [Optional] - The dependencies needed during the software build phase
 - `_pkg_path` [Optional] - Source packages fetched from` _uri` should
 be in this sub-folder. If empty or absent, we assume that the build is from
 from the root of the source package.
+- `_pre_config` [Optional] - Allows a script to be run prior to the configuration
 - `_conf_cmd` [Optional] - The command needed to configure the software,
 typically `./configure`. The order could include options if needed
 for the build like `./configure --prefix=/usr/ local`.
@@ -1627,23 +1696,25 @@ typically `make`
 It will be installed in a temporary folder. It is assumed that the command
 `_install_cmd` accepts the name of the temporary folder as the last argument. The example
 typical of the `_install_cmd` command is` make install DESTDIR=`
+- `_post_build` [Optional] - Allows for a script that is run post build but prior to
+the packaging of the files
 - `_pkgs` [Optional] - The software could be split into several sub-packages.
 This variable allows the way the split is made to be defined. An example could
 be `main{/usr/local/bin,/usr/local/lib};doc{/usr/local/share/doc}`. The package
 main is defined by `main{...}` and a second package with the extension
 `-doc` will be created with the files in `/usr/local/doc`
-- `_post_install` [Optional] - Allows to define a script which will be executed
+- `_post_install` [Optional] - Allows for a script which will be executed
 for the installation of the package.
 
 A complete example of a `pkg / openssl-1.1.1.pkg` file is 
 
 ```
 _pkg=openssl-1.1.1
-_version=1.1.1l
-_uri=https://www.openssl.org/source/openssl-1.1.1l.tar.gz
+_version=1.1.1q
+_uri=https://www.openssl.org/source/openssl-1.1.1q.tar.gz
 _dep=""
 _build_dep="compiletc perl5"
-_pkg_path=openssl-1.1.1l
+_pkg_path=openssl-1.1.1q
 _conf_cmd="./config --openssldir=/usr/local/etc/ssl"
 _make_cmd="make"
 _install_cmd="make install DESTDIR="
@@ -1662,7 +1733,7 @@ _post_install=\
 With the package defined, it is possible to create a binary package with the command
 
 ```shell
-./make.sh -build openssl-1.1.1
+./make.sh build openssl-1.1.1
 ```
 
 The next build of the DSAS with take into account this package in its build.

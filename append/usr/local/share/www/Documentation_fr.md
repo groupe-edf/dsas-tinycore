@@ -1547,7 +1547,35 @@ le distribution est trop vieux afin de supporté la compilation du DSAS.
 
 ### Commande de build du DSAS
 
-Après le build est fait avec la commande
+Tout la processus de compilation du DSAS est fait depuis la ligne de commande avec le script `make.sh`.
+L'usage du script pourrait être obtenu avec la commande `./make.sh -h` 
+
+
+```shell
+% ./make.sh -h
+Usage: make.sh  [Options] [Command]
+Build DSAS packages and distributions. Valid commands are
+     build pkg       Build the package 'pkg' from source code
+     source          Package DSAS source code
+     docker          Build a docker distribution package
+     clean           Remove the distribution files
+     realclean       Remove all files, leaving a clean build tree
+     check           Run test code to test correct function of checkfiles
+     iso             Build the DSAS ISO file. This the default command
+     static          Run static analysis on the DSAS source code
+     upgrade         Upgrade the TCZ packages to their latest version
+     work            Set the work directory
+Valid options are
+     -r|--rebuild    Force the rebuild of source packages
+     -f|--download   Force the source packages to be re-downloaded
+     -t|--test       Include test code in DSAS build
+     -k|--keep       Keep intermediate build files for debugging
+     -32             Force the build for 32 bit architectures
+     -64             Force the build for 64 bit architectures
+     -h|--help       Print this help
+```
+
+Le build de l'image ISO  est fait avec la commande
 
 ```
 ./make.sh
@@ -1588,20 +1616,84 @@ La compilation d'un image `Docker` est fait avec la commande
 Une package d'installation docker est créé dans work/docker.tgz avec une fichier `Makefile` a
 modifier avec les parametres d'installation voulu.
 
-## Mise à jour binaire
+## Processus de préparation d'une release
 
-Pour une mise à jour binaire du DSAS, il faut aussi mettre à jour la machine de la 
-build, et rebuild le DSAS de zéro avec les commandes
+L'objective de la processus de release est d'assurer la qualite de la release et que les modifications
+depuis le dernier release n'apporte pas des regressions dans la fonctionalité et sécurité du DSAS. La
+processus est separé en deux phase; une phase de test et un phase de build de la release.
+
+
+### Processus de de test pour une release
+
+Préalablement aux tests, il faut assuré que les derniers versions des packages de TinyCore sont 
+utilisés avec les commandes
 
 ```
-sudo tce-update
-cd dsas-tinycore
-./make.sh -realclean
-./make.sh
-``` 
+./make.sh clean
+./make.sh upgrade
+sudo rm work/tcz*/dsas_js.tcz*
+```
 
-dans le fichier `work/dsao.iso` un nouveau ISO du DSAS sera disponible. Après la
-mise à jour d'un VM est la simple remplacement du ISO existant avec le nouveau ISO
+Avant de continuer, un analyse statique du code source (javascript, shell et php) du DSAS est fait 
+avec la commande
+
+```
+./make.sh static
+```
+
+Les erreurs identifier par cet analyse sont a corriger ou accepter avant de continuer. Après la 
+compilation d'une version du DSAS pour les tests est fait avec la commande
+
+```
+./make.sh -t
+```
+
+Une ISO avec le version du DSAS de test est après dispobible dans le fichier `work/dsas-test.iso`. 
+Cet ISO inclut du code et service supplementaire nécessaire aux tests de tous les fonctions du
+DSAS. Afin d'utilisé il faut avoir deux machines virtuel configuré comme guichers haut et bas du
+DSAS et depuis le guichet bas et en tant que utilisateur `tc` la commande 
+
+```
+dsastests
+```
+
+est utilisé. Ceci est un script PHP utilisant un webdriver basé sur geeko afin de tester l'ensemble 
+des fonctions du DSAS et d'assuré que les rôles de filtrage du DSAS ne sont pas compris. Un exemple
+Des retours du script est
+
+![Exemple de test réussi dans le script `dsastest`](fr/DSAS44.png)
+
+En cas d'erreurs retourné par cette script, il faut le resoudre avant de continuer. Un erreur pourrait
+indiquer un changement dans la maniere de fonctionner du script de test, ayant besoin un mise à jour du
+script de test, ou bien en erreur dans le code de DSAS ayant besoin d'être corrigé.
+
+Assurer que l'ensemble des tests du script `dsastests` sont corrects avant de continuer 
+
+### Processus de compilation une release
+
+Maintenant que vous êtes pret à faire le release, il faut assurer que
+
+- Le fichier CHANGELOG est à jour, y compris le numéro de version et date de la release
+- Le numéro de la rélease est correct dans les fichiers
+  * DsasHelp.js: Le variable `dsasVersion`
+  * Documentation_en.md: Dans la section `Maintent en condition de sécuirté` de la documentation 
+  * Documentation_fr.md: Dans la section `Maintent en condition de sécuirté`  de la documentation
+- Le git est taggué avec le version comme `git tag -a v1.0.0`
+
+Vous pouvez après proceder à la compilation de l'ISO avec les commandes
+
+```
+./make.sh clean
+sudo rm work/tcz*/dsas_js.tcz*
+./make.sh
+```
+
+et l'ISO est disponible dans le fichier `work/dsas.iso`. A ce point vous pouvez créer la release
+sur la gitlab.
+
+### Mise à jour binaire des machines virtuels
+
+La mise à jour d'un VM est la simple remplacement du ISO existant avec le nouveau ISO
 comme
 
 ![Replacement du ISO pour un mise à jour sur VirtualBox](fr/vbox3.png)
@@ -1624,7 +1716,7 @@ docker container start bas
 
 les deux images Docker sera reinstallé sans perte de la configuration existante
 
-## Mise à jour source
+### Mise à jour d'un package en source
 
 Si une vulnérabilité est identifiée sur une package du DSAS est une mise à jour
 binaire n'est pas disponible, nous avons la possibilité de créer une package
@@ -1642,6 +1734,7 @@ du logiciel
 - `_pkg_path` [Optionnel] - Les packages source récupérée depuis `_uri` devrait 
 être dans cette sous dossier. Si vide ou absent on assume que le build est à partir
 du racine du package source. 
+- `_pre_config` [Optionnel] - Permets de définir une script a éxécuté avant la configuration
 - `_conf_cmd` [Optionnel] - La commande nécessaire pour la configure du logiciel, 
 typiquement `./configure`. La commande pourrait inclure des options si nécessaire 
 pour la build comme `./configure --prefix=/usr/local`.
@@ -1651,6 +1744,8 @@ typiquement `make`
 Il sera installé dans un dossier temporaire. Il est assumé que la commande 
 `_install_cmd` accepte le nom du dossier temporaire en dernier argument. L'exemple 
 typique de la commande `_install_cmd` est `make install DESTDIR=`
+- `_post_build` [Optionnel] - Permets de définir une script qui sera éxécuté entre la
+compilation and packaging
 - `_pkgs` [Optionnel] - Le logiciel pourrait être splitté en plusieurs sous packages.
 Cette variable permettre à définir la manière quel soit découpé. Un exemple pourrait
 être `main{/usr/local/bin,/usr/local/lib};doc{/usr/local/share/doc}`. Le package 
@@ -1663,11 +1758,11 @@ Un exemple complet d'un fichier `pkg/openssl-1.1.1.pkg` est
 
 ```
 _pkg=openssl-1.1.1
-_version=1.1.1l
-_uri=https://www.openssl.org/source/openssl-1.1.1l.tar.gz
+_version=1.1.1q
+_uri=https://www.openssl.org/source/openssl-1.1.1q.tar.gz
 _dep=""
 _build_dep="compiletc perl5"
-_pkg_path=openssl-1.1.1l
+_pkg_path=openssl-1.1.1q
 _conf_cmd="./config --openssldir=/usr/local/etc/ssl"
 _make_cmd="make"
 _install_cmd="make install DESTDIR="
@@ -1686,7 +1781,7 @@ _post_install=\
 Avec cette package définit, il pourrait être créer avec la commande
 
 ```shell
-./make.sh -build openssl-1.1.1
+./make.sh build openssl-1.1.1
 ```
 
 Un build du DSAS prendra en compte ce nouveau package pendant son build.
