@@ -2270,7 +2270,7 @@ try {
         exec("ssh tc@haut mv -f /var/dsas/dsas_conf.xml.test /var/dsas/dsas_conf.xml", $data, $retval);
         if ($retval != 0)
           return false;
-        exec("ssh tc@haut sudo /etc/init.d/services/dsas apply", $data, $retval))
+        exec("ssh tc@haut sudo /etc/init.d/services/dsas apply", $data, $retval);
         if ($retval == 0)
           return true;
       }
