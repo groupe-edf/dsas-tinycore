@@ -131,6 +131,15 @@ service_pass_len=24
 # Force the umask
 umask 0022
 
+# If not on tinycore, the user "tc" doesn't exist
+if grep -q "tc:" /etc/passwd; then
+  tc=tc
+  staff=staff
+else
+  tc=1001
+  staff=50
+fi
+
 msg() {
     echo "[*]" "$@"
 }
@@ -321,10 +330,10 @@ build_pkg() {
           (build_pkg "$dep") || error "Building package $dep" 
         done
         msg "Creating build image"
-        if [ -d "$extract" ]; then
-          umount "$extract/proc"
-          rm -fr "$extract"
-        fi
+        #if [ -d "$extract" ]; then
+        #  umount "$extract/proc"
+        #  rm -fr "$extract"
+        #fi
         mkdir -p "$extract"
         zcat "$squashfs" | { cd "$extract" || exit 1; cpio -i -H newc -d; }
         mount -t proc /proc "$extract/proc"
@@ -352,7 +361,7 @@ build_pkg() {
         mkdir -p "$extract/$builddir"
         mkdir -p "$extract/$destdir"
         unpack "$src_dir/$_src" "$extract/$builddir" || error "Can not unpack $_src"
-        chroot "$extract" chown -R tc.staff /home/tc
+        chroot "$extract" chown -R ${tc}.${staff} /home/tc
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 export http_proxy=${http_proxy:=}
@@ -376,7 +385,7 @@ $_conf_cmd
 exit \$?
 EOF
         chmod a+x "$extract/tmp/script"
-        [ -z "$_conf_cmd" ] || chroot --userspec=tc "$extract" /tmp/script || { umount "$extract/proc"; error "Unexpected error ($?) in configuration"; }
+        [ -z "$_conf_cmd" ] || chroot --userspec=${tc} "$extract" /tmp/script || { umount "$extract/proc"; error "Unexpected error ($?) in configuration"; }
         msg "Building $_pkg"
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
@@ -388,7 +397,7 @@ $_make_cmd
 exit \$?
 EOF
         chmod a+x "$extract/tmp/script"
-        [ -z "$_make_cmd" ] || chroot --userspec=tc "$extract" /tmp/script $_make_cmd || { umount "$extract/proc"; error "Unexpected error ($?) in build"; }
+        [ -z "$_make_cmd" ] || chroot --userspec=${tc} "$extract" /tmp/script $_make_cmd || { umount "$extract/proc"; error "Unexpected error ($?) in build"; }
         msg "Installing $_pkg"
         cat << EOF > "$extract/tmp/script"
 export DESTDIR=$destdir
@@ -522,7 +531,7 @@ install_firefox(){
       cp -p /etc/resolv.conf "$extract/etc/resolv.conf"
 
       mkdir -p "$extract/home/tc"
-      chown tc.staff "$extract/home/tc"
+      chown ${tc}.${staff} "$extract/home/tc"
       echo tc > "$extract/etc/sysconfig/tcuser"
 
       cat << EOF > "$extract/tmp/script"
@@ -536,7 +545,7 @@ $latest.sh -e || exit 1
 EOF
       chmod a+x "$extract/tmp/script"
       msg "Constructing package $package"
-      HOME=/home/tc chroot --userspec=tc "$extract" /tmp/script || error error constructing $package
+      HOME=/home/tc chroot --userspec=${tc} "$extract" /tmp/script || error error constructing $package
 
       msg "fecthing package $package"
       cp "$extract/tmp/tce/optional/$package.tcz" "$target"
@@ -560,11 +569,11 @@ install_webdriver(){
       # Install PHP composer
       download -f "https:/getcomposer.org/installer" "$src_dir"
       mkdir -p "$extract/home/tc"
-      chown tc.staff "$extract/home/tc"
+      chown ${tc}.${staff} "$extract/home/tc"
       chmod 750 "$extract/home/tc"
       cp "$src_dir/installer" "$extract/home/tc"
       chmod a+rx "$extract/home/tc/installer"
-      chroot "$extract" chown -R tc.staff "/home/tc/"
+      chroot "$extract" chown -R ${tc}.${staff} "/home/tc/"
       cp /etc/resolv.conf "$extract/etc/resolv.conf" && msg "copy resolv.conf"
       # http_proxy is imported (or not) from the environment. Shellcheck 
       # complains if we don't force a default value here
@@ -578,7 +587,7 @@ rm installer
 EOF
       chmod a+x "$extract/tmp/script"
       msg "Install PHP Composer $extract"
-      HOME=/home/tc chroot --userspec=tc "$extract" /tmp/script || error composer installation failed
+      HOME=/home/tc chroot --userspec=${tc} "$extract" /tmp/script || error composer installation failed
 
       # Install Facebook Webdriver
       cat << EOF > "$extract/tmp/script"
@@ -590,7 +599,7 @@ env HOME=/home/tc php composer.phar require php-webdriver/webdriver
 EOF
       chmod a+x "$extract/tmp/script"
       msg "Install PHP Web driver"  
-      chroot --userspec=tc "$extract" /tmp/script
+      chroot --userspec=${tc} "$extract" /tmp/script
 
       # Remove temporary resolv.conf
       rm "$extract/etc/resolv.conf"
@@ -620,11 +629,11 @@ install_phpstan(){
       # Install PHP composer
       download -f "https:/getcomposer.org/installer" "$src_dir"
       mkdir -p "$extract/home/tc"
-      chown tc.staff "$extract/home/tc"
+      chown ${tc}.${staff} "$extract/home/tc"
       chmod 750 "$extract/home/tc"
       cp "$src_dir/installer" "$extract/home/tc"
       chmod a+rx "$extract/home/tc/installer"
-      chroot "$extract" chown -R tc.staff "/home/tc/"
+      chroot "$extract" chown -R ${tc}.${staff} "/home/tc/"
       cp /etc/resolv.conf "$extract/etc/resolv.conf" && msg "copy resolv.conf"
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
@@ -636,7 +645,7 @@ rm installer
 EOF
       chmod a+x "$extract/tmp/script"
       msg "Install PHP Composer $extract"
-      HOME=/home/tc chroot --userspec=tc "$extract" /tmp/script || error composer installation failed
+      HOME=/home/tc chroot --userspec=${tc} "$extract" /tmp/script || error composer installation failed
 
       # Install PHPSTAN
       cat << EOF > "$extract/tmp/script"
@@ -648,7 +657,7 @@ env HOME=/home/tc php composer.phar require --dev phpstan/phpstan
 EOF
       chmod a+x "$extract/tmp/script"
       msg "Install PHPStan"  
-      chroot --userspec=tc "$extract" /tmp/script
+      chroot --userspec=${tc} "$extract" /tmp/script
 
       # Remove temporary resolv.conf
       rm "$extract/etc/resolv.conf"
@@ -711,7 +720,7 @@ install_dsas_js() {
       # Copy DSAS files to build tree
       mkdir -p $extract/home/tc/dsas
       tar cf - --exclude tmp --exclude=work --exclude=.git . | tar -C $extract/home/tc/dsas -xvf - 
-      chown -R tc.staff $extract/home/tc
+      chown -R ${tc}.${staff} $extract/home/tc
       if [ "$testcode" = "1" ]; then
          maketype="dev"
       else
@@ -730,7 +739,7 @@ make ${maketype}
 EOF
       chmod a+x "$extract/tmp/script"
       msg "Building  $package"
-      HOME=/home/tc chroot --userspec=tc "$extract" /tmp/script || error error constructing $package
+      HOME=/home/tc chroot --userspec=${tc} "$extract" /tmp/script || error error constructing $package
 
       msg "Constructing package $package"
       # Create the package for next use
@@ -876,7 +885,7 @@ parameters:
   paths:
     - dsas/append/usr/local/share/www/api
 EOF
-  chown -R tc.staff $extract/home/tc
+  chown -R ${tc}.${staff} $extract/home/tc
 
   cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
@@ -885,7 +894,7 @@ env HOME=/home/tc vendor/bin/phpstan
 EOF
   chmod a+x "$extract/tmp/script"
   msg "Running PHPStan on usr/local/share/www/api"
-  chroot --userspec=tc "$extract" /tmp/script || error error running phpstan
+  chroot --userspec=${tc} "$extract" /tmp/script || error error running phpstan
 
   cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
@@ -897,7 +906,7 @@ make dev
 EOF
   chmod a+x "$extract/tmp/script"
   msg "Running eslint on js/..."
-  chroot --userspec=tc "$extract" /tmp/script || error error running eslint
+  chroot --userspec=${tc} "$extract" /tmp/script || error error running eslint
 
   # Shellcheck needs Haskell/Cabal to rebuild. For now only allow on a 64bit platform
   # and download a static binary, or use shellchek if it is installed
@@ -945,7 +954,7 @@ echo SHELLCHECK : \$shellcheck
 EOF
     chmod a+x "$extract/tmp/script"
     msg "Running shellcheck on shell code"
-    chroot --userspec=tc "$extract" /tmp/script || error error running shellcheck
+    chroot --userspec=${tc} "$extract" /tmp/script || error error running shellcheck
   fi
 
   if [ "$keep" = "0" ]; then
