@@ -447,7 +447,7 @@ function modalInfo(name, body) {
     modalDSAS.removeAttribute("disable");
     modalDSAS.setAttribute("static", false);
     modalDSAS.setAttribute("hideonclick", true);
-    modalDSAS.setAction(() => { clearTimeout("info"); });
+    modalDSAS.setAction(() => { dsasClearTimeout("info"); });
     modalDSAS.setAttribute("title", _("Info : {0}", name));
     modalDSAS.setAttribute("type", "Ok");
     modalDSAS.setAttribute("size", "xl");
@@ -473,7 +473,7 @@ function dsasTaskInfo(id, name, len = 0) {
                 const el = document.createElement("span");
                 el.id = "logwind";
                 modalInfo(name, el);
-                infoLogs = new DisplayLogs("logwind", info);
+                infoLogs = new DisplayLogs("logwind", info, false, "", "", "", true);
             } else { infoLogs.appendlog(info); }
 
             // Automatically refresh the logs every 5 seconds

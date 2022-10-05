@@ -20,7 +20,7 @@
 // Relies on bootstrap for the tabs, etc
 
 export default class DisplayLogs {
-    constructor(id, logs, hidescrollbar = false, emphasis = "", filter = "", render = "") {
+    constructor(id, logs, hidescrollbar = false, emphasis = "", filter = "", render = "", openatend = false) {
         const temp = document.getElementById(id);
 
         this.view = null;
@@ -33,6 +33,7 @@ export default class DisplayLogs {
         this.hidescrollbar = hidescrollbar;
         this.highlight = { tab: -1, line: -1 };
         this.nitems = this.numberOfItems();
+        this.openatend = openatend;
 
         temp.textContent = ""; // Clear existing content
         if (this.logs.length === 1) {
@@ -87,6 +88,9 @@ export default class DisplayLogs {
                 if (this.logs.length > 1) {
                     for (i = 0; i < this.logs.length; i += 1) { document.getElementById("navlog" + i).attachEvent("click", this.changeTab.bind(this)); }
                 }
+            }
+            if (this.openatend) {
+                this.holder.scrollTop = this.holder.scrollHeight - this.holder.offsetHeight;
             }
         } else { window.requestAnimationFrame(this.initHolder.bind(this)); }
     }
