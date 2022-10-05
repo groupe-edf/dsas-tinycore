@@ -1,6 +1,6 @@
 Log of the principal changes to the DSAS
 
-Version 1.2.3 (XX XXX XXXX)
+Version 1.2.3 (07 Sep 2022)
 - Open task log windo at the bottom
 - use 'httponly' on session cookie to prevent session stealing
 - Name of Upper machine incorrect on status page
