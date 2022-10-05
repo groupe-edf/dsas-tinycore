@@ -32,8 +32,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
        $cnxstr = $cnxstr . " [" . $_SERVER["HTTP_CLIENT_IP"] . "]";
 
     if (dsas_user_active($username) && dsas_checkpass($username, $password)) {
-        if (session_status() != PHP_SESSION_ACTIVE)
+        if (session_status() != PHP_SESSION_ACTIVE) {
+            session_set_cookie_params(["lifetime" => 600,
+                                       "secure" => true,
+                                       "httponly" => true,
+                                       "samesite" => "strict"]);
             session_start();
+        }
  
         if ($newid = session_create_id("dsas-")) {
           // Store data in session variables

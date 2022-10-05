@@ -57,6 +57,10 @@ function dsas_ca_file() : string {
 function dsas_loggedin(bool $update_timeout = true, bool $admin_only = true) : bool {
   // Initialize the session, ignoring uninitalised session ids
   ini_set("session.use_strict_mode", "1");
+  session_set_cookie_params(["lifetime" => 600,
+                             "secure" => true,
+                             "httponly" => true,
+                             "samesite" => "strict"]);
   session_start();
 
   // Check if the user is already logged in
