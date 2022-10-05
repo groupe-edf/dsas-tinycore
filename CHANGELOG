@@ -1,6 +1,8 @@
 Log of the principal changes to the DSAS
 
 Version 1.2.3 (XX XXX XXXX)
+- Open task log windo at the bottom
+- use 'httponly' on session cookie to prevent session stealing
 - Name of Upper machine incorrect on status page
 - Table of contents problem in documentation
 - Mark upper machine unavailable in the same manner as version 1.1.x
