@@ -33,8 +33,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
     if (dsas_user_active($username) && dsas_checkpass($username, $password)) {
         if (session_status() != PHP_SESSION_ACTIVE) {
-            session_set_cookie_params(["lifetime" => 600,
-                                       "secure" => true,
+            session_set_cookie_params(["secure" => true,
                                        "httponly" => true,
                                        "samesite" => "strict"]);
             session_start();
