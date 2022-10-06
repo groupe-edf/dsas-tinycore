@@ -77,6 +77,11 @@ export default class DisplayLogs {
         this.holder = document.getElementById("logpane");
         this.height = this.itemHeight();
         if (this.holder && this.height !== 0) {
+            if (this.openatend) {
+                // Everything needs to be rendered with possible x-axis 
+                // scroll before really moving to the end
+                setTimeout(this.scrollToEnd.bind(this), 75);
+            }
             this.refreshWindow();
             if (this.holder.addEventListener) {
                 this.holder.addEventListener("scroll", this.delayingHandler.bind(this), false);
@@ -89,10 +94,14 @@ export default class DisplayLogs {
                     for (i = 0; i < this.logs.length; i += 1) { document.getElementById("navlog" + i).attachEvent("click", this.changeTab.bind(this)); }
                 }
             }
-            if (this.openatend) {
-                this.holder.scrollTop = this.holder.scrollHeight - this.holder.offsetHeight;
-            }
         } else { window.requestAnimationFrame(this.initHolder.bind(this)); }
+    }
+
+    scrollToEnd() {
+        if (this.holder.scrollTop < this.holder.scrollTopMax) {
+            // Don't need to explictly refresh as the event listener with deal with the scroll
+            this.holder.scrollTop = this.holder.scrollTopMax;
+        }
     }
 
     delayingHandler() {
@@ -149,7 +158,7 @@ export default class DisplayLogs {
                     + Math.ceil(this.holder.offsetHeight / this.height) >= this.nitems)) {
                 this.nitems = this.numberOfItems();
                 this.refreshWindow();
-                this.holder.scrollTop = this.holder.scrollHeight - this.holder.offsetHeight;
+                this.holder.scrollTop = this.holder.scrollTopMax;
             } else if (this.tab === tab) { this.nitems = this.numberOfItems(); }
         }
     }
@@ -218,16 +227,22 @@ export default class DisplayLogs {
 
     refreshWindow() {
         if (this.view != null) { this.view.remove(); }
-        if (this.logs.length > 1) { this.view = document.getElementById("log" + this.tab).appendChild(document.createElement("div")); } else { this.view = this.holder.appendChild(document.createElement("div")); }
+        if (this.logs.length > 1) {
+            this.view = document.getElementById("log" + this.tab).appendChild(document.createElement("div"));
+        } else {
+            this.view = this.holder.appendChild(document.createElement("div"));
+        }
 
         if (this.logs.length > 0) {
             let pre;
             if (this.logs[this.tab].length > 0) {
                 let lines;
                 let index;
-                const firstItem = Math.floor(this.holder.scrollTop / this.height);
+                const firstItem = Math.floor((this.openatend ? this.nitems * this.height
+                    : this.holder.scrollTop) / this.height);
                 let lastItem = firstItem + Math.ceil(this.holder.offsetHeight / this.height);
-                if (lastItem + 1 >= this.nitems) { lastItem = this.nitems - 1; }
+                if (this.openatend) this.openatend = false;
+                if (lastItem > this.nitems - 1) { lastItem = this.nitems - 1; }
                 this.view.id = "view";
                 this.view.style.top = (firstItem * this.height) + "px";
                 this.view.style.position = "absolute";
@@ -275,10 +290,21 @@ export default class DisplayLogs {
                 this.view.appendChild(pre);
             }
         }
-        document.getElementById("heightForcer").style.height = ((this.nitems === 0 ? 1 : this.nitems) * this.height) + "px";
+        // Be careful of presence or absence of x-axis scroll bar, by checking
+        // against scrollTopMax. If the style height in the constructor is changed
+        // from 500px it needs to be changed here as well
+        let hf = ((this.nitems === 0 ? 1 : this.nitems) * this.height);
+        if (hf < this.holder.scrollTopMax + 500) hf += this.height;
+        document.getElementById("heightForcer").style.height = hf + "px";
         if (this.hidescrollbar) {
-        // work around for non chrome browsers, hides the scrollbar
+            // work around for non chrome browsers, hides the scrollbar
             this.holder.style.width = (this.holder.offsetWidth * 2 - this.view.offsetWidth) + "px";
         }
+        if (this.openatend) {
+            // This won't force a rerendering as the scroll 
+            // event listener isn't in place yet.
+            this.openatend = false;
+            this.holder.scrollTop = this.scrollTopMax
+	}
     }
 }
