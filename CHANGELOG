@@ -1,7 +1,10 @@
 Log of the principal changes to the DSAS
 
+Version 1.2.r43 (XX XXX XXXX)
+- Fix last log line hidden by x-axis scroll bar
+
 Version 1.2.3 (07 Sep 2022)
-- Open task log windo at the bottom
+- Open task log window at the bottom
 - use 'httponly' on session cookie to prevent session stealing
 - Name of Upper machine incorrect on status page
 - Table of contents problem in documentation
