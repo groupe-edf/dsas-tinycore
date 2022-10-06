@@ -199,7 +199,6 @@ for _id in $ids; do
   grep -q "$_id" "$RUNLOG" || echo "$_str" >> "$RUNLOG"
 
   1>&2 myecho "$0 : #### Tasks Terminated - $(date --utc) ####"
-  1>&2 myecho "" # Line between task
 done
 
 # Cleanup the runlog file, removing non existant/deleted tasks
