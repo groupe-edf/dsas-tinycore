@@ -241,7 +241,6 @@ export default class DisplayLogs {
                 const firstItem = Math.floor((this.openatend ? this.nitems * this.height
                     : this.holder.scrollTop) / this.height);
                 let lastItem = firstItem + Math.ceil(this.holder.offsetHeight / this.height);
-                if (this.openatend) this.openatend = false;
                 if (lastItem > this.nitems - 1) { lastItem = this.nitems - 1; }
                 this.view.id = "view";
                 this.view.style.top = (firstItem * this.height) + "px";
