@@ -26,10 +26,9 @@ import {
     certName,
 } from "./DsasUtil";
 
-function certExpiring(cert) {
+function certExpiring(validTo) {
     // JS is time_t times 1000 'cause in milliseconds
-    let tt = cert.validTo_time_t;
-    tt *= 1000;
+    const tt = validTo * 1000;
 
     // EDF CA has a value of -1. What does that even mean !!
     if (tt < 0) return false;
@@ -38,8 +37,8 @@ function certExpiring(cert) {
     return false;
 }
 
-function certExpired(cert) {
-    const tt = cert.validTo_time_t * 1000;
+function certExpired(validTo) {
+    const tt = validTo * 1000;
     if (tt < 0) return false;
     if (tt - Date.now() < 0) { return true; }
     return false;
@@ -127,9 +126,9 @@ function treatGpgCerts(certs, node) {
         const item = temp.content.cloneNode(true);
         const links = item.querySelectorAll("a");
         ml.translateHTML(item);
-        let cls = "text-info";
-        if (certExpired(cert)) { cls = "text-danger"; }
-        if (certExpiring(cert)) { cls = "text-warning"; }
+        let cls = "text";  // All GPG certificates can be a CA
+        if (certExpired(cert.expires)) { cls = "text-danger"; }
+        if (certExpiring(cert.expires)) { cls = "text-warning"; }
         item.querySelector("p").className = "my-0 " + cls;
         links[0].setAttribute("href", "#gpg" + i);
         links[1].setAttribute("href", url);
@@ -182,9 +181,9 @@ function treatX509Certs(certs, node, added = false) {
         const links = item.querySelectorAll("a");
         ml.translateHTML(item);
         let cls = "text-info";
-        if (certExpired(cert)) {
+        if (certExpired(cert.validTo_time_t)) {
             cls = "text-danger";
-        } else if (certExpiring(cert)) {
+        } else if (certExpiring(cert.validTo_time_t)) {
             cls = "text-warning";
         } else if (certIsCa(cert)) {
             cls = "text";
