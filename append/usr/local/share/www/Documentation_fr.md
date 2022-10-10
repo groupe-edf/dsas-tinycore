@@ -16,7 +16,7 @@ les clefs USB à chaque utilisation, mais le risque de contamination est impossi
 
 Nous avons donc besoin d'un moyen technique de transfert de fichiers d'une zone non
 sensible vers nos infrastructures industrielles, et de contrôler systématiquement tout
-transfert afin d'exclure les risques de malveillance. Le "Dynamic Security Access Service" 
+transfert afin d'exclure les risques de malveillance. Le "Decontaminating Security Access Service" 
 (DSAS) a pour but de mettre en place ce moyen de transfert sécurisé. 
 
 Le DSAS a pour objectif de télécharger les mises à jour de sécurité, contrôler leurs 

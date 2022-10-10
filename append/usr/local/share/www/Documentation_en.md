@@ -15,7 +15,7 @@ are used, but the risk of contamination is impossible to exclude.
 
 So, a means of transfering files from a non-sensitive area to our industral
 infrastructure is needed, that includes the systematic control of all files
-transfered in order to eliminate the risk of malicious files. The "Dynamic 
+transfered in order to eliminate the risk of malicious files. The "Decontaminating 
 Security Access Service" (DSAS) aims to be this means of secure transfer.
 
 The objective of the DSAS is to download security updates, to control their 
