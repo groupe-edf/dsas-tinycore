@@ -1,5 +1,4 @@
-# DSAS - Decontaminating file transfers
-[en](#) [fr](README-fr.md)
+# DSAS - Decontaminating file transfers &nbsp;&nbsp;&nbsp; [en](#) [fr](README-fr.md)
 
 The isolation of industrial infrastructures is essential to limit
 the possibility of malicious attack. However, this isolation limits the
