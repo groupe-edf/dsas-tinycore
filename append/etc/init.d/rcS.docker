@@ -1,4 +1,5 @@
 #! /bin/sh
+umask 027
 
 # Setup tcedir
 # FIXME : shellcheck wants to replace "ls -1" by "find"
