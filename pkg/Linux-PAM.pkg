@@ -77,5 +77,4 @@ _post_install=\
 
 [ -d /etc/security ] || ln -sf /usr/local/etc/security /etc/security
 [ -d /etc/pam.d ] || ln -sf /usr/local/etc/pam.d /etc/pam.d
-[ -d /usr/lib/security ] || ln -sf /usr/local/lib/security /usr/lib/security
 [ -e /etc/environment ] || ln -sf /usr/local/etc/environment /etc/environment"
