@@ -11,11 +11,14 @@ _install_cmd="make install DESTDIR="
 _post_build=\
 "mkdir -p usr/local/etc/pam.d
 cat << EOF > usr/local/etc/pam.d/common-auth
-auth           [success=1 default=ignore]               pam_unix.so nullok_secure
+auth           required                                 pam_faillock.so preauth silent deny=3 unlock_time=600
+auth           [success=2 default=ignore]               pam_unix.so nullok_secure
+auth           required                                 pam_faillock.so authfail deny=3 unlock_time=600
 auth           requisite                                pam_deny.so
 auth           required                                 pam_permit.so
 EOF
 cat << EOF > usr/local/etc/pam.d/common-account
+account        required                                 pam_faillock.so
 account        [success=1 new_authtok_reqd=done default=ignore] pam_unix.so
 account        requisite                                pam_deny.so
 account        required                                 pam_permit.so
@@ -74,6 +77,5 @@ _post_install=\
 
 [ -d /etc/security ] || ln -sf /usr/local/etc/security /etc/security
 [ -d /etc/pam.d ] || ln -sf /usr/local/etc/pam.d /etc/pam.d
+[ -d /usr/lib/security ] || ln -sf /usr/local/lib/security /usr/lib/security
 [ -e /etc/environment ] || ln -sf /usr/local/etc/environment /etc/environment"
-
-
