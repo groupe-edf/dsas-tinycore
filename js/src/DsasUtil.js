@@ -90,6 +90,8 @@ export function dateToLocale(d) {
         hour: "numeric",
         minute: "numeric",
         second: "numeric",
+        timeZoneName: "short",
+        timezone: Intl.DateTimeFormat().resolveOptions().timeZone
     });
     if (typeof (d) === "string") {
         if (d.length < 14) {

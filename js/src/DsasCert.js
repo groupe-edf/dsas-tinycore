@@ -53,6 +53,8 @@ function timeToDate(t) {
         hour: "numeric",
         minute: "numeric",
         second: "numeric",
+        timeZoneName: "short",
+        timeZone: Intl.DateTimeFormat().resolveOptions().timeZone
     });
     return c.format(new Date(t * 1000));
 }
