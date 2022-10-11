@@ -1240,27 +1240,38 @@ chmod 644 /usr/local/share/www/?* /usr/local/share/www/api/?* /usr/local/share/w
 chmod 755 /usr/local/share/www/en /usr/local/share/www/fr /usr/local/share/www/api
 sed -i "s/umask 0[0-7][0-7]/umask 027/" /etc/profile
 echo "
-# Forbid core dumps
+# Forbid core dumps (suggestion lynis)
 ulimit -c 0
 
-# Force inactivity timeout
+# Force inactivity timeout (suggestion lynis)
 export TMOUT=300
 " >> /etc/profile
 
-# Ensure the umask is 027
+# Ensure the umask is 027 (suggestion lynis)
+cp /etc/init.d/rcS /etc/init.d/rcS.old
 grep -q umask /etc/init.d/rcS && sed -i -e "s/umask 0[0-7][0-7]/umask 027/" /etc/init.d/rcS
 if ! grep -q umask /etc/init.d/rcS; then
   # Find first non comment line, to add umask if needed
-  _line=\$(grep -n -v "^#" /etc/init.d/rcS | head -1n | cut -d: -f1)
-  head -\$((_line -1)) /etc/init.d/rcS > /etc/init.d/rcS.tmp
+  _line=\$(grep -n -v "^#" /etc/init.d/rcS | head -1 | cut -d: -f1)
+  head -\$((_line - 1)) /etc/init.d/rcS > /etc/init.d/rcS.tmp
   echo "umask 027" >> /etc/init.d/rcS.tmp
   tail +\$_line /etc/init.d/rcS >> /etc/init.d/rcS.tmp
   mv -f /etc/init.d/rcS.tmp /etc/init.d/rcS
   chmod 755 /etc/init.d/rcS
 fi
 
-# Ensure files in /etc/sysconfig are world readable
+# Ensure files in /etc/sysconfig are world readable (needed after setting umask 027)
 sed -i -e "s:^\(\s*\)\(.* > \)\(/etc/sysconfig/.*\)$:\1\2\3\n\1\[ \-e \"\3\" \] \&\& chmod 644 \3:g" /etc/init.d/tc-config
+
+# set swapfile options in /etc/fstab (suggestion lynis)
+sed -i -e "s:\(swap\s*defaults,\):\1swap,:" /etc/init.d/tc-config
+
+# set noexec,nosuid,nodev on /dev/shm (suggestion lynis)
+sed -i -e "s:\(/dev/shm\s*tmpfs\s*defaults\):\1,noexec,nosuid,nodev:" /etc/fstab
+
+# Use hidepid=2 on /prc (suggestion lynis)
+sed -i -e "s:\(proc\s*defaults\):\1,hidepid=2:" /etc/fstab
+
 EOF
 
   chmod 755 "$create_users"

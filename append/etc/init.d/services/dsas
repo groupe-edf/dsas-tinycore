@@ -64,7 +64,7 @@ mount_dsas(){
       chown root.staff /home/dsas
       chmod 755 /home/dsas
       # remount main disk as noexec. Strip trail "/dsas" from $DSAS to get the real partition
-      mount -o remount,noexec "${DSAS:0:-5}"
+      mount -o remount,noexec,nodev,nosuid "${DSAS:0:-5}"
       mount --noexec --nobind "$DSAS" /home/dsas
     fi
     # For persistent /var/log. Do this before launching syslog
@@ -228,6 +228,13 @@ get_dsas(){
 }
 
 audit_perms(){
+  # Suggestion form Lynis
+  echo "Auditing USB permissions"
+  while IFS= read -r -d '' dev; do
+    echo "0" > $dev/authorized
+    echo "0" > $dev/authorized_default
+  done < <(find /sys/bus/usb/devices -name "usb*" -print0)
+
   echo "Auditing permissions of ${GREEN}$DSAS${NORMAL} in the background"
   grep -q users /etc/group || addgroup -g 51 users
   while IFS= read -r -d '' _d; do
