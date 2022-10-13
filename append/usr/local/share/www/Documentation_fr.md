@@ -1489,7 +1489,7 @@ cat >> ~/.gitconfig << EOF
 EOF
 ```
 
-Ou le site utilisé pour l téléchargement du CA et la location du git est a adapter à vos besoin.
+Ou le site utilisé pour le téléchargement du CA et la location du git est a adapter à vos besoin.
 
 Maintenant, nous sommes prêts à récupérer l'arbre de code source du DSAS avec la commande
 
