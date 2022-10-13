@@ -10,6 +10,7 @@ Version 1.2.4 (XX XXX XXXX)
 - Update freeradius (3.2.0 -> 3.2.1)
 - Update rpm (4.17.1.1 -> 4.18.0)
 - Update zck (1.2.1 -> 1.2.2)
+- Update nodejs (16.17.0 -> 16.18.0)
 
 Version 1.2.3 (07 Sep 2022)
 - Open task log window at the bottom

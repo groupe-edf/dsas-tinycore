@@ -841,7 +841,7 @@ realclean)
   ;;
 upgrade)
   [ -e $work ] || error work directory does not exit. run \'./make.sh work ...\'
-  msg Fecthing md5.db.gz
+  msg Fetching md5.db.gz
   $curl_cmd -o "$tcz_dir/md5.db.gz" "$tcz_url/md5.db.gz" || error failed to download md5.db.gz
   gzip -f -d $tcz_dir/md5.db.gz
   while IFS= read -r -d '' file; do
