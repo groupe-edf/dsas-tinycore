@@ -4,7 +4,7 @@ Version 1.2.4 (XX XXX XXXX)
 - Multiple security hardening fixes from lynis
 - Ensure times in the interface are displayed in the local time
 - Fix last log line hidden by x-axis scroll bar
-- Lock accounts for 10 minutes are 3 failed login attempts
+- Lock accounts for 10 minutes after 3 failed login attempts
 
 Version 1.2.3 (07 Sep 2022)
 - Open task log window at the bottom
