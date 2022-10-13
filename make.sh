@@ -852,7 +852,7 @@ upgrade)
     [ -f "$pkg_file" ] && continue   # Locally built package
     [ "$_file" = "dsastestfiles.tcz" ] && continue  # Locally built file
     [ "$_file" = "dsasphpstan.tcz" ] && continue  # Locally built file
-    [ "$_file" = "dsas_js.tcz" ] && continue  # Locally built file
+    [ "$_file" = "dsas_js.tcz" ] && { msg "Removing $_file"; rm -f "$file"; continue; } # Remove to force rebuild
     [ "$_file" = "dsaswebdriver.tcz" ] && { msg "Removing $_file"; rm -f "$file"; continue; } # Remove to force rebuild
     [ "$_file" = "firefox.tcz" ] && { msg "Removing $_file"; rm -f "$file"; continue; } # Remove to force a rebuild
     read -r hash < "$file.md5.txt"
