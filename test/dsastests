@@ -112,7 +112,7 @@ function test(string $_msg, callable $_fn, bool $_fatal = false, $sshot = -1, $t
     } else {
       fail();
       echo $e->getMessage() . PHP_EOL;
-      if ($trace) {
+      if (_trace) {
         echo $e->getTraceAsString() . PHP_EOL;
       }
       if ($sshot)
@@ -924,7 +924,7 @@ try {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("syslog_server"))->clear();
         save();
         apply();
-        exec("pgrep syslogd", $data, $retval);
+        exec("sudo pgrep syslogd", $data, $retval);
         return($retval == 0); 
       });
         
@@ -934,7 +934,7 @@ try {
           $GLOBALS["driver"]->findElement(WebDriverBy::id("syslog"))->click();
         save();
         apply();
-        exec("pgrep syslogd", $data, $retval);
+        exec("sudo pgrep syslogd", $data, $retval);
         return ($retval != 0);
       });
         
@@ -946,10 +946,10 @@ try {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("ntp_pool"))->clear()->sendKeys("ntp1.example.com" . PHP_EOL . "ntp2.example.com");
         save();
         apply();
-        exec("pgrep ntpd", $data, $retval);
+        exec("sudo pgrep ntpd", $data, $retval);
         if ($retval == 0) {
-          $cmdline = file_get_contents("/proc/" . $data[0] . "/cmdline");
-          if (! preg_match("/.*ntp1.example.com.*ntp2.example.com.*$/", $cmdline))
+          exec("sudo cat /proc/" . $data[0] . "/cmdline", $cmdline, $retval);
+          if (! preg_match("/.*ntp1.example.com.*ntp2.example.com.*$/", $cmdline[0]))
             throw new RuntimeException("Incorrect ntp commandline");
         } else
           throw new RuntimeException("Can not start ntpd");
@@ -962,7 +962,7 @@ try {
           $GLOBALS["driver"]->findElement(WebDriverBy::id("ntp"))->click();
         save();
         apply();
-        exec("pgrep ntpd", $data, $retval);
+        exec("sudo pgrep ntpd", $data, $retval);
         return ($retval != 0);
       });
 
@@ -1013,7 +1013,7 @@ try {
         save();
         apply();
         // Check if repo is running 
-        exec("pgrep -f 'repo.conf'", $data, $retval); 
+        exec("sudo pgrep -f 'repo.conf'", $data, $retval); 
         return ($retval == 0);
       }, true);
 
@@ -1024,7 +1024,7 @@ try {
         save();
         apply();
         // Check if repo is running 
-        exec("pgrep -f 'repo.conf'", $data, $retval); 
+        exec("sudo pgrep -f 'repo.conf'", $data, $retval); 
         return ($retval != 0);
       }, true);
 
@@ -2256,7 +2256,7 @@ try {
   // Catch other errors here so that firefox is shut down cleanly
   echo $e->getMessage() . PHP_EOL;
   echo $e->getMessage() . PHP_EOL;
-  if ($trace) {
+  if (_trace) {
     echo $e->getTraceAsString() . PHP_EOL;
   }
   if (array_key_exists("driver", $GLOBALS)) screenshot();
