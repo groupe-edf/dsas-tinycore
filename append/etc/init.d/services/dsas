@@ -913,6 +913,7 @@ start_chroot(){
      # Create chroot jail for lftp as user haut
      mkdir -p  /opt/lftp/home/dsas/haut
      chown root.haut /opt/lftp/home/dsas/haut
+     chmod 755 /opt/lftp/home/dsas
      chmod 750 /opt/lftp/home/dsas/haut
      mount --noexec --nobind /home/dsas/haut /opt/lftp/home/dsas/haut
    fi
