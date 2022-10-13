@@ -27,6 +27,9 @@ import {
 } from "./DsasUtil";
 
 function certExpiring(validTo) {
+    // Check if certificate is always valid
+    if (validTo === "always") return false;
+
     // JS is time_t times 1000 'cause in milliseconds
     const tt = validTo * 1000;
 
@@ -38,6 +41,7 @@ function certExpiring(validTo) {
 }
 
 function certExpired(validTo) {
+    if (validTo === "always") return false;
     const tt = validTo * 1000;
     if (tt < 0) return false;
     if (tt - Date.now() < 0) { return true; }
