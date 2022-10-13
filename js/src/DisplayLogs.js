@@ -78,7 +78,7 @@ export default class DisplayLogs {
         this.height = this.itemHeight();
         if (this.holder && this.height !== 0) {
             if (this.openatend) {
-                // Everything needs to be rendered with possible x-axis 
+                // Everything needs to be rendered with possible x-axis
                 // scroll before really moving to the end
                 setTimeout(this.scrollToEnd.bind(this), 75);
             }
@@ -300,10 +300,10 @@ export default class DisplayLogs {
             this.holder.style.width = (this.holder.offsetWidth * 2 - this.view.offsetWidth) + "px";
         }
         if (this.openatend) {
-            // This won't force a rerendering as the scroll 
+            // This won't force a rerendering as the scroll
             // event listener isn't in place yet.
             this.openatend = false;
-            this.holder.scrollTop = this.scrollTopMax
-	}
+            this.holder.scrollTop = this.scrollTopMax;
+        }
     }
 }
