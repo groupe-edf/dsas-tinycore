@@ -47,7 +47,7 @@ as_haut="sudo sudo -E -u haut"
 _ldir="/opt/lftp"
 if [ -L "$DSAS_HOME" ]; then
   # This is an indication we are running in a docker instance. Can't chroot
-  chroot_lftp="/usr/local/bin/lftp"
+  chroot_lftp="$as_haut /usr/local/bin/lftp"
 else
   chroot_lftp="sudo /usr/local/sbin/chroot --userspec=haut:haut $_ldir env LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib /usr/local/bin/lftp"
   # Update resolv.conf and hosts in the chroot as networking might have changed
