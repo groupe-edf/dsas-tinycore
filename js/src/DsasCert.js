@@ -54,7 +54,7 @@ function timeToDate(t) {
         minute: "numeric",
         second: "numeric",
         timeZoneName: "short",
-        timeZone: Intl.DateTimeFormat().resolveOptions().timeZone
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
     return c.format(new Date(t * 1000));
 }
@@ -128,7 +128,7 @@ function treatGpgCerts(certs, node) {
         const item = temp.content.cloneNode(true);
         const links = item.querySelectorAll("a");
         ml.translateHTML(item);
-        let cls = "text";  // All GPG certificates can be a CA
+        let cls = "text"; // All GPG certificates can be a CA
         if (certExpired(cert.expires)) { cls = "text-danger"; }
         if (certExpiring(cert.expires)) { cls = "text-warning"; }
         item.querySelector("p").className = "my-0 " + cls;
