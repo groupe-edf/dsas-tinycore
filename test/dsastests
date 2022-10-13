@@ -38,7 +38,7 @@ use Facebook\WebDriver\Exception\StaleElementReferenceException;
 
 // Modifiable constants
 $sshot = true;   // Take screenshots
-$trace = false;  // Print backtrace
+define("_trace", false);  // Print backtrace
 define("_user", "tc");
 define("_pass", "dSaO2021cTf");
 define("_delay", 5);  // 5 seconds
@@ -90,7 +90,7 @@ function modal_delay() {
   usleep(500000);
 }
 
-function test(string $_msg, callable $_fn, bool $_fatal = false, $sshot = -1) {
+function test(string $_msg, callable $_fn, bool $_fatal = false, $sshot = -1, $tace = false) {
   if ($sshot === -1)
     $sshot = $GLOBALS["sshot"];
   try {
