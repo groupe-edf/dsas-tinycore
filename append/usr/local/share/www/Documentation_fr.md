@@ -594,7 +594,9 @@ d'administration du DSAS l'écran de connexion suivant vous sera présenté :
 ![Ecran de connexion du DSAS](fr/DSAS1.png)
 
 L'utilisateur privilégié sur le DSAS est l'utilisateur __tc__, et le mot de passe par défaut
-est le __dSaO2021DSAS__. A ce point connectez-vous sur l'interface d'administration.
+est le __dSaO2021DSAS__. Il y a un délai de 3 secondes entre chaque tentative de connexion
+échoué et le compte sera bloqué pendant 10 minutes en cas de 3 tentatives échoués consectutif.
+A ce point connectez-vous sur l'interface d'administration.
 
 ### Les basics de l'interface d'administration
 

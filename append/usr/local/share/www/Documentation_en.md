@@ -574,8 +574,10 @@ DSAS administration interface you will be presented with the following login scr
 
 ![DSAS login screen](en/DSAS1.png)
 
-The privileged user on the DSAS is user __tc__, and the default password
-is __dSaO2021DSAS__. At this point log on to the administration interface.
+The privileged user on the DSAS is user __tc__, and the default password is
+__dSaO2021DSAS__. There will be a 3 second delay between failed login attempts and
+accounts will be locked for 10 minutes after 3 successive failed login attempts.
+At this point log on to the administration interface.
 
 ### The basics of the administration interface
 
