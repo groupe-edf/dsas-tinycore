@@ -1,9 +1,9 @@
 _pkg=openssh
-_version=9.0p1
-_uri="https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.0p1.tar.gz"
+_version=9.1p1
+_uri="https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.1p1.tar.gz"
 _dep="openssl-1.1.1 Linux-PAM"
 _build_dep="compiletc openssl-1.1.1 openssl-1.1.1-dev Linux-PAM-dev"
-_pkg_path="openssh-9.0p1"
+_pkg_path="openssh-9.1p1"
 _conf_cmd="setarch linux$arch ./configure --with-pam --sysconfdir=/usr/local/etc/ssh --libexecdir=/usr/local/lib/openssh --with-privsep-path=/var/lib/sshd"
 _make_cmd="make"
 _install_cmd="make install DESTDIR="

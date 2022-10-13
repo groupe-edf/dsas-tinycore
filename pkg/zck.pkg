@@ -1,9 +1,9 @@
 _pkg=zck
-_version=1.2.2
-_uri=https://github.com/zchunk/zchunk/archive/refs/tags/1.2.2.tar.gz 
+_version=1.2.3
+_uri=https://github.com/zchunk/zchunk/archive/refs/tags/1.2.3.tar.gz 
 _build_dep="compiletc cmake coreutils meson ninja expat2-dev zstd zstd-dev curl-dev openssl-1.1.1-dev libssh2-dev"
 _dep="expat2 zstd curl openssl-1.1.1 libssh2 zstd"
-_pkg_path=zchunk-1.2.2
+_pkg_path=zchunk-1.2.3
 _conf_cmd="setarch linux$arch meson build"
 _make_cmd="cd build; ninja"
 _install_cmd="cd build; ninja install #"
