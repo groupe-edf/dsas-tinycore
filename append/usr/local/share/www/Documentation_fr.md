@@ -1510,7 +1510,7 @@ Nous pourrions maintenant rétablir les valeurs des variables d'environnement du
 ### Utilisation de colour avec `git diff`
 
 Finalement, la version de `less` installé par défaut n'accepte pas l'option `-R` nécessaire pour la 
-colorisation des avec la commande `git diff`. Afin d'avoir les changement proprement montré,
+colorisation des avec la commande `git diff`. Afin d'avoir les changements proprement montré,
 il faut faire les commandes
 
 ```

@@ -54,7 +54,7 @@ apt-get install build-essential rsync genisoimage squashfs-tools git curl
 To be able do build, the DSAS needs a root access via sudo. The reason is that the
 build makes extensive use of the chroot command to create clean build environments for
 each package. The build script also needs access to the internet to be able to download
-packages. If you are behind a proxy, you'll need to configure the proxy beofr continuing
+packages. If you are behind a proxy, you'll need to configure the proxy before continuing
 
 After the build command is
 
