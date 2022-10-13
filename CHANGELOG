@@ -1,6 +1,8 @@
 Log of the principal changes to the DSAS
 
 Version 1.2.4 (XX XXX XXXX)
+- Multiple security hardening fixes from lynis
+- Ensure times in the interface are displayed in the local time
 - Fix last log line hidden by x-axis scroll bar
 
 Version 1.2.3 (07 Sep 2022)
