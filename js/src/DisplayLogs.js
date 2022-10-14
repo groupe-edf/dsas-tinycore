@@ -212,7 +212,7 @@ export default class DisplayLogs {
     updatefilter(filter = "") {
         this.filter = filter;
         this.nitems = this.numberOfItems();
-        this.hightlight = { tab: -1, line: -1 }; // FIXME : Rather than reset, try to keep same line
+        this.highlight = { tab: this.highlight.tab, line: -1 }; // FIXME : Rather than reset, try to keep same line
         this.refreshWindow();
     }
 
