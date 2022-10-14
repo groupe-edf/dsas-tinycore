@@ -1,0 +1,12 @@
+_pkg=wget
+_version=1.21.3
+_uri="https://ftp.gnu.org/gnu/wget/wget-1.21.3.tar.gz"
+_dep="ca-certificates openssl-1.1.1 pcre2"
+_build_dep="compiletc openssl-1.1.1-dev ca-certificates ncursesw-dev pcre2-dev"
+_pkg_path="wget-1.21.3"
+_conf_cmd="setarch linux$arch ./configure --prefix=/usr/local --with-ssl=openssl"
+_make_cmd="make"
+_install_cmd="make install DESTDIR="
+_post_build=""
+_pkgs="main{/usr/local}"
+_post_install=""
