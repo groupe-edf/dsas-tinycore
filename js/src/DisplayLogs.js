@@ -18,6 +18,8 @@
 // A class to display a set of very large log files in bootstrap tabs,
 // only rendering the minimum number of lines so as to remain rapid.
 // Relies on bootstrap for the tabs, etc
+// Code is based very loosely on the code available in
+// https://stackoverflow.com/questions/17626717/large-list-rendering-in-javascript
 
 export default class DisplayLogs {
     constructor(id, logs, hidescrollbar = false, emphasis = "", filter = "", render = "", openatend = false) {
@@ -99,7 +101,7 @@ export default class DisplayLogs {
 
     scrollToEnd() {
         if (this.holder.scrollTop < this.holder.scrollTopMax) {
-            // Don't need to explictly refresh as the event listener with deal with the scroll
+            // Don't need to explictly refresh as the event listener will deal with the scroll
             this.holder.scrollTop = this.holder.scrollTopMax;
         }
     }
