@@ -1485,7 +1485,7 @@ try {
         $contents = fread($fp, filesize("/home/tc/dsas_backup.tgz"));
         fclose($fp);
         $contents = base64_encode($contents);
-        $GLOBALS["driver"]->executeScript("dsasRealRestore(b64toBlob(arguments[0], \"application/gzip\"); \"\");", [$contents]);
+        $GLOBALS["driver"]->executeScript("dsasRealRestore(b64toBlob(arguments[0], \"application/gzip\"), \"\");", [$contents]);
         // Applying, wait for okDSAS to become Clickable. Long wait due to apply
         $GLOBALS["driver"]->wait(4 * _delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
         modal_delay();
