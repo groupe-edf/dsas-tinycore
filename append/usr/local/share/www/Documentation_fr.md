@@ -1189,13 +1189,10 @@ Afin de récupérer un certificat GPG, la seule solution est de retourner vers
 L’éditeur de logiciel concerné. Par exemple quelques exemples de certificat
 des éditeurs de logiciels sont
 
-- [La page des certificats de RedHat](https://access.redhat.com/security/team/key) 
-contient [le certificat utilisé pour la signatures des binaires de Redhat depuis 
-2010](https://www.redhat.com/security/data/fd431d51.txt)
-- [La page des certificats de CentOs](https://www.centos.org/keys/) contient notamment 
-[le certificat utilisé pour CentOS7](https://www.centos.org/keys/RPM-GPG-KEY-CentOS-7)
-- [La page des certificats debian](https://ftp-master.debian.org/keys.html) contient
-notamment le certicat de [Debian Bullseye](https://ftp-master.debian.org/keys/archive-key-11.asc)
+<!-- Keep these bullet points on a single line as it causes problems with forigate VPN SSL -->
+- [La page des certificats de RedHat](https://access.redhat.com/security/team/key) contient [le certificat utilisé pour la signatures des binaires de Redhat depuis 2010](https://www.redhat.com/security/data/fd431d51.txt)
+- [La page des certificats de CentOs](https://www.centos.org/keys/) contient notamment [le certificat utilisé pour CentOS7](https://www.centos.org/keys/RPM-GPG-KEY-CentOS-7)
+- [La page des certificats debian](https://ftp-master.debian.org/keys.html) contient notamment le certicat de [Debian Bullseye](https://ftp-master.debian.org/keys/archive-key-11.asc)
 
 ### Importation d'un certificat dans le DSAS
 

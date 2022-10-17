@@ -1147,13 +1147,10 @@ to the DSAS.
 In order to retrieve a GPG certificate, the only solution is to retrieve them from their publisher.
 For example some examples of certificate of software publishers are
 
-- [The RedHat certificates page](https://access.redhat.com/security/team/key)
-contains [the certificate used for signing Redhat binaries since
-2010](https://www.redhat.com/security/data/fd431d51.txt)
-- [The CentOs certificates page](https://www.centos.org/keys/) contains in particular
-[the certificate used for CentOS7](https://www.centos.org/keys/RPM-GPG-KEY-CentOS-7)
-- [The debian certificates page](https://ftp-master.debian.org/keys.html) contains
-in particular the certificate of [Debian Bullseye](https://ftp-master.debian.org/keys/archive-key-11.asc)
+<!-- Keep these bullet points on a single line as it causes problems with forigate VPN SSL -->
+- [The RedHat certificates page](https://access.redhat.com/security/team/key) contains [the certificate used for signing Redhat binaries since 2010](https://www.redhat.com/security/data/fd431d51.txt)
+- [The CentOs certificates page](https://www.centos.org/keys/) contains in particular [the certificate used for CentOS7](https://www.centos.org/keys/RPM-GPG-KEY-CentOS-7)
+- [The debian certificates page](https://ftp-master.debian.org/keys.html) contains in particular the certificate of [Debian Bullseye](https://ftp-master.debian.org/keys/archive-key-11.asc)
 
 ### Importing a certificate into the DSAS
 
