@@ -1,6 +1,6 @@
 Log of the principal changes to the DSAS
 
-Version 1.2.4 (XX XXX XXXX)
+Version 1.2.4 (18 Oct 2022)
 - Multiple security hardening fixes from lynis
 - Ensure times in the interface are displayed in the local time
 - Fix last log line hidden by x-axis scroll bar
@@ -12,7 +12,7 @@ Version 1.2.4 (XX XXX XXXX)
 - Update zck (1.2.1 -> 1.2.2)
 - Update nodejs (16.17.0 -> 16.18.0)
 
-Version 1.2.3 (07 Sep 2022)
+Version 1.2.3 (07 Oct 2022)
 - Open task log window at the bottom
 - use 'httponly' on session cookie to prevent session stealing
 - Name of Upper machine incorrect on status page
