@@ -241,8 +241,16 @@ export default class DisplayLogs {
             if (this.logs[this.tab].length > 0) {
                 let lines;
                 let index;
-                const firstItem = Math.floor((this.openatend ? this.nitems * this.height
-                    : this.holder.scrollTop) / this.height);
+                let firstItem;
+                if (this.openatend) {
+                    if (this.nitems <= Math.ceil(this.holder.offsetHeight / this.height)) {
+                        firstItem = 0;
+                    } else {
+                        firstItem = this.nitems - Math.ceil(this.holder.offsetHeight / this.height);
+                    }
+                } else {
+                    firstItem = Math.floor(this.holder.scrollTop / this.height);
+                }
                 let lastItem = firstItem + Math.ceil(this.holder.offsetHeight / this.height);
                 if (lastItem > this.nitems - 1) { lastItem = this.nitems - 1; }
                 this.view.id = "view";
