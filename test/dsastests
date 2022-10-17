@@ -1479,13 +1479,13 @@ try {
 
     // Restore the configuration. Can't do this via the navbar as no
     // easy way to select file to upload. So we cheat ;-)
-    // Call the dsasRestoreCore function here !! 
+    // Call the dsasRealRestore function here !! 
     test("Restoring the configuration", function () {
         $fp = fopen("/home/tc/dsas_backup.tgz", "r");
         $contents = fread($fp, filesize("/home/tc/dsas_backup.tgz"));
         fclose($fp);
         $contents = base64_encode($contents);
-        $GLOBALS["driver"]->executeScript("dsasRestoreCore(b64toBlob(arguments[0], \"application/gzip\"));", [$contents]);
+        $GLOBALS["driver"]->executeScript("dsasRealRestore(b64toBlob(arguments[0], \"application/gzip\"); \"\");", [$contents]);
         // Applying, wait for okDSAS to become Clickable. Long wait due to apply
         $GLOBALS["driver"]->wait(4 * _delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
         modal_delay();
@@ -1568,7 +1568,7 @@ try {
           throw new RuntimeException("Can not fingerprint X509 certificate");
         $GLOBALS["finger"] = $finger;
         $contents = base64_encode($contents);
-        $GLOBALS["driver"]->executeScript("dsasUploadCertCore(b64toBlob(arguments[0], \"application/x-x509-user-cert\"), \"x509\", \"\");", [$contents]);
+        $GLOBALS["driver"]->executeScript("dsasUploadCert(\"x509\", \"\", b64toBlob(arguments[0], \"application/x-x509-user-cert\"));", [$contents]);
         // Applying, wait for okDSAS to become Clickable.
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
         modal_delay();
@@ -1656,7 +1656,7 @@ try {
           throw new RuntimeException("Can not fingerprint Openssl key");
         $GLOBALS["finger"] = $finger;
         $contents = base64_encode($contents);
-        $GLOBALS["driver"]->executeScript("dsasUploadCertCore(b64toBlob(arguments[0], \"application/x-pem-file\"), \"pubkey\", \"Openssl Test Certificate\");", [$contents]);
+        $GLOBALS["driver"]->executeScript("dsasUploadCert(\"pubkey\", \"Openssl Test Certificate\", b64toBlob(arguments[0], \"application/x-pem-file\"));", [$contents]);
         // Applying, wait for okDSAS to become Clickable.
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
         modal_delay();
@@ -1756,7 +1756,7 @@ try {
           throw new RuntimeException ("Can not read Gpg certificate");
         
         $contents = base64_encode($contents);
-        $GLOBALS["driver"]->executeScript("dsasUploadCertCore(b64toBlob(arguments[0], \"application/pgp-keys\"), \"gpg\", \"\");", [$contents]);
+        $GLOBALS["driver"]->executeScript("dsasUploadCert(\"gpg\", \"\", b64toBlob(arguments[0], \"application/pgp-keys\"));", [$contents]);
         // Applying, wait for okDSAS to become Clickable.
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
         modal_delay();
@@ -1855,7 +1855,7 @@ try {
         fclose($fp);
         $ncert = count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'add')]")));
         $contents = base64_encode($contents);
-        $GLOBALS["driver"]->executeScript("dsasUploadCertCore(b64toBlob(arguments[0], \"application/x-x509-user-cert\"), \"x509\", \"\");", [$contents]);
+        $GLOBALS["driver"]->executeScript("dsasUploadCert(\"x509\", \"\", b64toBlob(arguments[0], \"application/x-x509-user-cert\"));", [$contents]);
         // Applying, wait for okDSAS to become Clickable. This will be an error this time
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
         modal_delay();
@@ -1872,7 +1872,7 @@ try {
         fclose($fp);
         $ncert = count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'pubkey')]")));
         $contents = base64_encode($contents);
-        $GLOBALS["driver"]->executeScript("dsasUploadCertCore(b64toBlob(arguments[0], \"application/x-pem-file\"), \"pubkey\", \"\");", [$contents]);
+        $GLOBALS["driver"]->executeScript("dsasUploadCert(\"pubkey\", \"\", b64toBlob(arguments[0], \"application/x-pem-file\"));", [$contents]);
         // Applying, wait for okDSAS to become Clickable. This will be an error this time
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
         modal_delay();
@@ -1889,7 +1889,7 @@ try {
         fclose($fp);
         $ncert = count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'gpg')]")));
         $contents = base64_encode($contents);
-        $GLOBALS["driver"]->executeScript("dsasUploadCertCore(b64toBlob(arguments[0], \"application/pgp-keys\"), \"gpg\", \"\");", [$contents]);
+        $GLOBALS["driver"]->executeScript("dsasUploadCert(\"gpg\", \"\", b64toBlob(arguments[0], \"application/pgp-keys\"));", [$contents]);
         // Applying, wait for okDSAS to become Clickable. This will be an error this time
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
         modal_delay();

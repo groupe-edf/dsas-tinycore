@@ -209,10 +209,15 @@ function treatX509Certs(certs, node, added = false) {
     });
 }
 
-function dsasUploadCertCore(file, type, name) {
+function dsasUploadCert(type = "x509", name = "", file = null) {
     const formData = new FormData();
+    const cert = document.getElementById(type + "upload");
     formData.append("op", type + "_upload");
-    formData.append("file", file);
+    if (file === null) {
+        formData.append("file", cert[0].files[0]);
+    } else {
+        formData.append("file", file);
+    }
     formData.append("name", name);
 
     fetch("api/dsas-cert.php", {
@@ -237,12 +242,7 @@ function dsasUploadCertCore(file, type, name) {
     });
 }
 //  This needs to be exposed so test code can use it
-window.dsasUploadCertCore = dsasUploadCertCore;
-
-function dsasUploadCert(type = "x509", name = "") {
-    const cert = document.getElementById(type + "upload");
-    dsasUploadCertCore(cert[0].files[0], type, name);
-}
+window.dsasUploadCert = dsasUploadCert;
 
 function dsasPubkeyName() {
     const modalDSAS = document.getElementById("modalDSAS");

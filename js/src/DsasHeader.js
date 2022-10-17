@@ -135,10 +135,18 @@ function dsasBackup() {
     modalDSAS.setBody(body);
 }
 
-export default function dsasRestoreCore(file, passwd = "") {
+export default function dsasRealRestore(file = null, passwd = null) {
     const formData = new FormData();
-    formData.append("file", file);
-    formData.append("passwd", passwd);
+    if (file === null) {
+        formData.append("file", document.getElementById("RestoreSelectFile").files[0]);
+    } else {
+        formData.append("file", file);
+    }
+    if (passwd === null) {
+        formData.append("passwd", document.getElementById("RestorePassword").value);
+    } else {
+        formData.append("passwd", passwd);
+    }
 
     fetch("api/backup.php", {
         method: "POST",
@@ -165,13 +173,7 @@ export default function dsasRestoreCore(file, passwd = "") {
     });
 }
 // This needs to be exposed so test code can use it
-window.dsasRestoreCore = dsasRestoreCore;
-
-function dsasRealRestore() {
-    const passwd = document.getElementById("RestorePassword").value;
-    const file = document.getElementById("RestoreSelectFile").files[0];
-    dsasRestoreCore(file, passwd);
-}
+window.dsasRealRestore = dsasRealRestore;
 
 function dsasPasswdRestore() {
     const modalDSAS = document.getElementById("modalDSAS");
