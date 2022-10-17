@@ -61,6 +61,7 @@ export default function dsasDisplayPasswd() {
             modalMessage(_("Error during password change : {0}", (error.message ? error.message : error)));
         }
     });
+    document.getElementById("inp_pass").addEventListener("keypress", (event) => { if (event.key === "Enter") dsasChangePasswd(); });
     document.getElementById("update").addEventListener("click", () => { dsasChangePasswd(); return false; });
     document.getElementById("logout").addEventListener("click", () => { dsasLogout(); return false; });
 }
