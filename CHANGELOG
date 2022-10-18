@@ -1,6 +1,7 @@
 Log of the principal changes to the DSAS
 
 Version 1.2.6 (XX XXX XXXX)
+- Prevent crontab from running more than 3 instances of runtask at the same time
 - Colour the status bars to highlight lack of resources
 - Fix bug in information on task status and ability to kill tasks
 
