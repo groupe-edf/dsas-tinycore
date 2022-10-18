@@ -231,8 +231,8 @@ audit_perms(){
   # Suggestion form Lynis
   echo "Auditing USB permissions"
   while IFS= read -r -d '' dev; do
-    echo "0" > $dev/authorized
-    echo "0" > $dev/authorized_default
+    echo "0" > "$dev/authorized"
+    echo "0" > "$dev/authorized_default"
   done < <(find /sys/bus/usb/devices -name "usb*" -print0)
 
   echo "Auditing permissions of ${GREEN}$DSAS${NORMAL} in the background"
