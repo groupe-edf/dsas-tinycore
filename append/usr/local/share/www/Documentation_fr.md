@@ -1403,7 +1403,7 @@ Logiciels impactés par ce risque
 | php-cgi     | [8.0.1](http://tinycorelinux.net/12.x/x86/tcz/php-8.0-cgi.tcz) | Backend de la site d'administration |
 | lighttpd    | [1.4.58](http://tinycorelinux.net/12.x/x86/tcz/lighttpd.tcz) | Backend de la site d'administration |
 | Linux PAM | [1.5.2](https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz) | Authentification sur la site d'administration |
-| site web DSAS | [1.2.5](https://gitlab.com/adb014/dsas-tinycore) | Backend et frontend de la site d'administration |
+| site web DSAS | [1.2.6](https://gitlab.com/adb014/dsas-tinycore) | Backend et frontend de la site d'administration |
 
 La site web du DSAS est développé spécialement pour ce projet. An anyalse statique et suite de 
 test de la code est utilisé à chaque version de la code afin de limiter les risques.

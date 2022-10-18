@@ -1,5 +1,9 @@
 Log of the principal changes to the DSAS
 
+Version 1.2.6 (XX XXX XXXX)
+- Colour the status bars to highlight lack of resources
+- Fix bug in information on task status and ability to kill tasks
+
 Version 1.2.5 (18 Oct 2022)
 - Fix bug displaying small logfiles introduced in 1.2.4
 
