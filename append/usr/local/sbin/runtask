@@ -123,6 +123,10 @@ if [ "$clamav" = "1" ]; then
 fi
 
 if [ -z "$ids" ]; then
+  # Exit if more that three "runtask" instances are running
+  # runtask is run as "tc" user, so no "sudo" needed
+  [ "$(pgrep runtask | wc -l)" -gt "3" ] && { 1>&2 echo "$0: too many instances of $0"; exit 1; }
+
   # No tasks specified. Get a list of all tasks
   i=1
   while :; do
@@ -182,7 +186,7 @@ fi
 # shellcheck disable=SC2181
 for _id in $ids; do
   # Check if task is already running and skip if not 
-  _pid=$(pgrep "$_id")
+  _pid=$(sudo pgrep "$_id")
   [ -n "$_pid" ] && { 1>&2 myecho "$0 task $_id is running"; continue; }
 
   1>&2 myecho "$0 : #### Tasks started - $(date --utc) ####"
