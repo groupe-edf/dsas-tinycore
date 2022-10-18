@@ -26,7 +26,7 @@ define("_DSAS_LOG", _DSAS_HOME . "/log");
 define("_DSAS_XML", _DSAS_VAR . "/dsas_conf.xml");
 
 /**
- * Returns a string with the path to the A certificate bundle of the machine
+ * Returns a string with the path to the a certificate bundle on the machine
  *
  * @return string
  *     A string with the the absolute path of the CA certificate bundle
@@ -42,7 +42,7 @@ function dsas_ca_file() : string {
 
 /**
  * Returns true if an active session exists for the requested user. If the current
- * this is more than 10 minutes since the last call to this function. The user is
+ * time is more than 10 minutes since the last call to this function. The user is
  * automatically logged out
  *
  * @param bool $update_timeout
@@ -134,14 +134,14 @@ function dsas_user_active(string $user) : bool {
  * spawning a shell that might be attacked
  *
  * @param array<string>|string $args list of arguments to pass to proc_open
- * @param string $cwd
+ * @param string $cwd Current working directory
  * @param array<string> $stdin An array of strings representing line by line the input
  * @return array{retval: int, stdout: string, stderr: string} 
  */
 function dsas_exec(mixed $args, string $cwd = null, array $stdin = []) : array {
-  # Simplify the call to proc_open with the means to avoids spawning a shell
-  # and escaping the args integrated. The args MUST be passed as an array to get
-  # the escaping to work properly.
+  // Simplify the call to proc_open with the means to avoids spawning a shell
+  // and escaping the args integrated. The args MUST be passed as an array to get
+  // the escaping to work properly.
 
   $descriptorspec = array(
     0 => array("pipe", "r"), // stdin
@@ -165,7 +165,7 @@ function dsas_exec(mixed $args, string $cwd = null, array $stdin = []) : array {
        fwrite($pipes[0], $line . PHP_EOL);
     fclose($pipes[0]);
 
-    // Intercale reading of stderr and stdout to avoid one block the other
+    // Intercale reading of stderr and stdout to avoid one blocking the other
     $stdout="";
     $read_out=true;
     $stderr="";
@@ -236,7 +236,7 @@ function complexity_test(string $passwd) : bool {
    // Don't allow spaces in passwords
    if (preg_match("/\\s/", $passwd))
      return false;
-   // Voir https://owasp.org/www-community/password-special-characters
+   // See https://owasp.org/www-community/password-special-characters
    // Don't permit the characters "'` or spaces because however
    $luds = 0;
    if (preg_match("/[a-z]/", $passwd))
@@ -253,7 +253,7 @@ function complexity_test(string $passwd) : bool {
 }
 
 /**
- * Return a string that can be used as the addres of the upper machine.
+ * Return a string that can be used as the address of the upper machine.
  * This should be the hostname listed in /etc/host
  *
  * @return string
@@ -284,7 +284,7 @@ function force_passwd() : bool {
  * @param string $passwd
  *     The password to change to
  * @param string $hash
- *     The hash type to used. By default 'sha512'
+ *     The hash type to be used. By default 'sha512'
  * @return array{retval: int, stdout: string, stderr: string}
  *     A keyed array containg the output of the attempted password change. 'retval' is zero if
  *     sucessful 
@@ -302,7 +302,7 @@ function change_passwd(string $name, string $passwd, string $hash = "sha512") : 
   $cwd="/tmp";
   
   // Only change password on machine haut if the user is "tc". The only users aren't
-  // installed on th emachine haut. Use proc_open with a command array to avoid spawning 
+  // installed on the machine haut. Use proc_open with a command array to avoid spawning 
   // a shell that can be attacked. Set the machine "haut" first as it might not be available
   if ($name == "tc") {
     $process = proc_open(["ssh", "tc@" . interco_haut(), "sudo", "/usr/sbin/chpasswd", "-c", $hash], $descriptorspec, $pipes, $cwd);
@@ -338,7 +338,7 @@ function change_passwd(string $name, string $passwd, string $hash = "sha512") : 
 }
 
 /**
- * Converts a IPv4 mask like '255.255.255.0' into CIDR format, like '24'. This fnction
+ * Converts a IPv4 mask like '255.255.255.0' into CIDR format, like '24'. This function
  * does no error checking and it is assuming the mask is already tested as valid
  *
  * @param string $mask
@@ -410,7 +410,7 @@ function get_ifaces() : array {
 }                                                                               
 
 /**
- * A function to test whether a string representatio of an IPv4 address is valid. The
+ * A function to test whether a string representation of an IPv4 address is valid. The
  * string can be with or without the mask in CIDR format
  *
  * @param string $addr
@@ -515,7 +515,7 @@ function dsas_get_logs(string $_file = _DSAS_LOG . "/dsas_verif.log") : array {
 }
 
 /**
- * Returns a string with the request part of a log file. This allow incremental download 
+ * Returns a string with the requested part of a log file. This allow incrementally downloading 
  * new log elements to the file, skipping the parts alreay downloaded
  *
  * @param int $len
@@ -664,7 +664,7 @@ function _utf8ize(mixed $d) : mixed {
  *     The certificate in PEM format
  * @return array<string,string>
  *     The certificated returned as a keyed array. The fields are
- *     "uid", "size", "keyid", "finggerprint", "created", "expires", "pem" 
+ *     "uid", "size", "keyid", "fingerprint", "created", "expires", "pem" 
  *     and "authority"
  */
 function parse_gpg(string $cert) : array { 
@@ -700,7 +700,7 @@ function parse_gpg(string $cert) : array {
  * Test if a string is a valid domain name
  *
  * usage:
- *   is_valid_domaine("google.com")
+ *   is_valid_domain("google.com")
  *
  * @param string $d
  *     The domain name to test if valid
@@ -751,7 +751,7 @@ function dsasid(int $len = 24) : string {
  *    Return true if the task is running 
  */
 function dsas_task_running(string $id) : bool {
-   $ret = dsas_exec(["pgrep", "-f", "$id"]);
+   $ret = dsas_exec(["sudo", "pgrep", "-f", "$id"]);
    return ($ret["retval"] === 0);
 }
 

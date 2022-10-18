@@ -81,7 +81,7 @@ done
 for _id in $idx; do
   # Don't kill runtask to allow for runtask run from cron
   for p in getfiles checkfile; do
-    for pid in $(pgrep -f "$p.*$_id"); do
+    for pid in $(sudo pgrep -f "$p.*$_id"); do
       [ "$dryrun" = "1" ] && { 1>&2 echo "$0 : pkill -P $pid"; }
       [ "$dryrun" = "1" ] || sudo pkill -P "$pid" > /dev/null 2>&1
     done
