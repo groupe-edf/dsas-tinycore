@@ -46,23 +46,38 @@ function machineStatus(name, obj) {
     document.getElementById(name + "DiskBar").setAttribute("style", "width: " + p.toFixed() + "%");
     document.getElementById(name + "DiskBar").setAttribute("aria-valuenow", p.toFixed());
     document.getElementById(name + "DiskBar").textContent = p.toFixed(1) + "%";
+    if (p > 90.0) {
+        document.getElementById(name + "DiskBar").className = "progress-bar bg-danger";
+    } else {
+        document.getElementById(name + "DiskBar").className = "progress-bar";
+    }
     p = (100.0 * obj.memory_used) / obj.memory_total;
     document.getElementById(name + "Memory").textContent = formatSpace(obj.memory_used)
         + " / " + formatSpace(obj.memory_total);
     document.getElementById(name + "MemoryBar").setAttribute("style", "width: " + p.toFixed() + "%");
     document.getElementById(name + "MemoryBar").setAttribute("aria-valuenow", p.toFixed());
     document.getElementById(name + "MemoryBar").textContent = p.toFixed(1) + "%";
+    if (p > 90.0) {
+        document.getElementById(name + "MemoryBar").className = "progress-bar bg-danger";
+    } else {
+        document.getElementById(name + "MemoryBar").className = "progress-bar";
+    }
     if (obj.loadavg < 0.01) {
         p = 0;
     } else {
     // Scale by the number of cores
-        p = ((Math.log10(obj.loadavg) + 2) * 25) / obj.cores;
+        p = ((Math.log10(obj.loadavg / obj.cores) + 2) * 25);
         p = (p > 100 ? 100 : p);
     }
     document.getElementById(name + "LoadAvg").textContent = obj.loadavg;
     document.getElementById(name + "LoadBar").setAttribute("style", "width: " + p.toFixed() + "%");
     document.getElementById(name + "LoadBar").setAttribute("aria-valuenow", p.toFixed());
     document.getElementById(name + "LoadBar").textContent = obj.loadavg;
+    if (p > 60.0) {
+        document.getElementById(name + "LoadBar").className = "progress-bar bg-danger";
+    } else {
+        document.getElementById(name + "LoadBar").className = "progress-bar";
+    }
 }
 
 function dsasRefreshLogs(all = false) {
