@@ -73,7 +73,8 @@ function machineStatus(name, obj) {
     document.getElementById(name + "LoadBar").setAttribute("style", "width: " + p.toFixed() + "%");
     document.getElementById(name + "LoadBar").setAttribute("aria-valuenow", p.toFixed());
     document.getElementById(name + "LoadBar").textContent = obj.loadavg;
-    if (p > 60.0) {
+    // 55% is a load average of 1.6 times the number of cores.. This is already excessive
+    if (p > 55.0) {
         document.getElementById(name + "LoadBar").className = "progress-bar bg-danger";
     } else {
         document.getElementById(name + "LoadBar").className = "progress-bar";
