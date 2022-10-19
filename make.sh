@@ -1028,8 +1028,7 @@ docker)
   umount "$newiso"
   msg "Setting up DSAS for docker"
   install_tcz squashfs-tools
-  patch -d "$extract" usr/bin/tce-load  $(readlink -f docker/tce-load.patch)
-  # cat docker/tce-load.patch | (cd $extract || exit 1; patch usr/bin/tce-load; )
+  patch -d "$extract" usr/bin/tce-load  "$(readlink -f docker/tce-load.patch)"
   echo -n tc > $extract/etc/sysconfig/tcuser
   msg "Compressing DSAS files"  
   mkdir -p $docker
