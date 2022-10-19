@@ -2,13 +2,11 @@
 umask 027
 
 # Setup tcedir
-# FIXME : shellcheck wants to replace "ls -1" by "find"
-# Need to test it on a docker
-MNT=$(ls -1 /mnt | head -1 | sed -e "s:/$::")
-ln -s "/mnt/$MNT/tce" /etc/sysconfig/tcedir
-mkdir -p "/mnt/${MNT}/tce/optional"
-chown -R root:staff "/mnt/${MNT}/tce" /usr/local/tce.installed
-chmod -R g+w "/mnt/${MNT}/tce"
+MNT=$(find /mnt -mindepth 1 -maxdepth 1 -name "sd*" | sort | head -1)
+ln -s "${MNT}/tce" /etc/sysconfig/tcedir
+mkdir -p "${MNT}/tce/optional"
+chown -R root:staff "${MNT}/tce" /usr/local/tce.installed
+chmod -R g+w "${MNT}/tce"
 
 while [ "$#" -gt 0 ]; do
   case $1 in
