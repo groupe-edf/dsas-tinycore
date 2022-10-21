@@ -530,7 +530,7 @@
     "Base" : "Integré",
     "Base CA" : "CA Integré",
     "Self-signed" : "Auto signée ",
-    "URI Certification Authority :" : "Autorité de certificate d'URI :",
+    "URI Certification Authority :" : "Autorité de certification d'URI :",
     "Certificate authority not found" : "Autorité de certificate n'a pas été trouvé",
     "Antivirus" : "Antivirus",
     "Radius client active" : "Client Radius active",
