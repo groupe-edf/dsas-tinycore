@@ -528,7 +528,7 @@
     "Certificate successfully sent" : "Certificat envoyé avec sucess",
     "Certificate successfully renewed" : "Rénouvellement du certificat réussi",
     "Base" : "Integré",
-    "Base CA" : "CA Integré",
+    "Base CA" : "CA Intégré",
     "Self-signed" : "Auto signée ",
     "URI Certification Authority :" : "Autorité de certification d'URI :",
     "Certificate authority not found" : "Autorité de certificate n'a pas été trouvé",
