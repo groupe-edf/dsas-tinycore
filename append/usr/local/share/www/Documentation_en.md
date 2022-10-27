@@ -1,153 +1,177 @@
 # Introduction
 
 The isolation of industrial infrastructures is essential to limit
-the possibility of malicious attack. However, this isolation limits the
-ability to automate the downloading of software updates (operating systems,
-viral signatures, other updates) that are essentiel to the health of all
-sensitive systems. Configuration and other files are also difficult to
-send to sensitive systems.
+the possibility of malicious attack. However, this isolation limits 
+the ability to automate the downloading of software updates (operating
+systems, viral signatures, other updates) that are essential to the
+health of all sensitive systems. Configuration and other files are also
+difficult to send to sensitive systems.
 
-The means to transfer files to sensitive systems is often the use of USB keys.
-This mode of transfer requires time consuming human intervention and exposes 
-the industrial system to viral contamination at each USB connection. 
-Organizational means could be put in place to control USB keys each time they
-are used, but the risk of contamination is impossible to exclude.
+The means to transfer files to sensitive systems is often the use of USB
+keys. This mode of transfer requires time consuming human intervention
+and exposes the industrial system to viral contamination at each USB
+connection. Organizational means could be put in place to control USB
+keys each time they are used, but the risk of contamination is impossible
+to exclude.
 
-So, a means of transfering files from a non-sensitive area to our industral
-infrastructure is needed, that includes the systematic control of all files
-transfered in order to eliminate the risk of malicious files. The "Decontaminating 
-Security Access Service" (DSAS) aims to be this means of secure transfer.
+So, a means of transferring files from a non-sensitive area to our
+industrial infrastructure is needed, that includes the systematic control
+of all files transferred to eliminate the risk of malicious files. The
+`Decontaminating Security Access Service` (DSAS) aims to be this means of
+secure transfer.
 
-The objective of the DSAS is to download security updates, to control their 
-integrity and to make them available to the sensitive systems. The DSAS will
-also allow the use of USB keys to be eliminated on our industrial infrastructures,
-and therefore the DSAS includes the ability to transfer files signed by 
-authorized people. Finally, the DSAS ensures a protocol break between the various
-security zones in a defense in depth strategy.
+The objective of the DSAS is to download security updates, to control
+their integrity and to make them available to the sensitive systems. The
+DSAS will also allow the use of USB keys to be eliminated on our
+industrial infrastructures, and therefore the DSAS includes the ability
+to transfer files signed by authorized people. Finally, the DSAS ensures
+a protocol break between the various security zones in a defense in depth
+strategy.
 
 ## The principal of signature verification
 
-The principal means of file verification of the DSAS is the verification of
-signatures. Each file allowed to pass the DSAS can be verified by its 
+The principal means of file verification of the DSAS is the verification
+Of signatures. Each file allowed to pass the DSAS can be verified by its
 cryptographic signature.
 
-The DSAS is not the first proposal to use cryptographique signatures in a 
-file transfer system and for example [a product by SECLAB implements this.](https://www.seclab-security.com/seclab-securing-systems/)
-The problem is that these existing systems require human intervention to verify
-and sign every file received and to be transfered by the DSAS. A program like
-Symantec End Point Manager produces approximately 4000 files a day to transfer.
-It is therefore an illusion to consider that a human control of these files is
-possible before their transmission.
+The DSAS is not the first proposal to use cryptographique signatures in a
+file transfer system and for example [a product by SECLAB implements
+this.](https://www.seclab-security.com/seclab-securing-systems/)
+The problem is that these existing systems require human intervention to
+verify and sign every file received and to be transferred by the DSAS. A
+program like Symantec End Point Manager produces approximately 4000 files
+a day to transfer. It is therefore an illusion to consider that a human
+control of these files is possible before their transmission.
 
-The DSAS takes another approach, by assigning confidence to the existing signatures
-of certain software editors, thus allowing their transfer. However, there exists
-a multitude of means used by these editors to sign their softwarre, and the DSAS 
-must have the means to verify each type of signature used by the desired editors.
+The DSAS takes another approach, by assigning confidence to the existing
+Signatures of certain software editors, thus allowing their transfer.
+However, there exists a multitude of means used by these editors to sign
+their software, and the DSAS must have the means to verify each type of
+signature used by the desired editors.
 
 ### The chain of confidence
 
-The problem with a verification by signature is to know to whom we must give confidence.
-To this ends it is important to understand the chain of trust of the signature. This
-chain can be rooted in a "Certification Authority" (or CA) in this case of X509 certifcates,
-or a distributed confidence with the certificates themselves signed amongst themselves in
-the case of PGP certificates. For PGP certificates, the "web of trust" is implcit and passes
-by certificate signing ceremonies in the phase before the inclusion of the certificate in the
-DSAS. For X509 certificates, the chain of trust is explicitly included in every signed file.
-For example, the certificate used to sign a file is itself signed by an intermediate
-certificate which is signed by a certification authority. The DSAS allows verification tasks
-to be defined limiting the files allowed to pass to have a particular chain of trust and to
-not just verify the file is signed by a valid certification authority. Unfortunately, 
-[malicious actors can also buy signing certificates](https://duo.com/decipher/attackers-are-signing-malware-with-valid-certificates)
-and a verification solely based on the certification authority is not a strict guarantee 
-that a file is not malicious. The DSAS, if correctly configured, allows the transfers to be
-strictly limited to a single software editor, or even a particular division of this editor,
-so that the risks are minimised.
+The problem with a verification by signature is to know to whom we must
+give confidence. To this ends it is important to understand the chain of
+trust of the signature. This chain can be rooted in a `Certification
+Authority` (or CA) in this case of X509 certificates, or a distributed
+confidence with the certificates themselves signed amongst themselves in
+the case of PGP certificates. For PGP certificates, the `web of trust` is
+implicit and passes by certificate signing ceremonies in the phase before
+the inclusion of the certificate in the DSAS. For X509 certificates, the
+chain of trust is explicitly included in every signed file. For example,
+the certificate used to sign a file is itself signed by an intermediate
+certificate which is signed by a certification authority. The DSAS allows
+verification tasks to be defined limiting the files allowed to pass to
+have a particular chain of trust and to not just verify the file is
+signed by a valid certification authority. Unfortunately, [malicious
+actors can also buy signing certificates](https://duo.com/decipher/attackers-are-signing-malware-with-valid-certificates)
+and a verification solely based on the certification authority is not a
+strict guarantee that a file is not malicious. The DSAS, if correctly
+configured, allows the transfers to be strictly limited to a single
+software editor, or even a particular division of this editor, so that
+the risks are minimized.
 
 ## Architecture
 
 The principals of the DSAS are the following:
 
-- The DSAS is not part of either of the two domains that are interconnected, but
-is isolated between the two. The connections towards the DSAS are strictly controlled
-- Unneeded services or network ports are not made available. All unneeded sofware is 
-uninstalled
-- The DSAS must implement a complete break in the protocol between the two zones
-of sensitivity. This is implemented by the DSAS being implemented on two different
-machines, each dedicated to the connections towards one of the two differents zones
-of sensitivity, so that the compromission of the machine attached in the non sensitive
-zone does not put the machine in the sensitive zone at risk.
-- Several user accounts are used on the DSAS with different access rights, so that 
-the compromission of an account will not expose all of the internal zones of each
-of the machines of the DSAS
-- No unverified file is visible in the sensitive zone. The file systems of the
-two machines of the DSAS are seperate
-- The verifications are performed by the DSAS before files are made available in the
-sensitive zone. These verifications always include a signature and integrity check, which
-can be completed by an anti-virus control.
-- The maintenance of the security of the DSAS must be assured. This means that all
-of the software elements exposed to an attack must be known, their vulnerabilities
-monitored and the means to protect against these vulnerabilites in place.
+- The DSAS is not part of either of the two domains that are
+interconnected, but is isolated between the two. The connections towards
+the DSAS are strictly controlled
+- Unneeded services or network ports are not made available. All unneeded
+software is uninstalled
+- The DSAS must implement a complete break in the protocol between the
+two zones of sensitivity. This is implemented by the DSAS being
+implemented on two different machines, each dedicated to the connections
+towards one of the two different zones of sensitivity, so that the
+compromission of the machine attached in the non-sensitive zone does not
+put the machine in the sensitive zone at risk.
+- Several user accounts are used on the DSAS with different access
+rights, so that the compromission of an account will not expose all of
+the internal zones of each of the machines of the DSAS
+- No unverified file is visible in the sensitive zone. The file systems
+of the two machines of the DSAS are separate
+- The verifications are performed by the DSAS before files are made
+available in the sensitive zone. These verifications always include a
+signature and integrity check, which can be completed by an anti-virus
+control.
+- The maintenance of the security of the DSAS must be assured. This means
+that all of the software elements exposed to an attack must be known,
+their vulnerabilities monitored and the means to protect against these
+vulnerabilities in place.
 
 These constraints push us towards an architecture with
 
-- seperation of sensitive and non sensitive treatments of the two zones on to two
-distinct machines
-- To use of a minimalist linux system with the absolute minimum of software pre-installed.
-We have chosen to use the [Tiny Core Linux](http://tinycorelinux.net/) operating system
-because it is regularly updated with a minimal installation (12 megabytes) including only
-the linux kernel, busybox and a few boot scripts. No service is started by default
-- Additional dependances are avoided wherever possible. For example perl, python, ... are not
-installed as the scripting language "ash" is already available.
-- Each of the machines of the DSAS has two network interfaces, with one serving only for the
-interconnexion between the two machines. One of the machines is interconnected via the additional
-interface to the sensitive zone, while the other to the non sensitive zone
-- The direction of the initiation of the network connexion is always from the more sensitive
-zone towards the less sensitive zone. No network port on the more sensitive machine is exposed
-to the less sensitive machine. In this manner, while the more senstive machine can download files
-from the less sensitive machine, the less senistive machine can not send them directly.
-- All of the administration is performed form the sensitive zone. No adminsitration is posisble
-from the non sensitive zone.
-- There are several service accounts created on each machine, with the account "haut" being 
-the only one with the rights to download from a less sensitive zone, the account "verif" being
-the only one with the rights to transfer files between zones on each machine and the account
-"bas"  being the only one with exposed towards the more sensitive zone. The account "verif" is
-not accessible outside the machine.
+- separation of sensitive and non-sensitive treatments of the two zones
+on to two distinct machines
+- To use of a minimalist Linux system with the absolute minimum of
+software pre-installed. We have chosen to use the [Tiny Core
+Linux](http://tinycorelinux.net/) operating system because it is
+regularly updated with a minimal installation (12 megabytes) including
+only the Linux kernel, busybox and a few boot scripts. No service is
+started by default
+- Additional dependances are avoided wherever possible. For example,
+perl, python, ... are not installed as the scripting language `ash` is
+already available.
+- Each of the machines of the DSAS has two network interfaces, with one
+serving only for the interconnection between the two machines. One of the
+machines is interconnected via the additional interface to the sensitive
+zone, while the other to the non-sensitive zone
+- The direction of the initiation of the network connection is always
+from the more sensitive zone towards the less sensitive zone. No network
+port on the more sensitive machine is exposed to the less sensitive
+machine. In this manner, while the more sensitive machine can download
+files from the less sensitive machine, the less sensitive machine cannot
+send them directly.
+- All the administration is performed form the sensitive zone. No
+administration is possible from the non-sensitive zone.
+- There are several service accounts created on each machine, with the
+account `haut` being the only one with the rights to download from a less
+sensitive zone, the account `verif` being the only one with the rights to
+transfer files between zones on each machine and the account `bas` being
+the only one with exposed towards the more sensitive zone. The account
+`verif` is not accessible outside the machine.
 
 A simplified architecture of the DSAS is then
 
 ![Architecture DSAS architecture](en/DSAS.png)
 
-where the arrows represent network or application flows with the direction defining which 
-machine or application initiates the flow. 
+where the arrows represent network or application flows with the
+direction defining which machine or application initiates the flow.
 
-An administration account is also created. This account is only available from the sensitive
-zone and the possibility to add filtring to limit the machine that can connect to this account
-is implemented. This is the only account with administration rights and the root account is
-only accessible from this account.
+An administration account is also created. This account is only available
+from the sensitive zone and the possibility to add filtering to limit the
+machine that can connect to this account is implemented. This is the only
+account with administration rights and the root account is only
+accessible from this account.
 
 # Installation
 
-With the DSAS seperated into two machines, two seperate installations are needed. The two
-installation follow the same logic. In the following discussions, the machine connected to
-the non sensitive network is called "upper" or "haut" and the machine connected to the 
-sensitive network is called "lower" or "bas". An initial configuration of each machine is
-needed from their console, but after this initial phase, all configuration is done from the
-lower machine.
+With the DSAS separated into two machines, two separate installations are
+needed. The two installations follow the same logic. In the following
+discussions, the machine connected to the non-sensitive network is called
+`upper` or `haut` and the machine connected to the sensitive network is
+called `lower` or `bas`. An initial configuration of each machine is
+needed from their console, but after this initial phase, all configuration is done from the lower machine.
 
-To facilite the installation it is better to start with the installation of the upper machine,
-because in the initial phase the lower machine must be able to contact the upper machine, and
-so the upper machine must be configured first to allow the lower machine to send it orders.
+To facilitate the installation, it is better to start with the
+installation of the upper machine, because in the initial phase the lower
+machine must be able to contact the upper machine, and so the upper
+machine must be configured first to allow the lower machine to send it
+orders.
 
-In the following sections, if it is not explicitly stated, the configuration step concerns 
-both machines.
+In the following sections, if it is not explicitly stated, the
+configuration step concerns both machines.
 
 ## Disk space needed by the DSAS
 
-The DSAS needs independant disks for each of the machines used in its implementation.
-So the DSAS needs two times more disk space than the maximum used for the transfers.
-Inside each machine, the DSAS "mirrors" the files between each zone, and the old files
-are removed when they are not longer available on the site they were downloaded from.
-So the only the sum of space used by the download sites is needed, with a little
+The DSAS needs independent disks for each of the machines used in its
+implementation. So the DSAS needs two times more disk space than the
+maximum used for the transfers. Inside each machine, the DSAS `mirrors`
+the files between each zone, and the old files are removed when they are
+no longer available on the site they were downloaded from. So the only
+the sum of space used by the download sites is needed, with a little
 extra margin.
 
 The formula for the disk space needed for each of the DSAS machines is
@@ -156,178 +180,196 @@ The formula for the disk space needed for each of the DSAS machines is
 Space = D1 + D2 + ... Dn + max(D1, D2, ..., Dn) + (IsDocker ? 150Mbytes : 60Mbytes)
 ```
 
-where `Di` is the space needed for the repository `Di`. As there can temporarily be 
-two copies of the repository additional space is needed, `max(D1, D2, ..., Dn)` 
-additional disk is needed. The installation of the DSAS of Docker runs from a uncompressed 
-copy of the ISO image, where the other cases was a copy the the DSAS compressed ISO only.
+where `Di` is the space needed for the repository `Di`. As there can
+temporarily be two copies of the repository, `max(D1, D2, ..., Dn)`
+of additional disk is needed. The installation of the Docker of the DSAS
+runs from a uncompressed copy of the ISO image, where the other cases use
+a copy of the compressed ISO only.
 
-The Windows "Patch Tuesday" updates are often a hundred or so megabytes, so we multiply
-that by the number of updates to keep available and we can easily find otherselves with
-several gigabytes. The Symantec IntelligentUpdates need roughly 150 megabytes, while 
-Symantec LiveUpdate needs 50 gigabytes. 
+The Windows `Patch Tuesday` updates are often a hundred or so megabytes,
+so we multiply that by the number of updates to keep available and we can
+easily find ourselves with several gigabytes. The `Symantec
+IntelligentUpdate`s needs roughly 150 megabytes, while `Symantec LiveUpdate`s needs 50 gigabytes.
 
-Each Linux repository could need upto 50 gigabytes, so if we need to transfer linux update
-the needed disk space can easily explode. In the following configurations we have used a
-disk size of 50 gigabytes, however we recommend at least 500 gigabytes for each machine
+Each Linux repository could need up to 50 gigabytes, so if we need to
+transfer Linux update the needed disk space can easily explode. In the
+following configurations, we have used a disk size of 50 gigabytes,
+however, we recommend at least 500 gigabytes for each machine
 of the DSAS.
 
 ## Memory needed by the DSAS
 
-The DSAS needs an absolute minimum of 500 Mbytes of memory to boot and run correctly.
-To this minimum additional space is needed depending on the configuration. In the 
-standard virtual machine installation the directory `/tmp` is part of the root filesystem 
-and is stored in memory. As this directory is used extensively for the decompression of
-the archived files for testing, the size of the largest decompressed file is needed as
-additional memory. In testing we have found that this means that a minimum of __1 Gbyte__
-is needed by both machines of the DSAS.
+The DSAS needs an absolute minimum of 500 Mbytes of memory to boot and
+run correctly. To this minimum additional space is needed depending on
+the configuration. In the standard virtual machine installation, the
+directory `/tmp` is part of the root filesystem and is stored in memory.
+As this directory is used extensively for the decompression of
+the archived files for testing, the size of the largest decompressed file
+is needed as additional memory. In testing we have found that this means
+that a minimum of __1 Gbyte__ is needed by both machines of the DSAS.
 
-If the DSAS is configured to use an antivirus, the antiviral daemon uses additional memory.
-The antivirus only runs on the `lower` machine and we found that with in this case a 
-minimum of __3 Gbytes__ is needed.
+If the DSAS is configured to use an antivirus, the antiviral daemon uses
+additional memory. The antivirus only runs on the `lower` machine and we
+found that with in this case a minimum of __3 Gbytes__ is needed.
 
-The use of Docker might slightly change this calculations, by the docker image will share
-the hosts memory and so these number should not change that much.
+The use of Docker might slightly change this calculation, by the docker
+image will share the hosts memory and so these number should not change
+that much.
 
 ## Configuration of the virtual machines
 
-The DSAS is supplied in the form of an ISO that should be used as a "live CD". This means
-that the operating system should always boot from this image ISO. The major advantage of
-this is that the updates of the DSAS will be extremely easy and resumes as the shutdown of
-the DSAS, the remplacement of the ISO and a restart.
+The DSAS is supplied in the form of an ISO that should be used as a `live
+CD`. This means that the operating system should always boot from this
+image ISO. The major advantage of this is that the updates of the DSAS
+will be extremely easy and resumes as the shutdown of the DSAS, the
+replacement of the ISO and a restart.
 
-Three types of virtual machine installation are discussed below, with VirtualBox, with
-VMWare and with Docker.
+Three types of virtual machine installation are discussed below, with
+VirtualBox, with VMWare and with Docker.
 
-### Installion with VirtualBox
+### Installation with VirtualBox
 
 #### Creation of the virtual machines
 
-The ISO of the DSAS is a 32 bit Linux, and the virtual machine must be configured
-accordingly. For example, under VirtualBox the initial configuration should be 
-
+The ISO of the DSAS is a 32-bit Linux, and the virtual machine must be
+Configured accordingly. For example, under VirtualBox the initial
+configuration should be 
 
 ![Creation of a VM with VirtualBox](en/vbox1.png)
 
-Without the antivirus we recommand 1 gigabyte of memory, but if the antivirus is active 
-at least 3 gigabytes are needed for the lower machine.
+Without the antivirus we recommend 1 gigabyte of memory, but if the
+antivirus is active at least 3 gigabytes are needed for the lower
+machine.
 
-The DSAS has no specific requiement for the format of its disk, and here we have chosen 
-VirtualBox's default format 
+The DSAS has no specific requirement for the format of its disk, and here
+we have chosen VirtualBox's default format 
 
 ![Disk configuration with VirtualBox](en/vbox2.png)
 
-After the boot disk must be defined with the DSAS ISO image in "IDE primary master" 
+After the boot disk must be defined with the DSAS ISO image in `IDE
+primary master` 
 
 ![Boot of the ISO with VirtualBox](en/vbox3.png)
 
 If the boot disk is incorrectly configured the DSAS will not start.
 
-#### Network interconnexion betwwen the machines of the DSAS
+#### Network interconnection between the machines of the DSAS
 
-The virtual machines should be configured with two network cards. The first card
-will be used for the connection to the outside the DSAS and their configuration 
-will be depend upon the environment in which the DSAS is installed.
+The virtual machines should be configured with two network cards. The
+first card will be used for the connection to the outside the DSAS and
+their configuration will be dependent upon the environment in which the
+DSAS is installed.
 
-The second card is always used for the interconnexion between the two machines,
-and this network by default will be the static network "192.168.192.0/24". Several
-means could be used to configure this interconnection network, particularly if 
-a friewall is placed on this link (which doesn't seem to be necessary). We propose
-the use of an internal network of the hypervisor configured with VirtualBox like
+The second card is always used for the interconnexion between the two
+machines, and this network by default will be the static network
+`192.168.192.0/24`. Several means could be used to configure this
+interconnection network, particularly if a firewall is placed on this
+link (which doesn't seem to be necessary). We propose the use of an
+internal network of the hypervisor configured with VirtualBox like
 
 ![Configuration of the interconnection network with VirtualBox](en/vbox4.png)
 
 ### Installation with VMWare
 
-The configuration under VMWare is very similar to the configuration with VirtualBox. 
-As shown in the screen below, the virtual machine must be configured with
+The configuration under VMWare is very similar to the configuration with
+VirtualBox. As shown in the screen below, the virtual machine must be
+configured with
 
 - The desired disk space - Here a value of 150 Gbytes has been used
 - A cdrom device - As discussed below
-- Two network cards - The first card must be configured will be used for the connection 
-to the outside the DSAS and their configuration will be depend upon the environment in 
-which the DSAS is installed. The second card is always used for the interconnexion between
-the two machines of the DSAS.
+- Two network cards - The first card must be configured will be used for
+the connection to the outside the DSAS and their configuration will be
+depend upon the environment in which the DSAS is installed. The second
+card is always used for the interconnection between the two machines of
+the DSAS.
 
 ![Creation of a VM with VMWare](en/vmware1.png)
 
-The ISO boot image can be uploaded by clicking on the device, uploading a new image
-with the menu below, selecting it and saving the changes 
+The ISO boot image can be uploaded by clicking on the device, uploading a
+new image with the menu below, selecting it and saving the changes 
 
-![Selection of the iSO boot image with VMWare](en/vmware2.png)
+![Selection of the ISO boot image with VMWare](en/vmware2.png)
 
 ### Installation on Docker 
 
-The docker image of the DSAS is supplied in a file `docker.tgz`. This image must first
-be decompressed with the command
+The docker image of the DSAS is supplied in a file `docker.tgz`. This
+image must first be decompressed with the command
 
 ```
 tar xvzf docker.tgz
 ```
 
-This will create a directory named `docker` containing three files. 
+This will create a directory named `docker` containing three files.
 
-- rootfs64.tar.gz - This file contains all of the files needed to create the root
-directory of the DSAS with Docker
-- Dockerfile - This contains the instructions need to convert the file `rootfs64.tar.gz`
-into a valid Docker image
-- Makefile - This file contains a number of make targets that allow the simplification 
-of the installation of the Docker image of the DSAS 
+- rootfs64.tar.gz - This file contains all of the files needed to create
+the root directory of the DSAS with Docker
+- Dockerfile - This contains the instructions need to convert the file
+`rootfs64.tar.gz` into a valid Docker image
+- Makefile - This file contains a number of make targets that allow the
+simplification of the installation of the Docker image of the DSAS 
 
-The network configuration in the `Makefile` must be adapted before use. The DSAS will
-also configure the network (see the section on Docker at the end of this document), and
-so the configuration of the network by Docker must be identical to the network 
-configuration supplied to the DSAS.
+The network configuration in the `Makefile` must be adapted before use.
+The DSAS will also configure the network (see the section on Docker at
+the end of this document), and so the configuration of the network by
+Docker must be identical to the network configuration supplied to the
+DSAS.
 
 #### Docker configuration of principal network
 
-The Makefile assumes that the principal interface of the DSAS will always be configured
-in `bridge` mode. This means that if the administration interface must be accessed from
-a remote machine, the host must correctly route this network as well. If a different type
-of network is needed, the user is responsable for the creation of an appropriate Docker
-image and can not use the supplied Makefile.
+The Makefile assumes that the principal interface of the DSAS will always
+be configured in `bridge` mode. This means that if the administration
+interface must be accessed from a remote machine, the host must correctly
+route this network as well. If a different type of network is needed, the
+user is responsible for the creation of an appropriate Docker
+image and cannot use the supplied Makefile.
 
 Three variables are used to configure the principal network interface 
 
-- NET0 - The network in CIDR format. By default the Makefile with configured so that the
-lower machine is configured with the network `192.168.0.0/24` and the upper network with
-the network `192.168.1.0/24`. These can be adapted as needed
-- GW0 - This is the gateway address that will be configured for the network, and it must 
-be an adddress in the network supplied.
+- NET0 - The network in CIDR format. By default, the Makefile with
+configured so that the lower machine is configured with the network
+`192.168.0.0/24` and the upper network with the network `192.168.1.0/24`.
+These can be adapted as needed
+- GW0 - This is the gateway address that will be configured for the
+network, and it must be an address in the network supplied.
 - IP_ETH0 - This this the address of the upper or lower machine itself
 
 #### Docker configuration of interconnection network
 
-The interconnexion network might be a virtual or a physical network depending on the 
-configuration. There are four variables that control its configuration
+The interconnexion network might be a virtual or a physical network
+depending on the configuration. There are four variables that control its
+configuration
 
-- ETH1 - If a physical network is used this must be a valid network interface on the 
-host machine. The network will be configured with the `macvlan` device of linux as a 
-physical interface
-- NET1 - The network of the interconnexion in CIDR format. By default it is assumed that
-the upper and lower machines are on the same LAN and so this network is the same on both
-machines. It is possible to have a fire-wall between the two machines of the DSAS and in
-that case the networks will be different. By default the network used is
+- ETH1 - If a physical network is used this must be a valid network
+interface on the host machine. The network will be configured with the
+`macvlan` device of Linux as a physical interface
+- NET1 - The network of the interconnexion in CIDR format. By default, it
+is assumed that the upper and lower machines are on the same LAN and so
+this network is the same on both machines. It is possible to have a
+firewall between the two machines of the DSAS and in that case the
+networks will be different. By default, the network used is 
 `192.168.192.0/24`.
-- GW1 - If the machines of the DSAS are on the same network, the gateway can be left
-empty or undefined. Otherwise it must be configured with an address allow packets to 
-be routed between the two machines of the DSAS
-- IP_ETH1 - The specific IP address of the two machines of the DSAS. By default the 
-address of the upper machine is `192.168.192.2` and the lower machine `192.168.192.1`.
+- GW1 - If the machines of the DSAS are on the same network, the gateway
+can be left empty or undefined. Otherwise, it must be configured with an
+address allow packets to be routed between the two machines of the DSAS
+- IP_ETH1 - The specific IP address of the two machines of the DSAS. By
+default, the address of the upper machine is `192.168.192.2` and the
+lower machine `192.168.192.1`.
 
 #### Docker installation
 
-The docker installation is done individually for the two machines and must be performed
-in two phases. The first phase for the upper machine is launched with
+The docker installation is done individually for the two machines and
+must be performed in two phases. The first phase for the upper machine is
+launched with
 
 ```
 make install CONTAINER=haut
 ```
 
-This step will start the next step of the installation process as 
-[shown in the next section](#first-initialisation-phase). At the end of this step
-the docker container is installed and configured. Before continuing with the installation
-of the lower machine, the upper machine must be running. This can be done either
-via the Makefile with 
+This step will start the next step of the installation process as
+[shown in the next section](#first-initialisation-phase). At the end of
+this step the docker container is installed and configured. Before
+continuing with the installation of the lower machine, the upper machine
+must be running. This can be done either via the Makefile with 
 
 ```
 make start CONTAINER=haut
@@ -339,14 +381,15 @@ or directly with the command
 docker container start haut
 ```
 
-At the point the lower machine can be configured, starting with the command
+At the point the lower machine can be configured, starting with the
+command
 
 ```
 make install CONTAINER=bas
 ```
 
 And after [following the instructions in the next section](#first-initialisation-phase)
-can be launched  with
+can be launched with
 
 ```
 make start CONTAINER=bas
@@ -358,17 +401,19 @@ or directly with the command
 docker container start bas
 ```
 
-## First initialisation phase
+## First initialization phase
 
 We are now ready to start the machines for the first time.
 
-This step starts with an initialisation in two phases : the first using the linux 
-console, and the second with the administration console of the DSAS using https.
+This step starts with an initialization in two phases: the first using
+the Linux console, and the second with the administration console of the
+DSAS using https.
 
-The initial phase is performed from the machine consoles, because before the first
-configuration there is no guarantee that the machines will be visible from the outside.
-A minimum of configuration from the console for the network configuration is needed
-before continuing in a second phase from the DSAS administration interface.
+The initial phase is performed from the machine consoles, because before
+the first configuration there is no guarantee that the machines will be
+visible from the outside. A minimum of configuration from the console for
+the network configuration is needed before continuing in a second phase
+from the DSAS administration interface.
 
 ### Formatting the disks
 
@@ -383,8 +428,9 @@ Navigation in this type of menu is done with the following keys
 - Space - select an option
 - Enter - continue
 
-Use "Space" to select the disk, here "/dev/sda", and "Enter" to start formatting 
-the disk. After formatting, the machine will restart automatically before continuing
+Use `Space` to select the disk, here `/dev/sda`, and `Enter` to start
+formatting the disk. After formatting, the machine will restart
+automatically before continuing
 
 ### Selection of the type of machine
 
@@ -394,8 +440,8 @@ as the upper or lower machine. The menu
 ![Machine type selection](en/init3.png)
 
 is used to present the selection of the machine type. If the machine
-has been configured with only one network card at this point the DSAS will shut down
-its configuration with the error
+has been configured with only one network card at this point the DSAS
+will shut down its configuration with the error
 
 ![The error if two network interfaces are not configured](en/init2.png)
 
@@ -403,34 +449,39 @@ In this case stop the machine and add a network card in the hypervisor.
 
 ### Configuration of interconnection network
 
-The configuration of the interconnection network should only be changed rarely, and
-its configuration is only available in this initial phase of configuration. The 
-configuration of the interconnexion network depends on the environment in which the 
-DSAS is installed. There are 2 typical means of configuring the interconnection 
-network of the DSAS.
+The configuration of the interconnection network should only be changed
+rarely, and its configuration is only available in this initial phase of
+configuration. The configuration of the interconnexion network depends on
+the environment in which the DSAS is installed. There are 2 typical means
+of configuring the interconnection network of the DSAS.
 
-1. Both machines are on the same LAN. In this case the upper and lower machines 
-interconnection network should be configured with IP addresses in CIDR on the 
-same LAN, and the gateways for both machines will be ignored
-2. The two machines are on different LANs, to allow a firewall to be placed between
-them. In this case the IP addresses of both machines are independant and the gateways
-for both machines must be a valid IP address on the same LAN
+1. Both machines are on the same LAN. In this case the upper and lower
+machines interconnection network should be configured with IP addresses
+in CIDR on the same LAN, and the gateways for both machines will be
+ignored
+2. The two machines are on different LANs, to allow a firewall to be
+placed between them. In this case the IP addresses of both machines are
+independent and the gateways for both machines must be a valid IP address
+on the same LAN
 
-Both machines must know the interconnexion network configuration of both machines and
-so this step must be carried out on both machines and be __identical__. If the configuration
-is incorrect, the lower machine will be unable to contact the upper machine and one or
-both machines must be [reconfigured as discussed below](#in-the-event-of-a-dsas-initialization-error).
+Both machines must know the interconnexion network configuration of both
+machines and so this step must be carried out on both machines and be
+__identical__. If the configuration is incorrect, the lower machine will
+be unable to contact the upper machine and one or both machines must be
+[reconfigured as discussed below](#in-the-event-of-a-dsas-initialization-error).
 
-There are 4 steps in the configuration of the interconnection network. Firstly the 
-upper machines IP address in CIDR format must be entered as
+There are 4 steps in the configuration of the interconnection network.
+Firstly, the upper machines IP address in CIDR format must be entered as
 
 ![Configuration of the upper interconnection network](en/init15.png)
 
-The IP address here is the IP address that the upper machine will take and the mask in CIDR
-format must be between 24 and 30. By default this address is "192.168.192.2/24".
+The IP address here is the IP address that the upper machine will take
+and the mask in CIDR format must be between 24 and 30. By default, this
+address is `192.168.192.2/24`.
 
-Next, the gateway of the upper interconnection network. If the two machines are on the 
-same network, the gateway can be left blank. It is configured as 
+Next, the gateway of the upper interconnection network. If the two
+machines are on the same network, the gateway can be left blank. It is
+configured as 
 
 ![Configuration of the upper interconnection gateway](en/init16.png)
 
@@ -440,105 +491,112 @@ The lower network is configured in an identical manner
 
 ![Configuration of the lower interconnection gateway](en/init18.png)
 
-Here, both machines are on the same network with the lower machine taking the address
-"192.168.192.1/24". It should be noted that the addresses used for the interconnection
-network must not reused elsewhere.
+Here, both machines are on the same network with the lower machine taking
+the address `192.168.192.1/24`. It should be noted that the addresses
+used for the interconnection network must not reused elsewhere.
 
 ### Initial network configuration
 
-The network configuration of the upper machine is done via the administration interface
-of the lower machine. Consequently, this section only concerns the lower machine. However,
-if the network is not at least partially configured on the lower machine, the 
-administration interface might not be available. Therefore a initial configuration of the 
+The network configuration of the upper machine is done via the
+administration interface of the lower machine. Consequently, this section
+only concerns the lower machine. However, if the network is not at least
+partially configured on the lower machine, the administration interface
+might not be available. Therefore a initial configuration of the 
 network of the lower machine is made from the console.
 
-The first step is to choose if the network is static or if it uses DHCP for its
-configuration. The following menu is used to confirm this choice
+The first step is to choose if the network is static or if it uses DHCP
+for its configuration. The following menu is used to confirm this choice
 
 ![DHCP or static network selection](en/init4.png)
 
-At this point if DHCP has been chosen no other network configuration is necessary and
-you can move on to the next section.
+At this point if DHCP has been chosen no other network configuration is
+necessary and you can move on to the next section.
 
-For the static IP configuration you must enter the address and the netmask in the CIDR
-format. In CIDR format, the IPv4 netmask is represented by an integer between
-0 and 32 representing the number of bits used to encode the NetId part.
+For the static IP configuration, you must enter the address and the
+netmask in the CIDR format. In CIDR format, the IPv4 netmask is
+represented by an integer between 0 and 32 representing the number of
+bits used to encode the NetId part.
 
-For example the netmask "255.255.255.0" is represented in CIDR format by "/24" and
-the netmask "255.255.255.128" by "/25". So if our ip is "10.0.2.15" and our
-netmask is "255.255.255.0" it is entered as
+For example, the netmask `255.255.255.0` is represented in CIDR format by
+`/24` and the netmask `255.255.255.128` by `/25`. So, if our IP is
+`10.0.2.15` and our netmask is `255.255.255.0` it is entered as
 
 ![IP and netmask configuration of a static IP](en/init6.png)
 
-in the configuration interface at startup. The syntax of the entered IP address is
-validated before continuing. If it is not in an acceptable format the same menu will
-will be presented in a loop.
+in the configuration interface at startup. The syntax of the entered IP
+address is validated before continuing. If it is not in an acceptable
+format the same menu will be presented in a loop.
 
-If the administration machine is not on the same subnet as the DSAS, you must
-configure a default gateway. Otherwise leave blank to prevent any connection
-to DSAS from outside the subnet.
+If the administration machine is not on the same subnet as the DSAS, you
+must configure a default gateway. Otherwise leave blank to prevent any
+connection to DSAS from outside the subnet.
 
 ![Gateway configuration with a static IP](en/init7.png)
 
-Two items are required for DNS configuration. First the search domain, where here
-a search domain "example.com" is used
+Two items are required for DNS configuration. First the search domain,
+where here a search domain `example.com` is used
 
 ![DNS configuration with a static IP](en/init8.png)
 
-with this search domain the hosts "ntp1" and "ntp1.example.com" will be equivalent.
-Then you have to define name servers, responsible for converting DNS names to 
-IP addresses. For example
+with this search domain the hosts `ntp1` and `ntp1.example.com` will be equivalent. Then you must define name servers, responsible for
+converting DNS names to IP addresses. For example,
 
 ![DNS configuration with a static IP](en/init9.png)
 
-Several IP addresses separated by spaces could be entered, giving a list of name 
-servers in order of their preferred usage. 
+Several IP addresses separated by spaces could be entered, giving a list
+of name servers in order of their preferred usage. 
 
 ### SSH configuration
 
-The upper machine does not need an SSH configuration in the initial phase. SSH 
-configuration requires the creation of SSH keys for two DSAS users;
+The upper machine does not need an SSH configuration in the initial
+phase. SSH configuration requires the creation of SSH keys for two DSAS
+users;
 
-- the priviled user __tc__ allowing shell connexion with both machines, and
-- the user __haut__  for the use of sftp between the two machines.
+- the privileged user __tc__ allowing shell connection with both
+machines, and
+- the user __haut__ for the use of sftp between the two machines.
 
-The creation of the keys is automatic, but the authorized keys must be transferred to the
-upper machine. If the upper machine is not visible from the lower machine, it will wait
-with the message
+The creation of the keys is automatic, but the authorized keys must be
+transferred to the upper machine. If the upper machine is not visible
+from the lower machine, it will wait with the message
 
 ![Lower machine waiting for the upper machine](en/init11.png)
 
-The main reason to see this screen could be that the upper machine has not been 
-started. However, the network interconnection between the two machines could also be
-at fault.
+The main reason to see this screen could be that the upper machine has
+not been started. However, the network interconnection between the two
+machines could also be at fault.
 
-In the initial phase, there is no SSH key for SSH without a password. So the privileged
-users __tc__ password must be entered in the window.
+In the initial phase, there is no SSH key for SSH without a password. So,
+the privileged users __tc__ password must be entered in the window.
 
 ![Enter password during SSH configuration](en/init10.png)
 
-By default the DSAS password is __dSa02021DSAS__ but the first time you use
-the administration interface you will be forced to change this password.
+By default, the DSAS password is __dSa02021DSAS__ but the first time you
+Use the administration interface you will be forced to change this
+password.
 
-This is the last step of the initial setup on the console. The second phase
-of the initial configuration should be done with the administration interface.
+This is the last step of the initial setup on the console. The second
+phase of the initial configuration should be done with the administration
+interface.
 
 ### In the event of a DSAS initialization error
 
-To make mistakes is human, and DSAS offers ways to recover from mistakes made
-during initialization. If the initial phase of the installation (using the console)
-is not completed, no configuration will be saved. A simple restart of the
-machine will allow reconfiguration from scratch.
+To make mistakes is human, and DSAS offers ways to recover from mistakes
+made during initialization. If the initial phase of the installation
+(using the console) is not completed, no configuration will be saved. A
+simple restart of the machine will allow reconfiguration from scratch.
 
-If unfortunately you have completed the installation but it is not correct,
-then the administration interface will no longer be accessible, all is not lost. 
-However as the DSAS is configured to start without any human interaction after
-its first configuration, you will need to connect from the console interface to
-be able to access the configuration menu again.
+If unfortunately, you have completed the installation, but it is not
+correct, then the administration interface will no longer be accessible,
+all is not lost. However, as the DSAS is configured to start without any
+human interaction after its first configuration, you will need to connect
+from the console interface to be able to access the configuration menu
+again.
 
-The user to use on the console is 'tc' and the password to use, if you haven't 
-changed it already with the admin interface is as above. A classic linux console
-with minimal functionality available will be presented to you.
+The user to use on the console is 'tc' and the password to use if you
+haven't changed it already with the admin interface is as above. A
+classic Linux console with minimal functionality available will be
+presented to you.
 
 The command required to reconfigure the DSAS is
 
@@ -546,8 +604,8 @@ The command required to reconfigure the DSAS is
 $ sudo /etc/init.d/services/dsas reconfig
 ```
 
-You will then be presented with the configuration menu. At the end of the configuration, 
-don't forget to log out using the command
+You will then be presented with the configuration menu. At the end of the
+configuration, don't forget to log out using the command
 
 ``` shell
 $ exit
@@ -555,46 +613,52 @@ $ exit
 
 ## First login to the administration interface
 
-The address for the DSAS administration interface will depend on your installation
-but without NAT between you and the DSAS, the IP address will be the one entered 
-previously. On the other hand the DSAS administration port is always __port 5000__. 
-So if your IP is 10.0.15.2 as used in the example above you will need to connect 
-to https://10.0.2.15:5000 for the DSAS administration interface.
+The address for the DSAS administration interface will depend on your
+Installation but without NAT between you and the DSAS, the IP address
+will be the one entered previously. On the other hand, the DSAS
+administration port is always __port 5000__. 
+So, if your IP is 10.0.15.2 as used in the example above you will need to
+connect to https://10.0.2.15:5000 for the DSAS administration interface.
 
-The administration interface is in HTML5 with recent javascript functions. So
-a recent browser (after 2016) will be necessary in order to use the interface. If you can
-not connect, there is either a routing problem between you and the DSAS and it is necessary
-review the router configurations between you and the DSAS, i.e. the network configuration
-of the above DSAS is incorrect. In this case, refer to the section [In the event of an 
-initialization error of the DSAS](#in-the-event-of-a-dsas-initialization-error).
+The administration interface is in HTML5 with recent JavaScript
+functions. So a recent browser (after 2016) will be necessary in order to
+use the interface. If you cannot connect, there is either a routing
+problem between you and the DSAS and it is necessary review the router
+configurations between you and the DSAS, i.e. the network configuration
+of the above DSAS is incorrect. In this case, refer to the section [In
+the event of an initialization error of the DSAS](#in-the-event-of-a-dsas-initialization-error).
 
-The SSL certificate used by the DSAS in the initial phase is self-signed and it will 
-be necessary to accept its use in your browser. If you have successfully logged into the
-DSAS administration interface you will be presented with the following login screen:
+The SSL certificate used by the DSAS in the initial phase is self-signed
+and it will be necessary to accept its use in your browser. If you have
+successfully logged into the DSAS administration interface you will be
+presented with the following login screen:
 
 ![DSAS login screen](en/DSAS1.png)
 
-The privileged user on the DSAS is user __tc__, and the default password is
-__dSaO2021DSAS__. There will be a 3 second delay between failed login attempts and
-accounts will be locked for 10 minutes after 3 successive failed login attempts.
-At this point log on to the administration interface.
+The privileged user on the DSAS is user __tc__, and the default password
+is __dSaO2021DSAS__. There will be a 3 second delay between failed login
+attempts and accounts will be locked for 10 minutes after 3 successive
+failed login attempts. At this point log on to the administration
+interface.
 
 ### The basics of the administration interface
 
 #### The `Apply` button
 
-At the top of the administration interface pages you will find an `Apply` button
-highlighted in red. This button is very important. No modification made via the administration
-interface will be permanent and none, except password changes, will be applied until this 
-button is used. This button performs a permanent backup of the changes and applies them. In this
-manner, major errors can be easily removed with a simple restart unless they are applied.
+At the top of the administration interface pages you will find an `Apply`
+Button highlighted in red. This button is very important. No modification
+made via the administration interface will be permanent and none, except
+password changes, will be applied until this button is used. This button
+performs a permanent backup of the changes and applies them. In this
+manner, major errors can be easily removed with a simple restart unless
+they are applied.
 
 #### Shutdown and Restart
 
-The DSAS can be shutdown and restarted without fear because all the executable code is
-on the DSAS ISO image. The DSAS tasks in progress will be interrupted, but will be resumed at
-restart. The shutdown and restart functions are available in the `System` menu of the
-DSAS, like
+The DSAS can be shut down and restarted without fear because all the
+executable code is on the DSAS ISO image. The DSAS tasks in progress will
+be interrupted but will be resumed at restart. The shutdown and restart
+functions are available in the `System` menu of the DSAS, like
 
 ![DSAS system menu](en/DSAS8.png)
 
@@ -602,75 +666,84 @@ When running under Docker these commands will do nothing.
 
 #### Backup and Restore
 
-The currently applied DSAS configuration can be saved by using the button in
-the menu above. Selecting to backup, you will be asked to enter a password for the
-backup, like
+The currently applied DSAS configuration can be saved by using the button
+in the menu above. Selecting to backup, you will be asked to enter a
+password for the backup, like
 
 ![Backup password entry menu](en/DSAS24.png)
 
-The backups of the two DSAS machines are then encrypted in `bcrypt` with this password and
-archived together. If you do not enter a backup password, the files will be archived
-without the encryption step.
+The backups of the two DSAS machines are then encrypted in `bcrypt` with
+this password and archived together. If you do not enter a backup
+password, the files will be archived without the encryption step.
 
-It is strongly advised to encrypt these archives, because it contains the complete DSAS
-configuration, including SSL certificates and SSH secrets. The password does not have to 
-be the same password as used for the DSAS. The user passwords will not be backed up.
+It is strongly advised to encrypt these archives because it contains the
+complete DSAS configuration, including SSL certificates and SSH secrets.
+The password does not have to be the same password as used for the DSAS.
+The user passwords will not be backed up.
 
-When restoring the same password will be requested, and so this password should be kept
-preciously. In case of a restoration it will be applied immediately. This could result in
-the DSAS becoming unavailable, particularly if the network configuration has changed between
-the backup and restoration. In this case refer to the section [In the event of an 
-initialization error of the DSAS](#in-the-event-of-a-dsas-initialization-error).
+When restoring the same password will be requested, and so this password
+should be kept
+preciously. In case of a restoration, it will be applied immediately.
+This could result in the DSAS becoming unavailable, particularly if the
+network configuration has changed between the backup and restoration. In
+this case, refer to the section [In the event of an initialization error
+of the DSAS](#in-the-event-of-a-dsas-initialization-error).
 
 #### Automatic logout
 
-The DSAS is configured to check the connection rights for each operation, if more than
-10 minutes separate one operation from the next, you will be automatically logged out with
-the following message:
+The DSAS is configured to check the connection rights for each operation
+if more than 10 minutes separate one operation from the next, you will be
+automatically logged out with the following message:
 
 ![DSAS automatic logout screen](en/DSAS3.png)
 
-By clicking `Ok` on this message you will be redirected to the DSAS login screen.
+By clicking `Ok` on this message you will be redirected to the DSAS login
+screen.
 
 ### Initial password change
 
-If this is your first connection to the DSAS, the password of the user `tc` must
-be changed. Connect with the user `tc` and you will be presented with the following screen:
+If this is your first connection to the DSAS, the password of the user
+`tc` must be changed. Connect with the user `tc` and you will be
+presented with the following screen:
 
 ![Initial password change screen](en/DSAS2.png)
 
-It is impossible to continue with the administration interface without changing the 
-password. The limitations on passwords are
+It is impossible to continue with the administration interface without
+changing the password. The limitations on passwords are
 
-- they are at least 8 characters long (12 recommended)
-- they do not contain spaces or tabs
-- They contain at least 3 types of characters (upper case, lower case, number, special character)
+- they are at least 8 characters long (12 recommended),
+- they do not contain spaces or tabs,
+- They contain at least 3 types of characters (upper case, lower case, number, special character).
 
-Enter your new passwords and click on `Update`. You can now click on `Logout` and after
-logging in again with the user `tc` you will have access to the adminsitration interface. 
+Enter your new passwords and click on `Update`. You can now click on
+`Logout` and after logging in again with the user `tc` you will have
+access to the administration interface.
 
 ### User Configuration
 
-The user configuratuion screen is found under the tab `System` and the option `Users`. The 
-configuration screen is as follows
+The user configuration screen is found under the tab `System` and the
+option `Users`. The configuration screen is as follows
 
 ![DSAS user configuration menu](en/DSAS34.png)
 
-At the first connection only the default user `tc` is configured. It is recommanded to create 
-nominative users account for each user and to deactivate the account `tc`. The user `tc` is
-the only one with the rights to become `root` on the DSAS. Even though the account is deactivated
-it remains usable from the console of the DSAS and other adminsitrative users, knowing the 
-password for the account `tc` can use this knowledge to become `root`.
+At the first connection only the default user `tc` is configured. It is
+recommended to create nominative users account for each user and to
+deactivate the account `tc`. The user `tc` is the only one with the
+rights to become `root` on the DSAS. Even though the account is
+deactivated
+it remains usable from the console of the DSAS and other administrative
+users, knowing the password for the account `tc` can use this knowledge
+to become `root`.
 
-A new account is created by clicking on the button  ![](plus-lg.svg) to the right of the
-screen. You will be asked to enter a new user name like
+A new account is created by clicking on the button ![](plus-lg.svg) to
+the right of the screen. You will be asked to enter a new username like
 
 ![Add new user screen](en/DSAS35.png)
 
-New user names must be valid POSIX usernames. That is they must
+New usernames must be valid POSIX usernames. That is, they must
 
-- Start with a lower case letter or an underscore
-- Include only lower case letters, numbers, underscores or minuses
+- Start with a lower-case letter or an underscore
+- Include only lower-case letters, numbers, underscores or minuses
 - Can terminate in a dollar character
 - Be no longer than 32 characters
 
@@ -678,109 +751,127 @@ Here we have added the user `ua12345`.
 
 ![DSAS user configuration menu](en/DSAS37.png)
 
-For each users several modifications or actions are possible
+For each user several modifications or actions are possible
 
-- __Description__ - Information about the user can be freely added in this field
+- __Description__ - Information about the user can be freely added in
+this field
 - __Type__ _ Three types of users are possible 
-  * __administrator__ - An administration user of the DSAS. It has all the privileges on the 
-DSAS, and if `ssh` is active for adminsitrateurs, it can be used to connect with `ssh` 
-for advanced maintenance on the DSAS.
-  * __lower__ - This type of user has only one role. If the DSAS is configured with
-`ssh` for the user __bas__ it will have the right to connect via `sftp` and only via 
-`sftp` from the sensitive zone. This could be useful for the recovery of transmitted files.
-by DSAS in certain scenarios. Only verified files will be shown to this user
-by DSAS and a [chroot](https://fr.m.wikipedia.org/wiki/Chroot) is used to prevent
+  * __administrator__ - An administration user of the DSAS. It has all
+the privileges on the DSAS, and if `ssh` is active for administrators, it
+can be used to connect with `ssh` for advanced maintenance on the DSAS.
+  * __lower__ - This type of user has only one role. If the DSAS is
+configured with `ssh` for the user __bas__ it will have the right to
+connect via `sftp` and only via `sftp` from the sensitive zone. This
+could be useful for the recovery of transmitted files by DSAS in certain
+scenarios. Only verified files will be shown to this user by DSAS and a
+[chroot](https://fr.m.wikipedia.org/wiki/Chroot) is used to prevent
 the user from seeing anything else.
-  * __upper__ - This type of user, like user __lower__, is used for an `sftp` connection
-from the non-sensitive area to allow files to be uploaded directly to the DSAS. It is 
-also isolated with chroot and can only see the zone where files should be deposited. The
-use of this feature is strongly discouraged as it opens up the possibility of attacks 
+  * __upper__ - This type of user, like user __lower__, is used for an
+`sftp` connection from the non-sensitive area to allow files to be
+uploaded directly to the DSAS. It is also isolated with chroot and can
+only see the zone where files should be deposited. The use of this
+feature is strongly discouraged as it opens up the possibility of attacks
 against the DSAS
-- __Active__ - An account can be deactivated without deleting it. This allows for an account to be
-temporarily suspended without deleting it.
-- ![](lock.svg) - By clicking on this icon, it is possible to change the password of the user.
-- ![](x-lg.svg) - By clicking on this icon, it is possible to permenantly delete the user.
+- __Active__ - An account can be deactivated without deleting it. This
+allows for an account to be temporarily suspended without deleting it.
+- ![](lock.svg) - By clicking on this icon, it is possible to change the
+password of the user.
+- ![](x-lg.svg) - By clicking on this icon, it is possible to permanently
+delete the user.
  
-The modifications will not be taken into account unless the `Save Changes` button has been pressed.
-An example of the user configuration might be 
+The modifications will not be taken into account unless the `Save
+Changes` button has been pressed. An example of the user configuration
+might be 
 
 ![DSAS user configuration menu](en/DSAS38.png)
 
-At this point it is recommended to press the `Apply` button in order to make these
-permanent changes. Otherwise on the next restart the old passwords will be
-requested.  
+At this point it is recommended to press the `Apply` button in order to
+make these changes permanent. Otherwise on the next restart the old
+passwords will be requested.  
 
 ### Network configuration
 
-The network configuration screen is accessed from the DSAS `Configuration` menu, and the
-option `Network`. Selecting this option, the following screen will be presented
+The network configuration screen is accessed from the DSAS
+`Configuration` menu, and the option `Network`. Selecting this option,
+the following screen will be presented
 
 ![DSAS network configuration screen](en/DSAS6.png)
 
-The DSAS network configuration is separated into two parts. The network connected to 
-the sensitive network called __lower__ and to the non-sensitive network called __upper__. Each
-of these two configurations can be accessed by clicking on the arrow next to the type of
-network, like
+The DSAS network configuration is separated into two parts. The network
+connected to the sensitive network called __lower__ and to the
+non-sensitive network called __upper__. Each of these two configurations
+can be accessed by clicking on the arrow next to the type of network,
+like
 
 ![DSAS network configuration screen revealed](en/DSAS7.png)
 
-The configuration of the __lower__ network, previously entered is visible in this menu. 
-Check the settings, modify if necessary and press `Save changes`.
+The configuration of the __lower__ network, previously entered is visible
+in this menu. Check the settings, modify if necessary and press `Save
+changes`.
 
 A summary of the input fields on this page are
 
-- If the DHCP option is selected, the other fields for the network configuration are ignored on this
-interface.
+- If the DHCP option is selected, the other fields for the network
+configuration are ignored on this interface.
 - IP addresses, are in IPv4 format like NNN.NNN.NNN.NNN
-- If a netmask is necessary it is entered in CIDR format. In CIDR format the netmask is
-represented by an integer between 0 and 32, representing the size of the NetId.
-For example the netmask "255.255.255.0" is represented in CIDR format by "/24" and the 
-netmask "255.255.255.128" by "/25".
-- The "DNS Domain" must be a valid domain name.
-- Several IP addresses separated by carriage returns can be entered, giving a list of
-name servers in order of their preference.
+- If a netmask is necessary it is entered in CIDR format. In CIDR format
+the netmask is represented by an integer between 0 and 32, representing
+the size of the NetId. For example, the netmask `255.255.255.0` is
+represented in CIDR format by `/24` and the netmask `255.255.255.128` by
+`/25`.
+- The `DNS Domain` must be a valid domain name.
+- Several IP addresses separated by carriage returns can be entered,
+giving a list of name servers in order of their preference.
 
-In order to avoid the interconnection between the upper and lower machines being broken, the
-configuration of the interconnection network is not available via the UI. If it needs to be 
-changed you should refer the the section [In the event of an initialization error of the 
+To avoid the interconnection between the upper and lower machines being
+broken, the configuration of the interconnection network is not available
+via the UI. If it needs to be changed you should refer to the section [In the event of an initialization error of the 
 DSAS](#in-the-event-of-a-dsas-initialization-error).
 
 ### Renewal of the web certificate
 
-As [discussed above](#first-login-to-the-administration-interface), the SSL certificate
-used by the default DSAS is self-signed. This is also a secret item to replace during the 
-initial installation. The web server administration interface is in the `Web` submenu
-of the `Configuration` tab and appears as
+As [discussed above](#first-login-to-the-administration-interface), the
+SSL certificate used by the default DSAS is self-signed. This is also a
+secret item to replace during the initial installation. The web server
+administration interface is in the `Web` submenu of the `Configuration`
+tab and appears as
 
 ![Web server configuration menu](en/DSAS9.png)
 
-The renewal tab is accessed by clicking on the arrow to the left of `Renew
-certificate`, and looks like
+The renewal tab is accessed by clicking on the arrow to the left of
+`Renew certificate`, and looks like
 
 ![Web server configuration menu](en/DSAS13.png)
 
-The fields to be filled in for the renewal are fields defined by the standard 
-[RFC5280](https://datatracker.ietf.org/doc/html/rfc5280.html).
+The fields to be filled in for the renewal are fields defined by the
+standard [RFC5280](https://datatracker.ietf.org/doc/html/rfc5280.html).
 
-- __C__ - This field is the country of the organization responsible for the server. It 
-is must be two letters encoded as defined in RFC5280. For example, the code for France is __FR__.
-- __O__ - The organization responsible for the server. In France, it is generally the
-name of the company registered with INSEE and must be all capital letters.
-- __OU__ - An identifier of the sub organization responsible for the server. Certificates
-signed in France must include a KBIS, for example here '0002 552081317', is a valid KBIS.
-- __CN__ - For a server, like the DSAS this must be the DNS name of the server
-- __S__ - A free field for the region of the Company's head office. It is optional
-- __L__ - A free field for the city of the company's head office. It is optional
+- __C__ - This field is the country of the organization responsible for
+the server. It must be two letters encoded as defined in RFC5280. For
+example, the code for France is __FR__.
+- __O__ - The organization responsible for the server. In France, it is
+generally the name of the company registered with INSEE and must be all
+capital letters.
+- __OU__ - An identifier of the sub organization responsible for the
+server. Certificates signed in France must include a KBIS, for example
+here '0002 552081317', is a valid KBIS.
+- __CN__ - For a server, like the DSAS this must be the DNS name of the
+server
+- __S__ - A free field for the region of the Company's head office. It is
+optional
+- __L__ - A free field for the city of the company's head office. It is
+optional
 
 You can now click on the button `Renew certificate` and a certificate
-will be generated. However, it will not be used by the server until the next time
-you click on Apply. The public certificate and Signing Request (CSR) could
-be downloaded by clicking on the button ![](save.svg). 
+will be generated. However, it will not be used by the server until the
+next time you click on `Apply`. The public certificate and Signing
+Request (CSR) could be downloaded by clicking on the button
+![](save.svg).
 
 ## Service Configuration
 
-Other than the administration and repository web services, there are 6 other services
-which could be started on the DSAS;
+Other than the administration and repository web services, there are 6
+other services which could be started on the DSAS;
 
 - An OpenSSH server for connections to the DSAS,
 - An HTTPS repository for the files verified by the DSAS,
@@ -793,60 +884,69 @@ which could be started on the DSAS;
 
 ### Configuring the OpenSSH service
 
-In addition to the openssh server on the upper machine used for communications
-between the two DSAS machines, the DSAS administrator can choose to open
-other SSH services from the sensitive and/or non-sensitive zones.
+In addition to the openssh server on the upper machine used for
+Communications between the two DSAS machines, the DSAS administrator can
+choose to open other SSH services from the sensitive and/or non-sensitive
+zones.
 
-The OpenSSH server is never started with open access to all users on the DSAS. You 
-must explicitly give access to each user type, and this access is only valid from certain
-security zones. For example, above the OpenSSH service is checked and the
-adminstration users can only logged in from IP addresses in the 10.0.2.0/24 subnet.
-Users of type __upper__ and __lower__ users have no access rights.
+The OpenSSH server is never started with open access to all users on the
+DSAS. You must explicitly give access to each user type, and this access
+is only valid from certain security zones. For example, above the OpenSSH
+service is checked and the administration users can only log in from IP
+addresses in the 10.0.2.0/24 subnet. Users of type __upper__ and
+__lower__ users have no access rights.
 
-Listening addresses for each user can be very complex with multiple addresses
-possible separated by commas. A complex example could be
+Listening addresses for each user can be very complex with multiple
+Addresses possible separated by commas. A complex example could be
 
 ```
 10.0.2.1,10.0.2.128/25,!10.0.2.129
 ```
 
-where the address 10.0.2.1 and the subnet 10.0.2.128/25 could access the DSAS, but the address
-10.0.2.129 is prohibited to do so. By default no access is given, and if the listening address
-for a user left blank, the OpenSSH server is not even starting on the DSAS network interface
+where the address 10.0.2.1 and the subnet 10.0.2.128/25 could access the
+DSAS, but the address 10.0.2.129 is prohibited to do so. By default, no
+access is given, and if the listening address for a user left blank, the
+OpenSSH server is not even starting on the DSAS network interface
 concerned.
 
-Each user can only log in from certain sensitvity zones:
+Each user can only log in from certain sensitivity zones:
 
-- __Administration__ - The users of type `Administrator` can only connect from the sensitive area 
-and can connect with ssh, scp and sftp
-- __lower__ - The users of type __lower__ can only connect with sftp from the sensitive zone. This
-sftp functionality could be used to replace http server repository (or in addition). It only has 
-access to the DSAS area with the verified files and can not access files elsewhere.
-- __upper__ - `Use of users of type __upper__ in SSH and strongly discouraged`. The reason it is
-not recommended is that it does not respect the direction of the initiation of network flows, from
-the more sensitive zone to the less ensitive zone. But in the absence of other means of downloading,
-this account opens the possibility from the non-sensitive zone to deposit files on the upper
-machine of the DSAS. The users of type  __upper__ only have access with sftp and only to the DSAS zones 
-with the unverifed files.
+- __Administration__ - The users of type `Administrator` can only connect
+from the sensitive area and can connect with ssh, scp and sftp
+- __lower__ - The users of type __lower__ can only connect with sftp from
+the sensitive zone. This sftp functionality could be used to replace http
+server repository (or in addition). It only has access to the DSAS area
+with the verified files and cannot access files elsewhere.
+- __upper__ - `Use of users of type __upper__ in SSH and strongly
+discouraged`. The reason it is not recommended is that it does not
+respect the direction of the initiation of network flows, from
+the more sensitive zone to the less sensitive zone. But in the absence of
+other means of downloading, this account opens the possibility from the
+non-sensitive zone to deposit files on the upper machine of the DSAS. The
+users of type __upper__ only have access with sftp and only to the DSAS
+zones with the unverified files.
 
-If the SSH service is enabled towards a zone, port 22 is open on the DSAS machine
-concerned. 
+If the SSH service is enabled towards a zone, port 22 is open on the DSAS
+machine concerned. 
 
 ### HTTPS Repository
 
-The DSAS can publish all of the verified files readonly with a repository HTTPS. If the IP address
-of the DSAS on the lower network is `10.0.2.15` for example, the repositoty will be available at
-`https://10.0.2.15`.
+The DSAS can publish all the verified files read only with a repository
+HTTPS. If the IP address of the DSAS on the lower network is `10.0.2.15`
+for example, the repository will be available at `https://10.0.2.15`.
 
 ### SNMP Server
 
-A SNMP server can be activated on the DSAS. This service is only available with authentification and
-encryption and so only SNMPv3 is supported. Selecting `SNMPv3` the service will be activated. After 
-protocols for the authentification and encryption must be selected, a valid `SNMP Username` and 
-valid `SNMP Password` must be entered for both the authentification and encryption. 
+A SNMP server can be activated on the DSAS. This service is only
+available with authentication and encryption and so only SNMPv3 is
+supported. Selecting `SNMPv3` the service will be activated. After
+protocols for the authentication and encryption must be selected, a valid
+`SNMP Username` and valid `SNMP Password` must be entered for both the
+authentication and encryption. 
 
-All of the readonly data available from a typical SNMP server on a linux machine will be published. The
-data specific to the DSAS are available with the following OIDs 
+All the read only data available from a typical SNMP server on a Linux
+machine will be published. The data specific to the DSAS are available
+with the following OIDs 
 
 - 1.3.6.1.4.1.16845.100.100.1.0     - Status of the upper machine. `0` if the machine is available.
 - 1.3.6.1.4.1.16845.100.100.2.0     - Status of the DSAS tasks. `0` if all of the tasks are ok.
@@ -863,33 +963,38 @@ A [MIB file with these OID is available for download](DSAS-MIB.txt).
 
 ### syslogd client
 
-If the DSAS `syslogd` service is enabled, service logs are made locally. It is also 
-possible to define a remote server for the rsyslogd service for logs in UDP on port 514.
+If the DSAS `syslogd` service is enabled, service logs are made locally.
+It is also possible to define a remote server for the rsyslogd service
+for logs in UDP on port 514.
 
-Note that the syslogd service is provided by BusyBox, and the implementation of syslogd by 
-BusyBox does not include the possibility of TLS encryption on port 6514. So other means of
-securing this flow must be put in place.
+Note that the syslogd service is provided by BusyBox, and the
+implementation of syslogd by BusyBox does not include the possibility of
+TLS encryption on port 6514. So other means of securing this flow must be
+put in place.
 
-Using the syslogd service does not open a port on the DSAS, but only connections to a 
-remote server.
+Using the syslogd service does not open a port on the DSAS, but only
+connections to a remote server.
 
 ### ntpd client
 
-The DSAS includes the possibility of synchronizing via the ntp protocol. One or more ntp hosts
-could be configured. The addresses of the ntp hosts could be IP addresses or hostnames as provided
-by DNS. In the second case the DNS must be configured as discussed in the section 
+The DSAS includes the possibility of synchronizing via the ntp protocol.
+One or more ntp hosts could be configured. The addresses of the ntp hosts
+could be IP addresses or hostnames as provided by DNS. In the second case
+the DNS must be configured as discussed in the section 
 [Network configuration](network-configuration).
 
-Using ntp does not open a port on the DSAS but only connections to remote servers.
+Using ntp does not open a port on the DSAS but only connections to remote
+servers.
 
 ### Antivirus server
 
-The DSAS includes an antivirus server based on `ClamAV`. If the option `Antivirus` is checked,
-a server `clamd` will be started, and the files transfered by the DSAS will be checked with
-the antivirus.
+The DSAS includes an antivirus server based on `ClamAV`. If the option
+`Antivirus` is checked, a server `clamd` will be started, and the files
+transferred by the DSAS will be checked with the antivirus.
 
-However, these verifications need updated viral signatures. The files `main.cvd`, `daily.cvd`
-and `bytecode.cvd` must be installed on the DSAS. These files are available on the URL
+However, these verifications need updated viral signatures. The files
+`main.cvd`, `daily.cvd` and `bytecode.cvd` must be installed on the DSAS.
+These files are available on the URL
 
 ```
 https://database.clamav.net/main.cvd
@@ -897,43 +1002,50 @@ https://database.clamav.net/daily.cvd
 https://database.clamav.net/bytecode.cvd
 ```
 
-and the URI to configure on the DSAS could be `https://database.clamav.net/` but a local
-mirror should be prefered. The DSAS will update these files from this URI once a day.
+and the URI to configure on the DSAS could be
+`https://database.clamav.net/` but a local mirror should be preferred.
+The DSAS will update these files from this URI once a day.
 
 # DSAS Operation
 
 ## Status of machines
 
-The status page of tasks and machines is the entry and main page of the DSAS. It is accessed by
-clicking on `DSAS` in the menu at the top of the pages and resembles
+The status page of tasks and machines is the entry and main page of the
+DSAS. It is accessed by clicking on `DSAS` in the menu at the top of the
+pages and resembles
 
 ![Tasks and machine status page](en/DSAS14.png)
 
-The page is divided into two sections; at the top the status of the DSAS machines at the bottom 
-the status DSAS tasks. Three statistics are given for the two DSAS machines.
+The page is divided into two sections; at the top the status of the DSAS
+machines at the bottom the status DSAS tasks. Three statistics are given
+for the two DSAS machines.
 
-- __Disk usage__ - The total occupancy of DSAS disks are shown. If the disks
-are full it will be impossible to properly download and verify files. So the disks
-should be periodically monitored. Logically if the tasks have not changed,
-the use of the disks should not change either, but if one of the tasks suddenly
-increases its disk usage it will be easy to lack disk space. A disk that is more than
-80 or 90% full could easily be saturated.
-- __Memory usage__ - Each task on the DSAS occupies machine memory. If the memory is full, 
-the performance of the tasks will be impacted. It is necessary to watch that memory is saturated, 
-but as long as it is below 90% it should not be a problem. With the DSAS architecture, almost 
-200MB is also used by the operating system.
-- __Loadavg__ - The "Load average" is a concept of Unix giving an idea on the occupation of
-computational resources of the machine. A "Load Average" of "1" means that the equivalent
-of a processor core is completely occupied. So the total occupation of resources
-of the machine is at the point where the "Load average" is equal to the number of cores
-of the processor. On the DSAS page the "Load average" is presented in a logarithmic scale 
-with the number of processor cores at 50% of the length of the status bar. If the status bar 
-is longer than half, DSAS might have insufficient computing resources. The first thing
-to do again in this case is to restart the DSAS in order to see if the problem disappears.
+- __Disk usage__ - The total occupancy of DSAS disks are shown. If the
+Disks are full it will be impossible to properly download and verify
+files. So, the disks should be periodically monitored. Logically if the
+tasks have not changed, the use of the disks should not change either,
+but if one of the tasks suddenly increases its disk usage it will be easy
+to lack disk space. A disk that is more than 80 or 90% full could easily be saturated.
+- __Memory usage__ - Each task on the DSAS occupies machine memory. If
+the memory is full, the performance of the tasks will be impacted. It is
+necessary to watch that memory is saturated, but if it is below 90% it
+should not be a problem. With the DSAS architecture, almost 200MB is also
+used by the operating system.
+- __Loadavg__ - The `Load average` is a concept of Unix giving an idea on
+the occupation of computational resources of the machine. A `Load
+Average` of `1` means that the equivalent of a processor core is
+completely occupied. So, the total occupation of resources
+of the machine is at the point where the `Load average` is equal to the
+number of cores of the processor. On the DSAS page the `Load average` is
+presented in a logarithmic scale with the number of processor cores at
+50% of the length of the status bar. If the status bar is longer than
+half, DSAS might have insufficient computing resources. The first thing
+to do again in this case is to restart the DSAS in order to see if the
+problem disappears.
 
-If the DSAS lower machine is not available you will be unable to connect to the administration
-interface. On the other hand, if the upper machine is faulty, the page status informs you with
-the following screen
+If the DSAS lower machine is not available, you will be unable to connect
+to the administration interface. On the other hand, if the upper machine
+is faulty, the page status informs you with the following screen
 
 ![Status page, upper machine unavailable](en/DSAS15.png) 
 
