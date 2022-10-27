@@ -2023,11 +2023,12 @@ audited at each reboot
 
 ## Means of Verification
 
-There are 3 types of linux repository verification,
+There are 3 types of Linux repository verification,
 
-* rpm - The signature of each RPM file is verified with "rpm -K"
+* rpm - The signature of each RPM file is verified with `rpm -K`
 * repomd - The repomd.xml file is verified and only the hashes of each file are checked
-* deb - The Release file is verified and only the hashes of each file are checked
+* deb - The Release file is verified and only the hashes of each file are
+checked
 
 There are seven other types of verification
 
@@ -2041,87 +2042,103 @@ There are seven other types of verification
 
 ### Verification - rpm
 
-In the checks of the RPM repositories the repodata/repomd.xml file is read and the xml files
-with the list of packages to check are read. All the files in the repository are listed
-with their hash, in the so-called "primary" file of the repository.
+In the checks of the RPM repositories the repodata/repomd.xml file is
+read and the xml files with the list of packages to check are read. All
+the files in the repository are listed with their hash, in the so-called
+`primary` file of the repository.
 
 A repository could be the repository of an OS such as for example
 [http://mirror.centos.org/centos/7/os/x86_64/](http://mirror.centos.org/centos/7/os/x86_64/)
 or another repositoty like for example
 [http://mirror.centos.org/centos/7/extras/x86_64/](http://mirror.centos.org/centos/7/extras/x86_64/).
 
-In the `rpm` verification mode, each package file listed in the repository xml file
-primary is checked with the command `rpm -k` against the GPG certificate provided for the task.
+In the `rpm` verification mode, each package file listed in the
+repository xml file primary is checked with the command `rpm -k` against
+the GPG certificate provided for the task.
 
 ### Verification - repomd
 
-The `repomd` mode is like the` rpm` mode with the exception that the `repodata/repomd.xml` file is
-signed directly with GPG. The fact that this metadata file is signed and it contains the
-hash of the primary xml file, and the hashes of each package is included in the xml file of
-primary repository. In this way, only one signature verification and the 
+The `repomd` mode is like the` rpm` mode with the exception that the
+`repodata/repomd.xml` file is signed directly with GPG. The fact that
+this metadata file is signed and it contains the hash of the primary xml
+file, and the hashes of each package is included in the xml file of
+primary repository. In this way, only one signature verification and the
 hash of each package file, allows to cryptographically verify all files
 of the repository. This is faster and as secure as the `rpm` type checking.
 
 ### Verification - authenticode
 
-For the type of check "authenicode" each file in the folder is checked against
-specified certificates. If no certificate authority is specified, the certificate store is
-used including all certificates in the store. This could increase the risks and it is
-much better to specify a single authority certificate for verification
+For the type of check `authenticode` each file in the folder is checked
+against specified certificates. If no certificate authority is specified,
+the certificate store is used including all certificates in the store.
+This could increase the risks and it is much better to specify a single
+authority certificate for verification
 
-If the signatures are valid and signed by the specified certificates, the files are rendered
-available on the lower DSAS partition. No subfolder is processed
+If the signatures are valid and signed by the specified certificates, the
+files are rendered available on the lower DSAS partition. No subfolder is
+processed
 
-The osslsigncode software [https://github.com/mtrojnar/osslsigncode] is used for verification.
-The command
+The osslsigncode software [https://github.com/mtrojnar/osslsigncode] is
+used for verification. The command
 
 ```shell
 $ osslsigncode verify -CAfile ca.pem  <file>
 ```
 
-is used for checking a file `<file>` against a specific root certificate `ca.pem`.
-If we want to check against an intermediate certificate, the command is
+is used for checking a file `<file>` against a specific root certificate
+`ca.pem`. If we want to check against an intermediate certificate, the
+command is
 
 ```shell
-$ osslsigncode verify -CAfile ca.pem -require-leaf-hash sha256:$(sha256sum inter.der | cut -d" " -f1) <file>
+$ osslsigncode verify -CAfile ca.pem -require-leaf-hash sha256:$(sha256sum inter.der | cut -d` ` -f1) <file>
 ```
 
-where the `inter.der` file is the intermediate certificate to use for verification.
+where the `inter.der` file is the intermediate certificate to use for
+verification.
 
 ### Verification - Symantec LiveUpdate
 
-Symantec's IntelligentUpdate files are in authenticode, so they are excluded from this discussion.
-Symantec LiveUpdate format is used by `Symantec Endpoint Protection Manager` (SEPM) for updates.
-The signature format of LiveUpdate files is very complex with files signed according to
-[the method detailed in the next section](#signature-of-liveupdate-files), and files verified
-by their hash in another signed file, all the files in LiveUpdate format maybe identified by name
-such as
+Symantec's IntelligentUpdate files are in authenticode, so they are
+excluded from this discussion. Symantec LiveUpdate format is used by
+`Symantec Endpoint Protection Manager` (SEPM) for updates. The signature
+format of LiveUpdate files is very complex with files signed according to
+[the method detailed in the next section](#signature-of-liveupdate-files),
+and files verified by their hash in another signed file, all the files in
+LiveUpdate format maybe identified by name such as
 
-- `* .livetri.zip` - signed files of type LiveUpdate referring to other unsigned files
-- `NNNNNNNNNN *. *` - unsigned files with the field `NNNNNNNNNN` representing the date in number of seconds
-since the Unix epoch (January 1, 1970, 00:00:00 UTC). These files are not signed, and must be referenced
-in a `* livtri.zip` file. It seems that `SEPM` leaves files of this type which are no longer used in
-a `* livetri.zip` file and in this case the files can be ignored.
-- `minitri.flg` - A single byte file with the character` 0x20` (a space) in it. Presence or not
-of the file could modify the behavior of `SEPM`. The file can not be malicious. In the
-context of making files from a non-sensitive zone available to a sensitive zone, it can not
-be used as a hidden transmisison channel for information leakage. This file is transmitted without testing
-- `SymantecProductCatalog.zip` - the dates of the files in this archive are all before 2009. But the
-archive date is always updated by `SEPM`, the file is signed with old certificates from
-Symantec. This file is verified and sent by the DSAS
+- `* .livetri.zip` - signed files of type LiveUpdate referring to other
+unsigned files
+- `NNNNNNNNNN *. *` - unsigned files with the field `NNNNNNNNNN`
+representing the date in number of seconds since the Unix epoch (January
+1, 1970, 00:00:00 UTC). These files are not signed, and must be
+Referenced in a `* livtri.zip` file. It seems that `SEPM` leaves files of
+this type which are no longer used in a `* livetri.zip` file and in this
+case the files can be ignored.
+- `minitri.flg` - A single byte file with the character` 0x20` (a space)
+in it. Presence or not of the file could modify the behavior of `SEPM`.
+The file cannot be malicious. In the context of making files from a
+non-sensitive zone available to a sensitive zone, it cannot be used as a
+hidden transmission channel for information leakage. This file is
+transmitted without testing
+- `SymantecProductCatalog.zip` - the dates of the files in this archive
+are all before 2009. But the archive date is always updated by `SEPM`,
+the file is signed with old certificates from Symantec. This file is
+verified and sent by the DSAS
 - `* .jdb`- [JDB files are for updates from` SEPM` or clients
 `SEP`](https://knowledge.broadcom.com/external/article/151309/download-jdb-files-to-update-definitions.html).
 They are signed with an expired Symantec certificate.
 
-The DSAS is able to transmit all of these types of files with the exception of files
-`NNNNNNNNNN*.*` which are no longer listed in a `*livetri.zip` file.
+The DSAS can transmit all of these types of files with the exception of
+Files `NNNNNNNNNN*.*` which are no longer listed in a `*livetri.zip`
+file.
 
 #### Signing LiveUpdate files
 
-LiveUpdate files, and Symantec JDB files, are not signed directly. On the other hand
-all of these files are archives in `7z` or` ZIP` format, and these archives contain two files,
-typically named `v.grd` and` v.sig`. These files could have another name, but the extensions
-`.grd` and` .sig` are always used
+LiveUpdate files, and Symantec JDB files, are not signed directly. On the
+other hand all of these files are archives in `7z` or` ZIP` format, and
+these archives contain two files, typically named `v.grd` and` v.sig`.
+These files could have another name, but the extensions `.grd` and` .sig`
+are always used
 
 The contents of the `.grd` file are in format like 
 
@@ -2139,18 +2156,20 @@ SHA256=721473abd9d240d5170c9952a8a1d1644f177c1dbbef01b105e1d44705188db4
 ...
 ```
 
-With hashes of all the files contained in the archive. In the case of `*livetri.zip` files
-the hashes of the files could also correspond to another file not included directly in
-the archive but next to it with a name like `NNNNNNNNNN*.*`. The command 
+With hashes of all the files contained in the archive. In the case of
+`*livetri.zip` files the hashes of the files could also correspond to
+another file not included directly in the archive but next to it with a
+name like `NNNNNNNNNN*.*`. The command 
 
 ```shell
 $ openssl asn1parse -i -inform der -in v.sig
 ```
 
-makes it easy to see that the `.sig` file contains at least two certificates,
-a hash of the `.grd` file and the binary signature itself. The text "pkcs7-signedData"
-make it possible to identify the type of signature used. The problem is that the chain of
-trust of `.sig` files are typically
+makes it easy to see that the `.sig` file contains at least two 
+certificates, a hash of the `.grd` file and the binary signature itself.
+The text `pkcs7-signedData` make it possible to identify the type of
+signature used. The problem is that the chain of trust of `.sig` files
+are typically
 
 ```
 Symantec Internal RSA IT Root
@@ -2174,40 +2193,45 @@ Symantec Root CA
   -> Symantec Corporation
 ```
 
-for old files. None of these certificates are publicly available, and they are
-embedded directly in the SEPM software when it is installed. The certificate chain
-used are included in the `.sig` files and we can recover them in PEM format with a
-command
+for old files. None of these certificates are publicly available, and
+they are embedded directly in the SEPM software when it is installed. The
+certificate chain used are included in the `.sig` files and we can
+recover them in PEM format with a command
 
 ```shell
-$ openssl pkcs7 -inform der -in v.sig -outform pem -print_certs | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if(length($0) > 0) print > "cert" n ".pem"}
+$ openssl pkcs7 -inform der -in v.sig -outform pem -print_certs | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if(length($0) > 0) print > `cert` n `.pem`}
 ```
 
-this command will create two files, `cert.pem` and` cert1.pem` with the signing certificate and the
-intermediate certificates used. These certificates can be imported into the DSAS. Unfortunately,
-this will only output the intermediate certificates and the certificate used for signing.
-The root certificate is not included in the signature files. We examine the executable of SEP
-in order to find the three root certificates used by SEPM.
+this command will create two files, `cert.pem` and` cert1.pem` with the
+signing certificate and the intermediate certificates used. These
+certificates can be imported into the DSAS. Unfortunately,
+this will only output the intermediate certificates and the certificate
+used for signing. The root certificate is not included in the signature
+files. We examine the executable of SEP to find the three root
+certificates used by SEPM.
 
-All SEP 64bit client workstations include the executable `sepWscSvc64.exe`. Looking with the command 
+All SEP 64bit client workstations include the executable
+`sepWscSvc64.exe`. Looking with the command 
 
 ```shell
-$ LANG=C grep -obUaP "\x30\x82..\x30\x82" sepWscSvc64.exe
+$ LANG=C grep -obUaP `\x30\x82..\x30\x82` sepWscSvc64.exe
 ```
 
-or if your version of grep doesn't include perl regexps 
+or if your version of grep doesn't include perl regular expressions 
 
 ```shell
-$ echo -e "\x30\x82..\x30\x82" | LANG=C xargs -i grep -obUa {} sepWscSvc64.exe
+$ echo -e `\x30\x82..\x30\x82` | LANG=C xargs -i grep -obUa {} sepWscSvc64.exe
 ``` 
-it is possible to identify the beginning of the certificates. The text "\x30\x82" corresponds to the ASN.1 code
-for a `SEQUENCE`. A sequence is always followed by a length encoded on two bytes, and a
-certificate always starts with two `SEQUENCE`. So the regexp "\x30\x82..\x30\x82" is suitable for
-find the beginnings of certificates, but not only. This command finds the binary offsets of the
-corresponding to start of certificates like 
+it is possible to identify the beginning of the certificates. The text
+`\x30\x82` corresponds to the ASN.1 code for a `SEQUENCE`. A sequence is
+always followed by a length encoded on two bytes, and a certificate
+always starts with two `SEQUENCE`. So the regexp `\x30\x82..\x30\x82` is
+suitable for find the beginnings of certificates, but not only. This
+command finds the binary offsets of the corresponding to start of
+certificates like 
 
 ```
-$ echo -e "\x30\x82..\x30\x82" | LANG=C xargs -i grep -obUa {} sepWscSvc64.exe
+$ echo -e `\x30\x82..\x30\x82` | LANG=C xargs -i grep -obUa {} sepWscSvc64.exe
 1665104:0▒▒0▒
 1666048:0▒▒0▒
 1667008:0▒▒0▒
@@ -2226,8 +2250,8 @@ $ echo -e "\x30\x82..\x30\x82" | LANG=C xargs -i grep -obUa {} sepWscSvc64.exe
 1820193:0▒▒0▒
 ```
 
-but the text found by the regexp could be a part of the binary and not a certificate.
-We must tets all of these valeurs with
+but the text found by the regexp could be a part of the binary and not a
+certificate. We must test all of these values with
 
 ```shell
 $ dd bs=1666048 skip=1 if=sepWscSVC64.exe | openssl -inform der -in - -noout -text | less
@@ -2241,42 +2265,48 @@ $ dd bs=1666048 skip=1 if=sepWscSvc64.exe | openssl x509 -inform der -in - -outf
 $ dd bs=1667008 skip=1 if=sepWscSvc64.exe | openssl x509 -inform der -in - -outform pem -out Symantec_Root_CA.pem
 ```
 
-The format `PMCS7` is the format used by `SMIME`, and here the signatures are in `DER`format. The
-normal  `SMIME` signature verification command is
+The format `PMCS7` is the format used by `SMIME`, and here the signatures
+are in `DER`format. The normal `SMIME` signature verification command is
  
 ```shell
 $ openssl cms -verify -inform der -in v.sig -content v.grd
 ```
 
-this command will verify the signatures in `v.sig` against the roor certifcates installed
-on the machine and compare against the hash of the file `v.grd`. The root certificate 
-typically used is `Symantec Root 2005 CA`, and so the real verification to use is 
+this command will verify the signatures in `v.sig` against the root
+certifcates installed on the machine and compare against the hash of the
+file `v.grd`. The root certificate typically used is `Symantec Root 2005
+CA`, and so the real verification to use is 
 
 ```shell
 $ openssl cms -verify -CAfile SymantecRoot2005CA.pem -inform der -in v.sig -content v.grd
 ```
 
-but we will find two other problems with the Symantec signature chains. Two of the three root
-certificates used by Symantec for signatures have expired, and Symantec have not used
-time stamped signatures with an openssl time server. So `openssl` will refuse to validate the files
-provided by Symantec. The second problem is in the fields `X509v3 Key Usage` and
-`X509v3 Extended Key Usage`. `openssl` requires that all certificates in the chain of trust
-supports the same signing options, but the `Code Signing CA` certificate supports the  `Code Signing` option,
-but the other two certificates in the chain do not support it. Two other options of `openssl` are
-necessary in order to bypass such problems, 
+but we will find two other problems with the Symantec signature chains.
+Two of the three root certificates used by Symantec for signatures have
+expired, and Symantec have not used time stamped signatures with an
+openssl time server. So `openssl` will refuse to validate the files
+provided by Symantec. The second problem is in the fields `X509v3 Key
+Usage` and `X509v3 Extended Key Usage`. `openssl` requires that all
+certificates in the chain of trust supports the same signing options, but
+the `Code Signing CA` certificate supports the `Code Signing` option,
+but the other two certificates in the chain do not support it. Two other
+options of `openssl` are necessary to bypass such problems, 
 
 ```shell
 $ openssl cms -verify -purpose any -no_check_time -CAfile SymantecRoot2005CA.pem -inform der -in v.sig -content v.grd
 ```
 
-This is enough to verify that the Symantec files are signed by a certificate with the
-root `Symantec Root 2005 CA`, but nothing prevents Symantec from authorizing another intermediate
-certificate on this root. So it will be cleaner to verify the signature against a complete 
-chain of trust that we control. For that the DSAS must ignore the certificates in
-`v.sig` taking into account only the signature data, and we are obliged to provide the
-other certificates used for signing, `cert.pem` and` cert1.pem` created above. The argument
-`-certfile` could be used in order to do this, but` openssl` only accepts a single argument of
-type `-certfile`, so both certificates should be concatenated in one file and checked like
+This is enough to verify that the Symantec files are signed by a
+certificate with the root `Symantec Root 2005 CA`, but nothing prevents
+Symantec from authorizing another intermediate certificate on this root.
+So, it will be cleaner to verify the signature against a complete chain
+of trust that we control. For that the DSAS must ignore the certificates
+in `v.sig` taking into account only the signature data, and we are
+obliged to provide the other certificates used for signing, `cert.pem`
+and` cert1.pem` created above. The argument `-certfile` could be used in
+order to do this, but` openssl` only accepts a single argument of
+type `-certfile`, so both certificates should be concatenated in one file
+and checked like
 
 ```shell
 $ cat cert.pem cert1.pem > certs.pem
@@ -2288,66 +2318,75 @@ $ openssl cms -verify -CAfile SymantecRoot2005CA.pem -certfile certs.pem -nointe
 There are two types of verification for the files of Trend Micro
 
 - The verification of signed JAR files
-- The verification of `*.7z` files signés by SMIME
+- The verification of `*.7z` files signed by SMIME
 
-The certificate chain used by these two methods are independant, mais to simplify the use of the DSAS, 
-they can be treated and as single task. Therefore it is posisble to include all of the certificates 
+The certificate chain used by these two methods are independent, but to
+simplify the use of the DSAS, they can be treated and as single task.
+Therefore, it is possible to include all of the certificates 
 used by both verification methods in a task of type `trend` and both verifications will be tested.
 
 The choice of which verification to used is made in the following way
 
-- Only the files `*.jar`, `*.zip` and `*.7z` are tested directly, other files must be referenced
-in a JAR manifest to allow th eDSAS to treat them
-- If a file `*.sig` corresponding to the tested file exists, the file is considered to be signed
-by SMIME
+- Only the files `*.jar`, `*.zip` and `*.7z` are tested directly, other
+files must be referenced in a JAR manifest to allow the DSAS to treat
+them
+- If a file `*.sig` corresponding to the tested file exists, the file is
+considered to be signed by SMIME
 - Otherwise the file is treated as being in JAR format
 
 #### SMIME Signature of Trend files
 
-As for the Symantec LiveUpdate, several certificates can be recoverd from the signature files. For example
-the file `file.sig` can be used to recover the certificates with the command
+As for the Symantec LiveUpdate, several certificates can be recovered
+from the signature files. For example, the file `file.sig` can be used to
+recover the certificates with the command
 
 ```shell
-$ openssl pkcs7 -inform der -in file.sig -outform pem -print_certs | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if(length($0) > 0) print > "cert" n ".pem"}
+$ openssl pkcs7 -inform der -in file.sig -outform pem -print_certs | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if(length($0) > 0) print > `cert` n `.pem`}
 ```
 
-Unfortunately, the recovered certificates are only the intermediate or leaf certificates. No root
-certificate is available from the SMIME signature files and the root certificate is auto generated by 
-Trend Micro and not publicly available.
+Unfortunately, the recovered certificates are only the intermediate or
+leaf certificates. No root certificate is available from the SMIME
+signature files and the root certificate is auto generated by Trend Micro
+and not publicly available.
 
 FIXME: How to recover the root certificate ????
 
-After the root certificate is recovered, a file liek `file.7z` can be verified like
+After the root certificate is recovered, a file liek `file.7z` can be
+verified like
 
 ```
 openssl cms -verify -inform DER -in file.sig -content file.7Z -purpose any -CAfile cert.0 -nointern -certfile cert.1
 ```
 
-The root certificate is in the file `cert.0` and all of the other intermediate and leaf certificates are
-in the file `cert.1`. 
+The root certificate is in the file `cert.0` and all of the other
+intermediate and leaf certificates are in the file `cert.1`. 
 
 #### Jar File Signatures
 
 [The format of JAR files](https://docs.oracle.com/javase/7/docs/technotes/guides/jar/jar.html#Manifest-Overview)
-is publicly available, and the JAR files can be verified with openssl without the need to
-install JAVA on the DSAS. Particularly, the JAR files of Trend Micro needed for the signature are 
+is publicly available, and the JAR files can be verified with openssl
+without the need to install JAVA on the DSAS. Particularly, the JAR files
+of Trend Micro needed for the signature are 
 
-MANIFEST.MF - A file containg teh names and hashes of all of the files in (or next to) the JAR file
+MANIFEST.MF - A file containg teh names and hashes of all of the files in
+(or next to) the JAR file
 JAVA.SF - A file containing the hash of the manifest
 JAVA.RSA - A SMIME signature file of the file JAVA.SF
 
-All of the certificates needed for the signature of the JAR files can be recovered with  
+All of the certificates needed for the signature of the JAR files can be
+recovered with  
 
 ```shell
-$ openssl pkcs7 -inform der -in file.sig -outform pem -print_certs | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if(length($0) > 0) print > "cert" n ".pem"}
+$ openssl pkcs7 -inform der -in file.sig -outform pem -print_certs | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if(length($0) > 0) print > `cert` n `.pem`}
 $ cat cert.pem >> cert.0
 $ cat cert[1-9].pem >> cert.1
 ```
 
-It should be noted that the root certificate for the sigend JAR files of Trend Micro is 
-"Digicert Trusted Root G4", a publicly available CA in the majority of certificate stores.
+It should be noted that the root certificate for the sigend JAR files of 
+Trend Micro is `Digicert Trusted Root G4`, a publicly available CA in the
+majority of certificate stores.
 
-The signature verification est them perform as 
+The signature verification is then performed as 
 
 ```
 openssl cms -verify -inform DER -in JAVA.RSA -content JAVA.SF -purpose any -CAfile cert.0 -nointern -certfile cert.1
@@ -2357,18 +2396,21 @@ And the other files are verified by their hashes
 
 ### Verification - debian
 
-At the base of the verification of a debian repository is the file file `Release` and its 
-signature `Release.gpg`. Recnetly, the file `InRelease`, which is identical to `Release` but
-includes an integrated signature.
+At the base of the verification of a Debian repository is the file
+`Release` and its  signature `Release.gpg`. Recently, the file
+`InRelease`, which is identical to `Release` but includes an integrated
+signature.
 
-The debian respositories are sigend with several keys. At each new version of debian , a new master
-archive key is created. The file `Release` is signed with the current key and the key anterior. The
-repositoreis `stable`, `testing`, `security` are only signed with these two keys. However, the 
-repositories of the debian versions themselves, such as `Buster` or `BullsEye`, are also signed
-with a third key taht depends on the version.
+The Debian repositories are signed with several keys. At each new version
+of Debian, a new master archive key is created. The file `Release` is
+signed with the current key and the key anterior. The repositories
+`stable`, `testing`, `security` are only signed with these two keys.
+However, the repositories of the Debian versions themselves, such as
+`Buster` or `BullsEye`, are also signed with a third key that depends on
+the version.
 
-The verification tasks of debian repositories requires access to all of these keys. For example for
-`BullsEye` the needed keys are 
+The verification tasks of Debian repositories require access to all of
+these keys. For example, for `BullsEye` the needed keys are 
 
 - [Debian 10/buster archive signing key](https://ftp-master.debian.org/keys/archive-key-10.asc)
 - [Debian 11/bullseye archive signing key](https://ftp-master.debian.org/keys/archive-key-11.asc)
@@ -2399,70 +2441,86 @@ $ openssl genrsa -out key.pem 4096
 $ openssl rsa -in key.pem -pubout > key.pub
 ```
 
-And the public key in the key.pub file must be associated with the task in the DSAS. The files
-are signed as
+And the public key in the key.pub file must be associated with the task
+in the DSAS. The files are signed as
 
 ```shell
 $ openssl dgst -sign key.pem -keyform PEM -sha256 -out <file>.sig -binary <file>
 ```
 
-The signatures are always stored in separate files, and the DSAS assumes that the signatures
-are in a file with a .sig extension. Both files must be provided to DSAS. 
+The signatures are always stored in separate files, and the DSAS assumes
+that the signatures are in a file with a .sig extension. Both files must
+be provided to DSAS. 
 
 ### Special case - unsigned zip file
 
-In the case of the __liveupdate__ and __cyberwatch__ tasks the signed files are contained in an unsigned 
-zip file. The problem with this situation is that even though all of the files in the zip file
-are signed, the zip can hide other data that does not belong to the zip file. this is
-desired in the design of zip files in order to allow the creation of other zip formats, such as
-__JAR__ files, but also to include zip files in executables (self-extracting zips).
-There are also ways to abuse the format of zip files to hide data.
+In the case of the __liveupdate__ and __cyberwatch__ tasks the signed
+files are contained in an unsigned zip file. The problem with this
+situation is that even though all the files in the zip file
+are signed, the zip can hide other data that does not belong to the zip
+file. this is desired in the design of zip files to allow the creation of
+other zip formats, such as __JAR__ files, but also to include zip files
+in executables (self-extracting zips). There are also ways to abuse the
+format of zip files to hide data.
 
-A zip file is comprised of __N__ compressed objects followed by an index of the files contained in the
-zip with the positions for each compressed object of the zip file relative to the positions of the index.
-This opens 4 possible places to hide data in a zip file
+A zip file is comprised of __N__ compressed objects followed by an index
+of the files contained in the zip with the positions for each compressed
+object of the zip file relative to the positions of the index. This opens
+4 possible places to hide data in a zip file
 
-- add at the beginning: because the postions of the compressed objects are relative to the index it is
-quite possible to have data before these objects
-- append at the end: similarly data could be hidden after the index of the zip file
-- insert between compressed objects: Objects do not need to occupy all file spaces,
-it is just required that the positions of the compressed objects are correct
-- In the comment zone of the index: the zip format allows up to 65536 characters in the comment
-zone of the index itself.
+- add at the beginning: because the positions of the compressed objects
+are relative to the index it is quite possible to have data before these
+objects
+- append at the end: similarly, data could be hidden after the index of
+the zip file
+- insert between compressed objects: Objects do not need to occupy all
+file spaces, it is just required that the positions of the compressed
+objects are correct
+- In the comment zone of the index: the zip format allows up to 65536
+characters in the comment zone of the index itself.
 
-Verifiying only the contents of the zip file, none of these areas will be controlled. However, if we let 
-the zip file pass someone in the sensitive network could abuse this behavior in order to pass unverified files
-through DSAS.
+Verifying only the contents of the zip file, none of these areas will be
+controlled. However, if we let the zip file pass someone in the sensitive
+network could abuse this behavior to pass unverified files through DSAS.
 
-This only applies to unsigned zip files, as someone able to sign the zip is also
-able to sign content. So the solution is relatively simple, and consists of reconstructing the
-unsigned zip files from its contents. DSAS implements this behavior
+This only applies to unsigned zip files, as someone able to sign the zip
+is also able to sign content. So the solution is relatively simple, and
+consists of reconstructing the unsigned zip files from its contents. DSAS
+implements this behavior
 
 ## Verification - Antivirus
 
-The antivirus tests use the software ClamAV. It is important to understand the limitations of antiviral 
-tests and the prurpose of these tests in the DSAS. 
+The antivirus tests use the software ClamAV. It is important to
+understand the limitations of antiviral tests and the purpose of these
+tests in the DSAS. 
 
-1. An antivirus can only function correctly if the signatures used for the viral dection are up
-to date. The DSAS must therefore be configured to update its signatures regularly
-2. With encryption and obsfurcation it is possible to hide the presence of code in files. The
-limitations of these techniques are that the attacker must be able to control the file format.
+1. An antivirus can only function correctly if the signatures used for
+the viral detection is up to date. The DSAS must therefore be configured
+to update its signatures regularly
+2. With encryption and obfuscation it is possible to hide the presence of
+code in files. The limitations of these techniques are that the attacker
+must be able to control the file format.
 
-The risk that the use of an antivirus in the DSAS is attempting to address is the case of a compromised 
-software repositories with at least one malicious package uploaded. For example a 
+The risk that the use of an antivirus in the DSAS is attempting to
+address is the case of a compromised software repositories with at least
+one malicious package uploaded. For example, a 
 [recent compromission of php.net](https://arstechnica.com/gadgets/2021/03/hackers-backdoor-php-source-code-after-breaching-internal-git-server)
-allowed attackers to install backdoors in compromised packages. In this scenario, the attacker has
-no control on the format of the supplied packages. ClamAV is capable of decompressing and examining the
-files within most package archive formats, and so the signature of the attack can be examined by ClamAV.
+allowed attackers to install backdoors in compromised packages. In this
+scenario, the attacker has no control on the format of the supplied
+packages. ClamAV is capable of decompressing and examining the
+files within most package archive formats, and so the signature of the
+attack can be examined by ClamAV.
 
-However ClamAV can not help when the attacker can control the format of the packaged files. In this 
-case the attacker can choose the file type that obscures its contents and so hides the malicious code.
-This might be the case if an attacker has access to an openssl or gpg signing key. It is therefore
-critical to control carefully who has access to these openssl and gpg keys installed in the DSAS.
+However, ClamAV cannot help when the attacker can control the format of
+the packaged files. In this case the attacker can choose the file type
+that obscures its contents and so hides the malicious code. This might be
+the case if an attacker has access to an openssl or gpg signing key. It
+is therefore critical to control carefully who has access to these
+openssl and gpg keys installed in the DSAS.
 
 ## OpenSSH Service
 
-L'ensemble des flux ssh possible est
+All of possible SSH flux are
 
 | Source            |  Destination    | User        | Service  | Optional  | 
 |-------------------|-----------------|-------------|----------|-----------|
@@ -2472,12 +2530,13 @@ L'ensemble des flux ssh possible est
 | lower             | upper           | bas         | sftp     | required    |
 | open netwoek      | upper           | haut        | sftp     | not reco. |
 
-where the `ssh` service corresponds to the set of ssh services (ssh, scp and sftp). the
-first option of hardening the sshd service, except in case of the presence of the stream
-not recommended from the open network, the service only listens to the connections from the
-more sensitive network with OpenSSH's `Listen` configuration option. By default, all user
-access if forbidden, and each user must be explicitly added. The configuration for `tc` users
-are of the form 
+where the `ssh` service corresponds to the set of ssh services (ssh, scp
+and sftp). The first option of hardening the sshd service, except in case
+of the presence of the stream not recommended from the open network, the
+service only listens to the connections from the more sensitive network
+with OpenSSH's `Listen` configuration option. By default, all user
+access if forbidden, and each user must be explicitly added. The
+configuration for `tc` users are of the form 
 
 ```
 Match User tc Address $USER_TC
@@ -2485,9 +2544,9 @@ Match User tc Address $USER_TC
 	PubkeyAuthentication yes
 ```
 
-where `$ USER_TC` is a list of allowed IP or CIDR addresses to connect to the server. In order to
-secure the DSAS this list should be limited. For other users the configuration
-of sshd is 
+where `$ USER_TC` is a list of allowed IP or CIDR addresses to connect to
+the server. In order to secure the DSAS this list should be limited. For
+other users the configuration of sshd is 
 
 ```
 Match User $TYP Address $USER
@@ -2500,151 +2559,178 @@ Match User $TYP Address $USER
 	ForceCommand internal-sftp -u 0007 -d /share
 ```
 
-`sftp` users are strictly limited to where they can access and  `forwarding`
-is forbidden. The default `umask` is forced to be 007 in order to ensure file access
-to the user `verif`. 
+`sftp` users are strictly limited to where they can access and 
+`forwarding` is forbidden. The default `umask` is forced to be 007 to
+file access to the user `verif`. 
 
 ## Web service
 
-There are two web services; one required for the administration of the DSAS and a second optional
-one for a file repository. The two sites share the same TLS certificate, which are
-stored in `/var/dsas/`. The permissions of the private certificate are then (0640), with a
-group `repo` to which the two users` tc` and `bas` belong.
+There are two web services; one required for the administration of the
+DSAS and a second optional one for a file repository. The two sites share
+the same TLS certificate, which are stored in `/var/dsas/`. The
+permissions of the private certificate are then (0640), with a group
+`repo` to which the two users` tc` and `bas` belong.
 
-The administration server is run as the user `tc` and can only access files accessible to the
-`tc` user. The site is only available in https on the port `5000`. The site is written in 
-`HTML5, JS and bootstrap5` for the frontend and` PHP8` for the backend. The authentication on 
-the site is done with a connector to `Linux PAM` and the accounts local to the machine `lower`. 
-`PAM` is configured to work only with `Unix domain sockets` completely local to the machine, 
-therefore accessible only to the process running on the machine. The backend returns a session
-identifier for a successful login. This identifier is checked for each operation on the backend, 
-and expired after ten minutes without access to the machine.
+The administration server is run as the user `tc` and can only access
+files accessible to the `tc` user. The site is only available in https on
+the port `5000`. The site is written in `HTML5, JS and bootstrap5` for
+the frontend and` PHP8` for the backend. The authentication on the site
+is done with a connector to `Linux PAM` and the accounts local to the
+machine `lower`. `PAM` is configured to work only with `Unix domain
+sockets` completely local to the machine, therefore accessible only to
+the process running on the machine. The backend returns a session
+identifier for a successful login. This identifier is checked for each
+operation on the backend, and expired after ten minutes without access to
+the machine.
 
 The backend policy is that no information from the frontend is considered
-sure and everything is checked. The `proc_open` function of` PHP8` is used for
-system commands required for administration, and
+sure and everything is checked. The `proc_open` function of` PHP8` is
+used for system commands required for administration, and
 
 - Called in a way that does not start a shell
-- With any argument checked is escaped in order to avoid command injection
+- With any argument checked is escaped in order to avoid command
+injection
 
-The optional repository is run as the `bas` user and cannot
-access only files available to the user `bas`. This list of files is
-very limited and basically only includes files preinstalled or verified by the DSAS. The site
-is only available in https on port `443`. Users of the repository only have the right
-download files and under no circumstances would they have the right to add files to the repository 
+The optional repository is run as the `bas` user and can access only
+files available to the user `bas`. This list of files is very limited and
+basically only includes files preinstalled or verified by the DSAS. The
+site is only available in https on port `443`. Users of the repository
+only have the right download files and under no circumstances would they
+have the right to add files to the repository 
 
 ## Issues when using Docker
 
-A Docker installation supplies significantly reduced isolation between containers themselves
-and the host machines. It is therefore only recommanded if the upper and lower machines are
-installed on two machine that are physically different.
+A Docker installation supplies significantly reduced isolation between
+containers themselves and the host machines. It is therefore only
+recommended if the upper and lower machines are installed on two machines
+that are physically different.
 
-This section lists some of the issues related to the use of Docker for the DSAS.
+This section lists some of the issues related to the use of Docker for
+the DSAS.
 
 ### Docker ulimit
 
-Docker uses an overlay filesystem where there are potentially multiple filesystems 
-layered one on top of another use the the 
-[FuseFS filesystem](https://en.wikipedia.org/wiki/Filesystem_in_Userspace). This has
-implications of the speed of certain `ioctl` used in the container. A case in point 
-is the ioctl used by the filesystem command `fclose`. This case is important as several
-well known programs, include `OpenSSH` use code like
+Docker uses an overlay filesystem where there are potentially multiple
+filesystems layered one on top of another use the the [FuseFS
+filesystem](https://en.wikipedia.org/wiki/Filesystem_in_Userspace). This
+has implications of the speed of certain `ioctl` used in the container. A
+case in point is the ioctl used by the filesystem command `fclose`. This
+case is important as several well-known programs, include `OpenSSH` use code like
 
 ```
 do (int i=0; i < FD_MAX; i++)
   fclose(i);
 ```
 
-to ensure that all files are correctly closed. In a default Docker installation `FD_MAX`
-is `1024*1024`. For a standard installation the ioctl to fclose to an unopend file is so
-fast that the above code runs in a couple of milliseconds. However, in Docker with more
-an a million file descriptors to close the above takes more than 2 seconds on a default
-Docker installation. 
+to ensure that all files are correctly closed. In a default Docker
+installation `FD_MAX` is `1024*1024`. For a standard installation the
+ioctl to fclose to an unopened file is so fast that the above code runs
+in a couple of milliseconds. However, in Docker with more than a million
+file descriptors to close the above takes more than 2 seconds on a
+default Docker installation. 
 
-As the DSAS relies on SSH for several operations and so this delay seriously degrades the
-performance, and so the Docker image must be configured with a reduced numer of file 
-descriptors. We have found that the limit must be reduced under `65535` to have a 
-reasonable performance and we suggest a value of `4096`. This is configured with the 
+As the DSAS relies on SSH for several operations and so this delay
+seriously degrades the performance, and so the Docker image must be
+configured with a reduced number of file descriptors. We have found that
+the limit must be reduced under `65535` to have a reasonable performance
+and we suggest a value of `4096`. This is configured with the 
 option `--ulimit nofile=4096` when creating the Docker image.
 
 ### Docker privileged mode
 
-At the moment the only privilege that Docker needs for the DSAS is CAP_NET_ADMIN. This is
-because the DSAS assumes that it needs to configure its own network, rather than the Docker
-model where the container is already started with the network preconfigured. There are
-however security implications of the use of the CAP_NET_ADMIN flag that need to be taken 
-into account.
+At the moment the only privilege that Docker needs for the DSAS is
+CAP_NET_ADMIN. This is because the DSAS assumes that it needs to
+configure its own network, rather than the Docker model where the
+container is already started with the network preconfigured. There are
+however security implications of the use of the CAP_NET_ADMIN flag that
+need to be taken into account.
 
-As discussed in the article [Docker running an app with NET_ADMIN capability: involved risks](https://unix.stackexchange.com/questions/508809/docker-running-an-app-with-net-admin-capability-involved-risks), 
-the use of CAP_NET_ADMIN opens the possibility to use the ioctl that allow reprogrammation 
-of the network card (NIC). This can allow the network card to be made unusuable (even after 
-a reboot for a physical card), or in extreme cases allow the installation of code in the 
-EEPROM of the network card that might attack the hosts kernels and allow root access to the 
+As discussed in the article [Docker running an app with NET_ADMIN
+capability: involved risks](https://unix.stackexchange.com/questions/508809/docker-running-an-app-with-net-admin-capability-involved-risks), 
+the use of CAP_NET_ADMIN opens the possibility to use the ioctl that
+allow reprogramming of the network card (NIC). This can allow the network
+card to be made unusable (even after a reboot for a physical card), or in
+extreme cases allow the installation of code in the EEPROM of the network
+card that might attack the hosts kernels and allow root access to the
 host. 
 
 This means there are two strategies to treat this issue
 
-1. Keep the CAP_NET_ADMIN flag : To make use of this attack the atatcker already needs root 
-access to the DSAS. If this is the case they can already leverage this root access to the 
-DSAS to allow the rupture of the isolation provided by the DSAS. So in a real installation 
-the DSAS is at the same level of sensitivity as the host that is used for the DSAS. So in a 
-very real sense this might seem to be a non issue. Even if we decide to keep the 
-CAP_NET_ADMIN flag the impact on the host system can be reduced by :
-  - Only using `bridge` network devices. These network devices being enirely virtual, an 
-attack against this will not open up the host system. This has certain implications for the 
-network configuration that might be undesireable
-  - Dedicate a physical network card to an interface of the DSAS. Even if the DOS attack 
-against the NIC is very real, the attack of using the EEPROM to atatck the kernel is 
-relatively theoretical. So dedicating a physical network card seems to be a reasonable 
-compromise. A successful attack will only impact the DSAS itself.
-2. Drop the CAP_NET_ADIM flag : This means that the DSAS can no longer manager its own 
-network. In a VM or stand alone version of the DSAS, the capacity to manage the network is 
-required. So the implication of this is that there is either some complex logic in 
-`dsas.js` and the `dsas` boot script to disable the configuration and use of the networking 
-or there is two entirely different versions of the DSAS. Neither of these is very 
-attractive. 
+1. Keep the CAP_NET_ADMIN flag : To make use of this attack the attacker
+already needs root access to the DSAS. If this is the case, they can
+already leverage this root access to the DSAS to allow the rupture of the
+isolation provided by the DSAS. So in a real installation the DSAS is at
+the same level of sensitivity as the host that is used for the DSAS. So,
+in a very real sense this might seem to be a non-issue. Even if we decide
+to keep the CAP_NET_ADMIN flag the impact on the host system can be
+reduced by :
+  - Only using `bridge` network devices. These network devices being
+entirely virtual, an attack against this will not open up the host
+system. This has certain implications for the network configuration that
+might be undesirable
+  - Dedicate a physical network card to an interface of the DSAS. Even if
+the DOS attack against the NIC is very real, the attack of using the
+EEPROM to attack the kernel is relatively theoretical. So, dedicating a
+physical network card seems to be a reasonable compromise. A successful
+attack will only impact the DSAS itself.
+2. Drop the CAP_NET_ADIM flag : This means that the DSAS can no longer
+manager its own network. In a VM or standalone version of the DSAS, the
+capacity to manage the network is required. So, the implication of this
+is that there is either some complex logic in `dsas.js` and the `dsas`
+boot script to disable the configuration and use of the networking 
+or there is two entirely different versions of the DSAS. Neither of these
+is very attractive. 
 
 So for the moment the CAP_NET_ADMIN flag has been kept.
 
 ### Docker network interface names
 
-Docker gives no guarantees for the order of the initialisation network devices or the 
-order of the devices returned by `cat /proc/net/dev`. As the DSAS, like all equipement
-used for packet routing, relies on the order of the network interfaces for its 
-configuration, this is a serious constraint.
+Docker gives no guarantees for the order of the initialization network
+devices or the order of the devices returned by `cat /proc/net/dev`. As
+the DSAS, like all equipment used for packet routing, relies on the order
+of the network interfaces for its configuration, this is a serious
+constraint.
 
-We could address this by not configuring the network in the DSAS as discussed above, but
-the constraints of this are not acceptable. The solution currently used is to change the
-prefix used by the principal interface of the DSAS with the option 
-`--opt com.docker.network.container_iface_prefix=doc`. As the default interface prefix is
-`eth`, this means that the principal interface will always be alphabetically first. This
-options is only available on the `bridge` network type, the principal network of the DSAS
-must for now always be configured as a bridge.
+We could address this by not configuring the network in the DSAS as
+discussed above, but the constraints of this are not acceptable. The
+solution currently used is to change the prefix used by the principal
+interface of the DSAS with the option 
+`--opt com.docker.network.container_iface_prefix=doc`. As the default
+interface prefix is `eth`, this means that the principal interface will
+always be alphabetically first. This option is only available on the
+`bridge` network type, the principal network of the DSAS must for now
+always be configured as a bridge.
 
 ## CDN DDOS protection
 
-Many websites use services such as [Cloudflare](www.cloudflare.com) to provide protection
-against attacks. These CDN services relies on a number of features that might or
-might not include
+Many websites use services such as [Cloudflare](www.cloudflare.com) to
+provide protection against attacks. These CDN services relies on a number
+of features that might or might not include
 
 - Identification of the `User-Agent`
 - Fingerprinting of the TLS certificate
 - Cookies with access tokens
-- Running javascript of the browser for detetcion
+- Running javascript of the browser for detection
 - Capatcha
 - ...
 
-These protections are extremely efficient at eliminating the use of `bots` to access a 
-website and force the atatcker to use as many ressources as a modern browser to allow them
-to simulate a browser and gain access. This can significantly reduce the attack traffic to
-a web site. Unfortunately, the light-weight tehnologies used by the DSAS means that these
-CDN see the DSAS as a ` bot` and will not allow it access to websites protected by them.
+These protections are extremely efficient at eliminating the use of
+`bots` to access a website and force the attacker to use as many
+resources as a modern browser to allow them to simulate a browser and
+gain access. This can significantly reduce the attack traffic to
+a web site. Unfortunately, the light-weight technologies used by the DSAS
+means that these CDN see the DSAS as a ` bot` and will not allow it
+access to websites protected by them.
 
-As an example the `ClamAV` databases can be found at the website `https://database.clamav.net` 
-which is protected by CloudFlare. The DSAS can not access this site. So the ClamAV 
-databases can not be direcrtly downloaded by the DSAS from this site. Happily, ClamAV supplies
-a means of bypassing automatically this control via a `User-Agent` and UUID. The DSAS implements
-this bypass specific to ClamAV et the site `https://database.clamav.net` can only be used via
-this specific interface in the `Service` menu of the DSAS.
+As an example, the `ClamAV` databases can be found at the website
+`https://database.clamav.net` which is protected by CloudFlare. The DSAS
+cannot directly access this site. So the ClamAV databases cannot be
+direcrtly downloaded by the DSAS from this site. Happily, ClamAV supplies
+a means of bypassing automatically this control via a `User-Agent` and
+UUID. The DSAS implements this bypass specific to ClamAV and the site
+`https://database.clamav.net` can only be used via this specific
+interface in the `Service` menu of the DSAS.
+
+
 
 
