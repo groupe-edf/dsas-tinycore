@@ -1426,12 +1426,12 @@ https://mirror.example.com/rhel/8Server/arm64
 ## Analysis of the main risks of the DSAS
 
 This section discusses the main risks of DSAS. Other risks exist, for
-example the compromission of the DSAS repository site, but considering the architecture 
-of the DSAS other risks are considered as negligible.
+example the compromission of the DSAS repository site, but considering
+the architecture of the DSAS other risks are considered as negligible.
 
-The software impacted by these risks are detailed with the version numbers of
-each installed software making it easy to see if an upgrade of a software component
-is required.
+The software impacted by these risks are detailed with the version
+numbers of each installed software making it easy to see if an upgrade of
+a software component is required.
 
 ### Risk: Compromise of the link between the two DSAS machines
 
@@ -1462,7 +1462,7 @@ Software impacted by this risk
 | gnupg | [2.2.27](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.27.tar.bz2) | Used for RPM, DEB and GPG verification |
 | libgcrypt | [1.10.1](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.1.tar.bz2) | Used for RPM, DEB and GPG verification |
 | rpm | [4.18.0](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.18.x/rpm-4.18.0.tar.bz2) | Used for RPM checking |
-| osslsigncode | [2.5.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.5/osslsigncode-2.5.tar.gz) | Used for authenicode verification |
+| osslsigncode | [2.5.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.5/osslsigncode-2.5.tar.gz) | Used for authenticode verification |
 | clamav | [0.105.1](https://www.clamav.net/downloads/production/clamav-0.105.1.tar.gz) | Used for antivirus tests |
 
 ### Risque : Elevation of privileges
@@ -1470,13 +1470,13 @@ Software impacted by this risk
 | Risk        | Attack by elevation of DSAS users privileges  |
 | ----------- | ------------------------------------------------------------------------ |
 | Criticality | Important                                                                  |
-| Comment     | A step that is necessary in several attacks is an attack<br />by elevation of privilege. These attacks must pass by an<br />SUID application or the linux kernel. |
+| Comment     | A step that is necessary in several attacks is an attack<br />by elevation of privilege. These attacks must pass by an<br />SUID application or the Linux kernel. |
 
 Software impacted by this risk
 
 | software    | version  |  comment                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
-| linux kernel| [5.15.10](https://tinycorelinux.net/13.x/x86/release/src/kernel/linux-5.15.10-patched.txz) | Only the evalation of privileges CVE need be considered. |
+| Linux kernel| [5.15.10](https://tinycorelinux.net/13.x/x86/release/src/kernel/linux-5.15.10-patched.txz) | Only elevation of privileges CVE need be considered. |
 
 
 ### Risk: Attack on the means of downloading files
@@ -1498,7 +1498,7 @@ Software impacted by this risk
 | Risk | Attack against DSAS administrator authentication |
 | ----------- | --------------------------------------------------------- |
 | Criticality | Important |
-| Comment | The DSAS administration site is only available <br />from the sensitive network, and normally by configuring the <br />DMZ where the DSAS is installed accessible only from well-controlled <br />machines. So the risk is limited to an attack from a <br />console allowed to access the DSAS by someone not <br />authorized to do so. The risk of reconfiguring the DSAS to allow <br />unwanted files to enter or to prevent wanted files from <br />doing so. |
+| Comment | The DSAS administration site is only available <br />from the sensitive network, and normally by configuring the <br />DMZ where the DSAS is installed accessible only from well-controlled <br />machines. So, the risk is limited to an attack from a <br />console allowed to access the DSAS by someone not <br />authorized to do so. The risk of reconfiguring the DSAS to allow <br />unwanted files to enter or to prevent wanted files from <br />doing so. |
 
 Software impacted by this risk
 
@@ -1509,30 +1509,33 @@ Software impacted by this risk
 | Linux PAM | [1.5.2](https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz) | Authentication on the administration site |
 | DSAS website | [1.2.6](https://gitlab.com/adb014/dsas-tinycore) | Backend and frontend of the administration site |
 
-The DSAS website is specially developed for this project. Static analyse of the code and a test suite is
-used on this code before each release to minimise the risk. 
+The DSAS website is specially developed for this project. Static analysis
+of the code and a test suite is used on this code before each release to
+minimize the risk. 
 
 ## DSAS build process
 
 ### Preparing a build machine under TinyCore
 
-You will need a build machine. The easiest way is to use the same operating system
-to build as is used by the DSAS itself. For example the system
-[CorePlus v13.x](http://tinycorelinux.net/13.x/x86/release/CorePlus-current.iso)
-is currently used for the build of DSAS. The build of the DSAS needs at least 5GBytes 
-of memory (for the clamav build especially). After as you have set up
-this machine, you would need a number of tools in order to do the build.
+You will need a build machine. The easiest way is to use the same
+operating system to build as is used by the DSAS itself. For example, the
+system [CorePlus v13.x](http://tinycorelinux.net/13.x/x86/release/CorePlus-current.iso)
+is currently used for the build of DSAS. The build of the DSAS needs at
+least 5GBytes of memory (for the clamav build especially). After as you
+have set up this machine, you would need a number of tools in order to do
+the build.
 
-At this point, if you are behind a proxy for internet access, you must configure
-access via the environment variables `http_proxy` and` https_proxy` like
+At this point, if you are behind a proxy for internet access, you must
+Configure access via the environment variables `http_proxy` and`
+https_proxy` like
 
 ```shell
 export http_proxy=http://<hostanme>:<port>
 export https_proxy=http://<hostname>:<port>
 ```
 
-It will be useful to add these two lines to the `~/.profile` file so that it is
-configured at each login. After the command
+It will be useful to add these two lines to the `~/.profile` file so that
+it is configured at each login. After the command
 
 ```shell
 tce-load -wi Xorg-7.7 compiletc rsync coreutils mkisofs-tools squashfs-tools git curl ncursesw-dev tar
@@ -1540,9 +1543,10 @@ tce-load -wi Xorg-7.7 compiletc rsync coreutils mkisofs-tools squashfs-tools git
 
 will install all the tools necessary for the build. 
 
-#### Non-english keyboard
+#### Non-English keyboard
 
-If you have a non english keyboard, the easiest solution is to add a command like
+If you have a non-English keyboard, the easiest solution is to add a
+command like
 
 ```shell
 /usr/local/bin/setxkmap fr
@@ -1559,33 +1563,36 @@ git clone https://gitlab.com/adb014/dsas-tinycore.git
 
 #### Preparing the DSAS source tree for a private git
 
-The build of the DSAS requires packages to be downloaded from the internet. In the case where
-the main git repository used by the DSAS is on the private network, a bit a git magic will
-be needed to ensure that access to both the git repository and the internet is assured. This
+The build of the DSAS requires packages to be downloaded from the
+internet. In the case where the main git repository used by the DSAS is
+on the private network, a bit a git magic will be needed to ensure that
+access to both the git repository and the internet is assured. This
 step is only needed for this case and can be safely skipped otherwise
 
-We first have to temporarily disable the http proxy like 
+We first must temporarily disable the http proxy like 
 
 ```shell
 unset http_proxy
 unset https_proxy
 ```
 
-Taking the example of the gitlab used by my own company, the TLS certificate used is
-signed by a private certification authority, which is not installed by default on the
-build machine. An example of the means to download the CA and install it for use with 
+Taking the example of the gitlab used by my own company, the TLS
+certificate used is signed by a private certification authority, which is
+not installed by default on the build machine. An example of the means to
+download the CA and install it for use with 
 git might be 
 
 ```shell
 mkdir ~/.git-certs
 wget -P ~/.git-certs http://crl-edf.edf.fr/ac/autorite_racine_groupe_edf.cer
 cat >> ~/.gitconfig << EOF
-[http "https://gitlab.devops-unitep.edf.fr"]
+[http `https://gitlab.devops-unitep.edf.fr`]
   sslCAInfo = ~/.git-certs/autorite_racine_groupe_edf.cer
 EOF
 ```
 
-where the site used for the CA and location of the git should be adapted to your needs. 
+where the site used for the CA and location of the git should be adapted
+to your needs. 
 
 Now we are ready to download the DSAS source code with the command
 
@@ -1593,20 +1600,21 @@ Now we are ready to download the DSAS source code with the command
 git clone https://gitlab.devops-unitep.edf.fr/dsao-cyber/dsas-tinycore.git
 ```
 
-We can configure the next actions on the source tree to ignore the http proxy with the 
-commands
+We can configure the next actions on the source tree to ignore the http
+proxy with the commands
 
 ```shell
 cd dsas-tinycore
-git config --add remote.origin.proxy ""
+git config --add remote.origin.proxy ``
 ```
 
 Can we now restore the values of the proxy environment variables.
 
-### Colouring `git diff` commands
+### Coloring `git diff` commands
 
-The version of `less` that is installed by default doesn't accept the option `-R` needed to 
-correctly colour  the output of the command `git diff`. To allow this the commands 
+The version of `less` that is installed by default doesn't accept the
+option `-R` needed to correctly color the output of the command `git
+diff`. To allow this the commands 
 
 ```
 tce-load -wi less
@@ -1615,10 +1623,11 @@ git config core.pager /usr/local/bin/less
 
 are needed.
 
-### Building with a differnt distribution than TinyCore
+### Building with a different distribution than TinyCore
 
-It is possible to build the DSAS without TinyCore, however, the names of the packages to 
-install will depend on the distribution. At a minimum the tools
+It is possible to build the DSAS without TinyCore, however, the names of
+the packages to install will depend on the distribution. At a minimum the
+tools
 
 - The build essential including make, gcc, etc
 - rsync
@@ -1627,26 +1636,31 @@ install will depend on the distribution. At a minimum the tools
 - curl
 - git
 
-are needed. After, the instructions above should be used to inspire the means to configure the
-build tree for use. The equivalent command to install the needed packages for a debian machine is
+are needed. After, the instructions above should be used to inspire the
+means to configure the build tree for use. The equivalent command to
+install the needed packages for a Debian machine is
 
 ```shell
 apt-get install build-essential rsync genisoimage squashfs-tools git curl
 ``` 
 
-It should be noted that the DSAS build makes extensive use of the chroot command to create
-dediciate build environments for each package using native TinyCore code. This implies that
+It should be noted that the DSAS build makes extensive use of the chroot
+command to create dedicated build environments for each package using
+native TinyCore code. This implies that
 
-- The distribution used must have a compatible architecture to that used for the DSAS. Only x86
-and AMD64 architectures are currently supported.
-- The kernel and glibc must be compatiable with the TinyCore distribution and most notably its
-shell. If you receive the message "Kernel too old" during the build process, the distirbution
-is too old to support the current DSAS build
+- The distribution used must have a compatible architecture to that used
+for the DSAS. Only x86 and AMD64 architectures are currently supported.
+- The kernel and glibc must be compatible with the TinyCore distribution
+and most notably its shell. If you receive the message `Kernel too old`
+during the build process, the distribution is too old to support the
+current DSAS build. For example, the current version of the DSAS needs at
+least Debian Bullseye to be built.
 
 ### DSAS build commands
 
-All of the DSAS build process is preformed from the command line with the script `make.sh`. The
-usage string of this script is available via the command `./make.sh -h` 
+All the DSAS build process is preformed from the command line with the
+script `make.sh`. The usage string of this script is available via the
+command `./make.sh -h` 
 
 
 ```shell
@@ -1680,30 +1694,30 @@ To build the ISO image of the DSAS the command is
 ./make.sh
 ```
 
-An ISO image is created in the file `work/dsao.iso`. We can keep the temporary files 
-with the option "-keep". This is useful to examine why something is badly installed on
-the DSAS without needed to start a server with the DSAS installed. The compilation time 
-of the `node` and `clamav` packages is extremely long and so, this compilation will 
-take several hours the first time it is performed. 
-
+An ISO image is created in the file `work/dsao.iso`. We can keep the
+temporary files with the option `-keep`. This is useful to examine why
+something is badly installed on the DSAS without needing to start a
+server with the DSAS installed. The compilation time of the `node` and
+`clamav` packages is extremely long and so, this compilation will
+take several hours the first time it is performed.
 
 To build a source package (see the files `pkg/*.pkg`) a command like 
 
 ```
-./make.sh -build gnupg
+./make.sh build gnupg
 ```
 
 is used. To clean the files used during the build, the command 
 
 ```
-./make.sh -clean
+./make.sh clean
 ```
 
-is used. The ISOs of the DSAS sare kept, but all of the other temporary files are
-deleted. To completely clean the build tree, use the command
+is used. The ISOs of the DSAS are kept, but all of the other temporary
+files are deleted. To completely clean the build tree, use the command
 
 ```
-./make.sh -realclean
+./make.sh realclean
 ```
 
 A compilation of the `Docker` image is performed with the command
@@ -1712,19 +1726,20 @@ A compilation of the `Docker` image is performed with the command
 ./make.sh docker
 ```
 
-This creates a package `work/docker.tgz` contains a Makefile that needs to be adjusted to 
-the parameters needed for the Docker installation.
+This creates a package `work/docker.tgz` contains a Makefile that needs
+to be adjusted to the parameters needed for the Docker installation.
 
 ## Process to create a release
 
-The release process must ensure the qulaity of the release and that changes made since the last
-release do not result in regressions in the functionality or security of the DSAS. The process
-is separated into two phases; a test phase and a phase to build and create the release.
+The release process must ensure the quality of the release and that
+changes made since the last release do not result in regressions in the
+functionality or security of the DSAS. The process is separated into two
+phases; a test phase and a phase to build and create the release.
 
 ### Release test process
 
-Before the tests, it is necessary to ensure that the latest versions of TinyCore packages are
-used with the commands
+Before the tests, it is necessary to ensure that the latest versions of
+TinyCore packages are used with the commands
 
 ```
 ./make.sh clean
@@ -1732,38 +1747,40 @@ used with the commands
 sudo rm work/tcz*/dsas_js.tcz*
 ```
 
-Before continuing, a static analysis of the source code (javascript, shell and php) of the DSAS
-is performed with the command
+Before continuing, a static analysis of the source code (javascript,
+shell and php) of the DSAS is performed with the command
 
 ```
 ./make.sh static
 ```
 
-The identified errors should be resolved or accepted before continuing. After, the build of a 
-test version of the DSAS is performed with the command 
+The identified errors should be resolved or accepted before continuing.
+After, the build of a test version of the DSAS is performed with the
+command 
 
 ```
 ./make.sh -t
 ```
 
-An ISO with the test version of teh DSAS is available in the file `work/dsas-test.iso`. This ISP
-includes additional code and services  to test all of the functions of the DSAS. To use this test
-ISO, you need to have two virtual machines configured and from the machine configured as the `lower`
-machine run as the user ètc` the command 
+An ISO with the test version of teh DSAS is available in the file
+`work/dsas-test.iso`. This ISO includes additional code and services to
+test all of the functions of the DSAS. To use this test ISO, you need to
+have two virtual machines configured and from the machine configured as the `lower` machine run as the user `tc` the command 
 
 ```
 dsastests
 ```
 
-This is a PHP script using a webdriver based en geeko to test all of the function of the DSAS and 
-ensure that the DSAS correctly performs it rôle to filter the files. An example of the feedback from
-this script is 
+This is a PHP script using a webdriver based on `gecko` to test all of
+the function of the DSAS and ensure that the DSAS correctly performs its
+role to filter the files. An example of the feedback from this script is 
 
 ![Example of passed tests from the script `dsastest`](en/DSAS44.png)
 
-When errors are returned by this script, they must be resolved before continuing. An error can be
-due to a change in the manner the DSAS functions and require a modification of the test script, or
-it could indicate a real error in the DSAS code requiring a correction.
+When errors are returned by this script, they must be resolved before
+continuing. An error can be due to a change in the manner the DSAS
+functions and require a modification of the test script, or it could
+indicate a real error in the DSAS code requiring a correction.
 
 Ensure that all tests pass in the script `dsastests` before continuing.
 
@@ -1771,8 +1788,9 @@ Ensure that all tests pass in the script `dsastests` before continuing.
 
 Now that you are ready to create a release, you must ensure that 
 
-- The CHANGELOG file is updated, including the release version and date of release
-- Le release version is updated in the files
+- The CHANGELOG file is updated, including the release version and date
+of release
+- The version of the release is updated in the files
   * DsasHelp.js: The `dsasVersion` variable
   * Documentation_en.md: In the section `Security Maintenance`
   * Documentation_fr.md: In the section `Security Maintenance`
@@ -1786,14 +1804,14 @@ sudo rm work/tcz*/dsas_js.tcz*
 ./make.sh
 ```
 
-The ISO is then available in the file `work/dsas.iso`. At this point you can create the release
-on gitlab.
+The ISO is then available in the file `work/dsas.iso`. At this point you
+can create the release on gitlab.
 
 
 ### Binary upgrade of the virtual machines
 
-The upgrade of the VM is a simple remplacement of te existing ISO with the new image,
-like
+The upgrade of the VM is a simple replacement of the existing ISO with
+the new image, like
 
 ![Upgrading the ISO with VirtualBox](en/vbox3.png)
 
@@ -1813,7 +1831,7 @@ make install CONTAINER=bas
 docker container start bas
 ```
 
-will reinstall the image, without loosing the existing configuration
+will reinstall the image, without losing the existing configuration
 
 ## Source package upgrades
 
@@ -1821,33 +1839,36 @@ If a vulnerability is identified with a DSAS package and a binary update
 is not available, we have the option to create a package for DSAS from 
 the source code. We already have several packages made from source code
 
-- `_pkg` [Required] - The name of the package, it must be identical to a name of the file
-minus the `.pkg` extension
+- `_pkg` [Required] - The name of the package, it must be identical to a
+name of the file minus the `.pkg` extension
 - `_version` [Optional] - The software version number
 -`_uri` [Required] - The address to look for the source software package
-- `_dep` [Optional] - The dependencies necessary for the software as long as it is
+- `_dep` [Optional] - The dependencies necessary for the software if it
 is installed
-- `_build_dep` [Optional] - The dependencies needed during the software build phase
+- `_build_dep` [Optional] - The dependencies needed during the software
+build phase
 - `_pkg_path` [Optional] - Source packages fetched from` _uri` should
-be in this sub-folder. If empty or absent, we assume that the build is from
+be in this sub-folder. If empty or absent, we assume that the build is
 from the root of the source package.
-- `_pre_config` [Optional] - Allows a script to be run prior to the configuration
+- `_pre_config` [Optional] - Allows a script to be run prior to the
+configuration
 - `_conf_cmd` [Optional] - The command needed to configure the software,
 typically `./configure`. The order could include options if needed
 for the build like `./configure --prefix=/usr/ local`.
 - `_make_cmd` [Optional] - The command needed to build the software,
 typically `make`
 - `_install_cmd` [Optional] - The command needed to install the software.
-It will be installed in a temporary folder. It is assumed that the command
-`_install_cmd` accepts the name of the temporary folder as the last argument. The example
-typical of the `_install_cmd` command is` make install DESTDIR=`
-- `_post_build` [Optional] - Allows for a script that is run post build but prior to
-the packaging of the files
-- `_pkgs` [Optional] - The software could be split into several sub-packages.
-This variable allows the way the split is made to be defined. An example could
-be `main{/usr/local/bin,/usr/local/lib};doc{/usr/local/share/doc}`. The package
-main is defined by `main{...}` and a second package with the extension
-`-doc` will be created with the files in `/usr/local/doc`
+It will be installed in a temporary folder. It is assumed that the
+command `_install_cmd` accepts the name of the temporary folder as the
+last argument. The example typical of the `_install_cmd` command is
+`make install DESTDIR=`
+- `_post_build` [Optional] - Allows for a script that is run post build
+but prior to the packaging of the files
+- `_pkgs` [Optional] - The software could be split into several
+sub-packages. This variable allows the way the split is made to be
+defined. An example could be `main{/usr/local/bin,/usr/local/lib};doc{/usr/local/share/doc}`. The
+package main is defined by `main{...}` and a second package with the
+extension `-doc` will be created with the files in `/usr/local/doc`
 - `_post_install` [Optional] - Allows for a script which will be executed
 for the installation of the package.
 
@@ -1857,13 +1878,13 @@ A complete example of a `pkg / openssl-1.1.1.pkg` file is
 _pkg=openssl-1.1.1
 _version=1.1.1q
 _uri=https://www.openssl.org/source/openssl-1.1.1q.tar.gz
-_dep=""
-_build_dep="compiletc perl5"
+_dep=``
+_build_dep=`compiletc perl5`
 _pkg_path=openssl-1.1.1q
-_conf_cmd="./config --openssldir=/usr/local/etc/ssl"
-_make_cmd="make"
-_install_cmd="make install DESTDIR="
-_pkgs="main{/usr/local/bin,/usr/local/etc,/usr/local/lib/*.so*,/usr/local/lib/engines-1.1};dev{/usr/local/include,/usr/local/lib/*.a,/usr/local/lib/pkgconfig};doc{/usr/local/share}"
+_conf_cmd=`./config --openssldir=/usr/local/etc/ssl`
+_make_cmd=`make`
+_install_cmd=`make install DESTDIR=`
+_pkgs=`main{/usr/local/bin,/usr/local/etc,/usr/local/lib/*.so*,/usr/local/lib/engines-1.1};dev{/usr/local/include,/usr/local/lib/*.a,/usr/local/lib/pkgconfig};doc{/usr/local/share}`
 _post_install=\
 '#! /bin/sh
 [  -d /usr/local/etc/ssl/certs ] || mkdir -p /usr/local/etc/ssl/certs
@@ -1871,22 +1892,24 @@ _post_install=\
 [  -d /usr/local/etc/ssl/crl ] || mkdir -p /usr/local/etc/ssl/crl
 [  -d /usr/local/etc/ssl/newcerts ] || mkdir -p /usr/local/etc/ssl/newcerts
 [  -f /usr/local/etc/ssl/index.txt ] || touch /usr/local/etc/ssl/index.txt
-[  -f /usr/local/etc/ssl/serial ] || echo "01" > /usr/local/etc/ssl/serial
-[  -f /usr/local/etc/ssl/crlnumber ] || echo "01" > /usr/local/etc/ssl/crlnumber'
+[  -f /usr/local/etc/ssl/serial ] || echo `01` > /usr/local/etc/ssl/serial
+[  -f /usr/local/etc/ssl/crlnumber ] || echo `01` > /usr/local/etc/ssl/crlnumber'
 ```
 
-With the package defined, it is possible to create a binary package with the command
+With the package defined, it is possible to create a binary package with
+the command
 
 ```shell
 ./make.sh build openssl-1.1.1
 ```
 
-The next build of the DSAS will take into account this package in its build.
+The next build of the DSAS will take into account this package in its
+build.
 
 # Detailed architecture
 
-This section inclides the details of the security measures in place on the DSAS 
-to ensure its security.
+This section includes the details of the security measures in place on
+the DSAS to ensure its security.
 
 
 ## Detailed network flow matrix
@@ -1900,7 +1923,7 @@ to ensure its security.
 | sensitive network | lower             | 22          | tcp     | sftp     | optional  | user 'bas' file access        |
 | sensitive network | lower             | 161         | udp     | snmp     | optional  | surveillance of the DSAS      |
 | open network      | upper             | 22          | tcp     | sftp     | not reco. | user 'haut' file deposit      |
-| lower             | sensitive network | 123         | udp     | ntp      | optional  | time synchronisation          |
+| lower             | sensitive network | 123         | udp     | ntp      | optional  | time synchronization          |
 | lower             | sensitive network | 514         | udp     | syslog   | optional  | log service                   | 
 | upper             | open network      | 22          | tcp     | sftp/scp |    -      | task : sftp/scp               |
 | upper             | open network      | 20          | tcp     | ftp      |    -      | task : ftp - data fixed       |
@@ -1911,18 +1934,19 @@ to ensure its security.
 
 ## The user accounts of the DSAS
 
-There are 5 default accounts on the DSAS, with only one have to rights to connect 
-with a shell.
+There are 5 default accounts on the DSAS, with only one having rights to
+connect with a shell.
 
 | account | shell      | comment                                         |
 |---------|------------|-------------------------------------------------|
 | root    | /bin/false |                                                 |
 | tc      | /bin/ash   | Only user with the rights to use sudo do        | 
-| haut    | /bin/false | Used for connection to the non sensitive zone   |
+| haut    | /bin/false | Used for connection to the non-sensitive zone   |
 | bas     | /bin/false | Used for connection to the sensitive zone       |
 | verif   | /bin/false | Used internally to the DSAS                     |
 
-Each user added via the DSAS adminsitration interface will have a shell `/bin/ash`.
+Each user added via the DSAS administration interface will have a shell
+`/bin/ash`.
 
 
 ### The write permissions of each user
@@ -1937,35 +1961,39 @@ The write permission of each user is as seen in the following table
 | bas     | /tmp, /home/bas, /home/dsas/bas |
 
 
-User `tc` needs access to certain folders in order to do administration operations.
-The `verif` user has access to the files of the `bas` and `haut` users but also for writing
-logs and to `/usr/local/var/lib/rpm` so that the `verif` user can install GPG certificates
-for `rpm` without having `sudo` rights. Pre-existing rpm certificates are erased at each use,
-and so this right for the `verif` user is risk-free. 
+User `tc` needs access to certain folders to perform administration
+operations. The `verif` user has access to the files of the `bas` and
+`haut` users but also for writing logs and to `/usr/local/var/lib/rpm` so
+that the `verif` user can install GPG certificates for `rpm` without
+having `sudo` rights. Pre-existing rpm certificates are erased at each
+use, and so this right for the `verif` user is risk-free.
 
-## Disk partitionning 
+## Disk partitioning 
 
 The files downloaded and verified by the DSAS are all stored on a disk.
-This disk is mounted with the "noexec" flag and no file downloaded by the
+This disk is mounted with the `noexec` flag and no file downloaded by the
 DSAS on this disk can be used to compromise the integrity of the
-DSAS. "haut" and "bas" users are restricted to copying files only
-on this disc. All the DSAS executable files are on a "ramdisk"
+DSAS. `haut` and `bas` users are restricted to copying files only
+on this disc. All the DSAS executable files are on a `ramdisk`
 in the machine's memory and copied from the ISO image on each reboot.
 
-A hardlink in linux is exactly the same file duplicated in another location.
-The use of hardlinks between the files of the upper and lower disk partitions,
-can allow a simplification of the architecture, because no way to trace the
-downloaded files will be necessary without increasing the disk space.
+A hardlink in Linux is the same file duplicated in another location. The
+use of hardlinks between the files of the upper and lower disk
+partitions, can allow a simplification of the architecture, because no
+way to trace the downloaded files will be necessary without increasing
+the disk space.
 
-On the other hand, the hardlink must comply with the access requirements between 
-the two partitions. When a file exists in both zones, it is necessary that
+On the other hand, the hardlink must comply with the access requirements
+between the two partitions. When a file exists in both zones, it is
+necessary that
 
-- The haut(upper) user cannot modify the file visible in the lower partition
+- The haut(upper) user cannot modify the file visible in the lower
+partition
 - The haut (upper) user cannot delete the existence of the file in the
-  lower partition 
+lower partition 
 - That the haut (upper) user can delete a file in the upper partition
-- The users `haut` and `bas` must be isolated with a `chroot jail` and so the ownership
-  of the principal directory must be `root` 
+- The users `haut` and `bas` must be isolated with a `chroot jail` and so
+the ownership of the principal directory must be `root` 
 
 With the following permissions
 
@@ -1989,8 +2017,9 @@ share:x:2003:verif,bas,haut
 repo:x:2004:bas,tc
 ```
 
-These requirement are respected. The verificaton scripts of the DSAS have been
-adapted to respect these conditions. These permissions are audited at each reboot
+These requirements are respected. The verification scripts of the DSAS
+have been adapted to respect these conditions. These permissions are
+audited at each reboot
 
 ## Means of Verification
 
