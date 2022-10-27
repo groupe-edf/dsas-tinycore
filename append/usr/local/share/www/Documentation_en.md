@@ -1051,95 +1051,106 @@ is faulty, the page status informs you with the following screen
 
 ## Status of verified files
 
-The status of the verified files is available directly below the status of the machines
-of the DSAS, like
+The status of the verified files is available directly below the status
+of the machines of the DSAS, like
 
 ![Verified files status page](en/DSAS25.png)
 
 The status of file verification might be in multiple tabs. The number
-the tab grows with the age of the verification. The first tab is the current week,
-the second tab last week, etc.
+the tab grows with the age of the verification. The first tab is the
+current week, the second tab last week, etc.
 
-The status of each verified file is given on a line of the page, and each line is
-composed of 4 elements
+The status of each verified file is given on a line of the page, and each
+line is composed of 4 elements
 
-- __Status__: In the first position we find the status of the verification
-- __Hash__: In second position is the MD5 hash of the file. This could be useful when a threat
-has been identified, to see if it has been passed by the DSAS or not.
-- __Date__: The date of the verification is given in the third position. Dates are always given
-in UTC format.
+- __Status__: In the first position we find the status of the
+verification
+- __Hash__: In second position is the MD5 hash of the file. This could be
+useful when a threat has been identified, to see if it has been passed by
+the DSAS or not.
+- __Date__: The date of the verification is given in the third position.
+Dates are always given in converted to the local time zone.
 - __File__: And in the last position the path to the file is given
 
 The status will take one of the following values
 
-- `Ok`: All the requested checks were successful and the file was made available
-on the lower machine.
+- `Ok`: All the requested checks were successful, and the file was made
+Available on the lower machine.
 - `$$ Checksum fail`: A checksum test on the file failed
-- `** Bad Sig`: One of the requested verifications reported a bad signature
-- `** Bad Interm Sig`: The verification of an intermediate certificate failed
+- `** Bad Sig`: One of the requested verifications reported a bad
+signature
+- `** Bad Interm Sig`: The verification of an intermediate certificate
+failed
 - `** Bad RPM Sig`: The signature verification of an RPM file failed
-- `** Bad DEB Sig`: The signature verification of an DEB file failed
+- `** Bad DEB Sig`: The signature verification of a DEB file failed
 - `** Not signed`: The file is not signed and could not be verified
 
-the blue button at the top of the verification logs allow to switch between a mode or "all logs"
-are visible or a mode or that "errors only" are visible. This will allow you to quickly identify
-the files that had problems.
+the blue button at the top of the verification logs allow to switch
+between a mode or `all logs` are visible or a mode or that `errors only`
+are visible. This will allow you to quickly identify the files that had
+problems.
 
 ### Search in verification logs 
 
-In the case of a problem or a vulnerability being identified it might be necessary to examine
-the verification logs, for either the name of a file or its MD5 signature as an indicator of
-compromission. The DSAS includes a search dialog allowing matching log lines to be found. Type
-the string value to be found in the verification logs as shown below and the next matching line
-will be highlighted.
+In the case of a problem or a vulnerability being identified it might be
+necessary to examine the verification logs, for either the name of a file
+or its MD5 signature as an indicator of compromission. The DSAS includes
+a search dialog allowing matching log lines to be found. Type the string
+value to be found in the verification logs as shown below and the next
+matching line will be highlighted.
 
 ![Search in the verification logs](en/DSAS33.png)
 
-Typing `Return` allows the next matching line to be found. If there is no matching line between
-the actual position in the logs and the end of the logs, the DSAS will recommence the search 
-starting at the beginning. If no matching line is found, no line will be highlighted.
+Typing `Return` allows the next matching line to be found. If there is no
+matching line between the actual position in the logs and the end of the
+logs, the DSAS will recommence the search starting at the beginning. If
+no matching line is found, no line will be highlighted.
 
 ## Certificate configuration
 
-The DSAS is preconfigured with the set of root certificates of a classic linux distribution.
-All of these certificates and other imported certificates are available from the tab
-Configuration/Certificates as seen below
+The DSAS is preconfigured with the set of root certificates of a classic
+Linux distribution. All these certificates and other imported
+certificates are available from the tab Configuration/Certificates as seen below
 
 ![Certificate configuration page](en/DSAS17.png)
 
-The certificates installed in each category can be viewed by clicking on the
-arrow to the left of each category and the details of each certificate are available
-like
+The certificates installed in each category can be viewed by clicking on
+The arrow to the left of each category and the details of each
+certificate is available like
 
 ![Certificate configuration page](en/DSAS19.png)
 
-Each certificate can be downloaded by clicking on the button ![](save.svg).
+Each certificate can be downloaded by clicking on the button
+![](save.svg).
 
-Certificates are highlighted in 4 different ways depending on the characteristics
-of the certificate.
+Certificates are highlighted in 4 different ways depending on the
+Characteristics of the certificate.
 
-- __Certificate CA__ - With black text. The certificate is a root certificate or
-a self-signed certificate. The two types of certificate are similar with the difference 
-being whether the certificate is trusted or not.
+- __Certificate CA__ - With black text. The certificate is a root
+certificate or a self-signed certificate. The two types of certificates
+are similar with the difference being whether the certificate is trusted
+or not.
 - __Intermediate Certificate__ - With blue text. This certificate is not
 a root certificate, but it is signed by another certificate
-- __ Less than 6 months to expiration__ - With orange/yellow text. This certificate is
-less than 6 months from expiration
-- __Expired__ - With red text. The certificate has already expired. This does not mean
-that it is no longer usable, but it is not valid for files signed after the date of
-expiration
+- __ Less than 6 months to expiration__ - With orange/yellow text. This
+certificate is less than 6 months from expiration
+- __Expired__ - With red text. The certificate has already expired. This
+does not mean that it is no longer usable, but it is not valid for files
+signed after the date of expiration
 
-Preinstalled root certifications could be used for verifications on the DSAS. But using 
-these certificates alone is not sufficient, because
+Preinstalled root certifications could be used for verifications on the
+DSAS. But using these certificates alone is not sufficient, because
 
-- Preinstalled certificates do not include GPG certificates used by linux repositories
-- Verification only against a root certificate does not completely guarantee the
-absence of malware. [Code signing certificates have been abused]https://duo.com/decipher/attackers-are-signing-malware-with-valid-certificates)
-in the past in order to sign malware.
+- Preinstalled certificates do not include GPG certificates used by Linux
+repositories
+- Verification only against a root certificate does not completely
+guarantee the absence of malware. [Code signing certificates have been
+abused]https://duo.com/decipher/attackers-are-signing-malware-with-valid-certificates)
+in the past to sign malware.
 
-So ideally it is necessary to verify with the intermediate certificates closest to 
-the desired software publisher. For example a update of "Symantec Endpoint Protection" 
-(SEP) includes the chain of trust
+So ideally it is necessary to verify with the intermediate certificates
+closest to the desired software publisher. For example, an update of
+`Symantec Endpoint Protection` (SEP) includes the chain of trust
 
 ```
 VeriSign Class 3 Public Primary Certification Authority - G5
@@ -1147,47 +1158,53 @@ VeriSign Class 3 Public Primary Certification Authority - G5
   -> Symantec Corporation
 ```
 So ideally you should check for updates of SEP with the root certificate
-`VeriSign Class 3 Public Primary Certification Authority - G5` and with the certificate
-Intermediate `Symantec Corporation` or `Symantec Class 3 SHA256 Code Signing CA` in order
-to limit as much as possible the files that could be validated as a Symantec update. So 
-it is necessary to upload at least one of these Symantec certificates to the DSAS.
+`VeriSign Class 3 Public Primary Certification Authority - G5` and with
+the Intermediate certificate `Symantec Corporation` or `Symantec Class 3
+SHA256 Code Signing CA` to limit as much as possible the files that could
+be validated as a Symantec update. So, it is necessary to upload at least
+one of these Symantec certificates to the DSAS.
 
 ## X509 certificate management
 
 #### Identification of X509 certificates
 
-X509 certificates are used in Windows signatures, but also for files signed by `openssl`.
+X509 certificates are used in Windows signatures, but also for files
+signed by `openssl`.
 
-From a Windows computer, with a right click and selecting the option `Properties` we could
-see the following menu
+From a Windows computer, with a right click and selecting the option
+`Properties` we could see the following menu
 
 ![Properties menu of a signed binary](en/CERT1.png)
 
-By clicking on `Details` and after` Display the certificate` we can see the chain of trust
+By clicking on `Details` and after` Display the certificate` we can see
+the chain of trust
 
 ![Chain of trust of a signed binary](en/CERT4.png)
 
-This allows the root certificate and all the certificates used to sign the file to be seen.
+This allows the root certificate and all the certificates used to sign
+the file to be seen.
 
 #### Preparation of X509 certificates
 
-The most important point for the preparation of a certificate for importation into the DSAS
-is to know the provenance of the certificate. Ideally the certificate is supplied directly by 
-the software editor via a secure method. A usual means of recovering a certificate is directly from the
-editors website use https. However, this is not always possible, especially for Symantec as above.
+The most important point for the preparation of a certificate for
+importation into the DSAS is to know the provenance of the certificate.
+Ideally the certificate is supplied directly by the software editor via a
+secure method. A usual means of recovering a certificate is directly from
+the editor’s website use https. However, this is not always possible,
+especially for Symantec as above.
 
-In the absence of distribution via a website, all the certificates used for
-Windows signatures are embedded in the signed binaries themselves. So if
-you are __ sure__ where a binary comes from you can use the binary itself as a
-certificate source.
+In the absence of distribution via a website, all the certificates used
+for Windows signatures are embedded in the signed binaries themselves.
+So, if you are __ sure__ where a binary comes from you can use the binary
+itself as a certificate source.
 
 On the same menu as below on the `Details` tab we can see
 
 ![Details of a certificate](en/CERT5.png)
 
-with the option of `copy to file`. This option allows all the certificates of the chain of 
-trust to be saved. It is necessary to select from `save the certificate in base64 encoded X.509`
-format as
+with the option of `copy to file`. This option allows all the
+certificates of the chain of trust to be saved. It is necessary to select
+from `save the certificate in base64 encoded X.509` format as
 
 ![Export of a base64 certificate](en/CERT7.png)
 
@@ -1195,69 +1212,77 @@ A file with the certificate will be saved on your computer.
 
 #### Special case of Symantec LiveUpdate certificates
 
-Symantec LiveUpdate files are not signed directly, they are rather archives in `7z` format 
-with all the signed metadata necessary for their verification. In each file of `LiveUpdate`
-a file with the extension `.sig` can be found, typically` v.sig`. This file contains the
-certificates that must be imported into the DSAS for signing files of LiveUpdate. As long as
-you have extracted the `v.sig` file, the two certificates to import can be found with the command
+Symantec LiveUpdate files are not signed directly, they are rather
+archives in `7z` format with all the signed metadata necessary for their
+verification. In each file of `LiveUpdate` a file with the extension
+`.sig` can be found, typically` v.sig`. This file contains the
+certificates that must be imported into the DSAS for signing files of
+LiveUpdate. If you have extracted the `v.sig` file, the two certificates to import can be found with the command
 
 ``` shell
-$ openssl pkcs7 -inform der -in v.sig -outform pem -print_certs | awk 'split_after == 1 {n ++; split_after = 0} / ----- END CERTIFICATE ----- / {split_after = 1} {if (length ($ 0)> 0) print> "cert" n ". pem "}
+$ openssl pkcs7 -inform der -in v.sig -outform pem -print_certs | awk 'split_after == 1 {n ++; split_after = 0} / ----- END CERTIFICATE ----- / {split_after = 1} {if (length ($ 0)> 0) print> `cert` n `. pem `}
 ```
 
-on a linux machine. From the Windows command line we could do.
+on a Linux machine. From the Windows command line we could do.
 
 ``` shell
 $ openssl pkcs7 -inform der -in v.sig -outform pem -print_certs -out certs.pem
 ```
 
-and the `certs.pem` file will contain several certificates in text format that you can
-split into multiple files with the help of a text editor.
+and the `certs.pem` file will contain several certificates in text format
+that you can split into multiple files with the help of a text editor.
 
-On the other hand, some files in the archives are relatively old, and their
-signatures too. Therefore, several certificates are required. Moreover,
-the root certificates used for these signatures are not included in the files
-but integrated directly into SEP, as [discussed above](#verification-symantec-liveupdate).
+On the other hand, some files in the archives are relatively old, and
+their signatures too. Therefore, several certificates are required.
+Moreover, the root certificates used for these signatures are not
+included in the files but integrated directly into SEP, as [discussed
+above](#verification-symantec-liveupdate).
 
-In order to facilitate the use of Symantec LiveUpdate, and other software vendors
-typically used with the DSAS, the certificates to be installed on the DSAS are available
-in [the attached certificate bundle](Certificates.zip). 
+To facilitate the use of Symantec LiveUpdate, and other software vendors
+typically used with the DSAS, the certificates to be installed on the
+DSAS are available in [the attached certificate
+bundle](Certificates.zip). 
 
 #### Special case Trend Micro certificates
 
-The files supplied by Trend Micro are signed in two different ways; In signed JAR files, or in
-files signed in SMIME. The certificates used for the SMIME signatures can be recovered in a similar 
-maniere to the the certificates of Symantec LiveUpdate. For the certificates used for the JAR
-files, the JAR file must first be unzip to obtain the certificats like,
+The files supplied by Trend Micro are signed in two different ways; In
+signed JAR files, or in files signed in SMIME. The certificates used for
+the SMIME signatures can be recovered in a similar manner to the
+certificates of Symantec LiveUpdate. For the certificates used for the
+JAR files, the JAR file must first be uncompressed to obtain the
+Certificates like,
 
 ```shell
 $ unzip file.zip
-$ openssl pkcs7 -inform der -in JAVA.RSA -outform pem -print_certs | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if(length($0) > 0) print > "cert" n ".pem"}
+$ openssl pkcs7 -inform der -in JAVA.RSA -outform pem -print_certs | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if(length($0) > 0) print > `cert` n `.pem`}
 ```
 
 ### SSL public key management
 
-Public keys are not really certificates, as they only contain the cryptographic objet
-used for signature verification or decryption. No information on the organization responsible 
-for the keys or limitations on their use are included in SSL public keys. These keys are used 
-in the __openssl__ or __cyberwatch__ tasks
+Public keys are not really certificates, as they only contain the
+cryptographic object used for signature verification or decryption. No
+information on the organization responsible for the keys or limitations
+on their use are included in SSL public keys. These keys are used in the
+__openssl__ or __cyberwatch__ tasks
 
-Because there is no chain of trust for public keys, it is essential to  have a trusted means of
-retrieving them.
+Because there is no chain of trust for public keys, it is essential to
+have a trusted means of retrieving them.
 
 ### Managing GPG certificates
 
-GPG certificates are used in particular for checking linux binaries, but also for other files 
-signed by GPG (for example configuration files developed by DSAS users).
+GPG certificates are used to check Linux binaries, but also for other
+files signed by GPG (for example configuration files developed by DSAS
+users).
 
-GPG certificates do not explicitly integrate the chain of trust into signed binaries. GPG uses 
-the concept of a [web of trust](https://en.wikipedia.org/wiki/Web_of_trust) where the certificates
-themselves are validated against each other. This is outside the scope of this document and we 
-have assumed that you have complete confidence in the certificates that you have chosen to download
-to the DSAS.
+GPG certificates do not explicitly integrate the chain of trust into
+signed binaries. GPG uses the concept of a [web of
+trust](https://en.wikipedia.org/wiki/Web_of_trust) where the certificates
+themselves are validated against each other. This is outside the scope of
+this document and we have assumed that you have complete confidence in
+the certificates that you have chosen to download to the DSAS.
 
-In order to retrieve a GPG certificate, the only solution is to retrieve them from their publisher.
-For example some examples of certificate of software publishers are
+To retrieve a GPG certificate, the only solution is to retrieve them from
+their publisher. Some examples of certificate of software publishers are
 
 <!-- Keep these bullet points on a single line as it causes problems with forigate VPN SSL -->
 - [The RedHat certificates page](https://access.redhat.com/security/team/key) contains [the certificate used for signing Redhat binaries since 2010](https://www.redhat.com/security/data/fd431d51.txt)
@@ -1268,19 +1293,20 @@ For example some examples of certificate of software publishers are
 
 Public keys, X509 and GPG certificates can be added to DSAS by clicking on
 ![](plus-lg.svg) next to each category of certificate. A file browser
-of the computer is opened in order to select the file to download to the
-the DSAS. And a successful importation is signaled by
+of the computer is opened to select the file to download to the DSAS. And
+a successful importation is signaled by
 
 ![Certificate import successful](en/DSAS20.png)
 
-In order to confirm the correct importation of the certificate into the DSAS, it is
-recommend to examine the details of the imported certificate, like for example
+To confirm the correct importation of the certificate into the DSAS, it
+is recommend to examine the details of the imported certificate, for
+example
 
 ![Imported certificate details](en/DSAS21.png) 
 
 ## Task configuration
 
-A new task can be added by clicking on ![](plus-lg.svg) to the right of 
+A new task can be added by clicking on ![](plus-lg.svg) to the right of
 the tasks page.
 
 ![Add tasks menu](en/DSAS26.png)
@@ -1293,24 +1319,26 @@ By clicking on it we are presented with an add task form like
 - `Sub-folder used by the task` - The files associated with each task
 are stored in a separate folder on the DSAS. This folder should be unique
 for each task.
-- `URI (no loading if empty)` - The address where the DSAS will look for the files
-associated with a task. Leaving this empty is permissible and in this case it
-is assumed that the files associated with the tasks must be deposited on the DSAS
-by the user. the `URI` must be of the form `protocol://site/folder/` or else
-`protocol://site/folder/file`. Allowed protocols are `sftp:`, `ftp:`, `ftps:` 
-`http:` and `https:`. For example `ftp://example.com/LiveUpdate/`. The `/` 
-at the end of the `URI` with a folder is optional but recommended.
-- `URI Certification Authority` - If the `URI` uses `https`, then the DSAS will
-refuse to download files from the URI unless a validation certiciate is used 
-for the server. Three choices are possible
-  * `Base CA` - The integrated cerificate authorities are used the validate the
-  server
-  * `Self-signed` - The DSAS will not validate the certificate used by the server.
-  In this case a "Man in the Middle" attack is possible, and other means of ensuring
-  protection against this might be needed. All files recovered are verified by the 
-  DSAS so the risk is minimized.
-  * Uploaded certificates - The X509 root certificates that have been uploaded can
-  also be used as the certification authority for the verification of the server.
+- `URI (no loading if empty)` - The address where the DSAS will look for
+the files associated with a task. Leaving this empty is permissible and
+in this case it is assumed that the files associated with the tasks must
+be deposited on the DSAS by the user. the `URI` must be of the form
+`protocol://site/folder/` or else `protocol://site/folder/file`. Allowed
+protocols are `sftp:`, `ftp:`, `ftps:` `http:` and `https:`. For example,
+`ftp://example.com/LiveUpdate/`. The `/` at the end of the `URI` with a
+folder is optional but recommended.
+- `URI Certification Authority` - If the `URI` uses `https`, then the
+DSAS will refuse to download files from the URI unless a valid
+HTTPS certificate is used for the server. Three choices are possible
+  * `Base CA` - The integrated certificate authorities are used to
+validate the server
+  * `Self-signed` - The DSAS will not validate the certificate used by
+the server. In this case a `Man in the Middle` attack is possible, and
+other means of ensuring protection against this might be needed. All
+files recovered are verified by the DSAS so the risk is minimized.
+  * Uploaded certificates - The X509 root certificates that have been
+uploaded can also be used as the certification authority for the
+verification of the server.
 - `Task type` - The type of task used. The types of tasks allowed are
   * `rpm` - The task is a file repository in rpm format. All files are
 check with `rpm -K`.
@@ -1334,53 +1362,59 @@ Symantec LiveUpdate.
   * `per week` - The task is executed once per week
   * `per month` - The task is executed once per month
 - `Add certificate` - Default certificates and certificates added
-by user are available for addition to verification tasks. The certicate type
-must be appropriate for the type of task. Each selected certificate is
-added to the list of certificates for the task, and can be removed by
+by user are available for addition to verification tasks. The certificate
+type must be appropriate for the type of task. Each selected certificate
+is added to the list of certificates for the task, and can be removed by
 clicking on the ![](x-lg.svg) next to the certificate.
 
 An example of an added task is
 
 ![Example task added](en/DSAS31.png)
 
-Next to each task, the icon ![](pencil-square.svg) allows the task to be modified, ![](x-lg.svg) 
-allows the task to be removed, ![](play.svg) allows the task to be executed immediately and 
-![](info.svg) allows the logs of the task to be examined. If the task is running an icon 
-![](kill.svg) will appear next to the task, allowing the running task to be terminated. 
-The status of the task is provided via the color of the task title. In blue, the task was not executed,
-in green, the execution of the task was successful, and in red the execution has failed. The last
+Next to each task, the icon ![](pencil-square.svg) allows the task to be
+modified, ![](x-lg.svg) allows the task to be removed, ![](play.svg)
+allows the task to be executed immediately and ![](info.svg) allows the
+logs of the task to be examined. If the task is running an icon 
+![](kill.svg) will appear next to the task, allowing the running task to
+be terminated. The status of the task is provided via the color of the
+task title. In blue, the task was not executed, in green, the execution
+of the task was successful, and in red the execution has failed. The last
 execution of the task is visible by opening the task as
 
 ![Example of successful task execution](en/DSAS32.png) 
 
 ### Debian and Redhat architecture selection
 
-The Debian and Redhat style repositories can be very large. One means of reducing their size is 
-to only download the files for architectures that you will really be using. For instance if you 
-don't have `arm64` debian machines in your infrastructure there is no point in downloading the
+The Debian and Redhat style repositories can be very large. One means of
+reducing their size is to only download the files for architectures that
+you will really be using. For instance, if you don't have `arm64` Debian
+machines in your infrastructure there is no point in downloading the
 files for this architecture.
 
-Both Debian and Redhat permit the files to be downloaded to be restricted, but the manner in which
-this is achieved with the DSAS if different because Debian has one single monolithic repository
-whereas Redhat seperates the repositories by both function (for example main, extras and updates 
-for Centos) and by architecture.
+Both Debian and Redhat permit the files to be downloaded to be
+restricted, but the way this is achieved with the DSAS if different
+because Debian has one single monolithic repository whereas Redhat
+separates the repositories by both function (for example main, extras and
+updates for Centos) and by architecture.
 
-To limit the files downloaded for Debian is therefore directly controlled in the task creation
-or modification as can be seen in the figure below
+To limit the files downloaded for Debian is therefore directly controlled
+in the task creation or modification as can be seen in the figure below
 
 ![Example of Debian architecture selection](en/DSAS43.png)
 
 Where the special architectures
 
-- source : The source packages permitting the binary packages to be rebuilt
-- all : The architecture independant files needed by all architectures
+- source : The source packages permitting the binary packages to be
+rebuilt
+- all : The architecture independent files needed by all architectures
 
 are also supplied.
 
-As Redhat supplies individual repositories by archiecture and function, the DSAS must be 
-configured with multiple tasks for each architecture and/or functions. For example to
-download a mirror or RHEL v8 for both Intel/AMD 64bit and Arm 64 bit archiectures, two
-DSAS tasks usings the URIs below might be needed
+As Redhat supplies individual repositories by architecture and function,
+the DSAS must be configured with multiple tasks for each architecture
+and/or functions. For example, to download a mirror or RHEL v8 for both
+Intel/AMD 64-bit and Arm 64-bit architectures, two DSAS tasks using the
+URIs below might be needed
 
 ```
 https://mirror.example.com/rhel/8Server/x86_64
