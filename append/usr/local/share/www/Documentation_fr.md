@@ -1000,8 +1000,8 @@ depuis le machine bas.
 - `** Bad DEB Sig` : La vérification de signature d'un fichier DEB a échoué
 - `** Not signed` : Le fichier n'est pas signé et ne pourrait pas être vérifié
 
-le bouton bleu en haut des logs de vérification permettre de basculer entre un mode ou "tous le logs" 
-sont visible ou un mode ou "que des erreurs" sont visible. Ceci permettre de rapidement identifiés 
+le bouton bleu en haut des logs de vérification permettre de basculer entre un mode ou `tous le logs`
+sont visible ou un mode ou `que des erreurs` sont visible. Ceci permettre de rapidement identifiés 
 les fichiers ayant eu des problèmes.
 
 ### Recherche dans les logs de vérification
