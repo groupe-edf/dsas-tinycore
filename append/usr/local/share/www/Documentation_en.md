@@ -17,7 +17,7 @@ to exclude.
 So, a means of transferring files from a non-sensitive area to our
 industrial infrastructure is needed, that includes the systematic control
 of all files transferred to eliminate the risk of malicious files. The
-`Decontaminating Security Access Service` (DSAS) aims to be this means of
+"Decontaminating Security Access Service" (DSAS) aims to be this means of
 secure transfer.
 
 The objective of the DSAS is to download security updates, to control
@@ -53,10 +53,10 @@ signature used by the desired editors.
 
 The problem with a verification by signature is to know to whom we must
 give confidence. To this ends it is important to understand the chain of
-trust of the signature. This chain can be rooted in a `Certification
-Authority` (or CA) in this case of X509 certificates, or a distributed
+trust of the signature. This chain can be rooted in a "Certification
+Authority" (or CA) in this case of X509 certificates, or a distributed
 confidence with the certificates themselves signed amongst themselves in
-the case of PGP certificates. For PGP certificates, the `web of trust` is
+the case of PGP certificates. For PGP certificates, the "web of trust" is
 implicit and passes by certificate signing ceremonies in the phase before
 the inclusion of the certificate in the DSAS. For X509 certificates, the
 chain of trust is explicitly included in every signed file. For example,
@@ -127,11 +127,11 @@ send them directly.
 - All the administration is performed form the sensitive zone. No
 administration is possible from the non-sensitive zone.
 - There are several service accounts created on each machine, with the
-account `haut` being the only one with the rights to download from a less
-sensitive zone, the account `verif` being the only one with the rights to
-transfer files between zones on each machine and the account `bas` being
+account "haut" being the only one with the rights to download from a less
+sensitive zone, the account "verif" being the only one with the rights to
+transfer files between zones on each machine and the account "bas" being
 the only one with exposed towards the more sensitive zone. The account
-`verif` is not accessible outside the machine.
+"verif" is not accessible outside the machine.
 
 A simplified architecture of the DSAS is then
 
@@ -151,8 +151,8 @@ accessible from this account.
 With the DSAS separated into two machines, two separate installations are
 needed. The two installations follow the same logic. In the following
 discussions, the machine connected to the non-sensitive network is called
-`upper` or `haut` and the machine connected to the sensitive network is
-called `lower` or `bas`. An initial configuration of each machine is
+"upper" or "haut" and the machine connected to the sensitive network is
+called "lower" or "bas". An initial configuration of each machine is
 needed from their console, but after this initial phase, all configuration is done from the lower machine.
 
 To facilitate the installation, it is better to start with the
@@ -168,7 +168,7 @@ configuration step concerns both machines.
 
 The DSAS needs independent disks for each of the machines used in its
 implementation. So the DSAS needs two times more disk space than the
-maximum used for the transfers. Inside each machine, the DSAS `mirrors`
+maximum used for the transfers. Inside each machine, the DSAS "mirrors"
 the files between each zone, and the old files are removed when they are
 no longer available on the site they were downloaded from. So the only
 the sum of space used by the download sites is needed, with a little
@@ -186,7 +186,7 @@ of additional disk is needed. The installation of the Docker of the DSAS
 runs from a uncompressed copy of the ISO image, where the other cases use
 a copy of the compressed ISO only.
 
-The Windows `Patch Tuesday` updates are often a hundred or so megabytes,
+The Windows "Patch Tuesday" updates are often a hundred or so megabytes,
 so we multiply that by the number of updates to keep available and we can
 easily find ourselves with several gigabytes. The `Symantec
 IntelligentUpdate`s needs roughly 150 megabytes, while `Symantec LiveUpdate`s needs 50 gigabytes.
@@ -218,8 +218,8 @@ that much.
 
 ## Configuration of the virtual machines
 
-The DSAS is supplied in the form of an ISO that should be used as a `live
-CD`. This means that the operating system should always boot from this
+The DSAS is supplied in the form of an ISO that should be used as a "live
+CD". This means that the operating system should always boot from this
 image ISO. The major advantage of this is that the updates of the DSAS
 will be extremely easy and resumes as the shutdown of the DSAS, the
 replacement of the ISO and a restart.
@@ -262,7 +262,7 @@ DSAS is installed.
 
 The second card is always used for the interconnexion between the two
 machines, and this network by default will be the static network
-`192.168.192.0/24`. Several means could be used to configure this
+"192.168.192.0/24". Several means could be used to configure this
 interconnection network, particularly if a firewall is placed on this
 link (which doesn't seem to be necessary). We propose the use of an
 internal network of the hypervisor configured with VirtualBox like
@@ -477,7 +477,7 @@ Firstly, the upper machines IP address in CIDR format must be entered as
 
 The IP address here is the IP address that the upper machine will take
 and the mask in CIDR format must be between 24 and 30. By default, this
-address is `192.168.192.2/24`.
+address is "192.168.192.2/24".
 
 Next, the gateway of the upper interconnection network. If the two
 machines are on the same network, the gateway can be left blank. It is
@@ -492,7 +492,7 @@ The lower network is configured in an identical manner
 ![Configuration of the lower interconnection gateway](en/init18.png)
 
 Here, both machines are on the same network with the lower machine taking
-the address `192.168.192.1/24`. It should be noted that the addresses
+the address "192.168.192.1/24". It should be noted that the addresses
 used for the interconnection network must not reused elsewhere.
 
 ### Initial network configuration
@@ -517,9 +517,9 @@ netmask in the CIDR format. In CIDR format, the IPv4 netmask is
 represented by an integer between 0 and 32 representing the number of
 bits used to encode the NetId part.
 
-For example, the netmask `255.255.255.0` is represented in CIDR format by
-`/24` and the netmask `255.255.255.128` by `/25`. So, if our IP is
-`10.0.2.15` and our netmask is `255.255.255.0` it is entered as
+For example, the netmask "255.255.255.0" is represented in CIDR format by
+"/24" and the netmask "255.255.255.128" by "/25". So, if our IP is
+"10.0.2.15" and our netmask is "255.255.255.0" it is entered as
 
 ![IP and netmask configuration of a static IP](en/init6.png)
 
@@ -534,11 +534,12 @@ connection to DSAS from outside the subnet.
 ![Gateway configuration with a static IP](en/init7.png)
 
 Two items are required for DNS configuration. First the search domain,
-where here a search domain `example.com` is used
+where here a search domain "example.com" is used
 
 ![DNS configuration with a static IP](en/init8.png)
 
-with this search domain the hosts `ntp1` and `ntp1.example.com` will be equivalent. Then you must define name servers, responsible for
+with this search domain the hosts "ntp1" and "ntp1.example.com" will be 
+equivalent. Then you must define name servers, responsible for 
 converting DNS names to IP addresses. For example,
 
 ![DNS configuration with a static IP](en/init9.png)
@@ -816,10 +817,10 @@ configuration are ignored on this interface.
 - IP addresses, are in IPv4 format like NNN.NNN.NNN.NNN
 - If a netmask is necessary it is entered in CIDR format. In CIDR format
 the netmask is represented by an integer between 0 and 32, representing
-the size of the NetId. For example, the netmask `255.255.255.0` is
-represented in CIDR format by `/24` and the netmask `255.255.255.128` by
-`/25`.
-- The `DNS Domain` must be a valid domain name.
+the size of the NetId. For example, the netmask "255.255.255.0" is
+represented in CIDR format by "/24" and the netmask "255.255.255.128" by
+"/25".
+- The "DNS Domain" must be a valid domain name.
 - Several IP addresses separated by carriage returns can be entered,
 giving a list of name servers in order of their preference.
 
@@ -1031,12 +1032,12 @@ the memory is full, the performance of the tasks will be impacted. It is
 necessary to watch that memory is saturated, but if it is below 90% it
 should not be a problem. With the DSAS architecture, almost 200MB is also
 used by the operating system.
-- __Loadavg__ - The `Load average` is a concept of Unix giving an idea on
-the occupation of computational resources of the machine. A `Load
-Average` of `1` means that the equivalent of a processor core is
+- __Loadavg__ - The "Load average" is a concept of Unix giving an idea on
+the occupation of computational resources of the machine. A "Load
+Average" of "1" means that the equivalent of a processor core is
 completely occupied. So, the total occupation of resources
-of the machine is at the point where the `Load average` is equal to the
-number of cores of the processor. On the DSAS page the `Load average` is
+of the machine is at the point where the "Load average" is equal to the
+number of cores of the processor. On the DSAS page the "Load average" is
 presented in a logarithmic scale with the number of processor cores at
 50% of the length of the status bar. If the status bar is longer than
 half, DSAS might have insufficient computing resources. The first thing
@@ -1150,7 +1151,7 @@ in the past to sign malware.
 
 So ideally it is necessary to verify with the intermediate certificates
 closest to the desired software publisher. For example, an update of
-`Symantec Endpoint Protection` (SEP) includes the chain of trust
+"Symantec Endpoint Protection" (SEP) includes the chain of trust
 
 ```
 VeriSign Class 3 Public Primary Certification Authority - G5
@@ -1169,14 +1170,14 @@ one of these Symantec certificates to the DSAS.
 #### Identification of X509 certificates
 
 X509 certificates are used in Windows signatures, but also for files
-signed by `openssl`.
+signed by "openssl".
 
 From a Windows computer, with a right click and selecting the option
 `Properties` we could see the following menu
 
 ![Properties menu of a signed binary](en/CERT1.png)
 
-By clicking on `Details` and after` Display the certificate` we can see
+By clicking on `Details` and after `Display the certificate` we can see
 the chain of trust
 
 ![Chain of trust of a signed binary](en/CERT4.png)
@@ -1213,11 +1214,12 @@ A file with the certificate will be saved on your computer.
 #### Special case of Symantec LiveUpdate certificates
 
 Symantec LiveUpdate files are not signed directly, they are rather
-archives in `7z` format with all the signed metadata necessary for their
-verification. In each file of `LiveUpdate` a file with the extension
-`.sig` can be found, typically` v.sig`. This file contains the
+archives in "7z" format with all the signed metadata necessary for their
+verification. In each file of "LiveUpdate" a file with the extension
+".sig" can be found, typically "v.sig". This file contains the
 certificates that must be imported into the DSAS for signing files of
-LiveUpdate. If you have extracted the `v.sig` file, the two certificates to import can be found with the command
+LiveUpdate. If you have extracted the "v.sig" file, the two certificates
+to import can be found with the command
 
 ``` shell
 $ openssl pkcs7 -inform der -in v.sig -outform pem -print_certs | awk 'split_after == 1 {n ++; split_after = 0} / ----- END CERTIFICATE ----- / {split_after = 1} {if (length ($ 0)> 0) print> `cert` n `. pem `}
@@ -1229,7 +1231,7 @@ on a Linux machine. From the Windows command line we could do.
 $ openssl pkcs7 -inform der -in v.sig -outform pem -print_certs -out certs.pem
 ```
 
-and the `certs.pem` file will contain several certificates in text format
+and the "certs.pem" file will contain several certificates in text format
 that you can split into multiple files with the help of a text editor.
 
 On the other hand, some files in the archives are relatively old, and
@@ -1697,8 +1699,8 @@ To build the ISO image of the DSAS the command is
 An ISO image is created in the file `work/dsao.iso`. We can keep the
 temporary files with the option `-keep`. This is useful to examine why
 something is badly installed on the DSAS without needing to start a
-server with the DSAS installed. The compilation time of the `node` and
-`clamav` packages is extremely long and so, this compilation will
+server with the DSAS installed. The compilation time of the "node" and
+"clamav" packages is extremely long and so, this compilation will
 take several hours the first time it is performed.
 
 To build a source package (see the files `pkg/*.pkg`) a command like 
@@ -1720,7 +1722,7 @@ files are deleted. To completely clean the build tree, use the command
 ./make.sh realclean
 ```
 
-A compilation of the `Docker` image is performed with the command
+A compilation of the "Docker" image is performed with the command
 
 ```
 ./make.sh docker
@@ -1765,7 +1767,8 @@ command
 An ISO with the test version of teh DSAS is available in the file
 `work/dsas-test.iso`. This ISO includes additional code and services to
 test all of the functions of the DSAS. To use this test ISO, you need to
-have two virtual machines configured and from the machine configured as the `lower` machine run as the user `tc` the command 
+have two virtual machines configured and from the machine configured as
+the `lower` machine run as the user `tc` the command 
 
 ```
 dsastests
@@ -2026,7 +2029,8 @@ audited at each reboot
 There are 3 types of Linux repository verification,
 
 * rpm - The signature of each RPM file is verified with `rpm -K`
-* repomd - The repomd.xml file is verified and only the hashes of each file are checked
+* repomd - The repomd.xml file is verified and only the hashes of each 
+file are checked
 * deb - The Release file is verified and only the hashes of each file are
 checked
 
@@ -2100,7 +2104,7 @@ verification.
 
 Symantec's IntelligentUpdate files are in authenticode, so they are
 excluded from this discussion. Symantec LiveUpdate format is used by
-`Symantec Endpoint Protection Manager` (SEPM) for updates. The signature
+"Symantec Endpoint Protection Manager" (SEPM) for updates. The signature
 format of LiveUpdate files is very complex with files signed according to
 [the method detailed in the next section](#signature-of-liveupdate-files),
 and files verified by their hash in another signed file, all the files in
