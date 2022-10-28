@@ -153,7 +153,8 @@ needed. The two installations follow the same logic. In the following
 discussions, the machine connected to the non-sensitive network is called
 "upper" or "haut" and the machine connected to the sensitive network is
 called "lower" or "bas". An initial configuration of each machine is
-needed from their console, but after this initial phase, all configuration is done from the lower machine.
+needed from their console, but after this initial phase, all configuration
+is done from the lower machine.
 
 To facilitate the installation, it is better to start with the
 installation of the upper machine, because in the initial phase the lower
@@ -188,8 +189,9 @@ a copy of the compressed ISO only.
 
 The Windows "Patch Tuesday" updates are often a hundred or so megabytes,
 so we multiply that by the number of updates to keep available and we can
-easily find ourselves with several gigabytes. The `Symantec
-IntelligentUpdate`s needs roughly 150 megabytes, while `Symantec LiveUpdate`s needs 50 gigabytes.
+easily find ourselves with several gigabytes. The "Symantec
+IntelligentUpdates" needs roughly 150 megabytes, while "Symantec LiveUpdates"
+needs 50 gigabytes.
 
 Each Linux repository could need up to 50 gigabytes, so if we need to
 transfer Linux update the needed disk space can easily explode. In the
