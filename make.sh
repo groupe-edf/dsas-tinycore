@@ -49,6 +49,7 @@ rebuild=0
 forcedownload=0
 keep=0
 testcode=0
+vmtools=0
 cmd=""
 pkgs=""
 while [ "$#" -gt 0 ]; do
@@ -58,6 +59,7 @@ while [ "$#" -gt 0 ]; do
     -f|--download) forcedownload=1; ;;
     -k|--keep) keep=1; ;;
     -t|--test) testcode=1; ;;
+    -v|--vmtools) vmtools=1; ;;
     -32) arch="32"; ;;
     -64) arch="64"; ;;
     -h|--help)
@@ -78,6 +80,7 @@ while [ "$#" -gt 0 ]; do
       echo "     -f|--download   Force the source packages to be re-downloaded"
       echo "     -t|--test       Include test code in DSAS build"
       echo "     -k|--keep       Keep intermediate build files for debugging"
+      echo "     -v|--vmtools    Install open-vm-tools in image"
       echo "     -32             Force the build for 32 bit architectures"
       echo "     -64             Force the build for 64 bit architectures"
       echo "     -h|--help       Print this help"
@@ -1092,6 +1095,9 @@ docker)
   # a difference dependance. 
   [ "$arch" != 64 ] && install_tcz pcre2
   [ "$arch" = 64 ] && install_tcz pcre21032
+
+  # Install VMWARE open-vm-tools to allow for VM migration
+  install_tcz open-vm-tools
 
   if [ "$testcode" = "1" ]; then
     # Install test files. Force remove temporary PKG file
