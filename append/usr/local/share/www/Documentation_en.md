@@ -882,6 +882,8 @@ other services which could be started on the DSAS;
 - A syslogd client for local and remote administration logs,
 - A SNMPD server to supply the status logs of the DSAS, and
 - An antivirus server
+- A radius client
+
 
 ![Web server configuration menu](en/DSAS16.png)
 
@@ -1008,6 +1010,25 @@ https://database.clamav.net/bytecode.cvd
 and the URI to configure on the DSAS could be
 `https://database.clamav.net/` but a local mirror should be preferred.
 The DSAS will update these files from this URI once a day.
+
+### Radius Client
+
+The DSAS includes the possibility to use a radius serveur for the 
+authentification of user passwords. The user accounts mist be setup on the
+DSAS with the same usernames as the Radius server, and only the role of 
+validating the user is delegated to the Radius Server. The accounts 
+themselves remain local to the DSAS. If, and only if, the radius serveur
+is not available, the local password on the DSAS will be used.
+
+The DSAS radius client only uses PAP. Although radius PAP is encrypted it
+suffers from two major problems. 
+
+- It is based on the use of an MD5 hash, so to ensure its security the 
+shared secret must be as longer as possible (32 characters recommanded),
+- The "nonce" is selected by the client, therefore a capture of the traffic
+RADIUS_REQUEST packet between the Radius client and server, can easily be
+replayed. This means the network connection between the client and server
+needs to be physically secured.
 
 # DSAS Operation
 
@@ -1930,6 +1951,8 @@ the DSAS to ensure its security.
 | open network      | upper             | 22          | tcp     | sftp     | not reco. | user 'haut' file deposit      |
 | lower             | sensitive network | 123         | udp     | ntp      | optional  | time synchronization          |
 | lower             | sensitive network | 514         | udp     | syslog   | optional  | log service                   | 
+| lower             | sensitive network | 1812        | udp     | radius   | optional  | radius authentification       |
+| lower             | sensitive network | 1813        | udp     | radius   | optional  | radius accounting             |
 | upper             | open network      | 22          | tcp     | sftp/scp |    -      | task : sftp/scp               |
 | upper             | open network      | 20          | tcp     | ftp      |    -      | task : ftp - data fixed       |
 | upper             | open network      | 21          | tcp     | ftp      |    -      | task : ftp                    |

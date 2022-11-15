@@ -912,6 +912,7 @@ il y a 6 services qui pourrait être démarrer sur les machines du DSAS;
 - Un client syslogd pour les logs d'administration locale et distante,
 - Un serveur SNMPD pour la remonté du statut du DSAS, et 
 - Un serveur de vérification antivirale
+- Un client Radius 
 
 ![Menu de configuration du serveur web](fr/DSAS16.png)
 
@@ -1042,6 +1043,26 @@ https://database.clamav.net/bytecode.cvd
 et dans ce cas, la configuration du URI du DSAS pourrait être
 `https://database.clamav.net/` mais un site de réplication locale est
 préférable. Le DSAS mettra à jour ces signatures un fois par jour.
+
+### Client Radius
+
+Le DSAS inclut la possibilité d'utiliser un serveur radius pour 
+l'authentication des mots de passe des utilisateurs. Les comptes des
+utilisateurs sur le DSAS doit avoir les mêmes nom que le serveur Radius
+et seulement le rôle de validation des mots de passe est délugué au
+serveur. Les comptes eux-mêmes reste local au DSAS. Si, et seulement si,
+le serveur Radius n'est pas disponsible, les mots de passe locaux seraient
+utilisés.
+
+Le client Radius du DSAS ne peut que utiliser PAP. Même si PAP est chiffré,
+il souffre de deux problemes
+
+- A la base il fonctionne sur la hash MD5, donc le secret partagé doi-être
+le plus long possible (32 caracteres recommandé)
+- Le "nonce" est selectionné par le client, et donc une cpature de la paquet
+RADIUS_REQUEST de la client et sa rejoue pourrait permettre un authetification
+sans mot de passe. Ceci veut dire que la connexion réseau entre le client et
+serveur doit-être physiquement sécurisé.
 
 # Exploitation du DSAS
 
@@ -1996,6 +2017,8 @@ Afin de garantir le niveau de sécurité du DSAS.
 | réseau ouverte  | haut            | 22          | tcp     | sftp     | non reco. | dépôt fichier user 'haut'    |
 | bas             | réseau sensible | 123         | udp     | ntp      | optionnel | synchronisation temps        |
 | bas             | réseau sensible | 514         | udp     | syslog   | optionnel | service de log               | 
+| bas             | réseau sensible | 1812        | udp     | radius   | optionnel | radius authentication        |
+| bas             | réseau sensible | 1813        | udp     | radius   | optionnel | radius accounting            |
 | haut            | réseau ouverte  | 22          | tcp     | sftp/scp |    -      | tâche en sftp/scp            |
 | haut            | réseau ouverte  | 20          | tcp     | ftp      |    -      | tâche en ftp - data fixed    |
 | haut            | réseau ouverte  | 21          | tcp     | ftp      |    -      | tâche en ftp                 |
