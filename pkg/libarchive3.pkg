@@ -1,11 +1,10 @@
-_pkg=open-vm-tools
-_version=12.1.0
-_uri=https://www.github.com/vmware/open-vm-tools/archive/refs/tags/stable-12.1.0.tar.gz
-_build_dep="compiletc coreutils autoconf automake libtool-dev libmspack glib2-dev Linux-PAM-dev openssl-1.1.1-dev libxml2-dev libtirpc-dev rpcsvc-proto"
-_dep="libmspack glib2 Linux-PAM openssl-1.1.1 libxml2 libtirpc"
-_pkg_path=open-vm-tools-stable-12.1.0/open-vm-tools
-_conf_cmd="setarch linux$arch autoupdate; setarch linux$arch autoreconf -i; setarch linux$arch ./configure --disable-vgauth --without-x --with-pam-prefix=/usr/local/etc"
+_pkg=libarchive3
+_version=3.6.1
+_uri=https://www.libarchive.org/downloads/libarchive-3.6.1.tar.gz
+_build_dep="compiletc coreutils nettle3-dev acl-dev lzo-dev liblzma-dev libxml2-dev bzip2-lib libzstd liblz4-dev openssl-1.1.1-dev"
+_dep="nettle3 acl lzo liblzma libxml2 bzip2-lib libzstd liblz4 openssl-1.1.1"
+_pkg_path=libarchive-3.6.1
+_conf_cmd="setarch linux$arch ./configure"
 _make_cmd="make"
-_install_cmd="make install DESTDIR="
-_post_build="mv etc/vmware-tools usr/local/etc; mv usr/bin/vm-support usr/local/bin" 
-_pkgs='main{/usr/local/bin,/usr/local/lib*.so*,/usr/local/lib/open-vm-tools/plugins/*/lib*.so*,/usr/local/share};dev{/usr/local/include,/usr/local/lib/*.a,/usr/local/lib/*.la,/usr/local/lib/open-vm-tools/plugins/*/*.la,/usr/local/lib/pkgconfig}'
+_install_cmd="make install DESTDIR=" 
+_pkgs='main{/usr/local/bin,/usr/local/lib/*.so*};dev{/usr/local/include,/usr/local/lib/.a,/usr/local/lib/*.la,/usr/local/lib/pkgconfig};doc{/usr/local/share} '
