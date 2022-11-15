@@ -1097,7 +1097,7 @@ docker)
   [ "$arch" = 64 ] && install_tcz pcre21032
 
   # Install VMWARE open-vm-tools to allow for VM migration
-  install_tcz open-vm-tools
+  [ "$vmtools" = "1" ] && install_tcz open-vm-tools
 
   if [ "$testcode" = "1" ]; then
     # Install test files. Force remove temporary PKG file
