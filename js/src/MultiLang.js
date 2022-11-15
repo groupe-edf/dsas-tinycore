@@ -42,7 +42,7 @@ export default class MultiLang {
                 for (let i = 0; i < cookieArray.length; i += 1) {
                     const pos = cookieArray[i].indexOf("Language");
                     if (pos > -1) {
-                        lang = cookieArray[i].substr(10);
+                        lang = cookieArray[i].substr(cookieArray[i].indexOf("=") + 1);
                         if (Object.keys(this.phrases).includes(lang)) {
                             this.currentLanguage = lang;
                         }
