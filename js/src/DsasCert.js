@@ -49,7 +49,7 @@ function certExpired(validTo) {
 }
 
 function timeToDate(t) {
-    if (t <= 0) { return _("always"); }
+    if (t <= 0) { return "always"; }
     const c = new Intl.DateTimeFormat(ml.currentLanguage, {
         year: "numeric",
         month: "short",
@@ -133,8 +133,8 @@ function treatGpgCerts(certs, node) {
         const links = item.querySelectorAll("a");
         ml.translateHTML(item);
         let cls = "text"; // All GPG certificates can be a CA
-        if (certExpired(cert.expires)) { cls = "text-danger"; }
-        if (certExpiring(cert.expires)) { cls = "text-warning"; }
+        if (certExpired(cert.validTo)) { cls = "text-danger"; }
+        if (certExpiring(cert.validTo)) { cls = "text-warning"; }
         item.querySelector("p").className = "my-0 " + cls;
         links[0].setAttribute("href", "#gpg" + i);
         links[1].setAttribute("href", url);
