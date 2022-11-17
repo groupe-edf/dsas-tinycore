@@ -359,7 +359,7 @@ verifliveupdate(){
         { 1>&2 myecho "Verification failure of the file $(basename "$t") from the archive $(basename "$file") "; return 1; }
   done
 
-  # Fail if there are any files in the archive not listed in the file GRD
+  # Fail if there are any files in the archive not listed in a GRD file
   while IFS= read -r -d '' f; do
     f=${f#"$basedir/"}
     [[ "$f" =~ \.grd$ ]] && continue
