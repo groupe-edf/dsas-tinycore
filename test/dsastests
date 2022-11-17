@@ -40,7 +40,7 @@ use Facebook\WebDriver\Exception\StaleElementReferenceException;
 $sshot = true;   // Take screenshots
 define("_trace", false);  // Print backtrace
 define("_user", "tc");
-define("_pass", "dSaO2021cTf");
+define("_pass", "dSaO2021DSAS");  // Default password.. Norma
 define("_delay", 5);  // 5 seconds
 define("_retry", 50);  // 50 ms
 define("_LEN", 60);
@@ -343,6 +343,12 @@ try {
       if ($retval != 0)
         throw new RuntimeException("Error installing test files on lower machine");
       exec("sudo cp -f " . _share . "/log/* /home/dsas/log", $data, $retval);
+      if ($retval != 0)
+        throw new RuntimeException("Error copying log files on lower machine");
+      exec("sudo chown tc.verif /home/dsas/log/dsas_verif.log*", $data, $retval);
+      if ($retval != 0)
+        throw new RuntimeException("Error copying log files on lower machine");
+      exec("sudo chmod 660 /home/dsas/log/dsas_verif.log*", $data, $retval);
       if ($retval != 0)
         throw new RuntimeException("Error copying log files on lower machine");
       return true; 
