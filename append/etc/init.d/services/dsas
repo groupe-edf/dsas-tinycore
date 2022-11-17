@@ -75,6 +75,8 @@ mount_dsas(){
     mv /var/log var/log.old
     ln -s "${DSAS:0:-5}/log" /var/log
   fi
+  chown root.staff /home/dsas
+  chmod 755 /home/dsas
 }
 
 init_disk(){
@@ -743,14 +745,14 @@ config_sshd(){
     cp /home/tc/.ssh/known_hosts /home/haut/.ssh/known_hosts
     chown tc.staff /home/tc/.ssh/known_hosts
     chown haut.haut /home/haut/.ssh/known_hosts
+    PASSWD="dSaO2021DSAS"  # Try default password first
 
-    while :; do
-      PASSWD="$(dialog --stdout --no-cancel --insecure --passwordbox 'Password user tc:' 0 0)"
-      # Don't use $as_tc here as don't want the "-E"
-      sudo -u tc /usr/local/bin/sshpass -p "$PASSWD" ssh-copy-id -i /home/tc/.ssh/id_rsa.pub -f "tc@$INTERCO_HAUT" && break
+    # Don't use $as_tc here as don't want the "-E"
+    while ! sudo -u tc /usr/local/bin/sshpass -p "$PASSWD" ssh-copy-id -i /home/tc/.ssh/id_rsa.pub -f "tc@$INTERCO_HAUT" ; do
       # FIXME Sleep to allow any error messages to be seen. Maybe remove later
       sleep 5
       dialog --msgbox "Password incorrect" 0 0
+      PASSWD="$(dialog --stdout --no-cancel --insecure --passwordbox 'Password user tc:' 0 0)"
     done
 
     cp /home/haut/.ssh/id_rsa.pub /tmp/authorized_keys
@@ -1088,9 +1090,10 @@ case "${1}" in
       echo "Machine configured as type: ${GREEN}$TYP${NORMAL}"
       CONFIG_SSH=""
     else
+      sleep 1 # Wait to clear possible message before dialog
       TYP="$(dialog --stdout --no-cancel --radiolist 'Select machine type:' 0 0 0 haut 'Haut/High' on bas 'Bas/Low' off)"
       echo "$TYP" > "$VAR/dsas_typ"
-      chown 640 "$VAR/dsas_typ"
+      chmod 644 "$VAR/dsas_typ"
       echo "Machine configured as type: ${GREEN}$TYP${NORMAL}"
       config_interco
       # The machine "haut" is configured from the web admin of "bas"
