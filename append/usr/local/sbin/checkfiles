@@ -325,7 +325,7 @@ verifcyberwatch(){
 
 verifliveupdate(){
   local id tempdir src file zipdir dest livetri 
-  local sig grd args s1 s256 f basedir s t last filedir  
+  local sig grd g args s1 s256 f basedir s t last filedir
   id=$1
   tempdir="$2"
   src="$3"
@@ -336,52 +336,53 @@ verifliveupdate(){
 
   unzip -d "$zipdir" "$src/$file" > /dev/null 2>&1 || 7z -o"$zipdir" x "$src/$file" > /dev/null 2>&1 
   sig=$(find "$zipdir" -name "*.sig")
-  grd=$(find "$zipdir" -name "*.grd")
-
-  [ -n "$grd" ] || { 1>&2 myecho "File *.grd not found in the archive $(basename "$file")"; return 1; }
   [ -n "$sig" ] || { 1>&2 myecho "File *.sig not found in the archive $(basename "$file")"; return 1; }
 
   # Assumes all of the CA are in $termpdir/cert.0 and the other certificates in $tempdir/cert.1
   args="-purpose any -no_check_time"
   [ -f "$tempdir/cert.0" ] && args="$args -CAfile $tempdir/cert.0"
   [ -f "$tempdir/cert.1" ] && args="$args -nointern -certfile $tempdir/cert.1"
+
+  # Get base directory name
+  basedir=$(dirname "$(find "$zipdir" -name "*.grd" | head -n1)")
     
   # Verify the signature of the  file *.grd...  
   for s in $sig; do
     # Special case v1.sig that is an alternative signature for v.sig
     [ "$(basename "$s")" = "v1.sig" ] && continue
     t=$(echo "$s" | sed -e 's/.sig$/.grd/g')
-    echo "$grd" | grep -q "$t" || { 1>&2 myecho "Checksum file $t not found in the archive $(basename "$file")"; return 1; }
+    [ -f "$t" ] || { 1>&2 myecho "Checksum file $(basename "$t") not found in the archive $(basename "$file")"; return 1; }
     # I want the variable $args to do word splitting, ignore 
     # the shellcheck error associated with it
     # shellcheck disable=SC2086    
     openssl cms -verify -inform DER -in "$s" -content "$t" $args > /dev/null 2>&1 || \
-        { 1>&2 myecho "Verification failure of the file $t from the archive $(basename "$file") "; return 1; }
+        { 1>&2 myecho "Verification failure of the file $(basename "$t") from the archive $(basename "$file") "; return 1; }
   done
-
-  # Get base directory name
-  basedir=$(dirname "$(find "$zipdir" -name "*.grd" | head -n1)")
 
   # Fail if there are any files in the archive not listed in the file GRD
   while IFS= read -r -d '' f; do
     f=${f#"$basedir/"}
     [[ "$f" =~ \.grd$ ]] && continue
     [[ "$f" =~ \.sig$ ]] && continue
-    if ! grep -qi "$f" "$grd"; then
-      # FIXME The JDB files have the files lic.dat and navlic.dat that are not listed 
-      # in a grd file; What are these files ? How to check them ? For now we ignore
-      # these files under three conditions:
-      #    1. The file size is exactly 1048 bytes
-      #    2. navlic.dat and lic.dat are the same file
-      #    3. They are both listed in the catalog.dat file that is included in v.grd
-      if [[ "$f" =~ lic.dat$ ]] || [[ "$f" =~ navlic.dat$ ]]; then
-        [ "$(stat -c%s "$f")" = "1048" ] || { 1>&2 myecho "Can not verify the file $(basename "$f") from the archive $(basename "$file")"; return 1; }
-        if [ ! -f "$basedir/lic.dat" ] || [ ! -f "$basedir/navlic.dat" ] || ! diff -q "$zipdir/lic.dat" "$zipdir/navlic.dat"; then
-          1>&2 myecho "Can not verify the file $(basename "$f") from the archive $(basename "$file")"
-          return 1
-        fi
-        grep -qi "$f" "$basedir/catalog.dat" || { 1>&2 myecho "Can not verify the file $(basename "$f") from the archive $(basename "$file")"; return 1; }       
-      else
+    # FIXME The JDB files have the files lic.dat and navlic.dat that are not listed
+    # in a grd file; What are these files ? How to check them ? For now we ignore
+    # these files under three conditions:
+    #    1. The file size is exactly 1048 bytes
+    #    2. navlic.dat and lic.dat are the same file
+    #    3. They are both listed in the catalog.dat file that is included in v.grd
+    if [[ "$f" =~ lic.dat$ ]] || [[ "$f" =~ navlic.dat$ ]]; then
+      [ "$(stat -c%s "$f")" = "1048" ] || { 1>&2 myecho "Can not verify the file $(basename "$f") from the archive $(basename "$file")"; return 1; }
+      if [ ! -f "$basedir/lic.dat" ] || [ ! -f "$basedir/navlic.dat" ] || ! diff -q "$zipdir/lic.dat" "$zipdir/navlic.dat"; then
+        1>&2 myecho "Can not verify the file $(basename "$f") from the archive $(basename "$file")"
+        return 1
+      fi
+      grep -qi "$f" "$basedir/catalog.dat" || { 1>&2 myecho "Can not verify the file $(basename "$f") from the archive $(basename "$file")"; return 1; }
+    else
+      grd=""
+      while IFS= read -r -d '' g; do
+        grep -qi "$f" "$g" && { grd="$g"; break; }
+      done < <(find "$basedir" -type f -name "*.grd" -print0)
+      if [ -z "$grd" ]; then
         1>&2 myecho "Can not verify the file $(basename "$f") from the archive $(basename "$file")"; 
         return 1;
       fi
@@ -393,20 +394,20 @@ verifliveupdate(){
   f=""
   last=""
   filedir=$(dirname "$file")
-  for t in $grd; do
+
+  while IFS= read -r -d '' t; do
     while :; do
       IFS= read -r line || last="true"
       # If I do what shellcheck wants this code fails !!
       # shellcheck disable=SC2076
       if [ -n "$last" ] || [[ "$line" =~ "^\[File-.*\]" ]]; then
-        [ -z "$last" ] && [ -z "$f" ] && { f=$(echo "$line" | sed -e "s/^\[File-\(.*\)\]\s*$/\1/g"); continue; }
-        if [ -f "$basedir/$f" ]; then
+        if [ -n "$f" ] && [ -f "$basedir/$f" ]; then
           [ -z "$s256" ] || sha256sum "$basedir/$f" | grep -q "$s256" || \
               { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename "$file")"; return 2; }
           [ -z "$s1" ] || sha1sum "$basedir/$f" | grep -q "$s1" || \
               { 1>&2 myecho "Verification of checksum failed for $f from the archive $(basename "$file")"; return 2; }
           [ -z "$s256" ] && [ -z "$s1" ] && { 1>&2 myecho "File $f from the archive $(basename "$file") has no checksum"; return 2; }
-        elif [ -f "$src/$filedir/$f" ]; then
+        elif [ -n "$f" ] && [ -f "$src/$filedir/$f" ]; then
           # Only reverify the hash if its not already done.
           if [ ! "$src/$filedir/$f" -ef "$dest/$filedir/$f" ]; then
             [ -z "$s256" ] || sha256sum "$src/$filedir/$f" | grep -q "$s256" || \
@@ -423,7 +424,7 @@ verifliveupdate(){
               ln "$src/$filedir/$f" "$dest/$filedir/$f"
             fi
           fi
-        else
+        elif [ -n "$f" ]; then
           1>&2 echo "File $f not found. skipping"
         fi
         [ -z "$last" ] || break;
@@ -437,7 +438,7 @@ verifliveupdate(){
         s256=$(echo "$line" | sed -e "s/^SHA256=\([0-9a-fA-F]*\)\s*$/\1/g")
       fi
     done < "$t"
-  done
+  done < <(find "$basedir" -type f -name "*.grd" -print0)
 
   # Repack the zip file before returning to avoid potentiel hidden files
   if [[ "${file##*.}" = "7z" ]]; then 
