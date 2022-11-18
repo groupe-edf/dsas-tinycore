@@ -747,7 +747,7 @@ auriez accès à l'interface d'administration.
  
 ### Configuration des utilisateurs
 
-L'écran de configuration des utilisateurs est accédé depuis l’onglet
+L'écran de configuration des utilisateurs est accédé depuis l'onglet
 `Configuration` et l'option `Utilisateurs`. L'écran de configuration se
 présente comme
 
@@ -757,7 +757,7 @@ A la première utilisation, seulement l'utilisateur par défaut `tc` est
 configuré. Il est recommandé de créer des comptes nominatifs pour chaque
 utilisateur et de désactiver le compte `tc`. L'utilisateur `tc` est le
 seul avec le droit de devenir `root` sur la DSAS. Si le compte `tc` est
-désactivé les autres utilisateurs pourrait qu » devenir `root` avec la
+désactivé les autres utilisateurs pourrait que devenir `root` avec la
 connaissance de la mot de passe de l'utilisateur `tc`. Un utilisateur
 désactivé ne pourrait que connecté depuis la console du DSAS, et pas à
 distance.
@@ -806,7 +806,8 @@ possibilité d'attaques contre le DSAS
 - __Active__ - Un compte pourrait existe mais ne pas être fonctionnel.
 Ceci permettre de temporairement désactiver un compte sans le supprimer
 - ![](lock.svg) - En cliquant sur cette icone nous pourrions modifier le
-mot de passe de l'utilisateur
+mot de passe de l'utilisateur locale. Ce mot de passe n'est que utilisé
+si le client radius est désactivé ou le serveur radius ne réponds pas.
 - ![](x-lg.svg) - En cliquant sur cette icone, l'utilisateur pourrait
 être supprimé définitivement.
 

@@ -778,7 +778,8 @@ against the DSAS
 - __Active__ - An account can be deactivated without deleting it. This
 allows for an account to be temporarily suspended without deleting it.
 - ![](lock.svg) - By clicking on this icon, it is possible to change the
-password of the user.
+local password of the user. This password is only used if the radius
+client est deactiviated or the radius server does not response.
 - ![](x-lg.svg) - By clicking on this icon, it is possible to permanently
 delete the user.
  
