@@ -6,7 +6,5 @@ server.groupname="bas"
 ssl.engine="enable"
 ssl.pemfile="/var/dsas/dsas.pem"
 dir-listing.activate="enable"
-setenv.add-response-header += (
-    "Cache-Control" => "must-revalidate"
-)
-
+setenv.add-response-header += ("Cache-Control" => "must-revalidate")
+mimetype.assign = ("" => "application/octet-stream")
