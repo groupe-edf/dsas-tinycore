@@ -109,6 +109,12 @@ done
 # Longer curl timeout
 curl_cmd="curl --connect-timeout 300"
 
+# Setup kernel name for package dependencies include "-KERNEL"
+# FIXME can't use "uname -r" to allow build en non tinycore system.
+# FIXME this will need updating if tinycore version changed
+[ "$arch" = 64 ] && _kern="5.15.10-tinycore64"
+[ "$arch" = 32 ] && _kern="5.15.10-tinycore"
+
 # tiny core related
 if [ "$arch" != "64" ]; then
   livecd_url=http://tinycorelinux.net/13.x/x86/release/Core-current.iso
@@ -238,7 +244,8 @@ install_tcz() {
     # shellcheck disable=SC2068
     get_tcz $@
     exit_if_nonroot
-    for package; do 
+    for package; do
+	package=$(echo "$package" | sed -e s/-KERNEL/-$_kern/g)
         target=$tcz_dir/$package.tcz
         tce_marker=$extract/usr/local/tce.installed/$package
         if ! test -f "$tce_marker"; then
