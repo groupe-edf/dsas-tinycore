@@ -1,11 +1,12 @@
 Log of the principal changes to the DSAS
 
-Version 1.2.7 (XX XXX XXXX)
+Version 1.2.7 (13 Dec 2022)
 - Spellcheck the documentation
 - Add open-vm-tools version 12.1.0
 - Re-enable radius client of the DSAS and document its existence
 - Fix potential problem in changing default language
 - Fix permissions on newly formatted disk that prevented a fresh install
+- force mime-type on https repository, to allow recursive wget to not redownload files
 
 Version 1.2.6 (25 Oct 2022)
 - Prevent crontab from running more than 3 instances of runtask at the same time
