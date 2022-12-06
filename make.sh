@@ -192,6 +192,7 @@ pwgen() {
 get_tcz() {
   mkdir -pv $tcz_dir
   for package; do
+    package=$(echo "$package" | sed -e s/-KERNEL/-$_kern/g)
     target=$tcz_dir/$package.tcz
     dep=$target.dep
     # If the PKG file exists and is newer than the TCZ file, rebuild 
@@ -245,7 +246,7 @@ install_tcz() {
     get_tcz $@
     exit_if_nonroot
     for package; do
-	package=$(echo "$package" | sed -e s/-KERNEL/-$_kern/g)
+        package=$(echo "$package" | sed -e s/-KERNEL/-$_kern/g)
         target=$tcz_dir/$package.tcz
         tce_marker=$extract/usr/local/tce.installed/$package
         if ! test -f "$tce_marker"; then
