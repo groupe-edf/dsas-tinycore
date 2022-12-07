@@ -270,9 +270,10 @@ install_tcz() {
 }
 
 get() {
-  _src=$(basename "$1")
-  msg "Downloading $_src"
-  $curl_cmd -L -o "$2/$_src" "$1" || exit 1
+  [ "$#" -gt 2 ] && _sourc=$3
+  [ "$#" -gt 2 ] || _sourc=$(basename "$1")
+  msg "Downloading $_sourc"
+  $curl_cmd -L -o "$2/$_sourc" "$1" || exit 1
 }
 
 download() {
@@ -280,8 +281,10 @@ download() {
     shift
     noext="true"
   fi
+  [ "$#" -gt 2 ] && _source=$3
+  [ "$#" -gt 2 ] || _source=$(basename "$1")
   if [ "$forcedownload" -eq 0 ]; then
-    if [ ! -f "$2/$(basename "$1")" ]; then
+    if [ ! -f "$2/$_source" ]; then
       if  [ "$noext" = "true" ]; then
         # Ignore extension
         get "$@"
@@ -293,7 +296,7 @@ download() {
       fi
     fi
   else
-    get "$1" "$2"
+    get "$@"
   fi 
 }
 
@@ -347,11 +350,11 @@ build_pkg() {
         msg "Building $pkg_file"
         # Unset build variables before sourcing package file
         unset _build_dep _conf_cmd _dep _install_cmd _make_cmd _pkg _pkg_path _pkgs \
-          _post_build _post_install _pre_config _uri _version
+          _post_build _post_install _pre_config _uri _src _version
         # Use Linux-PAM.pkg as a non trivial source file to test with
         # shellcheck source=pkg/Linux-PAM.pkg
         . "$pkg_file"
-        _src=$(basename "$_uri")
+	[ -z "$_src" ] && _src=$(basename "$_uri")
         for dep in $_build_dep; do
           # () needed to create new environment 
           (build_pkg "$dep") || error "Building package $dep" 
@@ -385,7 +388,7 @@ build_pkg() {
 
         msg "Building $_pkg.tcz"
         mkdir -p "$src_dir"
-        download "$_uri" "$src_dir"
+        download "$_uri" "$src_dir" "$_src"
         mkdir -p "$extract/home/tc"
 
         mkdir -p "$extract/$builddir"

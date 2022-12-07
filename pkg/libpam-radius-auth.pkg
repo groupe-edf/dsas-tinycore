@@ -1,11 +1,13 @@
 _pkg=libpam-radius-auth
 _version=2.0.0
 #_uri="https://github.com/FreeRADIUS/pam_radius/archive/release_2_0_0.tar.gz"
+#_src=pam_radius-2_0_0.tar.gz
+#_pkg_path="pam_radius-release_2_0_0"
 _uri="https://github.com/FreeRADIUS/pam_radius/archive/refs/heads/master.tar.gz"
+_src=pam_radius-master.tar.gz
+_pkg_path="pam_radius-master"
 _dep="Linux-PAM"
 _build_dep="compiletc Linux-PAM-dev"
-#_pkg_path="pam_radius-release_2_0_0"
-_pkg_path="pam_radius-master"
 _conf_cmd="setarch linux$arch ./configure --prefix=/usr/local --exec-prefix=/usr/local"
 _make_cmd="make"
 _install_cmd=\
