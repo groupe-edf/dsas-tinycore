@@ -1,0 +1,23 @@
+_pkg=rust
+_version=1.66.0
+_uri=https://static.rust-lang.org/dist/rustc-1.66.0-src.tar.gz
+_build_dep="compiletc python3.6 ninja coreutils cmake curl-dev libssh2-dev clang llvm-dev ca-certificates"
+_dep="llvm_lib curl libssh2"
+# FIXME: Why is ca-certificate not updated corrected at the install ?
+_pre_config="/usr/local/sbin/update-ca-certificates; mkdir /lib64; cd /lib64; ln -s /lib/ld-linux-x86-64.so.2"
+_pkg_path=rustc-1.66.0-src
+#_conf_cmd="cp config.toml.example config.toml; sed -i -e 's/^.*download-ci-llvm.*$/download-ci-llvm = true/' config.toml"
+_conf_cmd="cp config.toml.example config.toml"
+_make_cmd="
+export RUSTFLAGS=\"-C link-args=-lffi\"
+export SSL_CERT_FILE=/usr/local/etc/ssl/certs/ca-certificates.crt
+python3 ./x.py build --exclude src/tools/miri"
+_install_cmd="
+cat << EOF > /tmp/install
+export LIBSSH2_SYS_USE_PKG_CONFIG=1
+DESTDIR=\\\$1
+python3 ./x.py install
+EOF
+chmod 755 /tmp/install
+/tmp/install" 
+_pkgs='main{/usr/local}'
