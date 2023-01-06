@@ -1,9 +1,9 @@
 _pkg=libgpg-error
-_version=1.42
-_uri=http://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.42.tar.bz2
+_version=1.46
+_uri=http://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.46.tar.bz2
 _dep=""
 _build_dep="compiletc coreutils"
-_pkg_path=libgpg-error-1.42
+_pkg_path=libgpg-error-1.46
 _conf_cmd="setarch linux$arch ./configure"
 _make_cmd="make"
 _install_cmd="make install DESTDIR=" 
