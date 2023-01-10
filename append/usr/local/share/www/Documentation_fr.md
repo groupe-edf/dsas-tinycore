@@ -1938,7 +1938,7 @@ fichier moins l'extension `.pkg`
 - `_disk_needed` [Optionnel] - Le espace de disk libre nécessaire pour la 
 compilation en gigaoctets
 - `_version` [Optionnel] - Le numéro de version du logiciel
--`_uri` [Requis] - L'adresse auquel de chercher la source package du
+- `_uri` [Requis] - L'adresse auquel de chercher la source package du
 logiciel
 - `_src` [Optionnel] - Le nom à utiliser pour le fichier téléchargé. Si
 omis utilise `basename $_uri`

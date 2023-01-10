@@ -1871,7 +1871,7 @@ name of the file minus the `.pkg` extension
 -  `_disk_needed` [Optional] - The free disk space needed for the compilation
 in gigabytes 
 - `_version` [Optional] - The software version number
--`_uri` [Required] - The address to look for the source software package
+- `_uri` [Required] - The address to look for the source software package
 - `_src` [Optional] - The name to use for the downloaded filee. If ommitted
 use `basename $_uri`
 - `_dep` [Optional] - The dependencies necessary for the software if it
