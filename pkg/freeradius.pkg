@@ -1,6 +1,7 @@
 _pkg=freeradius
 _version=3.2.1
 _uri=https://github.com/FreeRADIUS/freeradius-server/archive/release_3_2_1.tar.gz
+_src=freeradius_3_2_1.tar.gz
 _dep="libtalloc openssl-1.1.1 gcc_libs"
 _build_dep="compiletc coreutils libtalloc openssl-1.1.1-dev"
 _pkg_path=freeradius-server-release_3_2_1
