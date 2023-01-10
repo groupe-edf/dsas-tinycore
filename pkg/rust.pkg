@@ -72,4 +72,4 @@ export LIBSSH2_SYS_USE_PKG_CONFIG=1
 python3 ./x.py install --exclude src/tools/miri
 "
 _install_cmd="rsync -rlptv install/ " 
-_pkgs='main{/usr/local,/etc}'
+_pkgs='main{usr/local,etc}'
