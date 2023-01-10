@@ -1,5 +1,16 @@
 Log of the principal changes to the DSAS
 
+Version 1.2.8 (XX XXX XXXX)
+- Remove all trace of default SSL certificate and create unique default certificate at first boot
+- Update busybox (1.3.5 -> 1.3.6)
+- Update clamav (0.105.1 -> 1.0.0)
+- Update curl (7.85.0 -> 7.87.0)
+- Update gnupg (2.2.27 -> 2.2.41)
+- Update libgpg-error (1.42 -> 1.46)
+- Update libksba (1.5.1 -> 1.6.3)
+- Update openssl (1.1.1q -> 1.1.1s)
+- Add rustc/cargo version 1.66.0 as version 1.58.1 too old for ClamaAV v1.0.0 build
+
 Version 1.2.7 (13 Dec 2022)
 - Spellcheck the documentation
 - Add open-vm-tools version 12.1.0

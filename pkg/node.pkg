@@ -1,4 +1,5 @@
 _pkg=node
+_disk_needed=8
 _version=16.18.0
 _uri=https://nodejs.org/dist/v16.18.0/node-v16.18.0.tar.xz
 _build_dep="compiletc coreutils python3.6 openssl-1.1.1-dev libnghttp2-dev libnghttp2-dev icu70-dev gcc_libs-dev"

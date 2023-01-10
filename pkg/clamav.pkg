@@ -1,4 +1,5 @@
 _pkg=clamav
+_disk_needed=8  # Need 8GB of disk to build
 _version=1.0.0
 _uri="https://www.clamav.net/downloads/production/clamav-1.0.0.tar.gz"
 # Tinycore 64bit has very old version of PCRE2 installed by default. Explicitly link to right version

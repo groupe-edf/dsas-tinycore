@@ -333,6 +333,10 @@ unpack() {
   esac
 }
 
+disksize(){
+  df --block-size=1G $1 | tail -1 | xargs | cut -d' ' -f4
+}
+
 build_pkg() {
   for pkg in $1; do
     pkg_file=$pkg_dir/${pkg%%-dev}.pkg
@@ -350,10 +354,12 @@ build_pkg() {
         msg "Building $pkg_file"
         # Unset build variables before sourcing package file
         unset _build_dep _conf_cmd _dep _install_cmd _make_cmd _pkg _pkg_path _pkgs \
-          _post_build _post_install _pre_config _uri _src _version
+          _post_build _post_install _pre_config _uri _src _version _disk_needed
         # Use Linux-PAM.pkg as a non trivial source file to test with
         # shellcheck source=pkg/Linux-PAM.pkg
         . "$pkg_file"
+        [ -n "$_disk_needed" ] && [ "$(disksize $extract)" -lt "$_disk_needed" ] && \
+          error "insufficent disk for package '$pkg' (needed ${_disk_needed}GB)"
 	[ -z "$_src" ] && _src=$(basename "$_uri")
         for dep in $_build_dep; do
           # () needed to create new environment 
@@ -854,7 +860,7 @@ realclean)
   exit 0
   ;;
 upgrade)
-  [ -e $work ] || error work directory does not exit. run \'./make.sh work ...\'
+  [ -e $work ] || error work directory does not exist. run \'./make.sh work ...\'
   msg Fetching md5.db.gz
   $curl_cmd -o "$tcz_dir/md5.db.gz" "$tcz_url/md5.db.gz" || error failed to download md5.db.gz
   gzip -f -d $tcz_dir/md5.db.gz
@@ -1244,9 +1250,8 @@ chown -R tc.staff /home/tc
 chmod -R o-rwx /home/tc /home/haut /home/bas /home/verif 
 chown -R root.staff /var/dsas
 chmod 775 /var/dsas          # Write perm for verif
-chmod 640 /var/dsas/dsas.csr /var/dsas/?*.pem /var/dsas/?*.dsas
+chmod 640 /var/dsas/?*.dsas
 chmod 660 /var/dsas/dsas_conf.xml
-chown tc.repo /var/dsas/dsas.csr /var/dsas/?*.pem
 chown tc.verif /var/dsas/dsas_conf.xml
 chown root.repo /var/dsas/repo.conf.dsas
 chown -R root.staff /opt

@@ -1935,10 +1935,14 @@ plusieurs packages fait à partir du code source
 
 - `_pkg` [Requis] - Le nom du package, ça doit être identique un nom du
 fichier moins l'extension `.pkg`
+- `_disk_needed` [Optionnel] - Le espace de disk libre nécessaire pour la 
+compilation en gigaoctets
 - `_version` [Optionnel] - Le numéro de version du logiciel
 -`_uri` [Requis] - L'adresse auquel de chercher la source package du
 logiciel
-- `_deps` [Optionnel] - Les dépendances nécessaire pour le logiciel tant
+- `_src` [Optionnel] - Le nom à utiliser pour le fichier téléchargé. Si
+omis utilise `basename $_uri`
+- `_dep` [Optionnel] - Les dépendances nécessaire pour le logiciel tant
 qu'il est installé
 - `_build_dep` [Optionnel] - Les dépendances nécessaire pendant la phase
 de build du logiciel
@@ -1972,11 +1976,11 @@ Un exemple complet d'un fichier `pkg/openssl-1.1.1.pkg` est
 
 ```
 _pkg=openssl-1.1.1
-_version=1.1.1q
-_uri=https://www.openssl.org/source/openssl-1.1.1q.tar.gz
+_version=1.1.1s
+_uri=https://www.openssl.org/source/openssl-1.1.1s.tar.gz
 _dep=""
 _build_dep="compiletc perl5"
-_pkg_path=openssl-1.1.1q
+_pkg_path=openssl-1.1.1s
 _conf_cmd="./config --openssldir=/usr/local/etc/ssl"
 _make_cmd="make"
 _install_cmd="make install DESTDIR="
