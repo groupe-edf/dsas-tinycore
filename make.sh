@@ -367,10 +367,12 @@ build_pkg() {
         done
         msg "Creating build image"
         if [ -d "$extract" ]; then
-          while IFS= read -r -d '' _dir; do
-            umount "$_dir"
-          done < <(find "$extract/tmp/tcloop" -type "d" -print0)
-          umount "$extract/proc"
+          if [ -d "$extract/tmp/tcloop" ]; then
+            while IFS= read -r -d '' _dir; do
+              umount "$_dir"
+            done < <(find "$extract/tmp/tcloop" -type "d" -print0)
+          fi
+          [ -d "$extract/proc" ] && [ "$(ls -A "$extract/proc")" != "" ] && umount "$extract/proc"
           rm -fr "$extract"
         fi
         mkdir -p "$extract"
@@ -380,9 +382,9 @@ build_pkg() {
         # FIXME : Fix missing links
         # It appears that certain links are missings with the base intsall
         # and they need to be forced
-        ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libpthread.so.0 libpthread.so; )
-        ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libdl.so.2 libdl.so; )   
-
+        ( cd "$extract/usr/lib" || exit 1; [ -e "libpthread.so" ] || ln -s ../../lib/libpthread.so.0 libpthread.so; )
+        ( cd "$extract/usr/lib" || exit 1; [ -e "libdl.so" ] || ln -s ../../lib/libdl.so.2 libdl.so; )   
+        
         # Force install of coreutils as always needed for install_tcz
         install_tcz coreutils
         # shellcheck disable=SC2086
@@ -547,10 +549,12 @@ install_firefox(){
       _old=$extract
       extract="$build"
       if [ -d "$extract" ]; then
-        while IFS= read -r -d '' _dir; do
-          umount "$_dir"
-        done < <(find "$extract/tmp/tcloop" -type "d" -print0)
-        umount "$extract/proc"
+        if [ -d "$extract/tmp/tcloop" ]; then
+          while IFS= read -r -d '' _dir; do
+            umount "$_dir"
+          done < <(find "$extract/tmp/tcloop" -type "d" -print0)
+        fi
+        [ -d "$extract/proc" ] && [ "$(ls -A "$extract/proc")" != "" ] && umount "$extract/proc"
         rm -fr "$extract"
       fi
       mkdir -p "$extract"
@@ -560,8 +564,8 @@ install_firefox(){
       # FIXME : Fix missing links
       # It appears that certain links are missings with the base intsall
       # and they need to be forced
-      ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libpthread.so.0 libpthread.so; )
-      ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libdl.so.2 libdl.so; )
+      ( cd "$extract/usr/lib" || exit 1; [ -e "libtread.so" ] || ln -s ../../lib/libpthread.so.0 libpthread.so; )
+      ( cd "$extract/usr/lib" || exit 1; [ -e "libdl.so" ] || ln -s ../../lib/libdl.so.2 libdl.so; )
 
       # Force install of coreutils as always needed for install_tcz
       # In seperate shell to avoid modifiying local variables
@@ -598,10 +602,12 @@ EOF
       fi
       md5sum "$target" | sed -e "s:  $target$::g" > "$target.md5.txt"
 
-      while IFS= read -r -d '' _dir; do
-        umount "$_dir"
-      done < <(find "$extract/tmp/tcloop" -type "d" -print0)
-      umount "$extract/proc"
+      if [ -d "$extract/tmp/tcloop" ]; then
+        while IFS= read -r -d '' _dir; do
+          umount "$_dir"
+        done < <(find "$extract/tmp/tcloop" -type "d" -print0)
+      fi
+      [ -d "$extract/proc" ] && [ "$(ls -A "$extract/proc")" != "" ] && umount "$extract/proc"
       rm -fr "$extract"
       extract="$_old"
     fi
@@ -747,7 +753,7 @@ install_dsas_js() {
         while IFS= read -r -d '' _dir; do
           umount "$_dir"
         done < <(find "$extract/tmp/tcloop" -type "d" -print0)
-        umount "$extract/proc"
+        [ -d "$extract/proc" ] && [ "$(ls -A "$extract/proc")" != "" ] && umount "$extract/proc"
         rm -fr "$extract"
       fi
       mkdir -p "$extract"
@@ -757,8 +763,8 @@ install_dsas_js() {
       # FIXME : Fix missing links
       # It appears that certain links are missings with the base intsall
       # and they need to be forced
-      ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libpthread.so.0 libpthread.so; )
-      ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libdl.so.2 libdl.so; )
+      ( cd "$extract/usr/lib" || exit 1; [ -e "libpthread.so" ] || ln -s ../../lib/libpthread.so.0 libpthread.so; )
+      ( cd "$extract/usr/lib" || exit 1; [ -e "libdl.so" ] || ln -s ../../lib/libdl.so.2 libdl.so; )
 
       # Force install of coreutils as always needed for install_tcz
       # In seperate shell to avoid modifiying local variables
@@ -847,8 +853,8 @@ clean)
         umount "$_dir"
       done < <(find "$build/tmp/tcloop" -type "d" -print0)
   fi
-  [ -d "$image/proc" ] && umount "$image/proc"
-  [ -d "$build/proc" ] && umount "$build/proc"
+  [ -d "$image/proc" ] && [ "$(ls -A "$image/proc")" != "" ] && umount "$image/proc"
+  [ -d "$build/proc" ] && [ "$(ls -A "$build/proc")" != "" ] && umount "$build/proc"
   rm -fr $image $build $newiso $mnt $dsascd $rootfs64 $dsascd.md5 \
       $docker $dockimage $source $work/dsas_pass.txt
   exit 0
