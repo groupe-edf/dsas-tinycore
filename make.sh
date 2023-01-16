@@ -564,7 +564,7 @@ install_firefox(){
       # FIXME : Fix missing links
       # It appears that certain links are missings with the base intsall
       # and they need to be forced
-      ( cd "$extract/usr/lib" || exit 1; [ -e "libtread.so" ] || ln -s ../../lib/libpthread.so.0 libpthread.so; )
+      ( cd "$extract/usr/lib" || exit 1; [ -e "libpthread.so" ] || ln -s ../../lib/libpthread.so.0 libpthread.so; )
       ( cd "$extract/usr/lib" || exit 1; [ -e "libdl.so" ] || ln -s ../../lib/libdl.so.2 libdl.so; )
 
       # Force install of coreutils as always needed for install_tcz
@@ -1107,7 +1107,8 @@ docker)
   install_tcz dialog
   install_tcz rpm
   install_tcz p7zip         # Needed by LiveUpdate
-  install_tcz zip-unzip     # Needed to allow repacking of unsigned zip files
+  [ "$arch" = 64 ] && install_tcz zip unzip
+  [ "$arch" != 64 ] && install_tcz zip-unzip     # Needed to allow repacking of unsigned zip files
   install_tcz Linux-PAM
   install_tcz net-snmp
   install_tcz lftp
