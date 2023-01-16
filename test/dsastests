@@ -123,8 +123,7 @@ function test(string $_msg, callable $_fn, bool $_fatal = false, $sshot = -1, $t
 
 function hostip() {
   // Get IP addresss of the principal interface
-  if ($handle = opendir("/sys/class/net")) {
-    while (false != ($entry = readdir($handle))) {
+  foreach (scandir("/sys/class/net") as $entry) {
       switch ($entry) {
         case ".":
         case "..":
@@ -142,7 +141,6 @@ function hostip() {
             return false;
           return $matches[1];
       }
-    }
   }
   return ""; 
 }
