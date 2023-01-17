@@ -333,6 +333,10 @@ unpack() {
   esac
 }
 
+disksize(){
+  df --block-size=1G "$1" | tail -1 | xargs | cut -d' ' -f4
+}
+
 build_pkg() {
   for pkg in $1; do
     pkg_file=$pkg_dir/${pkg%%-dev}.pkg
@@ -350,10 +354,12 @@ build_pkg() {
         msg "Building $pkg_file"
         # Unset build variables before sourcing package file
         unset _build_dep _conf_cmd _dep _install_cmd _make_cmd _pkg _pkg_path _pkgs \
-          _post_build _post_install _pre_config _uri _src _version
+          _post_build _post_install _pre_config _uri _src _version _disk_needed
         # Use Linux-PAM.pkg as a non trivial source file to test with
         # shellcheck source=pkg/Linux-PAM.pkg
         . "$pkg_file"
+        [ -n "$_disk_needed" ] && [ "$(disksize "$extract")" -lt "$_disk_needed" ] && \
+          error "insufficent disk for package '$pkg' (needed ${_disk_needed}GB)"
 	[ -z "$_src" ] && _src=$(basename "$_uri")
         for dep in $_build_dep; do
           # () needed to create new environment 
@@ -361,10 +367,12 @@ build_pkg() {
         done
         msg "Creating build image"
         if [ -d "$extract" ]; then
-          while IFS= read -r -d '' _dir; do
-            umount "$_dir"
-          done < <(find "$extract/tmp/tcloop" -type "d" -print0)
-          umount "$extract/proc"
+          if [ -d "$extract/tmp/tcloop" ]; then
+            while IFS= read -r -d '' _dir; do
+              umount "$_dir"
+            done < <(find "$extract/tmp/tcloop" -type "d" -print0)
+          fi
+          [ -d "$extract/proc" ] && [ "$(ls -A "$extract/proc")" != "" ] && umount "$extract/proc"
           rm -fr "$extract"
         fi
         mkdir -p "$extract"
@@ -374,9 +382,9 @@ build_pkg() {
         # FIXME : Fix missing links
         # It appears that certain links are missings with the base intsall
         # and they need to be forced
-        ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libpthread.so.0 libpthread.so; )
-        ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libdl.so.2 libdl.so; )   
-
+        ( cd "$extract/usr/lib" || exit 1; [ -e "libpthread.so" ] || ln -s ../../lib/libpthread.so.0 libpthread.so; )
+        ( cd "$extract/usr/lib" || exit 1; [ -e "libdl.so" ] || ln -s ../../lib/libdl.so.2 libdl.so; )   
+        
         # Force install of coreutils as always needed for install_tcz
         install_tcz coreutils
         # shellcheck disable=SC2086
@@ -541,10 +549,12 @@ install_firefox(){
       _old=$extract
       extract="$build"
       if [ -d "$extract" ]; then
-        while IFS= read -r -d '' _dir; do
-          umount "$_dir"
-        done < <(find "$extract/tmp/tcloop" -type "d" -print0)
-        umount "$extract/proc"
+        if [ -d "$extract/tmp/tcloop" ]; then
+          while IFS= read -r -d '' _dir; do
+            umount "$_dir"
+          done < <(find "$extract/tmp/tcloop" -type "d" -print0)
+        fi
+        [ -d "$extract/proc" ] && [ "$(ls -A "$extract/proc")" != "" ] && umount "$extract/proc"
         rm -fr "$extract"
       fi
       mkdir -p "$extract"
@@ -554,8 +564,8 @@ install_firefox(){
       # FIXME : Fix missing links
       # It appears that certain links are missings with the base intsall
       # and they need to be forced
-      ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libpthread.so.0 libpthread.so; )
-      ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libdl.so.2 libdl.so; )
+      ( cd "$extract/usr/lib" || exit 1; [ -e "libpthread.so" ] || ln -s ../../lib/libpthread.so.0 libpthread.so; )
+      ( cd "$extract/usr/lib" || exit 1; [ -e "libdl.so" ] || ln -s ../../lib/libdl.so.2 libdl.so; )
 
       # Force install of coreutils as always needed for install_tcz
       # In seperate shell to avoid modifiying local variables
@@ -592,10 +602,12 @@ EOF
       fi
       md5sum "$target" | sed -e "s:  $target$::g" > "$target.md5.txt"
 
-      while IFS= read -r -d '' _dir; do
-        umount "$_dir"
-      done < <(find "$extract/tmp/tcloop" -type "d" -print0)
-      umount "$extract/proc"
+      if [ -d "$extract/tmp/tcloop" ]; then
+        while IFS= read -r -d '' _dir; do
+          umount "$_dir"
+        done < <(find "$extract/tmp/tcloop" -type "d" -print0)
+      fi
+      [ -d "$extract/proc" ] && [ "$(ls -A "$extract/proc")" != "" ] && umount "$extract/proc"
       rm -fr "$extract"
       extract="$_old"
     fi
@@ -741,7 +753,7 @@ install_dsas_js() {
         while IFS= read -r -d '' _dir; do
           umount "$_dir"
         done < <(find "$extract/tmp/tcloop" -type "d" -print0)
-        umount "$extract/proc"
+        [ -d "$extract/proc" ] && [ "$(ls -A "$extract/proc")" != "" ] && umount "$extract/proc"
         rm -fr "$extract"
       fi
       mkdir -p "$extract"
@@ -751,8 +763,8 @@ install_dsas_js() {
       # FIXME : Fix missing links
       # It appears that certain links are missings with the base intsall
       # and they need to be forced
-      ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libpthread.so.0 libpthread.so; )
-      ( cd "$extract/usr/lib" || exit 1; ln -s ../../lib/libdl.so.2 libdl.so; )
+      ( cd "$extract/usr/lib" || exit 1; [ -e "libpthread.so" ] || ln -s ../../lib/libpthread.so.0 libpthread.so; )
+      ( cd "$extract/usr/lib" || exit 1; [ -e "libdl.so" ] || ln -s ../../lib/libdl.so.2 libdl.so; )
 
       # Force install of coreutils as always needed for install_tcz
       # In seperate shell to avoid modifiying local variables
@@ -841,8 +853,8 @@ clean)
         umount "$_dir"
       done < <(find "$build/tmp/tcloop" -type "d" -print0)
   fi
-  [ -d "$image/proc" ] && umount "$image/proc"
-  [ -d "$build/proc" ] && umount "$build/proc"
+  [ -d "$image/proc" ] && [ "$(ls -A "$image/proc")" != "" ] && umount "$image/proc"
+  [ -d "$build/proc" ] && [ "$(ls -A "$build/proc")" != "" ] && umount "$build/proc"
   rm -fr $image $build $newiso $mnt $dsascd $rootfs64 $dsascd.md5 \
       $docker $dockimage $source $work/dsas_pass.txt
   exit 0
@@ -854,7 +866,7 @@ realclean)
   exit 0
   ;;
 upgrade)
-  [ -e $work ] || error work directory does not exit. run \'./make.sh work ...\'
+  [ -e $work ] || error work directory does not exist. run \'./make.sh work ...\'
   msg Fetching md5.db.gz
   $curl_cmd -o "$tcz_dir/md5.db.gz" "$tcz_url/md5.db.gz" || error failed to download md5.db.gz
   gzip -f -d $tcz_dir/md5.db.gz
@@ -1095,7 +1107,8 @@ docker)
   install_tcz dialog
   install_tcz rpm
   install_tcz p7zip         # Needed by LiveUpdate
-  install_tcz zip-unzip     # Needed to allow repacking of unsigned zip files
+  [ "$arch" = 64 ] && install_tcz zip unzip
+  [ "$arch" != 64 ] && install_tcz zip-unzip     # Needed to allow repacking of unsigned zip files
   install_tcz Linux-PAM
   install_tcz net-snmp
   install_tcz lftp
@@ -1244,9 +1257,8 @@ chown -R tc.staff /home/tc
 chmod -R o-rwx /home/tc /home/haut /home/bas /home/verif 
 chown -R root.staff /var/dsas
 chmod 775 /var/dsas          # Write perm for verif
-chmod 640 /var/dsas/dsas.csr /var/dsas/?*.pem /var/dsas/?*.dsas
+chmod 640 /var/dsas/?*.dsas
 chmod 660 /var/dsas/dsas_conf.xml
-chown tc.repo /var/dsas/dsas.csr /var/dsas/?*.pem
 chown tc.verif /var/dsas/dsas_conf.xml
 chown root.repo /var/dsas/repo.conf.dsas
 chown -R root.staff /opt

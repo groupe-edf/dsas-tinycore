@@ -1533,7 +1533,7 @@ Software impacted by this risk
 | php-cgi | [8.0.1](http://tinycorelinux.net/12.x/x86/tcz/php-8.0-cgi.tcz) | Backend of the administration site |
 | lighttpd | [1.4.58](http://tinycorelinux.net/12.x/x86/tcz/lighttpd.tcz) | Backend of the administration site |
 | Linux PAM | [1.5.2](https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz) | Authentication on the administration site |
-| DSAS website | [1.2.7](https://gitlab.com/adb014/dsas-tinycore) | Backend and frontend of the administration site |
+| DSAS website | [1.2.8](https://gitlab.com/adb014/dsas-tinycore) | Backend and frontend of the administration site |
 
 The DSAS website is specially developed for this project. Static analysis
 of the code and a test suite is used on this code before each release to
@@ -1868,8 +1868,12 @@ the source code. We already have several packages made from source code
 
 - `_pkg` [Required] - The name of the package, it must be identical to a
 name of the file minus the `.pkg` extension
+-  `_disk_needed` [Optional] - The free disk space needed for the compilation
+in gigabytes 
 - `_version` [Optional] - The software version number
--`_uri` [Required] - The address to look for the source software package
+- `_uri` [Required] - The address to look for the source software package
+- `_src` [Optional] - The name to use for the downloaded filee. If ommitted
+use `basename $_uri`
 - `_dep` [Optional] - The dependencies necessary for the software if it
 is installed
 - `_build_dep` [Optional] - The dependencies needed during the software
@@ -1903,15 +1907,15 @@ A complete example of a `pkg / openssl-1.1.1.pkg` file is
 
 ```
 _pkg=openssl-1.1.1
-_version=1.1.1q
-_uri=https://www.openssl.org/source/openssl-1.1.1q.tar.gz
-_dep=``
-_build_dep=`compiletc perl5`
-_pkg_path=openssl-1.1.1q
-_conf_cmd=`./config --openssldir=/usr/local/etc/ssl`
-_make_cmd=`make`
-_install_cmd=`make install DESTDIR=`
-_pkgs=`main{/usr/local/bin,/usr/local/etc,/usr/local/lib/*.so*,/usr/local/lib/engines-1.1};dev{/usr/local/include,/usr/local/lib/*.a,/usr/local/lib/pkgconfig};doc{/usr/local/share}`
+_version=1.1.1s
+_uri=https://www.openssl.org/source/openssl-1.1.1s.tar.gz
+_dep=""
+_build_dep="compiletc perl5"
+_pkg_path=openssl-1.1.1s
+_conf_cmd="./config --openssldir=/usr/local/etc/ssl"
+_make_cmd="make"
+_install_cmd="make install DESTDIR="
+_pkgs="main{/usr/local/bin,/usr/local/etc,/usr/local/lib/*.so*,/usr/local/lib/engines-1.1};dev{/usr/local/include,/usr/local/lib/*.a,/usr/local/lib/pkgconfig};doc{/usr/local/share}"
 _post_install=\
 '#! /bin/sh
 [  -d /usr/local/etc/ssl/certs ] || mkdir -p /usr/local/etc/ssl/certs

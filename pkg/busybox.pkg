@@ -1,9 +1,9 @@
 _pkg=busybox
-_version=1.35.0
-_uri="https://busybox.net/downloads/busybox-1.35.0.tar.bz2"
+_version=1.36.0
+_uri="https://busybox.net/downloads/busybox-1.36.0.tar.bz2"
 _dep="libtirpc Linux-PAM"
 _build_dep="compiletc Linux-PAM-dev sstrip curl libssh2 libtirpc-dev"
-_pkg_path="busybox-1.35.0"
+_pkg_path="busybox-1.36.0"
 _pre_config=\
 "cd $builddir/$_pkg_path
 for file in busybox-1.27.1-wget-make-default-timeout-configurable.patch \
@@ -37,8 +37,19 @@ sed -i -e 's:CONFIG_EXTRA_CFLAGS=\":CONFIG_EXTRA_CFLAGS=\"-I/usr/local/include/t
 # New options since busybox 1.33.0
 cat << EOF >> .config
 CONFIG_FEATURE_TIMEZONE=y
+CONFIG_SHA1_SMALL=1
+CONFIG_SHA1_HWACCEL=y
+CONFIG_SHA256_HWACCEL=y
+
+# CONFIG_LOOP_CONFIGURE is not set
+# CONFIG_NO_LOOP_CONFIGURE is not set
+CONFIG_TRY_LOOP_CONFIGURE=y
+
 # CONFIG_CRC32 is not set
 # CONFIG_ASCII is not set
+# CONFIG_TSORT is not set
+# CONFIG_SEEDRNG is not set
+# CONFIG_TREE is not set
 EOF
 chown tc.staff .config
 
@@ -65,6 +76,20 @@ CONFIG_FEATURE_FIND_AMIN=y
 CONFIG_FEATURE_FIND_CMIN=y
 CONFIG_FEATURE_FIND_SAMEFILE=y
 CONFIG_FEATURE_WGET_FTP=y
+
+CONFIG_ASH_SLEEP=y
+
+CONFIG_SHA1_SMALL=1
+CONFIG_SHA1_HWACCEL=y
+CONFIG_SHA256_HWACCEL=y
+
+# CONFIG_LOOP_CONFIGURE is not set
+# CONFIG_NO_LOOP_CONFIGURE is not set
+CONFIG_TRY_LOOP_CONFIGURE=y
+
+CONFIG_TSORT=y
+CONFIG_SEEDRNG=y
+CONFIG_TREE=y
 EOF
 chown tc.staff .config
 "

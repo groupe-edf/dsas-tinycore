@@ -970,6 +970,16 @@ stop_cron(){
   pkill crond 
 }
 
+config_ssl(){
+  [ -f "$VAR/dsas_priv.pem" ] && [ -f "$VAR/dsas_pub.pem" ] && [ -f "$VAR/dsas.pem" ] && [ -f "$VAR/dsas.csr" ] && return 0
+
+  openssl req -new -newkey rsa:2048 -nodes -subj "/C=FR/ST=Paris/L=Paris/O=DSAS/OU=DSAS/CN=dsas.example.com"  -keyout "$VAR/dsas_priv.pem" -out "$VAR/dsas.csr"
+  openssl req -x509 -sha256 -days 180 -subj "/C=FR/ST=Paris/L=Paris/O=DSAS/OU=DSAS/CN=dsas.example.com" -key "$VAR/dsas_priv.pem" -out "$VAR/dsas_pub.pem"
+  cat "$VAR/dsas_priv.pem" "$VAR/dsas_pub.pem" > "$VAR/dsas.pem"
+  chmod 640 "$VAR/dsas_priv.pem" "$VAR/dsas_pub.pem" "$VAR/dsas.pem" "$VAR/dsas.csr"
+  chown tc.repo "$VAR/dsas_priv.pem" "$VAR/dsas_pub.pem" "$VAR/dsas.pem" "$VAR/dsas.csr"
+}
+
 save_config(){
   # Make a copy of the config file for later comparison
   $as_tc cp -f $VAR/dsas_conf.xml "$VAR/dsas_conf.xml.active"
@@ -1099,6 +1109,7 @@ case "${1}" in
       # The machine "haut" is configured from the web admin of "bas"
       [ "$TYP" = "bas" ] && config_network
       CONFIG_SSH="true"
+      config_ssl
     fi
     setup_interco
     [ -z "$ISDOCKER" ] && /usr/bin/sethostname "$TYP"
