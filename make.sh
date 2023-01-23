@@ -1080,15 +1080,6 @@ docker)
     zcat "$squashfs" | { cd "$extract" || exit 1; cpio -i -H newc -d; }
   fi
 
-  # FIXME
-  # We have a chicken and the egg problem with busybox. Our custom built busybox 
-  # depends en /lib/libtirpc.3 that needs to be linked to /usr/local/lib/libtirpc.3
-  # The libtirpc doesn't do this, and it can't created in the post install script of 
-  # busybox because the toolchain is broken at that point. So we need to install libtirpc
-  # first and manually created the link
-  install_tcz libtirpc
-  chroot "$extract" /bin/ln -s /usr/local/lib/libtirpc.so.3 /lib/libtirpc.so.3
-
   # Install the needed packages
   install_tcz busybox  # Busybox with PAM and TMOUT support
   install_tcz openssl-1.1.1  # explicitly install openssl first so avail to ca-certificate
