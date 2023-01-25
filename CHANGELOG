@@ -1,5 +1,8 @@
 Log of the principal changes to the DSAS
 
+Version 1.2.11 (25 Jan 2023)
+- Fix JS error in display of radius setup
+
 Version 1.2.10 (25 Jan 2023)
 - Fix permission problem if rebooting just after changing a password
 
