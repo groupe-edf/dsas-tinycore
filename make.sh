@@ -739,12 +739,14 @@ install_dsas_js() {
    dep=$target.dep
 
    # Remove old TCZ if JS file is newer
-   while IFS= read -r -d '' file; do
-     if [ "$(stat -c '%Y' "$target")" -lt "$(stat -c '%Y' "$file")" ]; then
-       rm -f "$target"
-       break;
-     fi
-   done < <(find ./js -name "*.js" -print0)
+   if [ -f "$target" ]; then
+     while IFS= read -r -d '' file; do
+       if [ "$(stat -c '%Y' "$target")" -lt "$(stat -c '%Y' "$file")" ]; then
+         rm -f "$target"
+         break;
+       fi
+     done < <(find ./js -name "*.js" -print0)
+   fi
 
    if test  ! -f "$target"; then
       _old=$extract
