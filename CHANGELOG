@@ -1,6 +1,6 @@
 Log of the principal changes to the DSAS
 
-Version 1.2.9 (XX XXX XXX)
+Version 1.2.9 (25 Jan 2023)
 - Remove support for NFS and CIFS filesystems as they shouldn't be used and this allows RPC support to be dropped
 
 Version 1.2.8 (17 Jan 2023)
