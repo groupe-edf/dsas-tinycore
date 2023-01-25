@@ -739,12 +739,14 @@ install_dsas_js() {
    dep=$target.dep
 
    # Remove old TCZ if JS file is newer
-   while IFS= read -r -d '' file; do
-     if [ "$(stat -c '%Y' "$target")" -lt "$(stat -c '%Y' "$file")" ]; then
-       rm -f "$target"
-       break;
-     fi
-   done < <(find ./js -name "*.js" -print0)
+   if [ -f "$target" ]; then
+     while IFS= read -r -d '' file; do
+       if [ "$(stat -c '%Y' "$target")" -lt "$(stat -c '%Y' "$file")" ]; then
+         rm -f "$target"
+         break;
+       fi
+     done < <(find ./js -name "*.js" -print0)
+   fi
 
    if test  ! -f "$target"; then
       _old=$extract
@@ -1079,15 +1081,6 @@ docker)
     cmd mkdir -p $extract
     zcat "$squashfs" | { cd "$extract" || exit 1; cpio -i -H newc -d; }
   fi
-
-  # FIXME
-  # We have a chicken and the egg problem with busybox. Our custom built busybox 
-  # depends en /lib/libtirpc.3 that needs to be linked to /usr/local/lib/libtirpc.3
-  # The libtirpc doesn't do this, and it can't created in the post install script of 
-  # busybox because the toolchain is broken at that point. So we need to install libtirpc
-  # first and manually created the link
-  install_tcz libtirpc
-  chroot "$extract" /bin/ln -s /usr/local/lib/libtirpc.so.3 /lib/libtirpc.so.3
 
   # Install the needed packages
   install_tcz busybox  # Busybox with PAM and TMOUT support
