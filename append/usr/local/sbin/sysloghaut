@@ -58,7 +58,7 @@ if [ "$(whoami)" != "haut" ]; then
   if [ "$(id -u)" = 0 ]; then
     sudo -E -u haut "$0" "$HLOGSZ" "$HLOGSZ0" "$HLOGH" "$HLOGH0" > "$LAST.new"
   elif [ "$(whoami)" = "tc" ]; then
-    sudo sudo -E -u haut "$0" $HLOGSZ $HLOGSZ0 "$HLOGH" "$HLOGH0" > "$LAST.new"
+    sudo sudo -E -u haut "$0" "$HLOGSZ" "$HLOGSZ0" "$HLOGH" "$HLOGH0" > "$LAST.new"
   else
     1>&2 echo "$0: Must be run as user 'haut'"
     false
@@ -145,7 +145,7 @@ if [ "$NHLOGH" != "$HLOGH" ]; then
     fi
   fi
   # Treat the lines in $HLOG
-  dd status=none bs=1 skip=$HLOGSZ if="$tempdir/$(basename "$HLOG")" | while read -r line; do
+  dd status=none bs=1 skip="$HLOGSZ" if="$tempdir/$(basename "$HLOG")" | while read -r line; do
     parse_pri "$line" 
   done | nc -w 1 -u "$server" 514
 

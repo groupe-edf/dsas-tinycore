@@ -1780,9 +1780,17 @@ shell and php) of the DSAS is performed with the command
 ./make.sh static
 ```
 
-The identified errors should be resolved or accepted before continuing.
-After, the build of a test version of the DSAS is performed with the
-command 
+The identified errors should be resolved or accepted before continuing. It
+is also possible to run the three stages of the static analysis individually
+with the commands
+
+```
+./make.sh static phpstan
+./make.sh static eslint
+./make.sh static shellcheck
+```
+
+After, the build of a test version of the DSAS is performed with the command 
 
 ```
 ./make.sh -t

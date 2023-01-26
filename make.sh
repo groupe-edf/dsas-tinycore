@@ -30,7 +30,7 @@
 readlink /proc/$$/exe | grep -q dash && _shell="/bin/bash"
 [ "$(id -u)" -ne 0 ] && _asroot="sudo -E"
 if [ -n "$_shell" ]; then
-  $_asroot $_shell "$0" "$@"
+  $_asroot "$_shell" "$0" "$@"
   exit $?
 elif [ -n "$_asroot" ]; then
   $_asroot "$0" "$@"
@@ -192,7 +192,7 @@ pwgen() {
 get_tcz() {
   mkdir -pv $tcz_dir
   for package; do
-    package=$(echo "$package" | sed -e s/-KERNEL/-$_kern/g)
+    package=$(echo "$package" | sed -e "s/-KERNEL/-$_kern/g")
     target=$tcz_dir/$package.tcz
     dep=$target.dep
     # If the PKG file exists and is newer than the TCZ file, rebuild 
@@ -246,7 +246,7 @@ install_tcz() {
     get_tcz $@
     exit_if_nonroot
     for package; do
-        package=$(echo "$package" | sed -e s/-KERNEL/-$_kern/g)
+        package=$(echo "$package" | sed -e "s/-KERNEL/-$_kern/g")
         target=$tcz_dir/$package.tcz
         tce_marker=$extract/usr/local/tce.installed/$package
         if ! test -f "$tce_marker"; then
@@ -925,43 +925,48 @@ static)
   # a difference dependance. Only install PCRE2 on 32bit platforms
   [ "$arch" != 64 ] && install_tcz pcre2
 
-  # Install PHP cli and add iconv and phar extension
-  install_tcz php-8.0-cli
- 
-  # Copy /etc/resolv.conf file 
-  mkdir -p "$extract/etc"
-  cp -p /etc/resolv.conf "$extract/etc/resolv.conf"
-
-  cp $append/usr/local/etc/php/php.ini $extract/usr/local/etc/php/php.ini
-  sed -i -e "s/;extension=phar/extension=phar/" $extract/usr/local/etc/php/php.ini
-  sed -i -e "s/;extension=iconv/extension=iconv/" $extract/usr/local/etc/php/php.ini
-  sed -i -e "s/;extension=curl/extension=curl/" $extract/usr/local/etc/php/php.ini
-  sed -i -e "s/;extension=zip/extension=zip/" $extract/usr/local/etc/php/php.ini
-  sed -i -e "s/;extension=tokenizer/extension=tokenizer/" $extract/usr/local/etc/php/php.ini
-
-  # Install PHP webdriver via composer             
-  install_phpstan
-  
+  # Copy DSAS code to test tree  
   mkdir -p $extract/home/tc/dsas
   tar cf - --exclude tmp --exclude=work --exclude=.git . | tar -C $extract/home/tc/dsas -xvf - 
-  cat << EOF > $extract/home/tc/phpstan.neon
+
+  if [ -z "$pkgs" ] || [ -z "${pkgs##*phpstan*}" ]; then
+    # Install PHP cli and add iconv and phar extension
+    install_tcz php-8.0-cli
+ 
+    # Copy /etc/resolv.conf file 
+    mkdir -p "$extract/etc"
+    cp -p /etc/resolv.conf "$extract/etc/resolv.conf"
+
+    cp $append/usr/local/etc/php/php.ini $extract/usr/local/etc/php/php.ini
+    sed -i -e "s/;extension=phar/extension=phar/" $extract/usr/local/etc/php/php.ini
+    sed -i -e "s/;extension=iconv/extension=iconv/" $extract/usr/local/etc/php/php.ini
+    sed -i -e "s/;extension=curl/extension=curl/" $extract/usr/local/etc/php/php.ini
+    sed -i -e "s/;extension=zip/extension=zip/" $extract/usr/local/etc/php/php.ini
+    sed -i -e "s/;extension=tokenizer/extension=tokenizer/" $extract/usr/local/etc/php/php.ini
+
+    # Install PHP webdriver via composer             
+    install_phpstan
+
+    cat << EOF > $extract/home/tc/phpstan.neon
 parameters:
   level: 9
   paths:
     - dsas/append/usr/local/share/www/api
 EOF
-  chown -R ${tc}.${staff} $extract/home/tc
+    chown -R ${tc}.${staff} $extract/home/tc
 
-  cat << EOF > $extract/tmp/script
+    cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 cd /home/tc
 env HOME=/home/tc vendor/bin/phpstan
 EOF
-  chmod a+x "$extract/tmp/script"
-  msg "Running PHPStan on usr/local/share/www/api"
-  chroot --userspec=${tc} "$extract" /tmp/script || error error running phpstan
+    chmod a+x "$extract/tmp/script"
+    msg "Running PHPStan on usr/local/share/www/api"
+    chroot --userspec=${tc} "$extract" /tmp/script || error error running phpstan
+  fi
 
-  cat << EOF > $extract/tmp/script
+  if [ -z "$pkgs" ] || [ -z "${pkgs##*eslint*}" ]; then
+    cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 export http_proxy=${http_proxy:=}
 export https_proxy=${https_proxy:=}
@@ -969,57 +974,59 @@ export HOME=/home/tc
 cd /home/tc/dsas/js
 make dev
 EOF
-  chmod a+x "$extract/tmp/script"
-  msg "Running eslint on js/..."
-  chroot --userspec=${tc} "$extract" /tmp/script || error error running eslint
+    chmod a+x "$extract/tmp/script"
+    msg "Running eslint on js/..."
+    chroot --userspec=${tc} "$extract" /tmp/script || error error running eslint
+  fi
 
-  # Shellcheck needs Haskell/Cabal to rebuild. For now only allow on a 64bit platform
-  # and download a static binary, or use shellchek if it is installed
-  if which shellcheck > /dev/null 2>&1; then
-    msg "Running shellcheck on shell code"
-    shellcheck -x "append/usr/local/sbin/checkfiles" \
-                  "append/usr/local/sbin/dsaspasswd" \
-                  "append/usr/local/sbin/getcertificate" \
-                  "append/usr/local/sbin/getfiles" \
-                  "append/usr/local/sbin/killtask" \
-                  "append/usr/local/sbin/rotatelogs" \
-                  "append/usr/local/sbin/runtask" \
-                  "append/usr/local/sbin/snmpdsas" \
-                  "append/usr/local/sbin/sysloghaut" \
-                  "append/etc/init.d/services/dsas" \
-                  "append/etc/init.d/rcS.docker" \
-                  "make.sh"
-  else
-    [ "$(uname -m)" = "x86_64" ] || error "shellcheck can only be run on a 64bit machine"
-    _uri="https://github.com/koalaman/shellcheck/releases/download/v0.8.0/shellcheck-v0.8.0.linux.x86_64.tar.xz"
-    _src=$(basename "$_uri")
-    download "$_uri" "$src_dir"
-    unpack "$src_dir/$_src" "$extract/home/tc" || error "Can not unpack $_src"
+  if [ -z "$pkgs" ] || [ -z "${pkgs##*shellcheck*}" ]; then
+    # Shellcheck needs Haskell/Cabal to rebuild. For now only allow on a 64bit platform
+    # and download a static binary, or use shellchek if it is installed
+    if which shellcheck > /dev/null 2>&1; then
+      msg "Running shellcheck on shell code"
+      shellcheck -x "append/usr/local/sbin/checkfiles" \
+                    "append/usr/local/sbin/dsaspasswd" \
+                    "append/usr/local/sbin/getcertificate" \
+                    "append/usr/local/sbin/getfiles" \
+                    "append/usr/local/sbin/killtask" \
+                    "append/usr/local/sbin/rotatelogs" \
+                    "append/usr/local/sbin/runtask" \
+                    "append/usr/local/sbin/snmpdsas" \
+                    "append/usr/local/sbin/sysloghaut" \
+                    "append/etc/init.d/services/dsas" \
+                    "append/etc/init.d/rcS.docker" \
+                    "make.sh"
+    else
+      [ "$(uname -m)" = "x86_64" ] || error "shellcheck can only be run on a 64bit machine"
+      _uri="https://github.com/koalaman/shellcheck/releases/download/v0.9.0/shellcheck-v0.9.0.linux.x86_64.tar.xz"
+      _src=$(basename "$_uri")
+      download "$_uri" "$src_dir"
+      unpack "$src_dir/$_src" "$extract/home/tc" || error "Can not unpack $_src"
 
-    cat << EOF > $extract/tmp/script
+      cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 export HOME=/home/tc
 export USER=tc
-cd /home/tc
+cd /home/tc/dsas
 shellcheck=\$(find /home/tc -type f -name "shellcheck")
-echo SHELLCHECK : \$shellcheck
 [ -z \"\$shellcheck\" ] && { echo "shellcheck not found"; exit 1; }
-\$shellcheck -x "dsas/append/usr/local/sbin/checkfiles" \
-                "dsas/append/usr/local/sbin/dsaspasswd" \
-                "dsas/append/usr/local/sbin/getcertificate" \
-                "dsas/append/usr/local/sbin/getfiles" \
-                "dsas/append/usr/local/sbin/killtask" \
-                "dsas/append/usr/local/sbin/rotatelogs" \
-                "dsas/append/usr/local/sbin/runtask" \
-                "dsas/append/usr/local/sbin/snmpdsas" \
-                "dsas/append/usr/local/sbin/sysloghaut" \
-                "dsas/append/etc/init.d/services/dsas" \
-                "dsas/append/etc/init.d/rcS.docker" \
-                "dsas/make.sh"
+\$shellcheck -x "append/usr/local/sbin/checkfiles" \
+                "append/usr/local/sbin/dsaspasswd" \
+                "append/usr/local/sbin/getcertificate" \
+                "append/usr/local/sbin/getfiles" \
+                "append/usr/local/sbin/killtask" \
+                "append/usr/local/sbin/rotatelogs" \
+                "append/usr/local/sbin/runtask" \
+                "append/usr/local/sbin/snmpdsas" \
+                "append/usr/local/sbin/sysloghaut" \
+                "append/etc/init.d/services/dsas" \
+                "append/etc/init.d/rcS.docker" \
+                "make.sh"
 EOF
-    chmod a+x "$extract/tmp/script"
-    msg "Running shellcheck on shell code"
-    chroot --userspec=${tc} "$extract" /tmp/script || error error running shellcheck
+      chmod a+x "$extract/tmp/script"
+      msg "Running shellcheck on shell code"
+      chroot --userspec=${tc} "$extract" /tmp/script || error error running shellcheck
+    fi
   fi
 
   if [ "$keep" = "0" ]; then
@@ -1362,7 +1369,7 @@ EOF
   exit \$?
 EOF
   chmod a+x $extract/tmp/script
-  { msg "Setting up lftp chroot jail"; chroot $extract /tmp/script; } || { error "Unexpected error ($?) in lftp chroot creation"; exit 1; }
+  { msg "Setting up lftp chroot jail"; chroot $extract /tmp/script; } || error "Unexpected error ($?) in lftp chroot creation"
   /bin/rm -f $extract/tmp/script
   mknod -m=666 $extract/opt/lftp/dev/null c 1 3
 
@@ -1382,13 +1389,13 @@ EOF
   # Change ISO name if test version
   [ "$testcode" = "1" ] && dsascd=${dsascd%.iso}-test.iso
   
-  msg creating $dsascd
+  msg "creating $dsascd"
   ( cd "$extract" || exit 1; find . | cpio -o -H newc; ) | gzip -2 > "$squashfs"
   mkisofs=$(which mkisofs genisoimage | head -n 1)
   cmd "$mkisofs" -l -J -R -V TC-custom -no-emul-boot -boot-load-size 4 \
     -boot-info-table -b boot/isolinux/isolinux.bin \
-    -c boot/isolinux/boot.cat -o $dsascd $newiso
-  msg creating $dsascd.md5
+    -c boot/isolinux/boot.cat -o "$dsascd" "$newiso"
+  msg "creating $dsascd.md5"
   (cd "$work" || exit 1; md5sum "$(basename "$dsascd")"; ) > "$dsascd.md5"
 
   if [ "$keep" = "0" ]; then

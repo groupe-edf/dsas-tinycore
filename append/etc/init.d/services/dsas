@@ -115,9 +115,9 @@ init_disk(){
       [ $SIZE -lt 1000 ] && break
     done
     DISK="1"
-    if [ $REM -lt 1 ]; then
+    if [ "$REM" -lt 1 ]; then
       ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE$SUF]' $ON"
-    elif [ $REM -lt 100 ]; then
+    elif [ "$REM" -lt 100 ]; then
       ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE.0$REM$SUF]' $ON"
     else
       ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE.$REM$SUF]' $ON"
@@ -251,9 +251,9 @@ audit_perms(){
   chmod 770 "$DSAS/log"
   chmod g+s "$DSAS/log"
   for _user in bas haut; do
-    chown root.$_user "$DSAS/$_user"
+    chown "root.$_user" "$DSAS/$_user"
     chmod 750 "$DSAS/$_user"
-    chown $_user.$_user "$DSAS/$_user/share"
+    chown "$_user.$_user" "$DSAS/$_user/share"
     chmod 770 "$DSAS/$_user/share"
     while IFS= read -r -d '' _d; do
       [ "$_user" = "bas" ] || chown haut.haut "$_d"
@@ -264,7 +264,7 @@ audit_perms(){
   while IFS= read -r -d '' _f; do
     if [ "$(stat -c%h "$_f")" -eq 1 ]; then
       # not hardlinked so only in haut
-      chown $_user.$_user "$_f"
+      chown "$_user.$_user" "$_f"
       chmod 640 "$_f"
     fi
   done < <(find "$DSAS/haut/share" -type f -print0)
@@ -1002,8 +1002,8 @@ check_xml_version(){
     chmod 644 $VAR/dsas_conf.xml
     _ver="0.5"
   fi
-  VER_MAJOR="$(echo $_ver | cut -d. -f1)"
-  VER_MINOR="$(echo $_ver | cut -d. -f2)"
+  VER_MAJOR="$(echo "$_ver" | cut -d. -f1)"
+  VER_MINOR="$(echo "$_ver" | cut -d. -f2)"
   
   REAL_VER_MAJOR="$(echo $DSAS_XML_VERSION | cut -d. -f1)"
   REAL_VER_MINOR="$(echo $DSAS_XML_VERSION | cut -d. -f2)"
