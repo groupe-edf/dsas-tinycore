@@ -1,7 +1,9 @@
 Log of the principal changes to the DSAS
 
 Version 1.2.12 (XX XXX XXXX)
-- ???
+- Fix permissions of radius server file to allow lighttpd instance running as user tc to access it
+- Ensure deactivation of local accounts if radius server is availble
+- Add radius server test code 
 
 Version 1.2.11 (25 Jan 2023)
 - Fix JS error in display of radius setup
