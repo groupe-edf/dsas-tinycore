@@ -853,7 +853,7 @@ start_radius(){
   [ "$radius" != "true" ] && return
   [ -z "$server" ] && return
   [ -z "$secret" ] && return
-  echo "Configuring raiuds client to use the server ${GREEN}$server${NORMAL}." 
+  echo "Configuring radius client to use the server ${GREEN}$server${NORMAL}." 
   echo "# server[:port]                   shared_secret                 timeout(s)    source_ip      vrf" > $RADIUS_SERVER
   printf "%-32s %-32s %-4s" "$server" "$secret" "3" >> $RADIUS_SERVER
   chmod 750 "$RADIUS_SERVER"
