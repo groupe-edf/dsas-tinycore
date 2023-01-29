@@ -9,4 +9,103 @@ _conf_cmd="setarch linux$arch ./configure"
 _make_cmd="make"
 _install_cmd="make install R=" 
 _pkgs='main{/usr/local/bin,/usr/local/sbin,/usr/local/etc,/usr/local/var/,/usr/local/lib/*.so,/usr/local/share/freeradius};doc{/usr/local/share/doc,/usr/local/share/man};dev{/usr/local/include,/usr/local/lib/*.a,/usr/local/lib/*.la}'
-_post_install=""
+_post_install="
+rm -f /usr/local/etc/raddb/sites-enabled/default;
+cat << EOF > /usr/local/etc/raddb/sites-enabled/default
+server default {
+listen {
+	type = auth
+	ipaddr = *
+	port = 0
+	limit {
+		max_connections = 16
+		lifetime = 0
+		idle_timeout = 30
+	}
+}
+listen {
+	type = acct
+	ipaddr = *
+	port = 0
+	limit {
+		# max_pps = 0
+	}
+}
+authorize {
+	filter_username
+	filter_password
+	preprocess
+	chap
+	mschap
+	suffix
+	eap {
+		ok = return
+	}
+	files
+	-sql
+	-ldap
+	expiration
+	logintime
+	pap	
+}
+authenticate {
+	Auth-Type PAP {
+		pap
+	}
+	Auth-Type CHAP {
+		chap
+	}
+	Auth-Type MS-CHAP {
+		mschap
+	}
+	mschap
+	digest
+	eap
+}
+preacct {
+	preprocess
+	suffix
+	files
+}
+accounting {
+	detail
+	unix
+	-sql
+	exec
+	attr_filter.accounting_response
+}
+session {
+}
+post-auth {
+	if (session-state:User-Name && reply:User-Name && request:User-Name && (reply:User-Name == request:User-Name)) {
+		update reply {
+			&reply: += &session-state:
+		}
+	}
+	-sql
+	exec
+	remove_reply_message_if_eap
+	Post-Auth-Type REJECT {
+		-sql	
+		attr_filter.access_reject
+		eap
+		remove_reply_message_if_eap
+	}
+	Post-Auth-Type CHALLENGE {
+	}
+	Post-Auth-Type Client-Lost {	
+	}
+	if (EAP-Key-Name && &reply:EAP-Session-Id) {
+		update reply {
+			&EAP-Key-Name := &reply:EAP-Session-Id
+		}
+	}
+}
+pre-proxy {
+}
+post-proxy {
+	eap
+}
+}
+EOF
+"
