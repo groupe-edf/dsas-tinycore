@@ -844,6 +844,8 @@ stop_ntp(){
 
 start_radius(){
   mkdir -p "$(dirname "$RADIUS_SERVER")"
+  chmod 750 "$(dirname "$RADIUS_SERVER")"
+  chown root.staff "$(dirname "$RADIUS_SERVER")"
   radius=$(xmllint --xpath "string(dsas/config/radius/active)" "$VAR/dsas_conf.xml")
   server=$(xmllint --xpath "string(dsas/config/radius/server)" "$VAR/dsas_conf.xml")
   secret=$(xmllint --xpath "string(dsas/config/radius/secret)" "$VAR/dsas_conf.xml")
@@ -851,13 +853,16 @@ start_radius(){
   [ "$radius" != "true" ] && return
   [ -z "$server" ] && return
   [ -z "$secret" ] && return
+  echo "Configuring raiuds client to use the server ${GREEN}$server${NORMAL}." 
   echo "# server[:port]                   shared_secret                 timeout(s)    source_ip      vrf" > $RADIUS_SERVER
   printf "%-32s %-32s %-4s" "$server" "$secret" "3" >> $RADIUS_SERVER
-  sed -i -e '1s:^:auth           sufficient        pam_radius_auth.so localifdown conf=/etc/raddb/server\n:' /usr/local/etc/pam.d/common-auth
-} 
+  chmod 750 "$RADIUS_SERVER"
+  chown root.staff "$RADIUS_SERVER"
+  sed -i -e '2s:^:auth           [success=3 ignore=ignore default=2]      pam_radius_auth.so localifdown conf=/etc/raddb/server\n:' /usr/local/etc/pam.d/common-auth
+}
 
 stop_radius(){
-  sed -i -e ':a;N;s/^.*pam_radius_auth.so.*\n//' /usr/local/etc/pam.d/common-auth
+  sed -i -e '/^.*pam_radius_auth.so.*/d' /usr/local/etc/pam.d/common-auth
   rm $RADIUS_SERVER > /dev/null 2>&1
 }
 
