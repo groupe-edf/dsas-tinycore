@@ -73,7 +73,7 @@ function fail() {
 }
 
 function fatal() {
-  echo _red. "[FATAL]" . _normal . PHP_EOL;
+  echo _red . "[FATAL]" . _normal . PHP_EOL;
   $GLOBALS["nfail"]++;
 }
 
@@ -265,7 +265,7 @@ while (true) {
   echo "[B] Task configuration page tests" . PHP_EOL;
   echo "[C] Radius server tests" . PHP_EOL;
   switch ($x = readline("Select a value : ")) {
-    case"":
+    case "":
     case "0": $what = "all"; break 2; 
     case "1": $what = "verif"; break 2; 
     case "2": $what = "secu"; break 2; 
