@@ -42,6 +42,12 @@ else {
   }
   if ($output["retval"] == 0) 
     $output = dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . $haut, "mv", "/tmp/dsas_conf.xml", "/var/dsas/dsas_conf.xml"]);
+  if ($output["retval"] == 0) 
+    $output = dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . $haut, "chgrp", "verif", "/var/dsas/dsas_conf.xml"]);
+  if ($output["retval"] == 0) 
+    $output = dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . $haut, "chmod", "640", "/var/dsas/dsas_conf.xml"]);
+
+
   if ($output["retval"] == 0)
     $output = dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . $haut, "sudo", "/etc/init.d/services/dsas", "apply"]);
   if ($output["retval"] != 0)
