@@ -1,5 +1,8 @@
 Log of the principal changes to the DSAS
 
+Version 1.2.13 (06 Feb 2023)
+- Fix permissions dsas_conf.xml on upper machine during apply (problem introdiced by lynis hardening)
+
 Version 1.2.12 (03 Feb 2023)
 - Fix permissions of radius server file to allow lighttpd instance running as user tc to access it
 - Ensure deactivation of local accounts if radius server is availble
