@@ -205,11 +205,11 @@ for _id in $ids; do
     mkdir -p "$logdir"
     myecho "$0 : #### Tasks started - $(date --utc) ####" > "$logdir/$_id.log"
     myecho "$0 : #### Tasks on machine HAUT ####"  >> "$logdir/$_id.log"
-    sudo sudo -u haut ssh "tc@$INTERCO_HAUT" "$(dirname "$0")/getfiles" $opts "$_id" 2>&1 >> "$logdir/$_id.log"
-    [ $? -eq 0 ] && sudo sudo -u haut ssh "tc@$INTERCO_HAUT" sudo sudo -u verif "$(dirname "$0")/checkfiles" $opts "$_id" 2>&1 >> "$logdir/$_id.log"
+    sudo sudo -u haut ssh "tc@$INTERCO_HAUT" "$(dirname "$0")/getfiles" $opts "$_id" >> "$logdir/$_id.log" 2>&1
+    [ $? -eq 0 ] && sudo sudo -u haut ssh "tc@$INTERCO_HAUT" sudo sudo -u verif "$(dirname "$0")/checkfiles" $opts "$_id" >> "$logdir/$_id.log" 2>&1
     [ $? -eq 0 ] && myecho "$0 : #### Tasks on machine BAS ####" >> "$logdir/$_id.log"
-    [ $? -eq 0 ] && "$(dirname "$0")/getfiles" $opts "$_id" 2>&1 >> "$logdir/$_id.log"
-    [ $? -eq 0 ] && sudo sudo -u verif "$(dirname "$0")/checkfiles" $opts -o "$logfile" "$_id" 2>&1 >> "$logdir/$_id.log"
+    [ $? -eq 0 ] && "$(dirname "$0")/getfiles" $opts "$_id" >> "$logdir/$_id.log" 2>&1 
+    [ $? -eq 0 ] && sudo sudo -u verif "$(dirname "$0")/checkfiles" $opts -o "$logfile" "$_id" >> "$logdir/$_id.log" 2>&1 
     myecho "$0 : #### Tasks Terminated - $(date --utc) ####" >> "$logdir/$_id.log"
   fi
 
