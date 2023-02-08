@@ -25,7 +25,7 @@
 
 # if root rerun as user tc
 if [ "$(id -u)" = 0 ]; then
-  sudo -E -u tc "$0" "$@" || exit 1
+  sudo -E -u tc "$0" "$@" && exit 0 || exit 1
 fi
 
 # if not user tc, quit
@@ -128,7 +128,7 @@ fi
 if [ -z "$ids" ]; then
   # Exit if more that three "runtask" instances are running
   # runtask is run as "tc" user, so no "sudo" needed
-  [ "$(pgrep runtask | wc -l)" -gt "3" ] && { 1>&2 echo "$0: too many instances of $0"; exit 1; }
+  [ "$(pgrep "$0" | wc -l)" -gt "3" ] && { 1>&2 echo "$0: too many instances of $0"; exit 1; }
 
   # No tasks specified. Get a list of all tasks
   i=1
@@ -149,6 +149,8 @@ if [ -z "$ids" ]; then
     fi
     i=$((i + 1))
   done
+  # Randmonize the order of the tasks to give each task a chance of running first 
+  ids=$(echo $ids | tr " " "\n" | shuf | tr "\n" " ")
 else
   # Delete the tasks not scheduled to run from the list if not forced. Verify task exists
   newids=""
