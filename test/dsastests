@@ -2472,7 +2472,7 @@ try {
     test("Test system logging from lower machine", function() {
         # Create unique string to allow script to run multiple tiles
         $msg = "Test Message Lower Machine: " . substr(hash("sha256", time()), 0, 8);
-        exec("/usr/bin/logger -p 9 '" . $msg "'", $output, $retval);
+        exec("/usr/bin/logger -p 9 '" . $msg .  "'", $output, $retval);
         exec("grep -q '" . $msg ."' /var/log/rsyslog", $output, $retval);
         if ($retval != 0)
           throw new RuntimeException("System message from lower machine not logged");
@@ -2482,7 +2482,7 @@ try {
     // Test with logger from upper machine
     test("Test system logging from upper machine", function() {
         $msg = "Test Message Upper Machine: " . substr(hash("sha256", time()), 0, 8);
-        exec("sudo sudo -u haut ssh tc@haut /usr/bin/logger -p 9 '" . $msg "'", $output, $retval);
+        exec("sudo sudo -u haut ssh tc@haut /usr/bin/logger -p 9 '" . $msg . "'", $output, $retval);
         // Force transfer of upper syslog messages
         exec("sudo /usr/local/sbin/sysloghaut > /dev/null 2>&1", $output, $retval);
         exec("grep -q '" . $msg ."' /var/log/rsyslog", $output, $retval);
