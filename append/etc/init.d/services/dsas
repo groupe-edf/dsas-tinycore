@@ -67,7 +67,8 @@ mount_dsas(){
       mount -o remount,noexec,nodev,nosuid "${DSAS:0:-5}"
       mount --noexec --nobind "$DSAS" /home/dsas
     fi
-    # For persistent /var/log. Do this before launching syslog
+    # For persistent /var/log taht are also accessible by the tc user. Do this before launching syslog
+    [ -d "${DSAS:0:-5}/log" ] && chmod g+s "${DSAS:0:-5}/log" && chgrp staff -R "${DSAS:0:-5}/log"
     [ -d "${DSAS:0:-5}/log" ] && [ ! "$(mounted /var/log)" ] && mount "${DSAS:0:-5}/log" /var/log
   else
     [ -L /home/dsas ] || ln -s "$DSAS" /home
