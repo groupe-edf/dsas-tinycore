@@ -1,7 +1,11 @@
 Log of the principal changes to the DSAS
 
 Version 1.2.14 (XX XXX XXXX)
-- ???
+- Add rsyslog server test code
+- Correction syslog from upper machine after lynis hardening
+- Allow /var/log to be readbale by the user 'tc'
+- Radomise task order from runtask to allow different tasks to start first each time
+- Log successful DSAS logins as warnings rather than notices
 
 Version 1.2.13 (06 Feb 2023)
 - Fix permissions dsas_conf.xml on upper machine during apply (problem introdiced by lynis hardening)
