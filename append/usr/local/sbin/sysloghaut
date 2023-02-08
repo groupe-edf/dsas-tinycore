@@ -31,48 +31,48 @@ else
   exit 1
 fi
 
+help() {
+  echo "Usage: $(basename "$0")"
+  echo "Kills the tasks given the list of IDs"
+  echo "     -n|--dryrun     Perform minimum actions"
+  echo "     -h|--help       Print this help"
+}
+
+# Parse options
+dryrun=0
+while [ "$#" -gt 0 ]; do
+  case $1 in
+    -n|--dryrun) dryrun=1 ;;
+    -h|--help) help; exit 0 ;;
+    *) 1>&2 echo "Unrecognized option : $1"; help; exit 1 ;;
+  esac
+  shift 1
+done
+
+# if not user root, quit
+[ "$(id -u)" != "0" ] && { 1>&2 echo "$0: Must be run as root"; exit 1; }
+
 HLOG="/var/log/messages"
 HLOG0="/var/log/messages.0"
 
-# Must be rerun as user "haut" 
-if [ "$(whoami)" != "haut" ]; then
-  [ "$#" -ne 0 ] && { 1>&2 echo "$0: No arguments permitted"; exit 1; }
-  # Get the status of the last run
-  # shellcheck disable=SC2153
-  LAST=$LOG/syslog.haut
-  HLOGSZ=0
-  HLOGH=""
-  HLOGSZ0=0
-  HLOGH0=""
-  if [ -f "$LAST" ]; then
-    HLOGSZ=$(head -1 "$LAST" | cut -d' ' -f2)
-    [ -z "$HLOGSZ" ] && HLOGSZ=0
-    HLOGH=$(head -1 "$LAST" | cut -d' ' -f3)
-    [ -z "$HLOGH" ] && HLOGH=""
-    HLOGSZ0=$(grep "$HLOG0" "$LAST" | cut -d' ' -f2)
-    [ -z "$HLOGSZ0" ] && HLOGSZ0=0
-    HLOGH0=$(grep "$HLOG0" "$LAST" | cut -d' ' -f3)
-    [ -z "$HLOGH0" ] && HLOGH0=""
-  fi
-  # shellcheck disable=SC2024
-  if [ "$(id -u)" = 0 ]; then
-    sudo -E -u haut "$0" "$HLOGSZ" "$HLOGSZ0" "$HLOGH" "$HLOGH0" > "$LAST.new"
-  elif [ "$(whoami)" = "tc" ]; then
-    sudo sudo -E -u haut "$0" "$HLOGSZ" "$HLOGSZ0" "$HLOGH" "$HLOGH0" > "$LAST.new"
-  else
-    1>&2 echo "$0: Must be run as user 'haut'"
-    false
-  fi
-  status=$?
-  [ "$status" = "0" ] && mv "$LAST.new" "$LAST"
-  [ "$status" = "0" ] || rm "$LAST.new" 
-  exit $status
+[ "$#" -ne 0 ] && { 1>&2 echo "$0: No arguments permitted"; exit 1; }
+# Get the status of the last run
+# shellcheck disable=SC2153
+LAST=$LOG/syslog.haut
+HLOGSZ=0
+HLOGH=""
+HLOGSZ0=0
+HLOGH0=""
+if [ -f "$LAST" ]; then
+  HLOGSZ=$(head -1 "$LAST" | cut -d' ' -f2)
+  [ -z "$HLOGSZ" ] && HLOGSZ=0
+  HLOGH=$(head -1 "$LAST" | cut -d' ' -f3)
+  [ -z "$HLOGH" ] && HLOGH=""
+  HLOGSZ0=$(grep "$HLOG0" "$LAST" | cut -d' ' -f2)
+  [ -z "$HLOGSZ0" ] && HLOGSZ0=0
+  HLOGH0=$(grep "$HLOG0" "$LAST" | cut -d' ' -f3)
+  [ -z "$HLOGH0" ] && HLOGH0=""
 fi
-
-HLOGSZ=$1
-[ "$HLOGSZ" != "0" ] && HLOGH=$3
-HLOGSZ0=$2
-[ "$HLOGSZ0" != "0" ] && HLOGH0=$4
 
 syslog=$(xmllint --xpath "string(dsas/config/syslog/active)" "$VAR/dsas_conf.xml")
 server=$(xmllint --xpath "string(dsas/config/syslog/server)" "$VAR/dsas_conf.xml")
@@ -81,7 +81,11 @@ server=$(xmllint --xpath "string(dsas/config/syslog/server)" "$VAR/dsas_conf.xml
 
 # Get /var/log/messages from the machine haut
 tempdir=$(mktemp -d)
-scp "tc@$INTERCO_HAUT:$HLOG" "$tempdir/$(basename "$HLOG")"
+chown root.haut "$tempdir"
+chmod 770 "$tempdir"
+rm -f "$LAST.new"
+touch "$LAST.new"
+sudo -u haut scp "tc@$INTERCO_HAUT:$HLOG" "$tempdir/$(basename "$HLOG")"
 
 parse_pri(){
   # Recovers the syslog PRI field from the linux syslog and appends the
@@ -128,7 +132,7 @@ NHLOGH=$(sha256sum "$tempdir/$(basename "$HLOG")" | cut -d' ' -f1)
 if [ "$NHLOGH" != "$HLOGH" ]; then
   # Fetch $HLOG0 as well
   1>&2 echo "File $HLOG different ${NHLOGH:0:10}.. (${HLOGH:0:10}..)"
-  if scp "tc@$INTERCO_HAUT:$HLOG0" "$tempdir/$(basename "$HLOG0")"; then
+  if sudo -u haut scp "tc@$INTERCO_HAUT:$HLOG0" "$tempdir/$(basename "$HLOG0")"; then
     NHLOGH0=$(sha256sum "$tempdir/$(basename "$HLOG0")" | cut -d' ' -f1) 
     if [ "$NHLOGH0" != "$HLOGH0" ]; then
       1>&2 echo "File $HLOG0 different ${NHLOGH0:0:10}.. (${HLOGH0:0:10}..)"
@@ -146,14 +150,16 @@ if [ "$NHLOGH" != "$HLOGH" ]; then
   fi
   # Treat the lines in $HLOG
   dd status=none bs=1 skip="$HLOGSZ" if="$tempdir/$(basename "$HLOG")" | while read -r line; do
-    parse_pri "$line" 
+    parse_pri "$line"
   done | nc -w 1 -u "$server" 514
 
   # Update the status file
   HLOGH="$(sha256sum "$tempdir/$(basename "$HLOG")" | cut -d' ' -f1)"
   HLOGSZ="$(stat -c%s "$tempdir/$(basename "$HLOG")")"
-  echo "$HLOG $HLOGSZ $HLOGH"
-  echo "$HLOG0 $HLOGSZ0 $HLOGH0"
+  echo "$HLOG $HLOGSZ $HLOGH" >> "$LAST.new"
+  echo "$HLOG0 $HLOGSZ0 $HLOGH0" >> "$LAST.new"
+  # Move new log file to replace old log file
+  mv $LAST.new $LAST
 fi
 
 # Remove temporary files
