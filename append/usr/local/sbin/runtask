@@ -56,6 +56,14 @@ utc_date(){
   date --utc '+%Y%m%d%H%M%S'
 }
 
+format_runtime(){
+  hours=$(($1 / 3600))
+  rem=$(($1 % 3600))
+  minutes=$(($rem / 60))
+  seconds=$(($rem % 60))
+  printf "%dh %02dm %02ds" $hours $minutes $seconds
+}
+
 fixdate(){
   echo "$1" | sed -E -e 's/(....)(..)(..)(..)(..)(..)/\1-\2-\3 \4:\5:\6/'
 }
@@ -115,14 +123,18 @@ done
 # shellcheck disable=SC2181
 if [ "$clamav" = "1" ]; then
   # Only run clamav checks
+  _start=$(date +%s)
+  1>&2 myecho "$0 : #### Tasks started - $(date --utc) ####"
   1>&2 myecho "$0: #### Tasks on machine HAUT ####"
   sudo sudo -u haut ssh "tc@$INTERCO_HAUT" "$(dirname "$0")/getfiles" $opts
   [ $? -eq 0 ] && sudo sudo -u haut ssh "tc@$INTERCO_HAUT" sudo sudo -u verif "$(dirname "$0")/checkfiles" $opts
   [ $? -eq 0 ] && 1>&2 myecho "$0: #### Tasks on machine BAS ####"
   [ $? -eq 0 ] && "$(dirname "$0")/getfiles" $opts
   [ $? -eq 0 ] && sudo sudo -u verif "$(dirname "$0")/checkfiles" $opts -o $logfile
-
-  exit $?
+  status=$?
+  _end=$(date +%s)
+  myecho "$0 : #### Tasks Terminated - $(date --utc) (runtime $(format_runtime $((_end -_start)))) ####"
+  exit $status
 fi
 
 if [ -z "$ids" ]; then
@@ -194,6 +206,7 @@ for _id in $ids; do
   _pid=$(sudo pgrep "$_id")
   [ -n "$_pid" ] && { 1>&2 myecho "$0 task $_id is running"; continue; }
 
+  _start=$(date +%s)
   if [ -z "$logdir" ]; then
     1>&2 myecho "$0 : #### Tasks started - $(date --utc) ####"
     1>&2 myecho "$0 : #### Tasks on machine HAUT ####"
@@ -202,7 +215,9 @@ for _id in $ids; do
     [ $? -eq 0 ] && 1>&2 myecho "$0 : #### Tasks on machine BAS ####"
     [ $? -eq 0 ] && "$(dirname "$0")/getfiles" $opts "$_id"
     [ $? -eq 0 ] && sudo sudo -u verif "$(dirname "$0")/checkfiles" $opts -o "$logfile" "$_id"
-    1>&2 myecho "$0 : #### Tasks Terminated - $(date --utc) ####"
+    status=$?
+    _end=$(date +%s)
+    myecho "$0 : #### Tasks Terminated - $(date --utc) (runtime $(format_runtime $((_end -_start)))) ####"
   else
     mkdir -p "$logdir"
     myecho "$0 : #### Tasks started - $(date --utc) ####" > "$logdir/$_id.log"
@@ -212,11 +227,13 @@ for _id in $ids; do
     [ $? -eq 0 ] && myecho "$0 : #### Tasks on machine BAS ####" >> "$logdir/$_id.log"
     [ $? -eq 0 ] && "$(dirname "$0")/getfiles" $opts "$_id" >> "$logdir/$_id.log" 2>&1 
     [ $? -eq 0 ] && sudo sudo -u verif "$(dirname "$0")/checkfiles" $opts -o "$logfile" "$_id" >> "$logdir/$_id.log" 2>&1 
-    myecho "$0 : #### Tasks Terminated - $(date --utc) ####" >> "$logdir/$_id.log"
+    status=$?
+    _end=$(date +%s)
+    myecho "$0 : #### Tasks Terminated - $(date --utc) (runtime $(format_runtime $((_end -_start)))) ####" >> "$logdir/$_id.log"
   fi
 
   # Log the run date and exit status of the task
-  _str=$(printf "%-26s %-16s %d" "$_id" "$(utc_date)" $?)
+  _str=$(printf "%-26s %-16s %d" "$_id" "$(utc_date)" $status)
   grep -q "$_id" "$RUNLOG" && sed -i -e "s/^$_id.*$/$_str/" "$RUNLOG" 
   grep -q "$_id" "$RUNLOG" || echo "$_str" >> "$RUNLOG"
 done
