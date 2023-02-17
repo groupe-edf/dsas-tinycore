@@ -1,7 +1,27 @@
 Log of the principal changes to the DSAS
 
-Version 1.2.10 (XX XXX XXXX)
-- ???
+Version 1.2.14 (XX XXX XXXX)
+- Add rsyslog server test code
+- Correction for syslog from upper machine after lynis hardening
+- Allow /var/log to be readable by the user 'tc'
+- Randomise task order from runtask to allow different tasks to start first each time
+- Log successful DSAS logins as warnings rather than notices
+- Print runtime of task in the log
+
+Version 1.2.13 (06 Feb 2023)
+- Fix permissions dsas_conf.xml on upper machine during apply (problem introdiced by lynis hardening)
+
+Version 1.2.12 (03 Feb 2023)
+- Fix permissions of radius server file to allow lighttpd instance running as user tc to access it
+- Ensure deactivation of local accounts if radius server is availble
+- Add radius server test code 
+- Also log task information for runtask in crontab 
+
+Version 1.2.11 (25 Jan 2023)
+- Fix JS error in display of radius setup
+
+Version 1.2.10 (25 Jan 2023)
+- Fix permission problem if rebooting just after changing a password
 
 Version 1.2.9 (25 Jan 2023)
 - Remove support for NFS and CIFS filesystems as they shouldn't be used and this allows RPC support to be dropped

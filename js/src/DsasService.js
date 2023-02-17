@@ -152,8 +152,8 @@ export default function dsasDisplayService(what = "all") {
             document.getElementById("user_haut").disabled = (serv.ssh.active !== "true");
         }
         if (what === "radius" || what === "all") {
-            if (!emptyObj(document.getElementById("radius"))) {
-                // FIXME : The test above allows the radius code to be commented in service.htmls
+            if (document.getElementById("radius")) {
+                // FIXME : The test above allows the radius code to be commented in service.html
                 if (emptyObj(serv.radius)) {
                     // This allow me to not have to artificially upgrade the XML file version
                     document.getElementById("radius").checked = false;

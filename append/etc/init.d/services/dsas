@@ -67,7 +67,8 @@ mount_dsas(){
       mount -o remount,noexec,nodev,nosuid "${DSAS:0:-5}"
       mount --noexec --nobind "$DSAS" /home/dsas
     fi
-    # For persistent /var/log. Do this before launching syslog
+    # For persistent /var/log taht are also accessible by the tc user. Do this before launching syslog
+    [ -d "${DSAS:0:-5}/log" ] && chmod g+s "${DSAS:0:-5}/log" && chgrp staff -R "${DSAS:0:-5}/log"
     [ -d "${DSAS:0:-5}/log" ] && [ ! "$(mounted /var/log)" ] && mount "${DSAS:0:-5}/log" /var/log
   else
     [ -L /home/dsas ] || ln -s "$DSAS" /home
@@ -115,9 +116,9 @@ init_disk(){
       [ $SIZE -lt 1000 ] && break
     done
     DISK="1"
-    if [ $REM -lt 1 ]; then
+    if [ "$REM" -lt 1 ]; then
       ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE$SUF]' $ON"
-    elif [ $REM -lt 100 ]; then
+    elif [ "$REM" -lt 100 ]; then
       ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE.0$REM$SUF]' $ON"
     else
       ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE.$REM$SUF]' $ON"
@@ -251,9 +252,9 @@ audit_perms(){
   chmod 770 "$DSAS/log"
   chmod g+s "$DSAS/log"
   for _user in bas haut; do
-    chown root.$_user "$DSAS/$_user"
+    chown "root.$_user" "$DSAS/$_user"
     chmod 750 "$DSAS/$_user"
-    chown $_user.$_user "$DSAS/$_user/share"
+    chown "$_user.$_user" "$DSAS/$_user/share"
     chmod 770 "$DSAS/$_user/share"
     while IFS= read -r -d '' _d; do
       [ "$_user" = "bas" ] || chown haut.haut "$_d"
@@ -264,7 +265,7 @@ audit_perms(){
   while IFS= read -r -d '' _f; do
     if [ "$(stat -c%h "$_f")" -eq 1 ]; then
       # not hardlinked so only in haut
-      chown $_user.$_user "$_f"
+      chown "$_user.$_user" "$_f"
       chmod 640 "$_f"
     fi
   done < <(find "$DSAS/haut/share" -type f -print0)
@@ -844,6 +845,8 @@ stop_ntp(){
 
 start_radius(){
   mkdir -p "$(dirname "$RADIUS_SERVER")"
+  chmod 750 "$(dirname "$RADIUS_SERVER")"
+  chown root.staff "$(dirname "$RADIUS_SERVER")"
   radius=$(xmllint --xpath "string(dsas/config/radius/active)" "$VAR/dsas_conf.xml")
   server=$(xmllint --xpath "string(dsas/config/radius/server)" "$VAR/dsas_conf.xml")
   secret=$(xmllint --xpath "string(dsas/config/radius/secret)" "$VAR/dsas_conf.xml")
@@ -851,13 +854,16 @@ start_radius(){
   [ "$radius" != "true" ] && return
   [ -z "$server" ] && return
   [ -z "$secret" ] && return
+  echo "Configuring radius client to use the server ${GREEN}$server${NORMAL}." 
   echo "# server[:port]                   shared_secret                 timeout(s)    source_ip      vrf" > $RADIUS_SERVER
   printf "%-32s %-32s %-4s" "$server" "$secret" "3" >> $RADIUS_SERVER
-  sed -i -e '1s:^:auth           sufficient        pam_radius_auth.so localifdown conf=/etc/raddb/server\n:' /usr/local/etc/pam.d/common-auth
-} 
+  chmod 750 "$RADIUS_SERVER"
+  chown root.staff "$RADIUS_SERVER"
+  sed -i -e '2s:^:auth           [success=3 ignore=ignore default=2]      pam_radius_auth.so localifdown conf=/etc/raddb/server\n:' /usr/local/etc/pam.d/common-auth
+}
 
 stop_radius(){
-  sed -i -e ':a;N;s/^.*pam_radius_auth.so.*\n//' /usr/local/etc/pam.d/common-auth
+  sed -i -e '/^.*pam_radius_auth.so.*/d' /usr/local/etc/pam.d/common-auth
   rm $RADIUS_SERVER > /dev/null 2>&1
 }
 
@@ -1002,8 +1008,8 @@ check_xml_version(){
     chmod 644 $VAR/dsas_conf.xml
     _ver="0.5"
   fi
-  VER_MAJOR="$(echo $_ver | cut -d. -f1)"
-  VER_MINOR="$(echo $_ver | cut -d. -f2)"
+  VER_MAJOR="$(echo "$_ver" | cut -d. -f1)"
+  VER_MINOR="$(echo "$_ver" | cut -d. -f2)"
   
   REAL_VER_MAJOR="$(echo $DSAS_XML_VERSION | cut -d. -f1)"
   REAL_VER_MINOR="$(echo $DSAS_XML_VERSION | cut -d. -f2)"

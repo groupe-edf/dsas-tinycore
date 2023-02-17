@@ -48,7 +48,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
           session_commit();
           ini_set("session.use_strict_mode", "0");  // Allow new ID
           session_id($newid);
-          syslog(LOG_NOTICE, "Succesful DSAS login from " . $cnxstr);
+          syslog(LOG_WARNING, "Succesful DSAS login: USER=" . $username . " ; ADDR=" . $cnxstr);
           echo "Ok";
         } else {
           // This is not a security error but a server error
@@ -59,7 +59,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         // Need to delay return if inactive or unrecognised user, to simulate the delay from PAM
         if (! dsas_user_active($username))
           sleep(3);
-        syslog(LOG_WARNING, "Failed DSAS login attempt from " . $cnxstr);
+        syslog(LOG_WARNING, "Failed DSAS login: USER=" . $username . " ; ADDR=" . $cnxstr);
         header("HTTP/1.0 403 Forbidden");
     }
 } else {

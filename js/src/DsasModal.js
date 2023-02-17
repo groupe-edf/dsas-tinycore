@@ -156,7 +156,7 @@ export default class DSASModal extends HTMLElement {
             el2.className = "btn btn-secondary";
             el2.setAttribute("data-bs-dismiss", "modal");
             if (disable !== null) {
-                el2.setAttribute("disable", "");
+                el2.setAttribute("disabled", "");
             }
             el2.textContent = _("Cancel");
             el.appendChild(el2);
@@ -167,7 +167,7 @@ export default class DSASModal extends HTMLElement {
             el2.id = "ok" + tag;
             el2.className = "btn btn-primary";
             if (disable !== null) {
-                el2.setAttribute("disable", "");
+                el2.setAttribute("disabled", "");
             }
             if ((hideonclick === null && !this.action) || hideonclick) {
                 el2.setAttribute("data-bs-dismiss", "modal");

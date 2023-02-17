@@ -1600,7 +1600,7 @@ Logiciels impactés par ce risque
 | php-cgi     | [8.0.1](http://tinycorelinux.net/12.x/x86/tcz/php-8.0-cgi.tcz) | Backend de la site d'administration |
 | lighttpd    | [1.4.58](http://tinycorelinux.net/12.x/x86/tcz/lighttpd.tcz) | Backend de la site d'administration |
 | Linux PAM | [1.5.2](https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz) | Authentification sur la site d'administration |
-| site web DSAS | [1.2.10](https://gitlab.com/adb014/dsas-tinycore) | Backend et frontend de la site d'administration |
+| site web DSAS | [1.2.14](https://gitlab.com/adb014/dsas-tinycore) | Backend et frontend de la site d'administration |
 
 La site web du DSAS est développé spécialement pour ce projet. Une
 analyse statique et suite de test de la code est utilisé à chaque version
@@ -1843,8 +1843,17 @@ shell et php) du DSAS est fait avec la commande
 ```
 
 Les erreurs identifier par cette analyse sont à corriger ou accepter
-avant de continuer. Après la compilation d'une version du DSAS pour les
-tests est fait avec la commande
+avant de continuer. C'est possible de faire des trois stages de l'analyse
+statique individuellement comme
+
+```
+./make.sh static phpstan
+./make.sh static eslint
+./make.sh static shellcheck
+```
+
+Après la compilation d'une version du DSAS pour les tests est fait avec la 
+commande
 
 ```
 ./make.sh -t

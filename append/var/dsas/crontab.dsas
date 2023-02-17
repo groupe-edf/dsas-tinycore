@@ -1,5 +1,5 @@
 # Every 5 minutes, check if there are tasks to run
-*/5  *  *   *   *   sudo -u tc /usr/local/sbin/runtask >& /dev/null
+*/5  *  *   *   *   sudo -u tc /usr/local/sbin/runtask -l /home/dsas/log/tasks >& /dev/null
 # Once a week rotate the logs
 00  01  *   *   0   /usr/local/sbin/rotatelogs >& /dev/null
 # Set date on machine haut once an hour. Can't use ntp

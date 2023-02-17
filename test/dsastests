@@ -73,7 +73,7 @@ function fail() {
 }
 
 function fatal() {
-  echo _red. "[FATAL]" . _normal . PHP_EOL;
+  echo _red . "[FATAL]" . _normal . PHP_EOL;
   $GLOBALS["nfail"]++;
 }
 
@@ -90,7 +90,7 @@ function modal_delay() {
   usleep(500000);
 }
 
-function test(string $_msg, callable $_fn, bool $_fatal = false, $sshot = -1, $tace = false) {
+function test(string $_msg, callable $_fn, bool $_fatal = false, $sshot = -1) {
   if ($sshot === -1)
     $sshot = $GLOBALS["sshot"];
   try {
@@ -263,8 +263,10 @@ while (true) {
   echo "[9] Backup/Restore tests" . PHP_EOL;
   echo "[A] Certificate configuration page tests" . PHP_EOL;
   echo "[B] Task configuration page tests" . PHP_EOL;
+  echo "[C] Radius server tests" . PHP_EOL;
+  echo "[D] Rsyslog server tests" . PHP_EOL;
   switch ($x = readline("Select a value : ")) {
-    case"":
+    case "":
     case "0": $what = "all"; break 2; 
     case "1": $what = "verif"; break 2; 
     case "2": $what = "secu"; break 2; 
@@ -278,7 +280,11 @@ while (true) {
     case "a":
     case "A": $what = "cert"; break 2; 
     case "b":
-    case "B": $what = "task"; break 2; 
+    case "B": $what = "task"; break 2;
+    case "c":
+    case "C": $what = "radius"; break 2;
+    case "d":
+    case "D": $what = "rsyslog"; break 2;
     default : echo "Unrecognized option '" . $x . "'" . PHP_EOL; break;
   }
 }
@@ -2224,7 +2230,7 @@ try {
         throw new RuntimeException("Task not found");
       });   
 
-    // FIXME examine log of running task. THIS MIGHT BE HARD TO DO with short running tasks.
+    // FIXME examine log  of running task. THIS MIGHT BE HARD TO DO with short running tasks.
 
     // FIXME Kill a running tasks. Also hard to do.
 
@@ -2256,6 +2262,313 @@ try {
       });   
   }
 
+  if ($what === "all" || $what === "radius") {
+    // Navigate to /service.html via navbar 
+    test("Navigating to /service.html via navbar", function () {
+        $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[0]->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='service.html']"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Service"));
+        return ($GLOBALS["driver"]->getTitle() === "Service");
+      }, true);
+
+    // Save state of the radius service
+    test("Saving the state of the radius", function () {
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("repo")));
+        $GLOBALS["serv"]["radius"] = $GLOBALS["driver"]->findElement(WebDriverBy::id("radius"))->isSelected();
+        $GLOBALS["serv"]["radius_server"] = $GLOBALS["driver"]->findElement(WebDriverBy::id("radius_server"))->getAttribute("value");
+        $GLOBALS["serv"]["radius_secret"] = $GLOBALS["driver"]->findElement(WebDriverBy::id("radius_secret"))->getAttribute("value");
+        return true;
+      }, true);
+
+    // Activate Radius
+    if (! $GLOBALS["driver"]->findElement(WebDriverBy::id("radius"))->isSelected())
+      $GLOBALS["driver"]->findElement(WebDriverBy::id("radius"))->click();
+
+    // Setting radius server and secret. Default radiusd secret is "testing123"
+    feedfn("Setting bad radius server address as a DNS name", "radius_server", "-example.com");
+    modalfn("Setting good radius server address as a DNS name", "radius_server", "example.com");
+    feedfn("Setting bad radius server address as an IP", "radius_server", "270.0.1.1");
+    modalfn("Setting good radius server address", "radius_server", "127.0.0.1");
+    feedfn("Setting radius secret with an XSS", "radius_secret", "<script>alert('Bad Secret')</script>");
+    modalfn("Setting good radius secret", "radius_secret", "testing123");
+    apply();
+
+    // Remove stale users added to radiusd configuration
+    exec("sudo sed -i -e 's/^[^#].*Cleartext-Password :=.*$//g' /usr/local/etc/raddb/mods-config/files/authorize", $output, $retval);
+    // Setup user if /usr/local/etc/raddb/users. Don't yet start radiusd
+    exec("sudo sh -c 'echo \"" . _user . " Cleartext-Password := " . $GLOBALS["password"] . "_radius" . PHP_EOL . "\" >> /usr/local/etc/raddb/mods-config/files/authorize'" . PHP_EOL, $output, $retval);
+
+    // Logout via navbar 
+    test("Logging out via navbar", function () {
+        $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("headlogout"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
+        modal_delay();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("DSAS Login"));
+        return ($GLOBALS["driver"]->getTitle() === "DSAS Login");
+      });
+
+    // Try to log back in with new password to test fail with fallback to local passwords
+    test("Testing failing login with fallback to local ", function() {
+        $GLOBALS["driver"]->executeScript("for (feed of document.getElementsByClassName(\"form-control\")) feed.setAttribute(\"class\", \"form-control\");");
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_user"))->clear()->sendKeys(_user);
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys($GLOBALS["password"] . "_radius");
+        $GLOBALS["driver"]->findElement(WebDriverBy::className("btn"))->click();
+        // Need 3 seconds longer delay here to allow the access to radius server to timeout
+        $GLOBALS["driver"]->wait(_delay + 3, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className("is-invalid")));
+        return (str_contains($GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->getAttribute("class"), "is-invalid"));
+      });
+
+    // Try to log back in with local password to test sucess with fallback to local passwords
+    test("Testing correct login with fallback to local", function() {
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_user"))->clear()->sendKeys(_user);
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys($GLOBALS["password"]);
+        $GLOBALS["driver"]->findElement(WebDriverBy::className("btn"))->click();
+        // Wait to be on main page
+        try { 
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Main"));
+        } catch (TimeoutException $e) {
+          throw new RuntimeException("Bad Password");
+        }
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("logpane")));
+        $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='users.html']"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Users"));
+        return ($GLOBALS["driver"]->getTitle() === "Users");
+      });
+
+    // Start radiusd server
+    test("Starting local radius server", function () {
+        exec("sudo /usr/local/sbin/radiusd", $output, $retval);
+        if ($retval != 0)
+          return false;
+        return true;
+      }, true);
+
+    // Logout via navbar 
+    test("Logging out via navbar", function () {
+        $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("headlogout"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
+        modal_delay();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("DSAS Login"));
+        return ($GLOBALS["driver"]->getTitle() === "DSAS Login");
+      });
+
+    // Try to log back in with local password to test use of radius server
+    test("Testing failing login with local password", function() {
+        $GLOBALS["driver"]->executeScript("for (feed of document.getElementsByClassName(\"form-control\")) feed.setAttribute(\"class\", \"form-control\");");
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_user"))->clear()->sendKeys(_user);
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys($GLOBALS["password"]);
+        $GLOBALS["driver"]->findElement(WebDriverBy::className("btn"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className("is-invalid")));
+        return (str_contains($GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->getAttribute("class"), "is-invalid"));
+      });
+
+    // Try to log back in with radius password
+    test("Testing correct login with radius password", function() {
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_user"))->clear()->sendKeys(_user);
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys($GLOBALS["password"] . "_radius");
+        $GLOBALS["driver"]->findElement(WebDriverBy::className("btn"))->click();
+        // Wait to be on main page
+        try { 
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Main"));
+        } catch (TimeoutException $e) {
+          throw new RuntimeException("Bad Password");
+        }
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("logpane")));
+        $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='users.html']"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Users"));
+        return ($GLOBALS["driver"]->getTitle() === "Users");
+      });
+
+    // Kill radiusd server
+    test("Stopping local radius server", function () {
+        exec("sudo /usr/bin/pkill radiusd", $output, $retval);
+        if ($retval != 0)
+          return false;
+        return true;
+      }, true);
+
+    // Remove users added to radiusd configuration
+    exec("sudo sed -i -e 's/^[^#].*Cleartext-Password :=.*$//g' /usr/local/etc/raddb/mods-config/files/authorize", $output, $retval);
+
+    // Navigate to /service.html via navbar 
+    test("Navigating to /service.html via navbar", function () {
+        $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[0]->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='service.html']"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Service"));
+        return ($GLOBALS["driver"]->getTitle() === "Service");
+      }, true);
+
+    // Restore radius configuration
+    test("Restoring original radius configuration", function () {
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("repo")));
+        if ($GLOBALS["driver"]->findElement(WebDriverBy::id("radius"))->isSelected()) {
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("radius_server"))->clear()->sendKeys($GLOBALS["serv"]["radius_server"]);
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("radius_secret"))->clear()->sendKeys($GLOBALS["serv"]["radius_secret"]);
+        }
+        if ($GLOBALS["serv"]["radius"] != $GLOBALS["driver"]->findElement(WebDriverBy::id("radius"))->isSelected())
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("radius"))->click();
+        save();
+        apply();
+        return true;
+      }, true);
+  }
+
+  if ($what === "all" || $what === "rsyslog") {
+    // Navigate to /service.html via navbar 
+    test("Navigating to /service.html via navbar", function () {
+        $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[0]->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='service.html']"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Service"));
+        return ($GLOBALS["driver"]->getTitle() === "Service");
+      }, true);
+
+    // Save state of the rsyslog service
+    test("Saving the state of the syslog", function () {
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("repo")));
+        $GLOBALS["serv"]["syslog"] = $GLOBALS["driver"]->findElement(WebDriverBy::id("syslog"))->isSelected();
+        $GLOBALS["serv"]["syslog_server"] = $GLOBALS["driver"]->findElement(WebDriverBy::id("syslog_server"))->getAttribute("value");
+        return true;
+      }, true);
+
+    // Activate Syslog
+    if (! $GLOBALS["driver"]->findElement(WebDriverBy::id("syslog"))->isSelected())
+      $GLOBALS["driver"]->findElement(WebDriverBy::id("syslog"))->click();
+
+    // Setting syslog server.
+    feedfn("Setting bad syslog server address as a DNS name", "syslog_server", "-example.com");
+    modalfn("Setting good syslog server address as a DNS name", "syslog_server", "example.com");
+    feedfn("Setting bad syslog server address as an IP", "syslog_server", "270.0.1.1");
+    modalfn("Setting good syslog server address", "syslog_server", "127.0.0.1");
+    apply();
+
+    // Move existing syslog configuration
+    if (file_exists("/var/log/rsyslog"))
+      exec("sudo rm -f /var/log/rsyslog", $output, $retval);
+    if (file_exists("/usr/local/etc/rsyslog.conf.old"))
+      exec("sudo rm -f /usr/local/etc/rsyslog.conf.old", $output, $retval);
+    if (file_exists("/usr/local/etc/rsyslog.conf"))
+      exec("sudo mv -f /usr/local/etc/rsyslog.conf /usr/local/etc/rsyslog.conf.old", $output, $retval);
+    // Setup simple rsyslog configuration
+    file_put_contents("/tmp/rsyslog.conf", 'module(load="imudp")' . PHP_EOL . 'input(type="imudp" port="514")' . PHP_EOL . '*.*  /var/log/rsyslog' . PHP_EOL);
+    exec("sudo cp -f /tmp/rsyslog.conf /usr/local/etc/rsyslog.conf", $output, $retval);
+    exec("sudo chown root.staff /usr/local/etc/rsyslog.conf", $output, $retval);
+    exec("sudo chmod 640 /usr/local/etc/rsyslog.conf", $output, $retval);
+
+    // Start rsyslog server
+    test("Starting local rsyslog server", function () {
+        exec("sudo /usr/local/sbin/rsyslogd", $output, $retval);
+        if ($retval != 0)
+          return false;
+        return true;
+      }, true);
+
+    // Test with logger from lower machine
+    test("Test system logging from lower machine", function() {
+        # Create unique string to allow script to run multiple tiles
+        $msg = "Test Message Lower Machine: " . substr(hash("sha256", time()), 0, 8);
+        exec("/usr/bin/logger -p 9 '" . $msg .  "'", $output, $retval);
+        exec("grep -q '" . $msg ."' /var/log/rsyslog", $output, $retval);
+        if ($retval != 0)
+          throw new RuntimeException("System message from lower machine not logged");
+        return true;
+      });
+
+    // Test with logger from upper machine
+    test("Test system logging from upper machine", function() {
+        $msg = "Test Message Upper Machine: " . substr(hash("sha256", time()), 0, 8);
+        exec("sudo sudo -u haut ssh tc@haut /usr/bin/logger -p 9 '" . $msg . "'", $output, $retval);
+        // Force transfer of upper syslog messages
+        exec("sudo /usr/local/sbin/sysloghaut > /dev/null 2>&1", $output, $retval);
+        exec("grep -q '" . $msg ."' /var/log/rsyslog", $output, $retval);
+        if ($retval != 0)
+          throw new RuntimeException("System message from upper machine not logged");
+        return true;
+      });
+
+    // Logout via navbar 
+    test("Logging out via navbar", function () {
+        $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("headlogout"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
+        modal_delay();
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("DSAS Login"));
+        return ($GLOBALS["driver"]->getTitle() === "DSAS Login");
+      });
+
+    // Try to log back in with bad password to test log of failing login
+    test("Testing failing login with bad password", function() {
+        # Create a pseudo unique user name to allow script to run multiple times
+        $baduser = "BadUser" . substr(hash("sha256", time()), 0, 8);
+        $GLOBALS["driver"]->executeScript("for (feed of document.getElementsByClassName(\"form-control\")) feed.setAttribute(\"class\", \"form-control\");");
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_user"))->clear()->sendKeys($baduser);
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys("BadPassword");
+        $GLOBALS["driver"]->findElement(WebDriverBy::className("btn"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className("is-invalid")));
+        exec("sudo grep -q 'Failed DSAS login: USER=" . $baduser . "' /var/log/rsyslog", $output, $retval);
+        if ($retval != 0)
+          throw new RuntimeException("Failed login attempt not logged");
+        return (str_contains($GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->getAttribute("class"), "is-invalid"));
+      });
+
+    // Try to log back in with good password and see if connexion is logged
+    test("Testing correct login with good password", function() {
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_user"))->clear()->sendKeys(_user);
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys($GLOBALS["password"]);
+        $GLOBALS["driver"]->findElement(WebDriverBy::className("btn"))->click();
+        // Wait to be on main page
+        try { 
+          $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Main"));
+        } catch (TimeoutException $e) {
+          throw new RuntimeException("Bad Password");
+        }
+        exec("sudo grep -q 'Succesful DSAS login: USER=" . _user . "' /var/log/rsyslog", $output, $retval);
+        if ($retval != 0)
+          throw new RuntimeException("Successful login attempt not logged");
+        return true;
+      });
+
+    // Navigate to /service.html via navbar 
+    test("Navigating to /service.html via navbar", function () {
+        $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[0]->click();
+        $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='service.html']"))->click();
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Service"));
+        return ($GLOBALS["driver"]->getTitle() === "Service");
+      }, true);
+
+    // Kill rsyslog server
+    test("Stopping local ryslog server", function () {
+        exec("sudo /usr/bin/pkill rsyslogd", $output, $retval);
+        if ($retval != 0)
+          return false;
+        return true;
+      }, true);
+
+    // Restore old syslog configuration
+    if (file_exists("/var/log/rsyslog"))
+      exec("sudo rm -f /var/log/rsyslog", $output, $retval);
+    if (file_exists("/usr/local/etc/rsyslog.conf.old"))
+      exec("sudo mv -f /usr/local/etc/rsyslog.conf.old /usr/local/etc/rsyslog.conf", $output, $retval);
+
+    // Restore syslog configuration
+    test("Restoring original syslog configuration", function () {
+        $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("repo")));
+        if ($GLOBALS["driver"]->findElement(WebDriverBy::id("syslog"))->isSelected()) {
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("syslog_server"))->clear()->sendKeys($GLOBALS["serv"]["syslog_server"]);
+        }
+        if ($GLOBALS["serv"]["syslog"] != $GLOBALS["driver"]->findElement(WebDriverBy::id("syslog"))->isSelected())
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("syslog"))->click();
+        save();
+        apply();
+        return true;
+      }, true);
+  }
 } catch (Exception $e) {
   // Catch other errors here so that firefox is shut down cleanly
   echo $e->getMessage() . PHP_EOL;
