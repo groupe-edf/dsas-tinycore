@@ -75,8 +75,8 @@ should_run(){
     quarterhourly)  [ $_dif -lt 900 ] && return 1;  ;;
     hourly) [ $_dif -lt 3600 ] && return 1;  ;;
     daily) [ $_dif -lt 86400 ] && return 1; ;;
-    weekly) [ $_dif -gt 604800 ] && return 1; ;;
-    monthly) [ $_dif -gt 18144000 ] && return 1; ;;
+    weekly) [ $_dif -lt 604800 ] && return 1; ;;
+    monthly) [ $_dif -lt 18144000 ] && return 1; ;;
     *) return 1; ;;
   esac
   return 0
@@ -151,7 +151,7 @@ if [ -z "$ids" ]; then
     if [ -z "$force" ]; then
       _run=$(xmllint --xpath "string(dsas/tasks/task[$i]/run)" "$CONF")
       case "$_run" in
-        hourly|daily|weekly|monthly) : ;;
+        quarterhourly|hourly|daily|weekly|monthly) : ;;
         *) i=$((i + 1)); continue; ;;
       esac
       _last=$(grep "$_id" "$RUNLOG" | xargs | cut -d' ' -f2) 
@@ -161,7 +161,7 @@ if [ -z "$ids" ]; then
     fi
     i=$((i + 1))
   done
-  # Randmonize the order of the tasks to give each task a chance of running first 
+  # Randomize the order of the tasks to give each task a chance of running first 
   ids=$(echo $ids | tr " " "\n" | shuf | tr "\n" " ")
 else
   # Delete the tasks not scheduled to run from the list if not forced. Verify task exists
@@ -183,7 +183,7 @@ else
     if [ -z "$force" ]; then
       _run=$(xmllint --xpath "string(dsas/tasks/task[$i]/run)" "$CONF")
       case "$_run" in
-        hourly|daily|weekly|monthly) :; ;;
+        quarterhourly|hourly|daily|weekly|monthly) :; ;;
         *) continue; ;;
       esac
       _last=$(grep "$_id" "$RUNLOG" | xargs | cut -d' ' -f2)
@@ -208,7 +208,7 @@ for _id in $ids; do
 
   _start=$(date +%s)
   if [ -z "$logdir" ]; then
-    1>&2 myecho "$0 : #### Tasks started - $(date --utc) ####"
+    1>&2 myecho "$0 : #### Task (id: $_id) started - $(date --utc) ####"
     1>&2 myecho "$0 : #### Tasks on machine HAUT ####"
     sudo sudo -u haut ssh "tc@$INTERCO_HAUT" "$(dirname "$0")/getfiles" $opts "$_id"
     [ $? -eq 0 ] && sudo sudo -u haut ssh "tc@$INTERCO_HAUT" sudo sudo -u verif "$(dirname "$0")/checkfiles" $opts "$_id"
@@ -217,10 +217,10 @@ for _id in $ids; do
     [ $? -eq 0 ] && sudo sudo -u verif "$(dirname "$0")/checkfiles" $opts -o "$logfile" "$_id"
     status=$?
     _end=$(date +%s)
-    myecho "$0 : #### Tasks Terminated - $(date --utc) (runtime $(format_runtime $((_end -_start)))) ####"
+    myecho "$0 : #### Task Terminated - $(date --utc) (runtime $(format_runtime $((_end -_start)))) ####"
   else
     mkdir -p "$logdir"
-    myecho "$0 : #### Tasks started - $(date --utc) ####" > "$logdir/$_id.log"
+    myecho "$0 : #### Task (id: $_id) started - $(date --utc) ####" > "$logdir/$_id.log"
     myecho "$0 : #### Tasks on machine HAUT ####"  >> "$logdir/$_id.log"
     sudo sudo -u haut ssh "tc@$INTERCO_HAUT" "$(dirname "$0")/getfiles" $opts "$_id" >> "$logdir/$_id.log" 2>&1
     [ $? -eq 0 ] && sudo sudo -u haut ssh "tc@$INTERCO_HAUT" sudo sudo -u verif "$(dirname "$0")/checkfiles" $opts "$_id" >> "$logdir/$_id.log" 2>&1
@@ -229,7 +229,7 @@ for _id in $ids; do
     [ $? -eq 0 ] && sudo sudo -u verif "$(dirname "$0")/checkfiles" $opts -o "$logfile" "$_id" >> "$logdir/$_id.log" 2>&1 
     status=$?
     _end=$(date +%s)
-    myecho "$0 : #### Tasks Terminated - $(date --utc) (runtime $(format_runtime $((_end -_start)))) ####" >> "$logdir/$_id.log"
+    myecho "$0 : #### Task Terminated - $(date --utc) (runtime $(format_runtime $((_end -_start)))) ####" >> "$logdir/$_id.log"
   fi
 
   # Log the run date and exit status of the task
