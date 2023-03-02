@@ -24,3 +24,8 @@ a.disablenav {
   color: gray;
   pointer-events: none;
 }
+/* A fix for bootstrap modals messing up the scrollbar */
+body:not(.modal-open){
+  padding-right: 0px !important;
+  overflow: auto !important;
+}

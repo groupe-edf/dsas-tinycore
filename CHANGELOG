@@ -8,6 +8,7 @@ Version 1.2.14 (XX XXX XXXX)
 - Log successful DSAS logins as warnings rather than notices
 - Print runtime of task in the log
 - Fix error preventing weekly and monthly tasks from running correctly
+- Fix for bootstrap modal windows messing up scrollbars
 
 Version 1.2.13 (06 Feb 2023)
 - Fix permissions dsas_conf.xml on upper machine during apply (problem introdiced by lynis hardening)
