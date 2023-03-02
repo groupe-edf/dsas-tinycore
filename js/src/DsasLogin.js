@@ -90,10 +90,13 @@ export default function dsasInitLoggedin() {
 
     uri.search = new URLSearchParams({ admin: true });
     fetch(uri).then((response) => {
-        if (response.ok) { window.location = "index.html"; }
-        uri.search = new URLSearchParams({ admin: false });
-        fetch(uri).then((response2) => {
-            if (response2.ok) { window.location = "passwd.html"; }
-        });
+        if (response.ok) {
+            window.location = "index.html";
+        } else {
+            uri.search = new URLSearchParams({ admin: false });
+            fetch(uri).then((response2) => {
+                if (response2.ok) { window.location = "passwd.html"; }
+            });
+        }
     });
 }
