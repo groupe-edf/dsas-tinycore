@@ -825,4 +825,27 @@ function check_files(array $files, string $mime_type) : void {
     throw new RuntimeException("Invalid file format");
 }
 
+/**
+ * Function to insert an XML node at a particular position in a SimpleXMLElement.
+ * See https://stackoverflow.com/questions/3361036/
+ *
+ * usage:
+ *   simplexml_insert_after($xmlelement, $xml->node[3])
+ *
+ * @param SimpleXMLElement $insert
+ *    The node to be inserted
+ * @param SimpleXMLElement $target
+ *    The node after which the node is to be inserted
+ */
+function simplexml_insert_after(SimpleXMLElement $insert, SimpleXMLElement $target) : void {
+  $target_dom = dom_import_simplexml($target);
+  if ($target_dom->ownerDocument && $target_dom->parentNode) {
+    $insert_dom = $target_dom->ownerDocument->importNode(dom_import_simplexml($insert), true);
+    if ($target_dom->nextSibling)
+      $target_dom->parentNode->insertBefore($insert_dom, $target_dom->nextSibling);
+    else
+      $target_dom->parentNode->appendChild($insert_dom);
+  }
+}
+
 ?>

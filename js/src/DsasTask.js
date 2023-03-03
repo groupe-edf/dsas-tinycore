@@ -34,6 +34,10 @@ import {
 // Global variable for the DisplayLog instance for the task log files
 let infoLogs;
 
+// Positions for dragged items
+let dragfrom = NaN;
+let dragto = NaN;
+
 function dsasTaskRealDelete(id) {
     const formData = new FormData();
     const deleteFiles = document.getElementById("TaskDeleteFiles").checked;
@@ -504,8 +508,33 @@ function dsasTaskNew() {
     document.getElementById("TaskCert").textContent = "";
 }
 
+function dsasTaskDrop(from, to) {
+    if (from !== to && from !== to + 1) {
+        dsasClearTimeout("tasks");
+        const formData = new FormData();
+        formData.append("op", "drag");
+        formData.append("from", dragfrom);
+        formData.append("to", dragto);
+        fetch("api/dsas-task.php", { method: "POST", body: formData }).then((response) => {
+            if (response.ok) { return response.text(); }
+            return Promise.reject(new Error(response.statusText));
+        }).then(() => {
+            // Disable ESLINT here as circular refering behind the functions
+            /* eslint-disable-next-line no-use-before-define */
+            dsasDisplayTasks("drag");
+        }).catch((error) => {
+            if (failLoggedin(error)) {
+                dsasClearTimeout("tasks");
+                dsasClearTimeout("info");
+            } else {
+                modalMessage(_("Error : {0}", (error.message ? error.message : error)));
+            }
+        });
+    }
+}
+
 export default function dsasDisplayTasks(what = "all") {
-    if (what === "all" || what === "tasks" || what === "status") {
+    if (what === "all" || what === "drag" || what === "status") {
         fetch("api/dsas-task.php").then((response) => {
             if (response.ok) { return response.json(); }
             return Promise.reject(new Error(response.statusText));
@@ -516,11 +545,25 @@ export default function dsasDisplayTasks(what = "all") {
             const tasksrendered = document.createDocumentFragment();
             if (tasks.task) {
                 (tasks.task.constructor === Object ? [tasks.task] : tasks.task).forEach((task) => {
+                    let fromid = i;
+                    if (what === "drag" && dragfrom !== dragto && dragfrom !== dragto + 1) {
+                        if (i === dragto + 1 && dragfrom > dragto) {
+                            fromid = dragfrom;
+                        } else if (i === dragto && dragfrom < dragto) {
+                            fromid = dragfrom;
+                        } else if (i >= dragfrom && i < dragto) {
+                            fromid = i + 1;
+                        } else if (i > dragto + 1 && i <= dragfrom) {
+                            fromid = i - 1;
+                        }
+                    }
+
                     const item = temp.content.cloneNode(true);
                     const links = item.querySelectorAll("a");
                     const card = item.getElementById("taskcard");
                     const certs = item.getElementById("taskcerts");
-                    const tid = document.getElementById("task" + i);
+                    const taskdrag = item.querySelectorAll("div")[0];
+                    const tid = document.getElementById("task" + fromid);
                     ml.translateHTML(item);
                     let cls = "text-success";
                     if (task.last === "never") { cls = "text-info"; }
@@ -529,7 +572,7 @@ export default function dsasDisplayTasks(what = "all") {
                     item.querySelector("p").className = "my-0 " + cls;
                     links[0].href = "#task" + i;
                     links[0].setAttribute("aria-controls", "task" + i);
-                    if (tid && what === "status" && tid.className.includes("show")) {
+                    if (tid && (what === "status" || what === "drag") && tid.className.includes("show")) {
                         links[0].setAttribute("aria-expanded", "true");
                     }
                     item.querySelector("span").id = "taskname" + i;
@@ -544,10 +587,25 @@ export default function dsasDisplayTasks(what = "all") {
                         links[5].removeAttribute("hidden");
                         links[5].addEventListener("click", ((t) => (() => dsasTaskKill(t.id, t.name)))(task));
                     }
-                    if (tid && what === "status") {
-                        item.querySelector("div").className = tid.className;
+                    if (tid && (what === "status" || what === "drag")) {
+                        item.querySelectorAll("div")[1].className = tid.className;
                     }
-                    item.querySelector("div").id = "task" + i;
+                    item.querySelectorAll("div")[1].id = "task" + i;
+
+                    taskdrag.id = "drag" + i;
+                    taskdrag.addEventListener("drag", ((d) => (() => { dragfrom = d; }))(i));
+                    taskdrag.addEventListener("dragover", (e) => {
+                        // equivalent to "let target = e.target;" but keeps eslint happy
+                        let { target } = e;
+                        e.preventDefault();
+                        while (!target.getAttribute("draggable")) {
+                            target = target.parentElement;
+                            if (target.className === "body") return;
+                        }
+                        dragto = parseInt(target.id.substring(4), 10);
+                    });
+                    taskdrag.addEventListener("drop", () => { dsasTaskDrop(dragfrom, dragto); });
+
                     [["Directory :", printObj(task.directory)],
                         ["URI : ", printObj(task.uri)],
                         ["URI Certification Authority :", (emptyObj(task.ca.name) ? _("Base") : printObj(task.ca.name))],

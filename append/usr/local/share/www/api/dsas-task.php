@@ -379,7 +379,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
               chgrp(_DSAS_LOG . "/tasks", "verif");
             }
             // Force the execution of the task with the "-f" flag.
-            // FIXME : seems that we can't use dsas_exec ad it hands
+            // FIXME : seems that we can't use dsas_exec as it stands
             exec("runtask -v -f " . $id . " >& " . _DSAS_LOG . "/tasks/" . $id . ".log &");
           }
         }
@@ -453,6 +453,28 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
         break;
 
+      case "drag" :
+        $from = $_POST["from"];
+        $to = $_POST["to"];
+        if (! ctype_digit($from)) {
+          $errors[] = ["error" => "The task drag from value is invalid"];
+        } else if (! ctype_digit($to)) {
+          $errors[] = ["error" => "The task drag to value is invalid"];
+        } else {
+          $from = intval($from);
+          $to = intval($to);
+          $nt =  $dsas->tasks[0]->count();
+          if ($from < 0 || $to < 0 || $from > $nt - 1 || $to > $nt - 1) {
+            $errors[] = ["error" => "The task drag is invalid"];
+          } else  if ($from !== $to && $from !== $to - 1) {
+            $task = new SimpleXMLElement($dsas->tasks[0]->task[$from]->asXML());
+            $task_to = $dsas->tasks[0]->task[$to];
+            unset($dsas->tasks->task[$from]);
+            simplexml_insert_after($task, $task_to);
+          }
+        }
+        break;
+
       default:
         $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]]; 
         break;
@@ -468,7 +490,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
       header("Content-Type: application/json");
       echo json_encode($info);
     }
-    if ($_POST["op"] === "add" || $_POST["op"] === "delete" ||$_POST["op"] === "name")
+    if ($_POST["op"] === "add" || $_POST["op"] === "delete" || $_POST["op"] === "name" || $_POST["op"] === "drag")
       $dsas->asXml(_DSAS_XML);
   } else {
     header("Content-Type: application/json");

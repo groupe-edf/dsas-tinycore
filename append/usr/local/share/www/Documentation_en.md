@@ -1409,6 +1409,11 @@ execution of the task is visible by opening the task as
 
 ![Example of successful task execution](en/DSAS32.png) 
 
+The position of the tasks in the list of tasks can be reordered by simply
+dragging the task and dropping it on another task. The position of the 
+dragged task will now be immediately after the position where it has been
+dropped.
+
 ### Debian and Redhat architecture selection
 
 The Debian and Redhat style repositories can be very large. One means of

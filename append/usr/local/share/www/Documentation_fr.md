@@ -1474,6 +1474,11 @@ de la tâche est visible en ouvrant la tâche comme
 
 ![Exemple d'exécution de tache réussi](fr/DSAS32.png)
 
+La positionne d'un tache dans la liste deans taches pourrait être modifie
+simplement en selectionnant le tache avec le souris et placant le tache 
+sur un autre tache. La nouvelle positione du tache sera immediatement 
+après ce tache.
+
 ### Sélection d'architecture pour Debian et Redhat
 
 Les dépôts de style Debian et Redhat pourraient être très large. Un moyen

@@ -121,7 +121,7 @@
    </form></template>
 
 <template id="tasktemplate">
-  <p class="my-0">
+  <div draggable="true"><p class="my-0">
     <a class="text-toggle" data-bs-toggle="collapse" role="button" aria-expanded="false"><i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded"><img src="caret-down.svg"/></i></a>
     <span></span>
     &nbsp;<a data-toggle="tooltip" title="Edit" data-i18n-title><img src="pencil-square.svg"></a>
@@ -146,7 +146,7 @@
         ></div
       ></pre>
     </div>
-  </div>
+  </div></li>
 </template>
 
 <div class="container p-3 my-3 border" id="Task">
@@ -155,7 +155,7 @@
       <i class="text-collapsed"><img src="caret-right.svg"/></i><i class="text-expanded"><img src="caret-down.svg"/></i></a><span data-i18n>Tasks</span></h5>
   </div>
   <div class="col-md-2 text-end">
-    <img id="AddTask" src="plus-lg.svg" data-toggle="tooltip" title="Add" data-i18n-title>
+    <img id="AddTask" src="plus-lg.svg" data-toggle="tooltip" title="Add" draggable="false" data-i18n-title>
   </div>
   <div class="collapse" id="Tasks"></div>
 </div>
