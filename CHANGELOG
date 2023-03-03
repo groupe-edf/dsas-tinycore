@@ -1,6 +1,6 @@
 Log of the principal changes to the DSAS
 
-Version 1.2.14 (XX XXX XXXX)
+Version 1.2.14 (03 Mar 2023)
 - Add rsyslog server test code
 - Correction for syslog from upper machine after lynis hardening
 - Allow /var/log to be readable by the user 'tc'
