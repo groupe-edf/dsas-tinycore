@@ -2,8 +2,9 @@ Log of the principal changes to the DSAS
 
 Version 1.2.15 (XX XXX XXXX)
 - Update openssl (1.1.1s -> 1.1.1t)
-- Update openssh (9;1p1 -> 9.2p1)
+- Update openssh (9.1p1 -> 9.2p1)
 - Update freeradius (3.2.1 -> 3.2.2)
+- Update curl (7.87.0 -> 7.88.1)
 
 Version 1.2.14 (03 Mar 2023)
 - Add rsyslog server test code
