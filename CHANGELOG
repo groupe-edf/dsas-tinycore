@@ -9,6 +9,8 @@ Version 1.2.14 (XX XXX XXXX)
 - Print runtime of task in the log
 - Fix error preventing weekly and monthly tasks from running correctly
 - Fix for bootstrap modal windows messing up scrollbars
+- Allow reordering of task list with drag and drop
+- Update clamav (1.0.0 -> 1.0.1) - CVE-2023-20032
 
 Version 1.2.13 (06 Feb 2023)
 - Fix permissions dsas_conf.xml on upper machine during apply (problem introdiced by lynis hardening)
