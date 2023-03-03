@@ -5,6 +5,7 @@ Version 1.2.15 (XX XXX XXXX)
 - Update openssh (9.1p1 -> 9.2p1)
 - Update freeradius (3.2.1 -> 3.2.2)
 - Update curl (7.87.0 -> 7.88.1)
+- Minor bug preventing advancing task by one in task list
 
 Version 1.2.14 (03 Mar 2023)
 - Add rsyslog server test code

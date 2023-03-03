@@ -466,7 +466,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $nt =  $dsas->tasks[0]->count();
           if ($from < 0 || $to < 0 || $from > $nt - 1 || $to > $nt - 1) {
             $errors[] = ["error" => "The task drag is invalid"];
-          } else  if ($from !== $to && $from !== $to - 1) {
+          } else  if ($from !== $to && $from !== $to + 1) {
             $task = new SimpleXMLElement($dsas->tasks[0]->task[$from]->asXML());
             $task_to = $dsas->tasks[0]->task[$to];
             unset($dsas->tasks->task[$from]);
