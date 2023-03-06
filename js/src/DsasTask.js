@@ -598,7 +598,7 @@ export default function dsasDisplayTasks(what = "all") {
                         // equivalent to "let target = e.target;" but keeps eslint happy
                         let { target } = e;
                         e.preventDefault();
-                        while (target.className === "body") {
+                        while (target.className !== "body") {
                             if (target.id.substring(0, 4) === "drag" && 
                                 target.getAttribute("draggable")) break;
                             target = target.parentElement;
