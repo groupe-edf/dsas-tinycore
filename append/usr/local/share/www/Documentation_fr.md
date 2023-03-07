@@ -817,9 +817,11 @@ configuration des utilisateurs pourraient ressembler à
 
 ![Menu de configuration des utilisateurs du DSAS](fr/DSAS38.png)
 
-A ce point il est recommandé d'appuyer sur le bouton `Appliquer` afin de
-rendre ces modifications permanentes. Sinon au prochain redémarrage les
-anciens mots de passe seront demandés.
+L'ordre des utilisateurs pourait facilement être modifié en bouggant
+l'utilisateur avec le souris à l'endroit desiré. A ce point il est
+recommandé d'appuyer sur le bouton `Appliquer` afin de rendre ces
+modifications permanentes. Sinon au prochain redémarrage les anciens mots
+de passe seront demandés.
 
 ### Configuration des réseaux
 

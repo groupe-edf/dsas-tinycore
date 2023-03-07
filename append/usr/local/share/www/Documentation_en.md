@@ -789,9 +789,10 @@ might be
 
 ![DSAS user configuration menu](en/DSAS38.png)
 
-At this point it is recommended to press the `Apply` button in order to
-make these changes permanent. Otherwise on the next restart the old
-passwords will be requested.  
+The order of the users can easily be modified by dragging the user to the 
+desired position with the mouse. At this point it is recommended to press 
+the `Apply` button in order to make these changes permanent. Otherwise on 
+the next restart the old passwords will be requested.  
 
 ### Network configuration
 
