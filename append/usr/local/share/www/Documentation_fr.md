@@ -1383,6 +1383,11 @@ recommandé de regarder les détails du certificat importé, comme
 
 ![Détails du certificat importé](fr/DSAS21.png)
 
+La positionne d'un certificat dans la liste des certificats pourrait être 
+modifié simplement en selectionnant le certificat avec le souris et placant 
+le certificat sur un autre certificat. La nouvelle positione du certificat 
+sera immediatement après ce certificat.
+
 ## Configuration des taches
 
 Une nouvelle tâche pourrait être ajouter en cliquant sur le 
@@ -1474,7 +1479,7 @@ de la tâche est visible en ouvrant la tâche comme
 
 ![Exemple d'exécution de tache réussi](fr/DSAS32.png)
 
-La positionne d'un tache dans la liste deans taches pourrait être modifie
+La positionne d'un tache dans la liste des taches pourrait être modifié
 simplement en selectionnant le tache avec le souris et placant le tache 
 sur un autre tache. La nouvelle positione du tache sera immediatement 
 après ce tache.

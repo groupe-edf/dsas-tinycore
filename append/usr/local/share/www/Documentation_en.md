@@ -1330,6 +1330,11 @@ example
 
 ![Imported certificate details](en/DSAS21.png) 
 
+The position of the certificate in the list of certificates can be reordered 
+by simply dragging the certificate and dropping it on another certificate. The 
+position of the dragged certificate will now be immediately after the position 
+where it has been dropped.
+
 ## Task configuration
 
 A new task can be added by clicking on ![](plus-lg.svg) to the right of
