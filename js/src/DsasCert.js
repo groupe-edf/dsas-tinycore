@@ -27,6 +27,7 @@ import {
 } from "./DsasUtil";
 
 // Positions for dragged items
+let dragtyp = "";
 let dragfrom = NaN;
 let dragto = NaN;
 
@@ -190,17 +191,17 @@ function treatGpgCerts(certs, node) {
         links[2].removeAttribute("hidden");
 
         certdrag.id = "gpg_drag" + i;
-        certdrag.addEventListener("drag", ((d) => (() => { dragfrom = d; }))(i));
+        certdrag.addEventListener("drag", ((d) => (() => { dragtyp = "gpg_"; dragfrom = d; }))(i));
         certdrag.addEventListener("dragover", (e) => {
             // equivalent to "let target = e.target;" but keeps eslint happy
             let { target } = e;
             e.preventDefault();
-            while (target.className !== "body") {
-                if (target.id.substring(0, 8) === "gpg_drag"
+            while (target && target.className !== "body") {
+                if (target.id.substring(0, 8) === dragtyp + "drag"
                     && target.getAttribute("draggable")) break;
                 target = target.parentElement;
             }
-            dragto = parseInt(target.id.substring(8), 10);
+            dragto = (target ? parseInt(target.id.substring(8), 10) : NaN);
         });
         certdrag.addEventListener("drop", () => { dsasCertDrop("gpg", dragfrom, dragto); });
 
@@ -233,17 +234,17 @@ function treatSslPubkeys(certs, node) {
         links[2].removeAttribute("hidden");
 
         certdrag.id = "pub_drag" + i;
-        certdrag.addEventListener("drag", ((d) => (() => { dragfrom = d; }))(i));
+        certdrag.addEventListener("drag", ((d) => (() => { dragtyp = "pub_"; dragfrom = d; }))(i));
         certdrag.addEventListener("dragover", (e) => {
             // equivalent to "let target = e.target;" but keeps eslint happy
             let { target } = e;
             e.preventDefault();
-            while (target.className !== "body") {
-                if (target.id.substring(0, 8) === "pub_drag"
+            while (target && target.className !== "body") {
+                if (target.id.substring(0, 8) === dragtyp + "drag"
                     && target.getAttribute("draggable")) break;
                 target = target.parentElement;
             }
-            dragto = parseInt(target.id.substring(8), 10);
+            dragto = (target ? parseInt(target.id.substring(8), 10) : NaN);
         });
         certdrag.addEventListener("drop", () => { dsasCertDrop("pubkey", dragfrom, dragto); });
 
@@ -288,17 +289,17 @@ function treatX509Certs(certs, node, added = false) {
 
         if (added) {
             certdrag.id = "x509drag" + i;
-            certdrag.addEventListener("drag", ((d) => (() => { dragfrom = d; }))(i));
+            certdrag.addEventListener("drag", ((d) => (() => { dragtyp = "x509"; dragfrom = d; }))(i));
             certdrag.addEventListener("dragover", (e) => {
                 // equivalent to "let target = e.target;" but keeps eslint happy
                 let { target } = e;
                 e.preventDefault();
-                while (target.className !== "body") {
-                    if (target.id.substring(0, 8) === "x509drag"
+                while (target && target.className !== "body") {
+                    if (target.id.substring(0, 8) === dragtyp + "drag"
                         && target.getAttribute("draggable")) break;
                     target = target.parentElement;
                 }
-                dragto = parseInt(target.id.substring(8), 10);
+                dragto = (target ? parseInt(target.id.substring(8), 10) : NaN);
             });
             certdrag.addEventListener("drop", () => { dsasCertDrop("x509", dragfrom, dragto); });
         } else {
