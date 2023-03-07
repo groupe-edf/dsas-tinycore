@@ -22,6 +22,8 @@
 # shellcheck shell=sh
 # Allow "[["
 # shellcheck disable=SC3010
+# Allow redirects of sudo output.. I want the base user as the owner
+# shellcheck disable=SC2024
 
 # if root rerun as user tc
 if [ "$(id -u)" = 0 ]; then
@@ -59,8 +61,8 @@ utc_date(){
 format_runtime(){
   hours=$(($1 / 3600))
   rem=$(($1 % 3600))
-  minutes=$(($rem / 60))
-  seconds=$(($rem % 60))
+  minutes=$((rem / 60))
+  seconds=$((rem % 60))
   printf "%dh %02dm %02ds" $hours $minutes $seconds
 }
 
@@ -162,7 +164,7 @@ if [ -z "$ids" ]; then
     i=$((i + 1))
   done
   # Randomize the order of the tasks to give each task a chance of running first 
-  ids=$(echo $ids | tr " " "\n" | shuf | tr "\n" " ")
+  ids=$(echo "$ids" | tr " " "\n" | shuf | tr "\n" " ")
 else
   # Delete the tasks not scheduled to run from the list if not forced. Verify task exists
   newids=""
