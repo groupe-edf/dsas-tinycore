@@ -513,8 +513,8 @@ function dsasTaskDrop(from, to) {
         dsasClearTimeout("tasks");
         const formData = new FormData();
         formData.append("op", "drag");
-        formData.append("from", dragfrom);
-        formData.append("to", dragto);
+        formData.append("from", from);
+        formData.append("to", to);
         fetch("api/dsas-task.php", { method: "POST", body: formData }).then((response) => {
             if (response.ok) { return response.text(); }
             return Promise.reject(new Error(response.statusText));
@@ -599,8 +599,8 @@ export default function dsasDisplayTasks(what = "all") {
                         let { target } = e;
                         e.preventDefault();
                         while (target.className !== "body") {
-                            if (target.id.substring(0, 4) === "drag" && 
-                                target.getAttribute("draggable")) break;
+                            if (target.id.substring(0, 4) === "drag"
+                                && target.getAttribute("draggable")) break;
                             target = target.parentElement;
                         }
                         dragto = parseInt(target.id.substring(4), 10);
