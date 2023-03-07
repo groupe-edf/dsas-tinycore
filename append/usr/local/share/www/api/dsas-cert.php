@@ -206,9 +206,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $errors[] = ["error" => "The certificate drag to value is invalid"];
         } else {
           $nt =  $dsas->certificates[0]->count();
-          if ($from < 0 || $to < 0 || $from > $nt - 1 || $to > $nt - 1) {
-            $errors[] = ["error" => "The certificate drag is invalid"];
-          } else  if ($from !== $to && $from !== $to + 1) {
+          if ($from !== $to && $from !== $to + 1) {
             $cert = new SimpleXMLElement($dsas->certificates[0]->certificate[$from]->asXML());
             $cert_to = $dsas->certificates[0]->certificate[$to];
             unset($dsas->certificates->certificate[$from]);

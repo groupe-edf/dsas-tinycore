@@ -24,7 +24,7 @@ if (! dsas_loggedin())
   header("HTTP/1.0 403 Forbidden");
 else if($_SERVER["REQUEST_METHOD"] == "POST"){
     $dsas = simplexml_load_file(_DSAS_XML);
-    /** @var array{username: string, passwd: string, description: string, type: string, active: string} $data */
+    /** @var array{username: string, passwd: string, description: string, type: string, active: string, from: int, to: int} $data */
     $data = json_decode($_POST["data"], true);
     if ($dsas === false) {
       header("Content-Type: application/json");
