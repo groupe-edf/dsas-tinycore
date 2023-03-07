@@ -11,7 +11,7 @@
 <dsas-header></dsas-header>
 
 <template id="usertemplate">
-  <tr>
+  <tr draggable="true">
     <th scope="row"></th>
     <td><input type="text" class="form-control"></td>
     <td><select class="form-select">
@@ -21,8 +21,8 @@
     </select></td>
     <td style="text-align:center"><input type="checkbox" class="form-check-input"></td>
     <td>
-      <a data-toggle="tooltip" title="Change Password" data-i18n-title><img src="lock.svg"></a>
-      &nbsp;<a data-toggle="tooltip" title="Delete" data-i18n-title><img src="x-lg.svg"></a>
+      <a data-toggle="tooltip" title="Change Password" draggable="false" data-i18n-title><img src="lock.svg" draggable="false"></a>
+      &nbsp;<a data-toggle="tooltip" title="Delete" draggable="false" data-i18n-title><img src="x-lg.svg" draggable="false"></a>
     <td>
   </tr>
 </template>

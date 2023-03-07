@@ -145,6 +145,20 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
         break;
 
+      case "drag" :
+        $from = $data["from"];
+        $to = $data["to"];
+        $nt =  $dsas->config->users[0]->count();
+        if ($from < 1 || $to < 0 || $from > $nt - 1 || $to > $nt - 1) {
+          $errors[] = ["error" => "The user drag is invalid"];
+        } else  if ($from !== $to && $from !== $to + 1) {
+          $user = new SimpleXMLElement($dsas->config->users[0]->user[$from]->asXML());
+          $user_to = $dsas->config->users[0]->user[$to];
+          unset($dsas->config->users->user[$from]);
+          simplexml_insert_after($user, $user_to);
+        }
+        break;
+
       default:
         $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]]; 
         break;
