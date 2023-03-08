@@ -47,6 +47,8 @@ export function dsasClearTimeout(ref) {
     });
     timeouts = newtimeouts;
 }
+// This needs to be exposed so test code can clear timeouts to avoid stale handle errors
+window.dsasClearTimeout = dsasClearTimeout;
 
 export function dsasClearAllTimeouts() {
     timeouts.forEach((timeout) => {
