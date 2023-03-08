@@ -1783,7 +1783,7 @@ try {
             $first = false;
             continue;
           }
-          if (str_contains($card->getDomProperty("innerHTML"), $finger)) {
+          if (!str_contain($card->getDomProperty("id"), "drag") && str_contains($card->getDomProperty("innerHTML"), $finger)) {
             $GLOBALS["card"] = "#" . $card->getAttribute("id"); 
             $found = true;
             break;
