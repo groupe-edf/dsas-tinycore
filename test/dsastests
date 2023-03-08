@@ -199,8 +199,7 @@ function apply() {
       return false;
     }
   });
-  modal_delay();
-  $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
+  $GLOBALS["driver"]->wait(2 * _delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
   modal_delay();
   $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click(); // Click Ok to confirm
   // Wait for modal to clear
