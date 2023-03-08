@@ -518,10 +518,15 @@ function dsasTaskDrop(from, to) {
         fetch("api/dsas-task.php", { method: "POST", body: formData }).then((response) => {
             if (response.ok) { return response.text(); }
             return Promise.reject(new Error(response.statusText));
-        }).then(() => {
-            // Disable ESLINT here as circular refering behind the functions
-            /* eslint-disable-next-line no-use-before-define */
-            dsasDisplayTasks("drag");
+        }).then((text) => {
+            try {
+                const errors = JSON.parse(text);
+                modalErrors(errors);
+            } catch (e) {
+                // Disable ESLINT here as circular refering behind the functions
+                /* eslint-disable-next-line no-use-before-define */
+                dsasDisplayTasks("drag");
+            }
         }).catch((error) => {
             if (failLoggedin(error)) {
                 dsasClearTimeout("tasks");

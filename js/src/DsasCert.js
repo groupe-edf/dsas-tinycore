@@ -95,10 +95,15 @@ function dsasCertDrop(typ, from, to) {
             fetch("api/dsas-cert.php", { method: "POST", body: formData }).then((response) => {
                 if (response.ok) { return response.text(); }
                 return Promise.reject(new Error(response.statusText));
-            }).then(() => {
-                // Disable ESLINT here as circular refering behind the functions
-                /* eslint-disable-next-line no-use-before-define */
-                dsasDisplayCert(typ);
+            }).then((text) => {
+                try {
+                    const errors = JSON.parse(text);
+                    modalErrors(errors);
+                } catch (e) {
+                    // Disable ESLINT here as circular refering behind the functions
+                    /* eslint-disable-next-line no-use-before-define */
+                    dsasDisplayCert(typ);
+                }
             }).catch((error) => {
                 if (!failLoggedin(error)) {
                     modalMessage(_("Error : {0}", (error.message ? error.message : error)));
