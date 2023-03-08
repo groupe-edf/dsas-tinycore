@@ -105,7 +105,7 @@ while [ "$#" -gt 0 ]; do
       echo "     -v|--verbose      Log all files verified"
       echo "     -q|--quiet        Log only files failing to verify"
       echo "     -c|--clamav       Get ClamAv signature files. The ID is ignored"
-      echo "     -l|--logdir <dir> Save task logs to this directory" 
+      echo "     -l|--logdir <dir> Save task logs to this directory"
       echo "     -h|--help         Print this help"
       echo "ID can be the numerical order of the task or its MD5 ID"
       exit 0
@@ -140,9 +140,9 @@ if [ "$clamav" = "1" ]; then
 fi
 
 if [ -z "$ids" ]; then
-  # Exit if more that three "runtask" instances are running
+  # Exit if more that three "runtask" instances are running.. The pgrep itself counts as an instance
   # runtask is run as "tc" user, so no "sudo" needed
-  [ "$(pgrep "$0" | wc -l)" -gt "3" ] && { 1>&2 echo "$0: too many instances of $0"; exit 1; }
+  [ "$(pgrep "$(basename "$0")" | wc -l)" -gt "4" ] && { 1>&2 echo "$0: too many instances of $(basename "$0")"; exit 1; }
 
   # No tasks specified. Get a list of all tasks
   i=1
@@ -157,7 +157,7 @@ if [ -z "$ids" ]; then
         *) i=$((i + 1)); continue; ;;
       esac
       _last=$(grep "$_id" "$RUNLOG" | xargs | cut -d' ' -f2) 
-      [ -z "$_last" ] || should_run "$_last" "$_run" && ids="$ids $_id"    
+      [ -z "$_last" ] || should_run "$_last" "$_run" && ids="$ids $_id"
     else
       ids="$ids $_id"
     fi

@@ -1,5 +1,8 @@
 Log of the principal changes to the DSAS
 
+Version 1.2.17 (XX XXX XXX)
+- Fix for the limit of the number of running tasks . Only 3 allowed automatically
+
 Version 1.2.16 (08 Mar 2023)
 - Allow reordering of certificates
 - Allow reordering of users
