@@ -199,7 +199,7 @@ function apply() {
       return false;
     }
   });
-  $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
+  $GLOBALS["driver"]->wait(2 * _delay, _retry)->until(WebDriverExpectedCondition::elementToBeClickable(WebDriverBy::id("okDSAS")));
   modal_delay();
   $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click(); // Click Ok to confirm
   // Wait for modal to clear
@@ -1783,7 +1783,7 @@ try {
             $first = false;
             continue;
           }
-          if (str_contains($card->getDomProperty("innerHTML"), $finger)) {
+          if (!str_contains($card->getDomProperty("id"), "drag") && str_contains($card->getDomProperty("innerHTML"), $finger)) {
             $GLOBALS["card"] = "#" . $card->getAttribute("id"); 
             $found = true;
             break;
@@ -1955,6 +1955,9 @@ try {
         return false;
       });
 
+    // Clear timeout to avoid possibility of stale handles 
+    $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
+
     // Add Debian task with selected architectures
     $GLOBALS["finger"] = $_json[0]->dsas->gpg[0]->fingerprint;
     test("Add Deb Task", function () { 
@@ -1982,6 +1985,9 @@ try {
         return false;
       });
 
+    // Clear timeout to avoid possibility of stale handles 
+    $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
+
     // Add Opsnssl task
     $GLOBALS["finger"] = $_json[0]->dsas->pubkey[0]->fingerprint;
     test("Add Openssl Task", function () { 
@@ -2007,6 +2013,9 @@ try {
         }
         return false;
       });
+
+    // Clear timeout to avoid possibility of stale handles 
+    $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
 
     // Add RPM task with wrong certificate type
     $GLOBALS["finger"] = $_json[0]->dsas->pubkey[0]->fingerprint;
@@ -2038,6 +2047,9 @@ try {
         return true;
       });
 
+    // Clear timeout to avoid possibility of stale handles 
+    $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
+
     // Trying adding a task with an XSS in the task name
     $GLOBALS["finger"] = $_json[0]->dsas->gpg[0]->fingerprint;
     test("Add RPM Task with XSS attack", function () {
@@ -2068,6 +2080,9 @@ try {
         return true;
       });
 
+    // Clear timeout to avoid possibility of stale handles 
+    $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
+
     // Run a task and test that its running
     // Don't delete this task as next test as it might still be running. delay till th ened
     $GLOBALS["finger"] = $_json[0]->dsas->pubkey[0]->fingerprint;
@@ -2096,6 +2111,9 @@ try {
         throw new RuntimeException("Task to run not found");
       });
 
+    // Clear timeout to avoid possibility of stale handles 
+    $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
+
     // Examine log of existing task. Careful log needs to exist
     test("Examining log of Openssl task", function() {
         sleep(1); // The task page will refresh after end of task so need to wait
@@ -2116,6 +2134,9 @@ try {
         }
         throw new RuntimeException("Task not found");
       });
+
+    // Clear timeout to avoid possibility of stale handles 
+    $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
 
     test("Modify RPM task directory", function() {
         // Create the task directory to be kept, as the task hasn't run
@@ -2158,6 +2179,9 @@ try {
         throw new RuntimeException("Task not found");
       });
 
+    // Clear timeout to avoid possibility of stale handles 
+    $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
+
     // Delete an existing task without removing its files and see that the files remain
     test("Delete RPM task leaving files in place", function() {
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//img[@src='x-lg.svg']")) as $del) {
@@ -2188,6 +2212,9 @@ try {
         }
         throw new RuntimeException("Task not found");
       });
+
+    // Clear timeout to avoid possibility of stale handles 
+    $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
 
     // Delete an existing task removing its files and test that everything is gone
     test("Delete Deb task removing files", function() {
@@ -2233,6 +2260,9 @@ try {
     // FIXME examine log  of running task. THIS MIGHT BE HARD TO DO with short running tasks.
 
     // FIXME Kill a running tasks. Also hard to do.
+
+    // Clear timeout to avoid possibility of stale handles 
+    $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
 
     // Delete the Openssl task that should now be finished running
     test("Delete Openssl task removing files", function() {

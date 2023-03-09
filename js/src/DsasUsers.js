@@ -20,6 +20,10 @@ import { ml, _ } from "./MultiLang";
 import { modalMessage, modalAction, modalErrors } from "./DsasModal";
 import { failLoggedin, printObj } from "./DsasUtil";
 
+// Positions for dragged items
+let dragfrom = NaN;
+let dragto = NaN;
+
 function dsasRealUserPasswd(user) {
     const passwd = document.getElementById("UserPassword").value;
     const formData = new FormData();
@@ -171,6 +175,31 @@ function dsasChangeUsers() {
     });
 }
 
+function dsasUserDrop(from, to) {
+    if (from !== to && from !== to + 1) {
+        const formData = new FormData();
+        formData.append("op", "drag");
+        formData.append("data", JSON.stringify({ from, to }));
+        fetch("api/dsas-users.php", { method: "POST", body: formData }).then((response) => {
+            if (response.ok) { return response.text(); }
+            return Promise.reject(new Error(response.statusText));
+        }).then((text) => {
+            try {
+                const errors = JSON.parse(text);
+                modalErrors(errors);
+            } catch (e) {
+                // Disable ESLINT here as circular refering behind the functions
+                /* eslint-disable-next-line no-use-before-define */
+                dsasDisplayUsers();
+            }
+        }).catch((error) => {
+            if (!failLoggedin(error)) {
+                modalMessage(_("Error : {0}", (error.message ? error.message : error)));
+            }
+        });
+    }
+}
+
 export default function dsasDisplayUsers() {
     fetch("api/dsas-users.php").then((response) => {
         if (response.ok) { return response.json(); }
@@ -178,6 +207,7 @@ export default function dsasDisplayUsers() {
     }).then((obj) => {
         const temp = document.getElementById("usertemplate");
         const users = obj.user;
+        let i = 0;
         document.getElementById("Users").textContent = ""; // Clear old content
         (users.constructor === Object ? [users] : users).forEach((user) => {
             const isTc = user.username === "tc";
@@ -185,12 +215,14 @@ export default function dsasDisplayUsers() {
             ml.translateHTML(line);
             line.querySelector("th").id = "username_" + user.username;
             line.querySelector("th").textContent = user.username;
+            const draguser = line.querySelector("tr");
             const inp = line.querySelectorAll("input");
             inp[0].id = "description_" + user.username;
             inp[0].value = printObj(user.description);
             if (isTc) {
                 inp[0].setAttribute("disabled", "");
                 inp[0].setAttribute("readonly", "");
+                draguser.setAttribute("draggable", "false"); // User tc should always be first
             } else {
                 inp[0].removeAttribute("disabled");
                 inp[0].removeAttribute("readonly");
@@ -239,6 +271,23 @@ export default function dsasDisplayUsers() {
                 line.querySelectorAll("a")[1].removeAttribute("disabled");
                 line.querySelectorAll("a")[1].addEventListener("click", () => { dsasUserDelete(user.username); });
             }
+
+            draguser.id = "drag" + i;
+            if (!isTc) draguser.addEventListener("drag", ((d) => (() => { dragfrom = d; }))(i));
+            draguser.addEventListener("dragover", (e) => {
+                // equivalent to "let target = e.target;" but keeps eslint happy
+                let { target } = e;
+                e.preventDefault();
+                while (target.className !== "body") {
+                    if (target.id.substring(0, 4) === "drag"
+                        && target.getAttribute("draggable")) break;
+                    target = target.parentElement;
+                }
+                dragto = parseInt(target.id.substring(4), 10);
+            });
+            draguser.addEventListener("drop", () => { dsasUserDrop(dragfrom, dragto); });
+
+            i += 1;
             document.getElementById("Users").appendChild(line);
         });
         document.getElementById("AddUser").addEventListener("click", dsasUserNew);

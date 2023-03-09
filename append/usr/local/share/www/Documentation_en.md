@@ -789,9 +789,10 @@ might be
 
 ![DSAS user configuration menu](en/DSAS38.png)
 
-At this point it is recommended to press the `Apply` button in order to
-make these changes permanent. Otherwise on the next restart the old
-passwords will be requested.  
+The order of the users can easily be modified by dragging the user to the 
+desired position with the mouse. At this point it is recommended to press 
+the `Apply` button in order to make these changes permanent. Otherwise on 
+the next restart the old passwords will be requested.  
 
 ### Network configuration
 
@@ -1330,6 +1331,11 @@ example
 
 ![Imported certificate details](en/DSAS21.png) 
 
+The position of the certificate in the list of certificates can be reordered 
+by simply dragging the certificate and dropping it on another certificate. The 
+position of the dragged certificate will now be immediately after the position 
+where it has been dropped.
+
 ## Task configuration
 
 A new task can be added by clicking on ![](plus-lg.svg) to the right of
@@ -1408,6 +1414,11 @@ of the task was successful, and in red the execution has failed. The last
 execution of the task is visible by opening the task as
 
 ![Example of successful task execution](en/DSAS32.png) 
+
+The position of the tasks in the list of tasks can be reordered by simply
+dragging the task and dropping it on another task. The position of the 
+dragged task will now be immediately after the position where it has been
+dropped.
 
 ### Debian and Redhat architecture selection
 
@@ -1533,7 +1544,7 @@ Software impacted by this risk
 | php-cgi | [8.0.1](http://tinycorelinux.net/12.x/x86/tcz/php-8.0-cgi.tcz) | Backend of the administration site |
 | lighttpd | [1.4.58](http://tinycorelinux.net/12.x/x86/tcz/lighttpd.tcz) | Backend of the administration site |
 | Linux PAM | [1.5.2](https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz) | Authentication on the administration site |
-| DSAS website | [1.2.14](https://gitlab.com/adb014/dsas-tinycore) | Backend and frontend of the administration site |
+| DSAS website | [1.2.17](https://gitlab.com/adb014/dsas-tinycore) | Backend and frontend of the administration site |
 
 The DSAS website is specially developed for this project. Static analysis
 of the code and a test suite is used on this code before each release to

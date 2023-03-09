@@ -26,6 +26,11 @@ import {
     certName,
 } from "./DsasUtil";
 
+// Positions for dragged items
+let dragtyp = "";
+let dragfrom = NaN;
+let dragto = NaN;
+
 function certExpiring(validTo) {
     // Check if certificate is always valid
     if (validTo === "always") return false;
@@ -61,6 +66,53 @@ function timeToDate(t) {
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
     return c.format(new Date(t * 1000));
+}
+
+function dsasCertDrop(typ, from, to) {
+    if (from !== to && from !== to + 1) {
+        fetch("api/dsas-cert.php").then((response) => {
+            if (response.ok) { return response.json(); }
+            return Promise.reject(new Error(response.statusText));
+        }).then((certs) => {
+            const formData = new FormData();
+            formData.append("op", "drag");
+            switch (typ) {
+            case "x509":
+                formData.append("from", certs[0].dsas.x509[from].fingerprint);
+                formData.append("to", certs[0].dsas.x509[to].fingerprint);
+                break;
+            case "pubkey":
+                formData.append("from", certs[0].dsas.pubkey[from].fingerprint);
+                formData.append("to", certs[0].dsas.pubkey[to].fingerprint);
+                break;
+            case "gpg":
+                formData.append("from", certs[0].dsas.gpg[from].fingerprint);
+                formData.append("to", certs[0].dsas.gpg[to].fingerprint);
+                break;
+            default:
+                throw new Error("Unknown certificate drag type");
+            }
+            fetch("api/dsas-cert.php", { method: "POST", body: formData }).then((response) => {
+                if (response.ok) { return response.text(); }
+                return Promise.reject(new Error(response.statusText));
+            }).then((text) => {
+                try {
+                    const errors = JSON.parse(text);
+                    modalErrors(errors);
+                } catch (e) {
+                    // Disable ESLINT here as circular refering behind the functions
+                    /* eslint-disable-next-line no-use-before-define */
+                    dsasDisplayCert(typ);
+                }
+            }).catch((error) => {
+                if (!failLoggedin(error)) {
+                    modalMessage(_("Error : {0}", (error.message ? error.message : error)));
+                }
+            });
+        }).catch((error) => {
+            failLoggedin(error);
+        });
+    }
 }
 
 function dsasCertRealDelete(name, finger) {
@@ -131,6 +183,8 @@ function treatGpgCerts(certs, node) {
         const name = cert.uid;
         const item = temp.content.cloneNode(true);
         const links = item.querySelectorAll("a");
+        const certdrag = item.querySelectorAll("div")[0];
+
         ml.translateHTML(item);
         let cls = "text"; // All GPG certificates can be a CA
         if (certExpired(cert.validTo)) { cls = "text-danger"; }
@@ -140,8 +194,24 @@ function treatGpgCerts(certs, node) {
         links[1].setAttribute("href", url);
         links[2].addEventListener("click", () => { dsasCertDelete(name.replaceAll("\n", "\\n"), cert.fingerprint); });
         links[2].removeAttribute("hidden");
+
+        certdrag.id = "gpg_drag" + i;
+        certdrag.addEventListener("drag", ((d) => (() => { dragtyp = "gpg_"; dragfrom = d; }))(i));
+        certdrag.addEventListener("dragover", (e) => {
+            // equivalent to "let target = e.target;" but keeps eslint happy
+            let { target } = e;
+            e.preventDefault();
+            while (target && target.className !== "body") {
+                if (target.id.substring(0, 8) === dragtyp + "drag"
+                    && target.getAttribute("draggable")) break;
+                target = target.parentElement;
+            }
+            dragto = (target ? parseInt(target.id.substring(8), 10) : NaN);
+        });
+        certdrag.addEventListener("drop", () => { dsasCertDrop("gpg", dragfrom, dragto); });
+
         item.querySelector("span").textContent = name;
-        item.querySelector("div").setAttribute("id", "gpg" + i);
+        item.querySelectorAll("div")[1].setAttribute("id", "gpg" + i);
         item.querySelector("pre").textContent = gpgBody(cert);
         item.querySelector("pre").setAttribute("style", "height : 235x");
         node.appendChild(item);
@@ -160,13 +230,31 @@ function treatSslPubkeys(certs, node) {
         const { name } = cert;
         const item = temp.content.cloneNode(true);
         const links = item.querySelectorAll("a");
+        const certdrag = item.querySelectorAll("div")[0];
+
         ml.translateHTML(item);
         links[0].setAttribute("href", "#pubkey" + i);
         links[1].setAttribute("href", url);
         links[2].addEventListener("click", () => { dsasCertDelete(name.replaceAll("\n", "\\n"), cert.fingerprint); });
         links[2].removeAttribute("hidden");
+
+        certdrag.id = "pub_drag" + i;
+        certdrag.addEventListener("drag", ((d) => (() => { dragtyp = "pub_"; dragfrom = d; }))(i));
+        certdrag.addEventListener("dragover", (e) => {
+            // equivalent to "let target = e.target;" but keeps eslint happy
+            let { target } = e;
+            e.preventDefault();
+            while (target && target.className !== "body") {
+                if (target.id.substring(0, 8) === dragtyp + "drag"
+                    && target.getAttribute("draggable")) break;
+                target = target.parentElement;
+            }
+            dragto = (target ? parseInt(target.id.substring(8), 10) : NaN);
+        });
+        certdrag.addEventListener("drop", () => { dsasCertDrop("pubkey", dragfrom, dragto); });
+
         item.querySelector("span").textContent = name;
-        item.querySelector("div").setAttribute("id", "pubkey" + i);
+        item.querySelectorAll("div")[1].setAttribute("id", "pubkey" + i);
         item.querySelector("pre").textContent = cert.fingerprint;
         item.querySelector("pre").setAttribute("style", "height : 20x");
         node.appendChild(item);
@@ -185,6 +273,8 @@ function treatX509Certs(certs, node, added = false) {
         const name = certName(cert);
         const item = temp.content.cloneNode(true);
         const links = item.querySelectorAll("a");
+        const certdrag = item.querySelectorAll("div")[0];
+
         ml.translateHTML(item);
         let cls = "text-info";
         if (certExpired(cert.validTo_time_t)) {
@@ -201,8 +291,28 @@ function treatX509Certs(certs, node, added = false) {
             links[2].addEventListener("click", () => { dsasCertDelete(name.replaceAll("\n", "\\n"), cert.fingerprint); });
             links[2].removeAttribute("hidden");
         }
+
+        if (added) {
+            certdrag.id = "x509drag" + i;
+            certdrag.addEventListener("drag", ((d) => (() => { dragtyp = "x509"; dragfrom = d; }))(i));
+            certdrag.addEventListener("dragover", (e) => {
+                // equivalent to "let target = e.target;" but keeps eslint happy
+                let { target } = e;
+                e.preventDefault();
+                while (target && target.className !== "body") {
+                    if (target.id.substring(0, 8) === dragtyp + "drag"
+                        && target.getAttribute("draggable")) break;
+                    target = target.parentElement;
+                }
+                dragto = (target ? parseInt(target.id.substring(8), 10) : NaN);
+            });
+            certdrag.addEventListener("drop", () => { dsasCertDrop("x509", dragfrom, dragto); });
+        } else {
+            certdrag.setAttribute("draggable", "false");
+        }
+
         item.querySelector("span").textContent = name;
-        item.querySelector("div").setAttribute("id", (added ? "add" : "ca") + i);
+        item.querySelectorAll("div")[1].setAttribute("id", (added ? "add" : "ca") + i);
         item.querySelector("pre").textContent = certBody(cert);
         node.appendChild(item);
         i += 1;
@@ -266,7 +376,7 @@ export default function dsasDisplayCert(what = "all") {
         return Promise.reject(new Error(response.statusText));
     }).then((certs) => {
         if (what === "all" || what === "ca") { treatX509Certs(certs[0].ca, document.getElementById("ca")); }
-        if (what === "all" || what === "cert") { treatX509Certs(certs[0].dsas.x509, document.getElementById("cert"), true); }
+        if (what === "all" || what === "cert" || what === "x509") { treatX509Certs(certs[0].dsas.x509, document.getElementById("cert"), true); }
         if (what === "all" || what === "pubkey") { treatSslPubkeys(certs[0].dsas.pubkey, document.getElementById("pubkey"), true); }
         if (what === "all" || what === "gpg") { treatGpgCerts(certs[0].dsas.gpg, document.getElementById("gpg")); }
         if (what === "all") {

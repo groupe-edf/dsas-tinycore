@@ -817,9 +817,11 @@ configuration des utilisateurs pourraient ressembler à
 
 ![Menu de configuration des utilisateurs du DSAS](fr/DSAS38.png)
 
-A ce point il est recommandé d'appuyer sur le bouton `Appliquer` afin de
-rendre ces modifications permanentes. Sinon au prochain redémarrage les
-anciens mots de passe seront demandés.
+L'ordre des utilisateurs pourait facilement être modifié en bouggant
+l'utilisateur avec le souris à l'endroit desiré. A ce point il est
+recommandé d'appuyer sur le bouton `Appliquer` afin de rendre ces
+modifications permanentes. Sinon au prochain redémarrage les anciens mots
+de passe seront demandés.
 
 ### Configuration des réseaux
 
@@ -1383,6 +1385,11 @@ recommandé de regarder les détails du certificat importé, comme
 
 ![Détails du certificat importé](fr/DSAS21.png)
 
+La positionne d'un certificat dans la liste des certificats pourrait être 
+modifié simplement en selectionnant le certificat avec le souris et placant 
+le certificat sur un autre certificat. La nouvelle positione du certificat 
+sera immediatement après ce certificat.
+
 ## Configuration des taches
 
 Une nouvelle tâche pourrait être ajouter en cliquant sur le 
@@ -1473,6 +1480,11 @@ tâche a réussi, et en rouge l'exécution a échoué. La dernière exécution
 de la tâche est visible en ouvrant la tâche comme
 
 ![Exemple d'exécution de tache réussi](fr/DSAS32.png)
+
+La positionne d'un tache dans la liste des taches pourrait être modifié
+simplement en selectionnant le tache avec le souris et placant le tache 
+sur un autre tache. La nouvelle positione du tache sera immediatement 
+après ce tache.
 
 ### Sélection d'architecture pour Debian et Redhat
 
@@ -1600,7 +1612,7 @@ Logiciels impactés par ce risque
 | php-cgi     | [8.0.1](http://tinycorelinux.net/12.x/x86/tcz/php-8.0-cgi.tcz) | Backend de la site d'administration |
 | lighttpd    | [1.4.58](http://tinycorelinux.net/12.x/x86/tcz/lighttpd.tcz) | Backend de la site d'administration |
 | Linux PAM | [1.5.2](https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz) | Authentification sur la site d'administration |
-| site web DSAS | [1.2.14](https://gitlab.com/adb014/dsas-tinycore) | Backend et frontend de la site d'administration |
+| site web DSAS | [1.2.17](https://gitlab.com/adb014/dsas-tinycore) | Backend et frontend de la site d'administration |
 
 La site web du DSAS est développé spécialement pour ce projet. Une
 analyse statique et suite de test de la code est utilisé à chaque version

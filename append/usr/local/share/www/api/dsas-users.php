@@ -24,7 +24,7 @@ if (! dsas_loggedin())
   header("HTTP/1.0 403 Forbidden");
 else if($_SERVER["REQUEST_METHOD"] == "POST"){
     $dsas = simplexml_load_file(_DSAS_XML);
-    /** @var array{username: string, passwd: string, description: string, type: string, active: string} $data */
+    /** @var array{username: string, passwd: string, description: string, type: string, active: string, from: int, to: int} $data */
     $data = json_decode($_POST["data"], true);
     if ($dsas === false) {
       header("Content-Type: application/json");
@@ -142,6 +142,20 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           }
           if (! $found)
             $errors[] = ["error" => ["The user '{0}' does not exist",  $duser["username"]]];          
+        }
+        break;
+
+      case "drag" :
+        $from = $data["from"];
+        $to = $data["to"];
+        $nt =  $dsas->config->users[0]->count();
+        if ($from < 1 || $to < 0 || $from > $nt - 1 || $to > $nt - 1) {
+          $errors[] = ["error" => "The user drag is invalid"];
+        } else  if ($from !== $to && $from !== $to + 1) {
+          $user = new SimpleXMLElement($dsas->config->users[0]->user[$from]->asXML());
+          $user_to = $dsas->config->users[0]->user[$to];
+          unset($dsas->config->users->user[$from]);
+          simplexml_insert_after($user, $user_to);
         }
         break;
 

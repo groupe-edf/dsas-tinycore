@@ -34,19 +34,15 @@ fi
 help() {
   echo "Usage: $(basename "$0")"
   echo "Kills the tasks given the list of IDs"
-  echo "     -n|--dryrun     Perform minimum actions"
   echo "     -h|--help       Print this help"
 }
 
 # Parse options
-dryrun=0
 while [ "$#" -gt 0 ]; do
   case $1 in
-    -n|--dryrun) dryrun=1 ;;
-    -h|--help) help; exit 0 ;;
-    *) 1>&2 echo "Unrecognized option : $1"; help; exit 1 ;;
+    -h|--help) help; shift 1; exit 0; ;;
+    *) 1>&2 echo "Unrecognized option : $1"; help; exit 1; ;;
   esac
-  shift 1
 done
 
 # if not user root, quit

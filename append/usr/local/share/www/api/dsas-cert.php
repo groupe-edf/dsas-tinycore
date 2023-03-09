@@ -163,6 +163,59 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
 
         break;
 
+      case "drag" :
+        $from_finger = $_POST["from"];
+        $to_finger = $_POST["to"];
+        $from = -1;
+        $to = -1;
+        $i = 0;
+        foreach ($dsas->certificates->certificate as $certificate) {
+          if ($certificate->type == "x509") {
+            if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $from_finger) {
+              $from = $i;
+            }
+            if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $to_finger) {
+              $to = $i;
+            }
+          } else if ($certificate->type == "pubkey") {
+            $pem = htmlspecialchars(trim($certificate->pem));
+            $pemnowrap = (string)preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pem);
+            $pemnowrap = (string)preg_replace('/\\s+/', '', $pemnowrap);
+            if (hash("sha256", base64_decode($pemnowrap)) == $from_finger) {
+              $from = $i;
+            }
+            if (hash("sha256", base64_decode($pemnowrap)) == $to_finger) {
+              $to = $i;
+            }
+          } else {
+            $cert = parse_gpg(trim($certificate->pem));
+            if ($cert["fingerprint"]  == $from_finger) {
+              $from = $i;
+            }
+            if ($cert["fingerprint"]  == $to_finger) {
+              $to = $i;
+            }
+          }
+          if ($from !== -1 && $to !== -1) break;
+          $i++;
+        }
+
+        if ($from == -1) {
+          $errors[] = ["error" => "The certificate drag from value is invalid"];
+        } else if ($to == -1) {
+          $errors[] = ["error" => "The certificate drag to value is invalid"];
+        } else {
+          $nt =  $dsas->certificates[0]->count();
+          if ($from !== $to && $from !== $to + 1) {
+            $cert = new SimpleXMLElement($dsas->certificates[0]->certificate[$from]->asXML());
+            $cert_to = $dsas->certificates[0]->certificate[$to];
+            unset($dsas->certificates->certificate[$from]);
+            simplexml_insert_after($cert, $cert_to);
+          }
+        }
+        break;
+
+
       default:
         $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]]; 
         break;

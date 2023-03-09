@@ -396,7 +396,7 @@ class DSASHeader extends HTMLElement {
         // FIXME Remove innerHTML ?
         // This isn't a security risk as there are no user defined fields in the html below
         this.innerHTML = `    <div class="row g-0 sticky-top"><div class="col-8"><nav class="navbar navbar-expand-sm bg-dark navbar-dark">
-      <a class="navbar-brand px-2" href="/">DSAS</a>
+      <a class="navbar-brand px-2" href="/" draggable="false">DSAS</a>
       <ul class="navbar-nav">
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" data-i18n>Configuration</a>
@@ -420,7 +420,7 @@ class DSASHeader extends HTMLElement {
         </div>
       </li>
       <li class="nav-item">
-        <a class="nav-link" id="headhelp" href="help.html" data-i18n>Documentation</a>
+        <a class="nav-link" id="headhelp" href="help.html" draggable="false" data-i18n>Documentation</a>
       </li>
       </ul>
     </nav></div>
