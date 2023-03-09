@@ -81,50 +81,53 @@ mount_dsas(){
 }
 
 init_disk(){
-  [ -z "$ISDOCKER" ] && FDISKL=$(fdisk -l | awk '$1 ~ /dev/{printf " %s ",$1}')
-  [ -z "$ISDOCKER" ] || FDISKL=$(grep "^/dev/" /etc/mtab | cut -f1 -d' ' | uniq)
   FOUND=""
   DISK=""
-  ARGS="--stdout --no-cancel --radiolist 'Select device to format for the DSAS:' 0 0 0"
-  ON="on"
-  # Loop through block devices
-  while IFS= read -r -d '' i; do
-    case "$i" in
-      *loop*|*ram*)
-        continue
-        ;;
-    esac
+  [ -z "$ISDOCKER" ] && FDISKL=$(fdisk -l | awk '$1 ~ /dev/{printf " %s ",$1}')
+  [ -z "$ISDOCKER" ] || FOUND=$(grep "^/dev/" /etc/mtab | cut -f1 -d' ' | uniq | sed -e 's:/dev/::')
 
-    DEVNAME=$(echo "$i" | tr "!" "/" | awk 'BEGIN{FS="/"}{print $(NF-1)}')
-    DEVMAJOR="$(cut -f1 -d: "$i")"
-    [ "$DEVMAJOR" != '8' ] && continue
-    for PART in $FDISKL; do
-      case "$PART" in
-        *"/dev/$DEVNAME"*)
-          FOUND=$DEVNAME
-          MOUNTPOINT=$(echo "$PART" | sed -e "s:.*\($DEVNAME.*\):/mnt/\1:g")
-          [ -d "$MOUNTPOINT" ] || mkdir "$MOUNTPOINT"
-          mount | grep -q "$PART" || mount "$PART" "$MOUNTPOINT"
-          break
+  if [ -z "$FOUND" ]; then
+    ARGS="--stdout --no-cancel --radiolist 'Select device to format for the DSAS:' 0 0 0"
+    ON="on"
+    # Loop through block devices
+    while IFS= read -r -d '' i; do
+      case "$i" in
+        *loop*|*ram*)
+          continue
           ;;
       esac
-    done
-    SIZE="$(($(cat "/sys/block/$DEVNAME/size") / 2))"
-    for SUF in MB GB TB PB; do
-      REM=$(($((SIZE % 1000)) / 10))
-      SIZE=$((SIZE / 1000))
-      [ $SIZE -lt 1000 ] && break
-    done
-    DISK="1"
-    if [ "$REM" -lt 1 ]; then
-      ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE$SUF]' $ON"
-    elif [ "$REM" -lt 100 ]; then
-      ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE.0$REM$SUF]' $ON"
-    else
-      ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE.$REM$SUF]' $ON"
-    fi
-    ON="off"
-  done < <(find /sys/block/*/ -mindepth 1 -maxdepth 1 -name dev -print0)
+
+      DEVNAME=$(echo "$i" | tr "!" "/" | awk 'BEGIN{FS="/"}{print $(NF-1)}')
+      DEVMAJOR="$(cut -f1 -d: "$i")"
+      [ "$DEVMAJOR" != '8' ] && continue
+      for PART in $FDISKL; do
+        case "$PART" in
+          *"/dev/$DEVNAME"*)
+            FOUND=$DEVNAME
+            MOUNTPOINT=$(echo "$PART" | sed -e "s:.*\($DEVNAME.*\):/mnt/\1:g")
+            [ -d "$MOUNTPOINT" ] || mkdir "$MOUNTPOINT"
+            mount | grep -q "$PART" || mount "$PART" "$MOUNTPOINT"
+            break
+            ;;
+        esac
+      done
+      SIZE="$(($(cat "/sys/block/$DEVNAME/size") / 2))"
+      for SUF in MB GB TB PB; do
+        REM=$(($((SIZE % 1000)) / 10))
+        SIZE=$((SIZE / 1000))
+        [ $SIZE -lt 1000 ] && break
+      done
+      DISK="1"
+      if [ "$REM" -lt 1 ]; then
+        ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE$SUF]' $ON"
+      elif [ "$REM" -lt 100 ]; then
+        ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE.0$REM$SUF]' $ON"
+      else
+        ARGS="$ARGS /dev/$DEVNAME '/dev/$DEVNAME [$SIZE.$REM$SUF]' $ON"
+      fi
+      ON="off"
+    done < <(find /sys/block/*/ -mindepth 1 -maxdepth 1 -name dev -print0)
+  fi
 
   if [ -z "$FOUND" ]; then
     if [ -z "$DISK" ]; then
@@ -231,12 +234,14 @@ get_dsas(){
 }
 
 audit_perms(){
-  # Suggestion form Lynis
-  echo "Auditing USB permissions"
-  while IFS= read -r -d '' dev; do
-    echo "0" > "$dev/authorized"
-    echo "0" > "$dev/authorized_default"
-  done < <(find /sys/bus/usb/devices -name "usb*" -print0)
+  if [ -z "$ISDOCKER" ]; then
+    # Suggestion form Lynis
+    echo "Auditing USB permissions"
+    while IFS= read -r -d '' dev; do
+      echo "0" > "$dev/authorized"
+      echo "0" > "$dev/authorized_default"
+    done < <(find /sys/bus/usb/devices -name "usb*" -print0)
+  fi
 
   echo "Auditing permissions of ${GREEN}$DSAS${NORMAL} in the background"
   grep -q users /etc/group || addgroup -g 51 users
