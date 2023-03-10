@@ -30,6 +30,7 @@ else {
   // on which this PHP code is running. So dsas_exec will hang in this case. 
   // exceptionally we use "exec" that seems to work.
   exec("sudo /etc/init.d/services/dsas apply", $dummy, $retval);
+  $output["stderr"] = "Error in apply on lower machine";
   $output["retval"] = $retval;
 
   if ($output["retval"] == 0) 
