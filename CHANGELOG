@@ -1,5 +1,8 @@
 Log of the principal changes to the DSAS
 
+Version 1.2.18 (XX XXX XXXX)
+- Fix scroll positionning at the end for chrome et edge browsers
+
 Version 1.2.17 (09 Mar 2023)
 - Fix for the limit of the number of running tasks . Only 3 allowed automatically
 - Use file locking un runlog file to avoid multiple tasks writing to the file at the same time

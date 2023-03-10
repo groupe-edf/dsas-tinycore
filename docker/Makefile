@@ -6,7 +6,7 @@
 IMAGE_NAME := dsas
 IMAGE_TAG := 13.0-x86_64
 CONTAINER := haut
-VOLUME := $(shell df -P /var/lib/docker | awk 'END{print $1}' | cut -f1 -d' ' | sed -e 's:/dev/::')
+VOLUME := sda2
 NET0 := $(shell if [ "$(CONTAINER)" = "bas" ]; then echo "192.168.0.0/24"; else echo "192.168.1.0/24"; fi)
 GW0 := $(shell if [ "$(CONTAINER)" = "bas" ]; then echo "192.168.0.254"; else echo "192.168.1.254"; fi)
 IP_ETH0 := $(shell if [ "$(CONTAINER)" = "bas" ]; then echo "192.168.0.1"; else echo "192.168.1.1"; fi)
