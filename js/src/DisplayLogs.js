@@ -301,7 +301,7 @@ export default class DisplayLogs {
             }
         }
         // Be careful of presence or absence of x-axis scroll bar, by checking
-        // against (scrollHeight - cleintHeight) which max scroll strat position.
+        // against scrollHeight.
         let hf = ((this.nitems === 0 ? 1 : this.nitems) * this.height);
         if (hf < this.holder.scrollHeight) hf += this.height;
         document.getElementById("heightForcer").style.height = hf + "px";
