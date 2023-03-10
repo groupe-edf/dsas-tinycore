@@ -100,9 +100,9 @@ export default class DisplayLogs {
     }
 
     scrollToEnd() {
-        if (this.holder.scrollTop < this.holder.scrollTopMax) {
+        if (this.holder.scrollTop < this.holder.scrollHeight - this.holder.clientHeight) {
             // Don't need to explictly refresh as the event listener will deal with the scroll
-            this.holder.scrollTop = this.holder.scrollTopMax;
+            this.holder.scrollTop = this.holder.scrollHeight - this.holder.clientHeight;
         }
     }
 
@@ -160,7 +160,7 @@ export default class DisplayLogs {
                     + Math.ceil(this.holder.offsetHeight / this.height) >= this.nitems)) {
                 this.nitems = this.numberOfItems();
                 this.refreshWindow();
-                this.holder.scrollTop = this.holder.scrollTopMax;
+                this.holder.scrollTop = this.holder.scrollHeight - this.holder.clientHeight;
             } else if (this.tab === tab) { this.nitems = this.numberOfItems(); }
         }
     }
@@ -301,10 +301,9 @@ export default class DisplayLogs {
             }
         }
         // Be careful of presence or absence of x-axis scroll bar, by checking
-        // against scrollTopMax. If the style height in the constructor is changed
-        // from 500px it needs to be changed here as well
+        // against (scrollHeight - cleintHeight) which max scroll strat position.
         let hf = ((this.nitems === 0 ? 1 : this.nitems) * this.height);
-        if (hf < this.holder.scrollTopMax + 500) hf += this.height;
+        if (hf < this.holder.scrollHeight) hf += this.height;
         document.getElementById("heightForcer").style.height = hf + "px";
         if (this.hidescrollbar) {
             // work around for non chrome browsers, hides the scrollbar
@@ -314,7 +313,7 @@ export default class DisplayLogs {
             // This won't force a rerendering as the scroll
             // event listener isn't in place yet.
             this.openatend = false;
-            this.holder.scrollTop = this.scrollTopMax;
+            this.holder.scrollTop = this.scrollHeight - this.clientHeight;
         }
     }
 }
