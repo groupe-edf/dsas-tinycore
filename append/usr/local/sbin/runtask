@@ -124,6 +124,9 @@ done
 # shellcheck disable=SC2086
 # shellcheck disable=SC2181
 if [ "$clamav" = "1" ]; then
+  # Check if task is already running and skip if not.. "3" means a single task here with subshells
+  [ "$(pgrep -f "$(basename "$0") -c" -gt "3" ] && { 1>&2 myecho "$0: task ClamAV is running"; exit 0; }
+
   # Only run clamav checks
   _start=$(date +%s)
   1>&2 myecho "$0 : #### Tasks started - $(date --utc) ####"
