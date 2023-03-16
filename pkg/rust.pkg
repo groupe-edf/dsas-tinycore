@@ -75,7 +75,7 @@ EOF
 _make_cmd="
 export RUSTFLAGS=\"-C link-args=-lffi\"
 export SSL_CERT_FILE=/usr/local/etc/ssl/certs/ca-certificates.crt
-DESTDIR=install
+export DESTDIR=install
 export LIBSSH2_SYS_USE_PKG_CONFIG=1
 python3 ./x.py install --exclude src/tools/miri
 "
