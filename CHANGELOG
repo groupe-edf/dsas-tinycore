@@ -3,6 +3,7 @@ Log of the principal changes to the DSAS
 Version 1.2.18 (XX XXX XXXX)
 - Fix scroll positionning at the end for chrome and edge browsers
 - Numereous fixes for docker 
+- Use openssl AES CBC rather than bcrypt to encrypt backups. Old backups still usable
 - Update libtalloc (version 2.3.4 -> 2.4.0)
 - Update rpm (version 4.18.0 -> 4.18.1)
 - Update zchuck (version 1.2.3 -> 1.3.0)
