@@ -3,7 +3,7 @@ _disk_needed=16 # Need at least 16GB to build
 _version=1.68.0
 _uri=https://static.rust-lang.org/dist/rustc-1.68.0-src.tar.gz
 _build_dep="compiletc python3.6 rsync ninja coreutils cmake curl-dev libssh2-dev clang llvm-dev ca-certificates"
-_dep="llvm_lib curl libssh2"
+_dep="llvm-lib curl libssh2"
 # FIXME: Why is ca-certificate not updated corrected at the install ?
 _pre_config="
 /usr/local/sbin/update-ca-certificates; 
