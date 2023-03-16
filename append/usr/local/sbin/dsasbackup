@@ -79,6 +79,9 @@ done
 [ "$RESTORE" -eq 1 ] && [ ! -f "$BKP" ] && { 1>&2 echo "Backup file  doesn't exist"; exit 1; }
 [ -z "$BKP" ] && BKP="/tmp/dsas_backup.tgz"
 
+# According to https://bugs.debian.org/700758 bcrypt uses ECB block coding that is
+# not cryptographically secure. Don't use bcrypt, but keep here to allow decryption
+# of existing files
 blowfish_encrypt(){
   cat << EOD | /usr/bin/bcrypt -c "$1" 2> /dev/null  
 $2
@@ -92,32 +95,41 @@ $2
 EOD
 }
 
+aes_encrypt(){
+  openssl enc -aes-256-cbc -salt -pbkdf2 -k "$2" -in "$1" -out "$1.enc"
+}
+
+aes_decrypt(){
+  openssl enc -aes-256-cbc -d -pbkdf2 -k "$2" -in "$1.enc" -out "$1"
+}
+
+
 if [ "$RESTORE" -eq 0 ]; then
   # Create the backup on the machine haut
   # shellcheck disable=SC2024
   # shellcheck disable=SC2086
   (umask 077; sudo sudo -u haut ssh "tc@$INTERCO_HAUT" sudo tar -C / -c -z -f - $FILES > /tmp/haut.tgz)
-  [ -n "$PASSWD" ] && (umask 077; cd /tmp || exit 1; blowfish_encrypt haut.tgz "$PASSWD")
+  [ -n "$PASSWD" ] && (umask 077; cd /tmp || exit 1; aes_encrypt haut.tgz "$PASSWD")
   
   # Get the backup for the machine bas
   # shellcheck disable=SC2024
   # shellcheck disable=SC2086
   (umask 077; sudo tar -C / -c -z -f - $FILES > /tmp/bas.tgz)
-  [ -n "$PASSWD" ] && (umask 077; cd /tmp || exit 1; blowfish_encrypt bas.tgz "$PASSWD")
+  [ -n "$PASSWD" ] && (umask 077; cd /tmp || exit 1; aes_encrypt bas.tgz "$PASSWD")
 
   # Create the backup file
   [ -f "$BKP" ] && /bin/rm -f $BKP  
   if [ -z "$PASSWD" ]; then
     (umask 077; cd /tmp || exit 1; tar -czf $BKP haut.tgz bas.tgz)
   else
-    (umask 077; cd /tmp || exit 1; tar -czf $BKP haut.tgz.bfe bas.tgz.bfe)
+    (umask 077; cd /tmp || exit 1; tar -czf $BKP haut.tgz.enc bas.tgz.enc)
   fi
 
   # Remove temporary files
-  (cd /tmp || exit 1; /bin/rm -f haut.tgz bas.tgz haut.tgz.bfe bas.tgz.bfe)
+  (cd /tmp || exit 1; /bin/rm -f haut.tgz bas.tgz haut.tgz.enc bas.tgz.enc)
 else
   # Remove existing files
-  (cd /tmp || exit 1; /bin/rm -f haut.tgz bas.tgz haut.tgz.bfe bas.tgz.bfe)
+  (cd /tmp || exit 1; /bin/rm -f haut.tgz bas.tgz haut.tgz.bfe bas.tgz.bfe haut.tgz.enc bas.tgz.enc)
 
   # Unpack the tar file
   (umask 077; cd /tmp || exit 1; tar -zxf $BKP) || exit 1
@@ -126,14 +138,24 @@ else
     [ -f "/tmp/haut.tgz" ] || { 1>&2 echo "Backup corrupted or encrypted"; exit 1; }
     [ -f "/tmp/bas.tgz" ] || { 1>&2 echo "Backup corrupted or encrypted"; exit 1; }
   else
-    [ -f "/tmp/haut.tgz.bfe" ] || { 1>&2 echo "Backup corrupted or not encrypted"; exit 1; }
-    [ -f "/tmp/bas.tgz.bfe" ] || { 1>&2 echo "Backup corrupted or not encrypted"; exit 1; }
+    [ -f "/tmp/haut.tgz.bfe" ] || [ -f "/tmp/haut.tgz.enc" ] || { 1>&2 echo "Backup corrupted or not encrypted"; exit 1; }
+    [ -f "/tmp/bas.tgz.bfe" ] || [ -f "/tmp/bas.tgz.enc" ] || { 1>&2 echo "Backup corrupted or not encrypted"; exit 1; }
 
     # Decrypt the files 
-    (umask 077; cd /tmp || exit 1; blowfish_decrypt haut.tgz "$PASSWD") || \
-        { 1>&2 echo "Can not decrypt the backup. Check the password"; exit 1; }
-    (umask 077; cd /tmp || exit 1; blowfish_decrypt bas.tgz "$PASSWD") || \
-        { 1>&2 echo "The backup is corrupted"; exit 1; }
+    if [ -e "haut.tgz.bfe" ]; then
+        (umask 077; cd /tmp || exit 1; blowfish_decrypt haut.tgz "$PASSWD") || \
+            { 1>&2 echo "Can not decrypt the backup. Check the password"; exit 1; }
+    else
+        (umask 077; cd /tmp || exit 1; aes_decrypt haut.tgz "$PASSWD") || \
+            { 1>&2 echo "Can not decrypt the backup. Check the password"; exit 1; }
+    fi
+    if [ -e "bas.tgz.bfe" ]; then
+        (umask 077; cd /tmp || exit 1; blowfish_decrypt bas.tgz "$PASSWD") || \
+            { 1>&2 echo "The backup is corrupted"; exit 1; }
+    else
+        (umask 077; cd /tmp || exit 1; aes_decrypt bas.tgz "$PASSWD") || \
+            { 1>&2 echo "The backup is corrupted"; exit 1; }
+    fi
   fi
 
   # Control the contents of the tar files and only allow files in the list $FILES
@@ -215,6 +237,6 @@ else
   fi
 
   # Remove temporary files
-  (cd /tmp || exit 1; /bin/rm -f haut.tgz bas.tgz haut.tgz.bfe bas.tgz.bfe)
+  (cd /tmp || exit 1; /bin/rm -f haut.tgz bas.tgz haut.tgz.bfe bas.tgz.bfe haut.tgz.enc bas.tgz.enc)
 fi
 
