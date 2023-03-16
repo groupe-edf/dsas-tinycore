@@ -44,7 +44,7 @@ a day to transfer. It is therefore an illusion to consider that a human
 control of these files is possible before their transmission.
 
 The DSAS takes another approach, by assigning confidence to the existing
-Signatures of certain software editors, thus allowing their transfer.
+signatures of certain software editors, thus allowing their transfer.
 However, there exists a multitude of means used by these editors to sign
 their software, and the DSAS must have the means to verify each type of
 signature used by the desired editors.
@@ -105,7 +105,7 @@ These constraints push us towards an architecture with
 
 - separation of sensitive and non-sensitive treatments of the two zones
 on to two distinct machines
-- To use of a minimalist Linux system with the absolute minimum of
+- The use of a minimalist Linux system with the absolute minimum of
 software pre-installed. We have chosen to use the [Tiny Core
 Linux](http://tinycorelinux.net/) operating system because it is
 regularly updated with a minimal installation (12 megabytes) including
@@ -214,7 +214,7 @@ If the DSAS is configured to use an antivirus, the antiviral daemon uses
 additional memory. The antivirus only runs on the `lower` machine and we
 found that with in this case a minimum of __3 Gbytes__ is needed.
 
-The use of Docker might slightly change this calculation, by the docker
+The use of Docker might slightly change this calculation, but the docker
 image will share the hosts memory and so these number should not change
 that much.
 
@@ -223,7 +223,7 @@ that much.
 The DSAS is supplied in the form of an ISO that should be used as a "live
 CD". This means that the operating system should always boot from this
 image ISO. The major advantage of this is that the updates of the DSAS
-will be extremely easy and resumes as the shutdown of the DSAS, the
+will be extremely easy and resumes to the shutdown of the DSAS, the
 replacement of the ISO and a restart.
 
 Three types of virtual machine installation are discussed below, with
@@ -233,8 +233,8 @@ VirtualBox, with VMWare and with Docker.
 
 #### Creation of the virtual machines
 
-The ISO of the DSAS is a 32-bit Linux, and the virtual machine must be
-Configured accordingly. For example, under VirtualBox the initial
+The ISO of the DSAS is a 32- or 64-bit Linux, and the virtual machine must 
+be configured accordingly. For example, under VirtualBox the initial
 configuration should be 
 
 ![Creation of a VM with VirtualBox](en/vbox1.png)
@@ -244,7 +244,7 @@ antivirus is active at least 3 gigabytes are needed for the lower
 machine.
 
 The DSAS has no specific requirement for the format of its disk, and here
-we have chosen VirtualBox's default format 
+we have chosen VirtualBox's default format
 
 ![Disk configuration with VirtualBox](en/vbox2.png)
 
@@ -258,7 +258,7 @@ If the boot disk is incorrectly configured the DSAS will not start.
 #### Network interconnection between the machines of the DSAS
 
 The virtual machines should be configured with two network cards. The
-first card will be used for the connection to the outside the DSAS and
+first card will be used for the connection to the outside of the DSAS and
 their configuration will be dependent upon the environment in which the
 DSAS is installed.
 
@@ -280,7 +280,7 @@ configured with
 - The desired disk space - Here a value of 150 Gbytes has been used
 - A cdrom device - As discussed below
 - Two network cards - The first card must be configured will be used for
-the connection to the outside the DSAS and their configuration will be
+the connection to the outside of the DSAS and their configuration will be
 depend upon the environment in which the DSAS is installed. The second
 card is always used for the interconnection between the two machines of
 the DSAS.
@@ -575,7 +575,7 @@ the privileged users __tc__ password must be entered in the window.
 ![Enter password during SSH configuration](en/init10.png)
 
 By default, the DSAS password is __dSa02021DSAS__ but the first time you
-Use the administration interface you will be forced to change this
+use the administration interface you will be forced to change this
 password.
 
 This is the last step of the initial setup on the console. The second
@@ -627,9 +627,9 @@ The administration interface is in HTML5 with recent JavaScript
 functions. So a recent browser (after 2016) will be necessary in order to
 use the interface. If you cannot connect, there is either a routing
 problem between you and the DSAS and it is necessary review the router
-configurations between you and the DSAS, i.e. the network configuration
-of the above DSAS is incorrect. In this case, refer to the section [In
-the event of an initialization error of the DSAS](#in-the-event-of-a-dsas-initialization-error).
+configurations between you and the DSAS, or the network configuration
+of the above is incorrect. In this case, refer to the section [In the 
+event of an initialization error of the DSAS](#in-the-event-of-a-dsas-initialization-error).
 
 The SSL certificate used by the DSAS in the initial phase is self-signed
 and it will be necessary to accept its use in your browser. If you have
@@ -675,9 +675,10 @@ password for the backup, like
 
 ![Backup password entry menu](en/DSAS24.png)
 
-The backups of the two DSAS machines are then encrypted in `bcrypt` with
-this password and archived together. If you do not enter a backup
-password, the files will be archived without the encryption step.
+The backups of the two DSAS machines are then encrypted with `openssl` 
+with AES-256 CDC mode using the supplied password  and archived together. 
+If you do not enter a backup password, the files will be archived without
+the encryption step.
 
 It is strongly advised to encrypt these archives because it contains the
 complete DSAS configuration, including SSL certificates and SSH secrets.
@@ -685,11 +686,10 @@ The password does not have to be the same password as used for the DSAS.
 The user passwords will not be backed up.
 
 When restoring the same password will be requested, and so this password
-should be kept
-preciously. In case of a restoration, it will be applied immediately.
-This could result in the DSAS becoming unavailable, particularly if the
-network configuration has changed between the backup and restoration. In
-this case, refer to the section [In the event of an initialization error
+should be kept preciously. In case of a restoration, it will be applied 
+immediately. This could result in the DSAS becoming unavailable, particularly
+if the network configuration has changed between the backup and restoration.
+In this case, refer to the section [In the event of an initialization error
 of the DSAS](#in-the-event-of-a-dsas-initialization-error).
 
 #### Automatic logout
@@ -875,7 +875,7 @@ Request (CSR) could be downloaded by clicking on the button
 
 ## Service Configuration
 
-Other than the administration and repository web services, there are 6
+Other than the administration and repository web services, there are 7
 other services which could be started on the DSAS;
 
 - An OpenSSH server for connections to the DSAS,
@@ -885,7 +885,6 @@ other services which could be started on the DSAS;
 - A SNMPD server to supply the status logs of the DSAS, and
 - An antivirus server
 - A radius client
-
 
 ![Web server configuration menu](en/DSAS16.png)
 
@@ -924,8 +923,8 @@ from the sensitive area and can connect with ssh, scp and sftp
 the sensitive zone. This sftp functionality could be used to replace http
 server repository (or in addition). It only has access to the DSAS area
 with the verified files and cannot access files elsewhere.
-- __upper__ - `Use of users of type __upper__ in SSH and strongly
-discouraged`. The reason it is not recommended is that it does not
+- __upper__ - __Use of users of type upper in SSH and strongly
+discouraged__. The reason it is not recommended is that it does not
 respect the direction of the initiation of network flows, from
 the more sensitive zone to the less sensitive zone. But in the absence of
 other means of downloading, this account opens the possibility from the
@@ -1016,7 +1015,7 @@ The DSAS will update these files from this URI once a day.
 ### Radius Client
 
 The DSAS includes the possibility to use a radius serveur for the 
-authentification of user passwords. The user accounts mist be setup on the
+authentification of user passwords. The user accounts must be setup on the
 DSAS with the same usernames as the Radius server, and only the role of 
 validating the user is delegated to the Radius Server. The accounts 
 themselves remain local to the DSAS. If, and only if, the radius serveur
@@ -1043,15 +1042,16 @@ pages and resembles
 ![Tasks and machine status page](en/DSAS14.png)
 
 The page is divided into two sections; at the top the status of the DSAS
-machines at the bottom the status DSAS tasks. Three statistics are given
-for the two DSAS machines.
+machines and at the bottom the status verified files. Three statistics are
+given for the two DSAS machines.
 
 - __Disk usage__ - The total occupancy of DSAS disks are shown. If the
 Disks are full it will be impossible to properly download and verify
 files. So, the disks should be periodically monitored. Logically if the
 tasks have not changed, the use of the disks should not change either,
 but if one of the tasks suddenly increases its disk usage it will be easy
-to lack disk space. A disk that is more than 80 or 90% full could easily be saturated.
+to lack disk space. A disk that is more than 80 or 90% full could easily be
+saturated.
 - __Memory usage__ - Each task on the DSAS occupies machine memory. If
 the memory is full, the performance of the tasks will be impacted. It is
 necessary to watch that memory is saturated, but if it is below 90% it
@@ -1066,8 +1066,8 @@ number of cores of the processor. On the DSAS page the "Load average" is
 presented in a logarithmic scale with the number of processor cores at
 50% of the length of the status bar. If the status bar is longer than
 half, DSAS might have insufficient computing resources. The first thing
-to do again in this case is to restart the DSAS in order to see if the
-problem disappears.
+to do in this case is to restart the DSAS in order to see if the problem
+disappears.
 
 If the DSAS lower machine is not available, you will be unable to connect
 to the administration interface. On the other hand, if the upper machine
@@ -1095,13 +1095,13 @@ verification
 useful when a threat has been identified, to see if it has been passed by
 the DSAS or not.
 - __Date__: The date of the verification is given in the third position.
-Dates are always given in converted to the local time zone.
+Dates are always converted to the local time zone.
 - __File__: And in the last position the path to the file is given
 
 The status will take one of the following values
 
 - `Ok`: All the requested checks were successful, and the file was made
-Available on the lower machine.
+available on the lower machine.
 - `$$ Checksum fail`: A checksum test on the file failed
 - `** Bad Sig`: One of the requested verifications reported a bad
 signature
@@ -1112,7 +1112,7 @@ failed
 - `** Not signed`: The file is not signed and could not be verified
 
 the blue button at the top of the verification logs allow to switch
-between a mode or `all logs` are visible or a mode or that `errors only`
+between a mode where `all logs` are visible or a mode or that `errors only`
 are visible. This will allow you to quickly identify the files that had
 problems.
 
@@ -1135,13 +1135,13 @@ no matching line is found, no line will be highlighted.
 ## Certificate configuration
 
 The DSAS is preconfigured with the set of root certificates of a classic
-Linux distribution. All these certificates and other imported
-certificates are available from the tab Configuration/Certificates as seen below
+Linux distribution. All these certificates and other imported certificates
+are available from the tab Configuration/Certificates as seen below
 
 ![Certificate configuration page](en/DSAS17.png)
 
 The certificates installed in each category can be viewed by clicking on
-The arrow to the left of each category and the details of each
+the arrow to the left of each category and the details of each
 certificate is available like
 
 ![Certificate configuration page](en/DSAS19.png)
@@ -1150,7 +1150,7 @@ Each certificate can be downloaded by clicking on the button
 ![](save.svg).
 
 Certificates are highlighted in 4 different ways depending on the
-Characteristics of the certificate.
+characteristics of the certificate.
 
 - __Certificate CA__ - With black text. The certificate is a root
 certificate or a self-signed certificate. The two types of certificates
@@ -1165,7 +1165,7 @@ does not mean that it is no longer usable, but it is not valid for files
 signed after the date of expiration
 
 Preinstalled root certifications could be used for verifications on the
-DSAS. But using these certificates alone is not sufficient, because
+DSAS. But using these certificates alone are not sufficient, because
 
 - Preinstalled certificates do not include GPG certificates used by Linux
 repositories
@@ -1228,9 +1228,9 @@ On the same menu as below on the `Details` tab we can see
 
 ![Details of a certificate](en/CERT5.png)
 
-with the option of `copy to file`. This option allows all the
-certificates of the chain of trust to be saved. It is necessary to select
-from `save the certificate in base64 encoded X.509` format as
+with the option of `copy to file`. This option allows all the certificates
+of the chain of trust to be saved. It is necessary to select the option
+`save the certificate in base64 encoded X.509` format as
 
 ![Export of a base64 certificate](en/CERT7.png)
 
@@ -1544,7 +1544,7 @@ Software impacted by this risk
 | php-cgi | [8.0.1](http://tinycorelinux.net/12.x/x86/tcz/php-8.0-cgi.tcz) | Backend of the administration site |
 | lighttpd | [1.4.58](http://tinycorelinux.net/12.x/x86/tcz/lighttpd.tcz) | Backend of the administration site |
 | Linux PAM | [1.5.2](https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz) | Authentication on the administration site |
-| DSAS website | [1.2.18](https://gitlab.com/adb014/dsas-tinycore) | Backend and frontend of the administration site |
+| DSAS website | [1.2.18](https://gitlab.com/groupe-edf/dsas-tinycore) | Backend and frontend of the administration site |
 
 The DSAS website is specially developed for this project. Static analysis
 of the code and a test suite is used on this code before each release to
@@ -1595,7 +1595,7 @@ to the `~/.xession` file or run this command from an X11 console.
 
 
 ```shell
-git clone https://gitlab.com/adb014/dsas-tinycore.git
+git clone https://gitlab.com/groupe-edf/dsas-tinycore.git
 ```
 
 #### Preparing the DSAS source tree for a private git
