@@ -1,0 +1,17 @@
+--- usr/bin/filetool.sh.orig	2023-03-10 17:31:31.740547516 +0000
++++ usr/bin/filetool.sh	2023-03-10 17:43:03.503892912 +0000
+@@ -141,7 +141,13 @@
+ FULLPATH="${TARGET#$DEVICE/}"
+ [ "$FULLPATH" = "$DEVICE" ] && FULLPATH=""
+ 
+-find_mountpoint $DEVICE
++if grep -q "/mnt/$DEVICE" /etc/mtab; then
++  MOUNTED="yes"
++  MOUNTPOINT="/mnt/$DEVICE"
++  D2="$DEVICE"
++else
++  find_mountpoint $DEVICE
++fi
+ 
+ if [ -z "$MOUNTPOINT" ]; then
+   echo "Invalid device $DEVICE" > /tmp/backup_status

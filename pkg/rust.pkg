@@ -1,40 +1,47 @@
 _pkg=rust
 _disk_needed=16 # Need at least 16GB to build
-_version=1.66.0
-_uri=https://static.rust-lang.org/dist/rustc-1.66.0-src.tar.gz
+_version=1.68.0
+_uri=https://static.rust-lang.org/dist/rustc-1.68.0-src.tar.gz
 _build_dep="compiletc python3.6 rsync ninja coreutils cmake curl-dev libssh2-dev clang llvm-dev ca-certificates"
-_dep="llvm_lib curl libssh2"
+_dep="llvm-lib curl libssh2"
 # FIXME: Why is ca-certificate not updated corrected at the install ?
 _pre_config="
 /usr/local/sbin/update-ca-certificates; 
 mkdir /lib64; 
 cd /lib64; 
 ln -s /lib/ld-linux-x86-64.so.2"
-_pkg_path=rustc-1.66.0-src
-# FIXME: apply https://github.com/rust-lang/rust/pull/105901/files
+_pkg_path=rustc-1.68.0-src
+# FIXME problem missing llvm-tools (see https://github.com/rust-lang/issues/108948)
+# external llvm-config so these aren't even needed !!
 _conf_cmd="
 cat << EOF | patch src/bootstrap/install.rs
---- src/bootstrap/install.rs.old	2023-01-10 00:41:55.292893397 +0000
-+++ src/bootstrap/install.rs	2023-01-10 00:56:25.996210261 +0000
-@@ -200,10 +200,14 @@
-         install_sh(builder, \"clippy\", self.compiler.stage, Some(self.target), &tarball);
+--- src/bootstrap/install.rs.orig	2023-03-14 22:36:17.470754110 +0000
++++ src/bootstrap/install.rs	2023-03-14 22:36:19.340754143 +0000
+@@ -209,12 +209,6 @@
+             );
+         }
      };
-     Miri, alias = \"miri\", Self::should_build(_config), only_hosts: true, {
+-    LlvmTools, alias = \"llvm-tools\", Self::should_build(_config), only_hosts: true, {
 -        let tarball = builder
--            .ensure(dist::Miri { compiler: self.compiler, target: self.target })
--            .expect(\"missing miri\");
--        install_sh(builder, \"miri\", self.compiler.stage, Some(self.target), &tarball);
-+        if let Some(tarball) = builder.ensure(dist::Miri { compiler: self.compiler, target: self.target }) {
-+            install_sh(builder, \"miri\", self.compiler.stage, Some(self.target), &tarball);
-+        } else {
-+            // Miri is only available on nightly
-+            builder.info(
-+               &format!(\"skipping Install miri stage{} ({}\", self.compiler.stage, self.target),
-+            );
-+        }
-     };
+-            .ensure(dist::LlvmTools { target: self.target })
+-            .expect(\"missing llvm-tools\");
+-        install_sh(builder, \"llvm-tools\", self.compiler.stage, Some(self.target), &tarball);
+-    };
      Rustfmt, alias = \"rustfmt\", Self::should_build(_config), only_hosts: true, {
          if let Some(tarball) = builder.ensure(dist::Rustfmt {
+             compiler: self.compiler,
+EOF
+cat << EOF | patch src/bootstrap/builder.rs
+--- src/bootstrap/builder.rs.orig	2023-03-14 22:32:39.287416969 +0000
++++ src/bootstrap/builder.rs	2023-03-14 22:34:28.734085544 +0000
+@@ -779,7 +779,6 @@
+                 install::RustDemangler,
+                 install::Clippy,
+                 install::Miri,
+-                install::LlvmTools,
+                 install::Analysis,
+                 install::Src,
+                 install::Rustc
 EOF
 cat << EOF > config.toml
 [llvm]
@@ -47,12 +54,13 @@ extended = true
 
 [install]
 prefix = \"/usr/local\"
-docdir = \"share/doc/rustc-1.66.0\"
+docdir = \"share/doc/rustc-1.68.0\"
 
 [rust]
 channel = \"stable\"
 rpath = false
 codegen-tests = false
+llvm-tools = false
 
 [target.x86_64-unknown-linux-gnu]
 llvm-config = \"/usr/local/bin/llvm-config\"
@@ -67,7 +75,7 @@ EOF
 _make_cmd="
 export RUSTFLAGS=\"-C link-args=-lffi\"
 export SSL_CERT_FILE=/usr/local/etc/ssl/certs/ca-certificates.crt
-DESTDIR=install
+export DESTDIR=install
 export LIBSSH2_SYS_USE_PKG_CONFIG=1
 python3 ./x.py install --exclude src/tools/miri
 "

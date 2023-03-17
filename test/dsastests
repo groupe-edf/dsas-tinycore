@@ -2182,6 +2182,10 @@ try {
     // Clear timeout to avoid possibility of stale handles 
     $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
 
+    // FIXME: Despite clearing the timeout above, we need a slight delay here to
+    // avoid a stale handle.. Weird and I don't understand why
+    modal_delay(); 
+
     // Delete an existing task without removing its files and see that the files remain
     test("Delete RPM task leaving files in place", function() {
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//img[@src='x-lg.svg']")) as $del) {
