@@ -911,6 +911,7 @@ CreateUser $snmp_username $snmp_encrypt $snmp_password $snmp_privencrypt $snmp_p
 rouser $snmp_username priv 1
 pass $dsas_oid /usr/local/sbin/snmpdsas
 EOF
+    echo "Starting SNMP server on ${GREEN}$ip${NORMAL}." 
     /usr/local/sbin/snmpd &
   fi
 }

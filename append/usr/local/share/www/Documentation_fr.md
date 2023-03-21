@@ -240,7 +240,7 @@ avec VirtualBox, avec VMWare and avec Docker.
 
 #### Création des machines virtuelles
 
-L'ISO du DSAS est une souche linux en 32 bits, et la machine virtuelle
+L'ISO du DSAS est une souche linux en 32- ou 64-bits, et la machine virtuelle
 est à configurer en conséquence. Par exemple, sous VirtualBox la
 configuration initiale devrait être
 
@@ -698,10 +698,10 @@ demandé d'entrée un mot de passe pour la sauvegarde, comme
 
 ![Menu d'entrée de mot de passe de sauvegarde](fr/DSAS24.png)
 
-Les sauvegardes des deux machines du DSAS sont alors chiffré en `bcrypt`
-avec ce mot de passe et archivé ensemble. Si vous ne rentrée pas de mot
-de passe de sauvegarde, les fichiers sera archivés sans l'étape de
-chiffrement.
+Les sauvegardes des deux machines du DSAS sont alors chiffré acec
+`openssl` utilisant le mode AES256 CBC et ce mot de passe et archivé ensemble.
+Si vous ne rentrée pas de mot de passe de sauvegarde, les fichiers sera 
+archivés sans l'étape de chiffrement.
 
 Il est fortement conseillé de chiffrer ces archives, parce qu'il contient
 la configuration complète du DSAS, les certificats SSL et les éléments
@@ -907,7 +907,7 @@ téléchargé en cliquant sur le bouton ![](save.svg).
 ## Configuration des services
 
 Autre que le service web d'administration et service web de repositoire,
-il y a 6 services qui pourrait être démarrer sur les machines du DSAS;
+il y a 7 services qui pourrait être démarrer sur les machines du DSAS;
 
 - Un serveur OpenSSH pour les connexions depuis l'extérieur,
 - Un dépôt HTTPS pour la distribution des fichiers vérifié par le DSAS,
@@ -958,8 +958,8 @@ depuis la zone sensible. Cette fonctionnalité de sftp pourrait être
 utilisé pour remplacer le serveur http de dépôt (ou en complément). Il
 n'a que accès à la zone du DSAS avec les fichiers vérifiés et ne peut pas
 accéder ailleurs dans le DSAS.
-- __haut__ - `Utilisation d'un compte de type haut en SSH en fortement
-déconseillé`. La raison qu'il est déconseillé est qu'il ne respecte pas
+- __haut__ - __Utilisation d'un compte de type haut en SSH en fortement
+déconseillé__. La raison qu'il est déconseillé est qu'il ne respecte pas
 le sens de l'ouverture des flux de la zone plus sensible vers la zone
 moins sensible. Mais en absence d'autre moyen de téléchargement ce compte
 ouvre la possibilité depuis la zone non sensible à déposer des fichiers
@@ -1071,8 +1071,8 @@ serveur doit-être physiquement sécurisé.
 
 ## Statut des machines
 
-La page de statut des taches et les machines et la page d'entrée dans la
-DSAS et la page principale. Elle est accédée en cliquant sur `DSAS` dans
+La page de statut des fichier vérifiés et les machines et la page d'entrée dans
+la DSAS et la page principale. Elle est accédée en cliquant sur `DSAS` dans
 le menu en tête des pages et se présente comme
 
 ![Page de statut des taches et les machines](fr/DSAS14.png)
@@ -1612,7 +1612,7 @@ Logiciels impactés par ce risque
 | php-cgi     | [8.0.1](http://tinycorelinux.net/12.x/x86/tcz/php-8.0-cgi.tcz) | Backend de la site d'administration |
 | lighttpd    | [1.4.58](http://tinycorelinux.net/12.x/x86/tcz/lighttpd.tcz) | Backend de la site d'administration |
 | Linux PAM | [1.5.2](https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz) | Authentification sur la site d'administration |
-| site web DSAS | [1.2.18](https://gitlab.com/adb014/dsas-tinycore) | Backend et frontend de la site d'administration |
+| site web DSAS | [1.2.19](https://gitlab.com/groupe-edf/dsas-tinycore) | Backend et frontend de la site d'administration |
 
 La site web du DSAS est développé spécialement pour ce projet. Une
 analyse statique et suite de test de la code est utilisé à chaque version
@@ -1662,7 +1662,7 @@ X11.
 #### Préparation d'un arbre de source DSAS
 
 ```shell
-git clone https://gitlab.com/adb014/dsas-tinycore.git
+git clone https://gitlab.com/groupe-edf/dsas-tinycore.git
 ```
 
 #### Préparation d'un arbre de source DSAS avec un git privée

@@ -244,7 +244,7 @@ for _id in $ids; do
   lockcount=0
   while [ -e "$RUNLOG.lock" ]; do
     lockcount=$((lockcount + 1))
-    [ "$lockcount" == "60" ] && { myecho "$0: timeout waiting for file lock on $RUNLOG"; continue 2; }
+    [ "$lockcount" = "60" ] && { myecho "$0: timeout waiting for file lock on $RUNLOG"; continue 2; }
     sleep 1
   done
   touch "$RUNLOG.lock"
@@ -257,7 +257,7 @@ done
 lockcount=0
 while [ -e "$RUNLOG.lock" ]; do
   lockcount=$((lockcount + 1))
-  [ "$lockcount" == "60" ] && { myecho "$0: timeout waiting for file lock on $RUNLOG"; exit 1; }
+  [ "$lockcount" = "60" ] && { myecho "$0: timeout waiting for file lock on $RUNLOG"; exit 1; }
   sleep 1
 done
 touch "$RUNLOG.lock"
