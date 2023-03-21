@@ -1,5 +1,8 @@
 Log of the principal changes to the DSAS
 
+Version 1.2.19 (XX XXX XXXX)
+- ???
+
 Version 1.2.18 (16 Mar 2023)
 - Fix scroll positionning at the end for chrome and edge browsers
 - Numereous fixes for docker 
