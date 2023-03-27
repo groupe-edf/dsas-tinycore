@@ -388,14 +388,14 @@ getrepo() {
        fi
 
        # Remove the files in our tree not listed in primary.xml
-       _str="$DSAS_HAUT/$dir"
-       _len=$((${#_str} + 1))
-       for _file in $($as_haut find "$DSAS_HAUT/$dir" -path "$DSAS_HAUT/$dir/repodata" -prune -type f -o -type f) ; do
-         if [[ "$filetable" != "*${_file:$_len}*" ]]; then
-           myecho "Removing stale file ${_file:$_len}"
+       # Using the "comm" function to detecting stale files is by far the fastest here
+       $as_haut zcat "$DSAS_HAUT/$dir/$filelist" | grep "<location " | sed -e 's:.*href="\(.*\)"/>$:\1:g'  | sort > /tmp/_files1.$$ 
+       $as_haut find "$DSAS_HAUT/$dir" -path "$DSAS_HAUT/$dir/repodata" -prune -type f -o -type f | sed -e "s:$DSAS_HAUT/$dir/::g" | sort > /tmp/_files2.$$
+       while IFS= read -r -d '' _file; do
+           myecho "Removing stale file $_file"
            $as_haut rm -f "$_file"
-         fi
-       done
+       done < <(comm -13  --nocheck-order /tmp/_files1.$$ /tmp/_files2.$$ | tr \\n \\0)
+       /bin/rm /tmp/_files1.$$ /tmp/_files2.$$
 
        # Download the packages
        #
