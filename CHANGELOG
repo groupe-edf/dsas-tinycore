@@ -2,6 +2,7 @@ Log of the principal changes to the DSAS
 
 Version 1.2.19 (XX XXX XXXX)
 - Fix for SNMP table of DSAS tasks (bug introduced in v1.1.1 of the DSAS)
+- Authenticode verification time set to file creation date
 
 Version 1.2.18 (16 Mar 2023)
 - Fix scroll positionning at the end for chrome and edge browsers
