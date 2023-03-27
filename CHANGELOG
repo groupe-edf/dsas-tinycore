@@ -1,5 +1,9 @@
 Log of the principal changes to the DSAS
 
+Version 1.2.20 (27 Mar 2023)
+- Force use of gnu version of comm for stale file tests to avoid issues
+- Ocassionnally print something in file downloads for RPM repositories to avoid timeouts
+
 Version 1.2.19 (27 Mar 2023)
 - Fix for SNMP table of DSAS tasks (bug introduced in v1.1.1 of the DSAS)
 - Authenticode verification time set to file creation date. Avoids issues with expired certificates
