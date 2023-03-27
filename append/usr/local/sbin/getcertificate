@@ -77,7 +77,8 @@ get_certificate(){
       if [ "$incert" = "false" ]; then
         echo "error parsing $ca_bundle"
       else
-        cert="$cert\n$line"
+        cert="$cert
+$line"
         incert="false"
         echo "$cert" > "/tmp/cert.$2"
         f=$(openssl x509 -in "/tmp/cert.$2" -noout -fingerprint -sha256 -inform pem  | cut -d= -f2 | sed -e "s/://g" | tr "[:upper:]" "[:lower:]")
@@ -85,7 +86,8 @@ get_certificate(){
         /bin/rm "/tmp/cert.$2"
       fi
     else
-      cert="$cert\n$line"
+      cert="$cert
+$line"
     fi
   done < "$ca_bundle"
 }
