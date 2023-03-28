@@ -1550,7 +1550,7 @@ Logiciels impactés par ce risque
 | logiciel    | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
 | openssl     | [1.1.1q](https://www.openssl.org/source/openssl-1.1.1q.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
-| openssh     | [9.1p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.1p1.tar.gz) | ssh et sftp utilisé |
+| openssh     | [9.2p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.2p1.tar.gz) | ssh et sftp utilisé |
 
 ### Risque : Attaque sur la vérification des signatures 
 
@@ -1564,11 +1564,11 @@ Logiciels impactés par ce risque
 | logiciel      | version  |  commentaire                                                                      | 
 |--------------|----------|------------------------------------------------------------------------------|
 | openssl      | [1.1.1q](https://www.openssl.org/source/openssl-1.1.1q.tar.gz) | Utilisé pour la vérification authenticode, LiveUpdate et OpenSSL |
-| gnupg        | [2.2.27](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.27.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
+| gnupg        | [2.2.41](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.41.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
 | libgcrypt    | [1.10.1](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.1.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
-| rpm          | [4.18.0](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.17.x/rpm-4.18.0.tar.bz2) | Utilisé pour la vérification RPM |
+| rpm          | [4.18.1](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.18.x/rpm-4.18.1.tar.bz2) | Utilisé pour la vérification RPM |
 | osslsigncode | [2.5.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.5/osslsigncode-2.5.tar.gz) | Utilisé pour la vérification authenticode |
-| clamav | [0.105.1](https://www.clamav.net/downloads/production/clamav-0.105.1.tar.gz) | Utilisé pour des tests antivirale |
+| clamav | [1.0.1](https://www.clamav.net/downloads/production/clamav-1.0.1.tar.gz) | Utilisé pour des tests antivirale |
 
 ### Risque : Elevation des privilèges
 
