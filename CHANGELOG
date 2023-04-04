@@ -1,5 +1,9 @@
 Log of the principal changes to the DSAS
 
+Version 2.0.0 (XX XXX XXXX)
+- Update Tinycore 13.1 -> 14.0
+- Add /var/cache/hrmib package cache directory for SNMP installed software
+
 Version 1.2.20 (27 Mar 2023)
 - Force use of gnu version of comm for stale file tests to avoid issues
 - Ocassionnally print something in file downloads for RPM repositories to avoid timeouts
