@@ -3,6 +3,7 @@ Log of the principal changes to the DSAS
 Version 2.0.0 (XX XXX XXXX)
 - Update Tinycore 13.1 -> 14.0
 - Add /var/cache/hrmib package cache directory for SNMP installed software
+- Update openssh (9.2p1 -> 9.3p1)
 
 Version 1.2.20 (27 Mar 2023)
 - Force use of gnu version of comm for stale file tests to avoid issues
