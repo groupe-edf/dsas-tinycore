@@ -283,10 +283,12 @@ build_pkg_cache() {
        _version="_$(cat ./js/src/DsasHelp.js | grep "dsasVersion =" | sed -e "s:^.* = \"\([0-9.]*\).*$:\1:")"
      else
        [ -f "$tcz_dir/$_pkg.tcz.info" ] || $curl_cmd -s -o "$tcz_dir/$_pkg.tcz.info" "$tcz_url/$_pkg.tcz.info"
-       _version=$(cat "$tcz_dir/$_pkg.tcz.info" | grep -i version: | cut -d: -f2 | xargs | tr "/" "-")
+       _version=$(cat "$tcz_dir/$_pkg.tcz.info" | grep -i version: | cut -d: -f2 | xargs | tr "/" ".")
        [ -z "$_version" ] || _version="_$_version"
      fi
-     touch -r $_file $_snmpdir/$_pkg$_version
+     # Use amd64 for architecture for coherence with other distributions
+     [ "$arch" = "64" ] && touch -r $_file $_snmpdir/$_pkg${_version}_amd64 \
+       || touch -r $_file $_snmpdir/$_pkg${_version}_x86 
   done < <(find "$extract/usr/local/tce.installed" -type "f" -print0)
 }
 
