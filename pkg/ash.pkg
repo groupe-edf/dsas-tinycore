@@ -11,9 +11,9 @@ setarch linux$arch make allnoconfig
 
 # Add the configuration on an ASH shell
 cat << EOF | patch .config
---- .config.old	2022-04-13 04:25:20.285201152 +0000
-+++ .config	2022-04-13 05:02:44.421823940 +0000
-@@ -238,7 +238,7 @@
+--- .config.orig	2023-04-17 19:40:46.091641407 +0000
++++ .config	2023-04-17 19:47:39.681663693 +0000
+@@ -244,7 +244,7 @@
  # CONFIG_FEATURE_DU_DEFAULT_BLOCKSIZE_1K is not set
  # CONFIG_ECHO is not set
  # CONFIG_FEATURE_FANCY_ECHO is not set
@@ -22,7 +22,7 @@ cat << EOF | patch .config
  # CONFIG_EXPAND is not set
  # CONFIG_UNEXPAND is not set
  # CONFIG_EXPR is not set
-@@ -1098,24 +1098,24 @@
+@@ -1108,25 +1108,25 @@
  # CONFIG_BASH_IS_HUSH is not set
  CONFIG_BASH_IS_NONE=y
  CONFIG_SHELL_ASH=y
@@ -50,12 +50,14 @@ cat << EOF | patch .config
 -# CONFIG_ASH_ECHO is not set
 -# CONFIG_ASH_PRINTF is not set
 -# CONFIG_ASH_TEST is not set
+-# CONFIG_ASH_SLEEP is not set
 -# CONFIG_ASH_HELP is not set
 -# CONFIG_ASH_GETOPTS is not set
 -# CONFIG_ASH_CMDCMD is not set
 +CONFIG_ASH_ECHO=y
 +CONFIG_ASH_PRINTF=y
 +CONFIG_ASH_TEST=y
++CONFIG_ASH_SLEEP=y
 +CONFIG_ASH_HELP=y
 +CONFIG_ASH_GETOPTS=y
 +CONFIG_ASH_CMDCMD=y
@@ -67,7 +69,7 @@ EOF
 cat << EOF | patch include/libbb.h
 --- include/libbb.h.old	2022-04-13 04:52:33.455169183 +0000
 +++ include/libbb.h	2022-04-13 04:53:04.341835232 +0000
-@@ -2261,7 +2261,7 @@
+@@ -2274,7 +2274,7 @@
  extern const char bb_busybox_exec_path[] ALIGN1;
  /* allow default system PATH to be extended via CFLAGS */
  #ifndef BB_ADDITIONAL_PATH
