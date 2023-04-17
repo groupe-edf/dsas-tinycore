@@ -109,12 +109,6 @@ done
 # Longer curl timeout
 curl_cmd="curl --connect-timeout 300"
 
-# Setup kernel name for package dependencies include "-KERNEL"
-# FIXME can't use "uname -r" to allow build en non tinycore system.
-# FIXME this will need updating if tinycore version changed
-[ "$arch" = 64 ] && _kern="5.15.10-tinycore64"
-[ "$arch" = 32 ] && _kern="5.15.10-tinycore"
-
 # tiny core related
 if [ "$arch" != "64" ]; then
   livecd_url=http://tinycorelinux.net/14.x/x86/release/Core-current.iso
@@ -848,6 +842,15 @@ get_unpack_livecd(){
     mount | grep $livecd0 > /dev/null || cmd mount $livecd0 $mnt
     cmd rsync -av --exclude=boot.cat $mnt/ $newiso/
     cmd umount $mnt
+  fi
+
+  # Setup kernel name for package dependencies include "-KERNEL"
+  # If on tinycore, can get it from $(uname -r), otherwise from
+  # a tinycore image and find "*lib/modules/KERNEL-tinycore*" directory
+  if uname -r | grep -q tinycore; then
+    _kern=$(uname -r)
+  else
+    _kern=$(zcat ../work/newiso/boot/corepure64.gz | cpio -t 2> /dev/null | grep "/lib/modules/" | head -1 | tr '/' '\n' | grep tinycore)
   fi
 }
 
