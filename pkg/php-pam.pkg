@@ -12,7 +12,7 @@ cat << EOF > /tmp/install
 #!/bin/sh
 mkdir -p \\\$1/usr/local/lib/php/extensions/
 /bin/cp -p modules/pam.so \\\$1/usr/local/lib/php/extensions/
-chown root.root \\\$1/usr/local/lib/php/extensions/pam.so
+chown root:root \\\$1/usr/local/lib/php/extensions/pam.so
 EOF
 chmod 755 /tmp/install
 /tmp/install "

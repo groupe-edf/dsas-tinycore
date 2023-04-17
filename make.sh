@@ -425,7 +425,7 @@ build_pkg() {
         mkdir -p "$extract/$builddir"
         mkdir -p "$extract/$destdir"
         unpack "$src_dir/$_src" "$extract/$builddir" || error "Can not unpack $_src"
-        chroot "$extract" chown -R ${tc}.${staff} /home/tc
+        chroot "$extract" chown -R ${tc}:${staff} /home/tc
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 export http_proxy=${http_proxy:=}
@@ -600,7 +600,7 @@ install_firefox(){
       cp -p /etc/resolv.conf "$extract/etc/resolv.conf"
 
       mkdir -p "$extract/home/tc"
-      chown ${tc}.${staff} "$extract/home/tc"
+      chown ${tc}:${staff} "$extract/home/tc"
       echo tc > "$extract/etc/sysconfig/tcuser"
 
       cat << EOF > "$extract/tmp/script"
@@ -646,11 +646,11 @@ install_webdriver(){
       # Install PHP composer
       download -f "https:/getcomposer.org/installer" "$src_dir"
       mkdir -p "$extract/home/tc"
-      chown ${tc}.${staff} "$extract/home/tc"
+      chown ${tc}:${staff} "$extract/home/tc"
       chmod 750 "$extract/home/tc"
       cp "$src_dir/installer" "$extract/home/tc"
       chmod a+rx "$extract/home/tc/installer"
-      chroot "$extract" chown -R ${tc}.${staff} "/home/tc/"
+      chroot "$extract" chown -R ${tc}:${staff} "/home/tc/"
       cp /etc/resolv.conf "$extract/etc/resolv.conf" && msg "copy resolv.conf"
       # http_proxy is imported (or not) from the environment. Shellcheck 
       # complains if we don't force a default value here
@@ -706,11 +706,11 @@ install_phpstan(){
       # Install PHP composer
       download -f "https:/getcomposer.org/installer" "$src_dir"
       mkdir -p "$extract/home/tc"
-      chown ${tc}.${staff} "$extract/home/tc"
+      chown ${tc}:${staff} "$extract/home/tc"
       chmod 750 "$extract/home/tc"
       cp "$src_dir/installer" "$extract/home/tc"
       chmod a+rx "$extract/home/tc/installer"
-      chroot "$extract" chown -R ${tc}.${staff} "/home/tc/"
+      chroot "$extract" chown -R ${tc}:${staff} "/home/tc/"
       cp /etc/resolv.conf "$extract/etc/resolv.conf" && msg "copy resolv.conf"
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
@@ -802,7 +802,7 @@ install_dsas_js() {
       # Copy DSAS files to build tree
       mkdir -p $extract/home/tc/dsas
       tar cf - --exclude tmp --exclude=work --exclude=.git . | tar -C $extract/home/tc/dsas -xvf - 
-      chown -R ${tc}.${staff} $extract/home/tc
+      chown -R ${tc}:${staff} $extract/home/tc
       if [ "$testcode" = "1" ]; then
          maketype="dev"
       else
@@ -976,7 +976,7 @@ parameters:
   paths:
     - dsas/append/usr/local/share/www/api
 EOF
-    chown -R ${tc}.${staff} $extract/home/tc
+    chown -R ${tc}:${staff} $extract/home/tc
 
     cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
@@ -1194,7 +1194,7 @@ docker)
   msg Append DSAS files
   rsync -rlptv "$append/" "$extract/"
   mkdir -p "$extract/home/tc"
-  chown root.root "$extract"
+  chown root:root "$extract"
   chmod 755 "$extract/home"
 
   # Now that phop.ini is copied, if in test mode add iconv, phar, etc 
@@ -1228,7 +1228,7 @@ cat << EOF >> "$create_users"
 echo tc:dSaO2021DSAS | chpasswd -c sha512
 mkdir /home/tc/.ssh
 chmod 700 /home/tc/.ssh
-chown tc.staff /home/tc/.ssh
+chown tc:staff /home/tc/.ssh
 EOF
 
   msg adding user 'verif'
@@ -1247,7 +1247,7 @@ adduser -s /bin/false -u 2001 -D -h /home/bas bas
 echo bas:$pass | chpasswd -c sha512
 mkdir /home/bas/.ssh
 chmod 700 /home/bas/.ssh
-chown bas.bas /home/bas/.ssh
+chown bas:bas /home/bas/.ssh
 EOF
 
   msg adding user 'haut'
@@ -1258,7 +1258,7 @@ adduser -s /bin/false -u 2002 -D -h /home/haut haut
 echo bas:$pass | chpasswd -c sha512
 mkdir /home/haut/.ssh
 chmod 700 /home/haut/.ssh
-chown haut.haut /home/haut/.ssh
+chown haut:haut /home/haut/.ssh
 EOF
 
   cat << EOF >> "$create_users"
@@ -1277,18 +1277,18 @@ addgroup -g 51 users
 # Hardening
 # Fix directory and file permissions
 chmod 440 /etc/sudoers
-chown root.root /etc/sudoers
+chown root:root /etc/sudoers
 chmod 700 /root
 chmod -R g-s /home
-chown -R tc.staff /home/tc
+chown -R tc:staff /home/tc
 chmod -R o-rwx /home/tc /home/haut /home/bas /home/verif 
-chown -R root.staff /var/dsas
+chown -R root:staff /var/dsas
 chmod 775 /var/dsas          # Write perm for verif
 chmod 640 /var/dsas/?*.dsas
 chmod 660 /var/dsas/dsas_conf.xml
-chown tc.verif /var/dsas/dsas_conf.xml
-chown root.repo /var/dsas/repo.conf.dsas
-chown -R root.staff /opt
+chown tc:verif /var/dsas/dsas_conf.xml
+chown root:repo /var/dsas/repo.conf.dsas
+chown -R root:staff /opt
 chmod 770 /opt
 chmod 770 /opt/.filetool.lst
 chmod 644 /usr/local/share/www/?* /usr/local/share/www/api/?* /usr/local/share/www/en/?* /usr/local/share/www/fr/?*
@@ -1347,9 +1347,9 @@ EOF
   _ldir=/opt/lftp
   (umask 022; mkdir -p \$_ldir/lib \$_ldir/dev \$_ldir/etc \$_ldir/tmp \$_ldir/home)
   chmod 775 \$_ldir/tmp
-  chown root.staff \$_ldir/tmp
+  chown root:staff \$_ldir/tmp
   (umask 027; mkdir -p \$_ldir/home/haut)
-  chown haut.haut \$_ldir/home/haut
+  chown haut:haut \$_ldir/home/haut
   cp -p /lib/ld-linux* \$_ldir/lib
   grep ^haut /etc/passwd > \$_ldir/etc/passwd
   cp -p /etc/host.conf /etc/nsswitch.conf \$_ldir/etc

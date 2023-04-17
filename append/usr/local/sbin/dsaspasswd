@@ -6,7 +6,7 @@ sudo cp -pf /etc/shadow "$tmpdir/etc/shadow"
 sudo cp -pf /etc/passwd "$tmpdir/etc/passwd"
 cd "$tmpdir" || exit 1
 sudo tar czT /opt/.filetool.lst -f /etc/sysconfig/tcedir/mydata.tgz
-sudo chown tc.staff /etc/sysconfig/tcedir/mydata.tgz
+sudo chown tc:staff /etc/sysconfig/tcedir/mydata.tgz
 sudo chmod 660 /etc/sysconfig/tcedir/mydata.tgz
 cd /
 sudo rm -fr "$tmpdir"

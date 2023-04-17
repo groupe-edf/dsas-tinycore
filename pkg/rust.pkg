@@ -11,7 +11,7 @@ mkdir /lib64;
 cd /lib64; 
 ln -s /lib/ld-linux-x86-64.so.2"
 _pkg_path=rustc-1.68.0-src
-# FIXME problem missing llvm-tools (see https://github.com/rust-lang/issues/108948)
+# FIXME problem missing llvm-tools (see https://github.com/rust-lang/rust/issues/108948)
 # external llvm-config so these aren't even needed !!
 _conf_cmd="
 cat << EOF | patch src/bootstrap/install.rs
