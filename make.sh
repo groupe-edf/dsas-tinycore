@@ -1177,7 +1177,6 @@ docker)
     install_firefox
     install_tcz harfbuzz fribidi # FIXME missing firefox dependency !!
     install_tcz Xorg-fonts
-    install_tcz xfonts-unifont
     install_tcz unifont 
 
     # Install PHP
@@ -1200,7 +1199,7 @@ docker)
   chown root:root "$extract"
   chmod 755 "$extract/home"
 
-  # Now that phop.ini is copied, if in test mode add iconv, phar, etc 
+  # Now that php.ini is copied, if in test mode add iconv, phar, etc 
   if [ "$testcode" = "1" ]; then
     sed -i -e "s/;extension=phar/extension=phar/" $extract/usr/local/etc/php/php.ini
     sed -i -e "s/;extension=iconv/extension=iconv/" $extract/usr/local/etc/php/php.ini
@@ -1327,7 +1326,7 @@ sed -i -e "s:\(swap\s*defaults,\):\1swap,:" /etc/init.d/tc-config
 # set noexec,nosuid,nodev on /dev/shm (suggestion lynis)
 sed -i -e "s:\(/dev/shm\s*tmpfs\s*defaults\):\1,noexec,nosuid,nodev:" /etc/fstab
 
-# Use hidepid=2 on /prc (suggestion lynis)
+# Use hidepid=2 on /proc (suggestion lynis)
 sed -i -e "s:\(proc\s*defaults\):\1,hidepid=2:" /etc/fstab
 
 EOF
