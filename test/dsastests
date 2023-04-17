@@ -349,7 +349,7 @@ try {
       exec("sudo cp -f " . _share . "/log/* /home/dsas/log", $data, $retval);
       if ($retval != 0)
         throw new RuntimeException("Error copying log files on lower machine");
-      exec("sudo chown tc.verif /home/dsas/log/dsas_verif.log*", $data, $retval);
+      exec("sudo chown tc:verif /home/dsas/log/dsas_verif.log*", $data, $retval);
       if ($retval != 0)
         throw new RuntimeException("Error copying log files on lower machine");
       exec("sudo chmod 660 /home/dsas/log/dsas_verif.log*", $data, $retval);
@@ -2142,15 +2142,15 @@ try {
         // Create the task directory to be kept, as the task hasn't run
         exec("ssh tc@haut sudo mkdir -p /home/dsas/haut/share/tests/dummyRPM /home/dsas/bas/share/tests/dummyRPM", $data, $retval);
         if ($retval == 0) 
-          exec("ssh tc@haut sudo chown haut.haut /home/dsas/haut/share/tests/dummyRPM", $data, $retval);
+          exec("ssh tc@haut sudo chown haut:haut /home/dsas/haut/share/tests/dummyRPM", $data, $retval);
         if ($retval == 0) 
-          exec("ssh tc@haut sudo chown verif.share /home/dsas/bas/share/tests/dummyRPM", $data, $retval);
+          exec("ssh tc@haut sudo chown verif:share /home/dsas/bas/share/tests/dummyRPM", $data, $retval);
         if ($retval == 0)
           exec("sudo mkdir -p /home/dsas/haut/share/tests/dummyRPM /home/dsas/bas/share/tests/dummyRPM", $data, $retval);
         if ($retval == 0) 
-          exec("sudo chown haut.haut /home/dsas/haut/share/tests/dummyRPM", $data, $retval);
+          exec("sudo chown haut:haut /home/dsas/haut/share/tests/dummyRPM", $data, $retval);
         if ($retval == 0) 
-          exec("sudo chown verif.share /home/dsas/bas/share/tests/dummyRPM", $data, $retval);
+          exec("sudo chown verif:share /home/dsas/bas/share/tests/dummyRPM", $data, $retval);
         if ($retval != 0)
           throw new RuntimeException("Error creating test directories");
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//img[@src='pencil-square.svg']")) as $mod) {
@@ -2225,15 +2225,15 @@ try {
         // Create the task directory to be kept, as the task hasn't run
         exec("ssh tc@haut sudo mkdir /home/dsas/haut/share/tests/dummyDeb /home/dsas/bas/share/tests/dummyDeb", $data, $retval);
         if ($retval == 0) 
-          exec("ssh tc@haut sudo chown haut.haut /home/dsas/haut/share/tests/dummyDeb", $data, $retval);
+          exec("ssh tc@haut sudo chown haut:haut /home/dsas/haut/share/tests/dummyDeb", $data, $retval);
         if ($retval == 0) 
-          exec("ssh tc@haut sudo chown verif.share /home/dsas/bas/share/tests/dummyDeb", $data, $retval);
+          exec("ssh tc@haut sudo chown verif:share /home/dsas/bas/share/tests/dummyDeb", $data, $retval);
         if ($retval == 0)
           exec("sudo mkdir /home/dsas/haut/share/tests/dummyDeb /home/dsas/bas/share/tests/dummyDeb", $data, $retval);
         if ($retval == 0) 
-          exec("sudo chown haut.haut /home/dsas/haut/share/tests/dummyDeb", $data, $retval);
+          exec("sudo chown haut:haut /home/dsas/haut/share/tests/dummyDeb", $data, $retval);
         if ($retval == 0) 
-          exec("sudo chown verif.share /home/dsas/bas/share/tests/dummyDeb", $data, $retval);
+          exec("sudo chown verif:share /home/dsas/bas/share/tests/dummyDeb", $data, $retval);
         if ($retval != 0)
           throw new RuntimeException("Error creating test directories");
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//img[@src='x-lg.svg']")) as $del) {
@@ -2491,7 +2491,7 @@ try {
     // Setup simple rsyslog configuration
     file_put_contents("/tmp/rsyslog.conf", 'module(load="imudp")' . PHP_EOL . 'input(type="imudp" port="514")' . PHP_EOL . '*.*  /var/log/rsyslog' . PHP_EOL);
     exec("sudo cp -f /tmp/rsyslog.conf /usr/local/etc/rsyslog.conf", $output, $retval);
-    exec("sudo chown root.staff /usr/local/etc/rsyslog.conf", $output, $retval);
+    exec("sudo chown root:staff /usr/local/etc/rsyslog.conf", $output, $retval);
     exec("sudo chmod 640 /usr/local/etc/rsyslog.conf", $output, $retval);
 
     // Start rsyslog server
