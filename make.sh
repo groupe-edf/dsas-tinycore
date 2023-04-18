@@ -1385,6 +1385,7 @@ EOF
   chown haut:haut \$_ldir/home/haut
   cp -p /lib/ld-linux* \$_ldir/lib
   grep ^haut /etc/passwd > \$_ldir/etc/passwd
+  echo haut:x:2002: > \$_ldir/etc/group
   cp -p /etc/host.conf /etc/nsswitch.conf \$_ldir/etc
   for _file in /usr/local/bin/lftp /usr/local/etc/lftp.conf /usr/local/bin/ssh; do
     while [ -L "\$_file" ]; do
