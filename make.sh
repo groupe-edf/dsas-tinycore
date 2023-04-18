@@ -550,6 +550,24 @@ EOF
   done
 }
 
+# Special version for firefox
+get_tcz_and_deps() {
+  _dest=$1
+  shift
+  for _pkg; do
+    [ -f "$dest/$_pkg.tcz" ] && continue
+    msg "Copy $_pkg.tcz to $_dest"
+    cp $tcz_dir/$_pkg.tcz  $tcz_dir/$_pkg.tcz.dep $_dest
+    ( cd $_dest;  md5sum "$_pkg.tcz" > "$_pkg.tcz.md5.txt"; )
+    _dep=$tcz_dir/$_pkg.tcz.dep
+    if test -s "$_dep"; then
+      # Want word splitting on arg to
+      # shellcheck disable=SC2046
+      get_tcz_and_deps $_dest $(sed -e s/.tcz$// "$_dep")
+    fi
+  done
+}
+
 install_firefox(){
   package=firefox
   target=$tcz_dir/$package.tcz
@@ -589,6 +607,19 @@ install_firefox(){
       ( install_tcz coreutils )
       ( install_tcz "$latest" )
 
+      # Find dependencies in "$latest" and install them to allow them to be
+      # cached and avoid too many downloads
+      sqfsTools="squashfs-tools"
+      eval $(sed -n '/deps1="/,/"/p' $extract/usr/local/bin/$latest.sh | sed "s:\\\::g")
+      mkdir -p $extract/tmp/tce/optional
+      chown -R $tc:$staff $extract/tmp/tce
+      chmod 775 $extract/tmp/tce $extract/tmp/tce/optional
+      ( install_tcz $deps1 libssh2 )
+      ( get_tcz_and_deps  $extract/tmp/tce/optional $deps1 )
+      chmod -R 644 "$extract/tmp/tce/optional"
+      chmod 775 $extract/tmp/tce/optional
+      chown -R $tc:$staff "$extract/tmp/tce/optional"
+
       # Copy /etc/resolv.conf file
       mkdir -p "$extract/etc"
       cp -p /etc/resolv.conf "$extract/etc/resolv.conf"
@@ -602,15 +633,15 @@ export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 export http_proxy=${http_proxy:=}
 export https_proxy=${https_proxy:=}
 export USER=tc
-mkdir /tmp/tce
 sudo tce-setup
+sudo update-ca-certificates
 $latest.sh -e || exit 1
 EOF
       chmod a+x "$extract/tmp/script"
       msg "Constructing package $package"
       HOME=/home/tc chroot --userspec=${tc} "$extract" /tmp/script || error error constructing $package
 
-      msg "fecthing package $package"
+      msg "fetching package $package"
       cp "$extract/tmp/tce/optional/$package.tcz" "$target"
       if ! test -f "$extract/tmp/tce/optional/$package.tcz.dep"; then
         touch "$tce_dir/$package.tcz.dep"
