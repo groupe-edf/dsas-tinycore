@@ -1,0 +1,11 @@
+_pkg=py3.9cairo
+_version=1.23.0
+_uri=https://github.com/pygobject/pycairo/releases/download/v1.23.0/pycairo-1.23.0.tar.gz
+_build_dep="compiletc python3.9-dev cairo-dev"
+_dep="python3.9 cairo"
+_pkg_path=pycairo-1.23.0
+_pre_config=""
+_conf_cmd=""
+_make_cmd="python3.9 setup.py build"
+_install_cmd="python3.9 setup.py install --root="
+_pkgs='main{/usr/local/lib/python3.9};dev{/usr/local/include,/usr/local/lib/pkgconfig}'

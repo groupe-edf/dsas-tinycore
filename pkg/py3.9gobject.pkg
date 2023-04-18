@@ -1,0 +1,11 @@
+_pkg=py3.9gobject
+_version=3.44.1
+_uri=https://download.gnome.org/sources/pygobject/3.44/pygobject-3.44.1.tar.xz
+_build_dep="compiletc meson python3.9-dev gobject-introspection-dev py3.9cairo-dev cairo-dev"
+_dep="py3.9cairo gobject-introspection"
+_pkg_path=pygobject-3.44.1
+_pre_config="ln -s /bin/busybox /bin/bash; cd /usr/local/bin; rm python3; ln -s python3.9 python3"
+_conf_cmd="setarch linux$arch meson build --prefix=/usr/local --localstatedir=/var --buildtype=plain"
+_make_cmd="cd build; ninja"
+_install_cmd="cd build; ninja install #"
+_pkgs='main{/usr/local/lib/python3.9};dev{/usr/local/include,/usr/local/lib/pkgconfig}'
