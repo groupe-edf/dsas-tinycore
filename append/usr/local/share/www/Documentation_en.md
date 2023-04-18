@@ -1482,7 +1482,7 @@ Software impacted by this risk
 | software      | version    | comment                                                                        | 
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
 | openssl | [1.1.1t](https://www.openssl.org/source/openssl-1.1.1t.tar.gz) | Only the functionality used by ssh impacted |
-| openssh | [9.2p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.2p1.tar.gz) | ssh and sftp used |
+| openssh | [9.3p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.3p1.tar.gz) | ssh and sftp used |
 
 ### Risk: Attack on signature verification
 
