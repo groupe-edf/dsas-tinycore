@@ -2,14 +2,14 @@ _pkg=libmodulemd
 _version=2.14.0
 _uri=https://github.com/fedora-modularity/libmodulemd/releases/download/2.14.0/modulemd-2.14.0.tar.xz
 if [ "$arch" != "64" ]; then
-  _build_dep="compiletc cmake expat2-dev coreutils meson ninja glib2-dev libssh2-dev libyaml-dev rpm popt-dev gtk-doc file-dev gobject-introspection-dev py3.6gobject-dev"
-  _dep="glib2 libyaml rpm gtk-doc gobject-introspection file py3.6gobject"
+  _build_dep="compiletc cmake expat2-dev coreutils meson ninja glib2-dev libssh2-dev libyaml-dev rpm popt-dev gtk-doc file-dev gobject-introspection-dev py3.9gobject-dev"
+  _dep="glib2 libyaml rpm gtk-doc gobject-introspection file py3.9gobject"
 else
-  _build_dep="compiletc cmake expat2-dev coreutils meson ninja glib2-dev libssh2-dev yaml-dev rpm popt-dev gtk-doc file-dev gobject-introspection-dev py3.6gobject-dev"
-  _dep="glib2 yaml rpm gtk-doc gobject-introspection file py3.6gobject"
+  _build_dep="compiletc cmake expat2-dev coreutils meson ninja glib2-dev libssh2-dev yaml-dev rpm popt-dev gtk-doc file-dev gobject-introspection-dev py3.9gobject-dev"
+  _dep="glib2 yaml rpm gtk-doc gobject-introspection file py3.9gobject"
 fi
 _pkg_path=modulemd-2.14.0
-_pre_config="ln -s /bin/busybox /bin/bash"
+_pre_config="ln -s /bin/busybox /bin/bash; cd /usr/local/bin; rm python3; ln -s python3.9 python3"
 _conf_cmd="setarch linux$arch meson build -D with_docs=false"
 _make_cmd="cd build; ninja"
 _install_cmd="cd build; ninja install #"
