@@ -1581,7 +1581,7 @@ Logiciels impactés par ce risque
 
 | logiciel    | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
-| noyau linux | [5.15.10](https://tinycorelinux.net/13.x/x86/release/src/kernel/linux-5.15.10-patched.txz) | Des CVE d'élévation de privilège sont les seuls à traiter |
+| noyau linux | [6.1.2](https://tinycorelinux.net/14.x/x86/release/src/kernel/linux-6.1.2-patched.txz) | Des CVE d'élévation de privilège sont les seuls à traiter |
 
 
 ### Risque : Attaque sur le moyen de téléchargement des fichiers 
@@ -1609,8 +1609,8 @@ Logiciels impactés par ce risque
 
 | logiciel     | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
-| php-cgi     | [8.0.1](http://tinycorelinux.net/12.x/x86/tcz/php-8.0-cgi.tcz) | Backend de la site d'administration |
-| lighttpd    | [1.4.58](http://tinycorelinux.net/12.x/x86/tcz/lighttpd.tcz) | Backend de la site d'administration |
+| php-cgi     | [8.0.1](http://tinycorelinux.net/14.x/x86/tcz/php-8.0-cgi.tcz) | Backend de la site d'administration |
+| lighttpd    | [1.4.58](http://tinycorelinux.net/14.x/x86/tcz/lighttpd.tcz) | Backend de la site d'administration |
 | Linux PAM | [1.5.2](https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz) | Authentification sur la site d'administration |
 | site web DSAS | [2.0.0](https://gitlab.com/groupe-edf/dsas-tinycore) | Backend et frontend de la site d'administration |
 
@@ -1624,7 +1624,7 @@ de la code afin de limiter les risques.
 
 Vous auriez besoin une machine de build. Le plus simple est d'utiliser la
 même souche que utilisé par le DSAS lui-même. Par exemple la souche 
-[CorePlus v13.x](http://tinycorelinux.net/13.x/x86/release/CorePlus-current.iso)
+[CorePlus v14.x](http://tinycorelinux.net/14.x/x86/release/CorePlus-current.iso)
 est utilisé actuellement pour la build du DSAS. Le DSAS a besoin au moins
 4 Go de mémoire (notamment pour le build de clamav). Tant que vous avez
 mise en place cette machine, vous auriez besoin un certain nombre

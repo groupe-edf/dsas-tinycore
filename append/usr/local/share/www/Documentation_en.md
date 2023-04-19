@@ -1513,7 +1513,7 @@ Software impacted by this risk
 
 | software    | version  |  comment                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
-| Linux kernel| [5.15.10](https://tinycorelinux.net/13.x/x86/release/src/kernel/linux-5.15.10-patched.txz) | Only elevation of privileges CVE need be considered. |
+| Linux kernel| [6.1.2](https://tinycorelinux.net/14.x/x86/release/src/kernel/linux-6.1.2-patched.txz) | Only elevation of privileges CVE need be considered. |
 
 
 ### Risk: Attack on the means of downloading files
@@ -1541,8 +1541,8 @@ Software impacted by this risk
 
 | software | version | comment |
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
-| php-cgi | [8.0.1](http://tinycorelinux.net/12.x/x86/tcz/php-8.0-cgi.tcz) | Backend of the administration site |
-| lighttpd | [1.4.58](http://tinycorelinux.net/12.x/x86/tcz/lighttpd.tcz) | Backend of the administration site |
+| php-cgi | [8.0.1](http://tinycorelinux.net/14.x/x86/tcz/php-8.0-cgi.tcz) | Backend of the administration site |
+| lighttpd | [1.4.58](http://tinycorelinux.net/14.x/x86/tcz/lighttpd.tcz) | Backend of the administration site |
 | Linux PAM | [1.5.2](https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz) | Authentication on the administration site |
 | DSAS website | [2.0.0](https://gitlab.com/groupe-edf/dsas-tinycore) | Backend and frontend of the administration site |
 
@@ -1556,7 +1556,7 @@ minimize the risk.
 
 You will need a build machine. The easiest way is to use the same
 operating system to build as is used by the DSAS itself. For example, the
-system [CorePlus v13.x](http://tinycorelinux.net/13.x/x86/release/CorePlus-current.iso)
+system [CorePlus v14.x](http://tinycorelinux.net/14.x/x86/release/CorePlus-current.iso)
 is currently used for the build of DSAS. The build of the DSAS needs at
 least 5GBytes of memory (for the clamav build especially). After as you
 have set up this machine, you would need a number of tools in order to do
