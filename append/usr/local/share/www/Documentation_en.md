@@ -1481,7 +1481,7 @@ Software impacted by this risk
 
 | software      | version    | comment                                                                        | 
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [1.1.1t](https://www.openssl.org/source/openssl-1.1.1t.tar.gz) | Only the functionality used by ssh impacted |
+| openssl | [1.1.1u](https://www.openssl.org/source/openssl-1.1.1u.tar.gz) | Only the functionality used by ssh impacted |
 | openssh | [9.3p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.3p1.tar.gz) | ssh and sftp used |
 
 ### Risk: Attack on signature verification
@@ -1495,7 +1495,7 @@ Software impacted by this risk
 
 | software | version | comment |
 | -------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [1.1.1t](https://www.openssl.org/source/openssl-1.1.1t.tar.gz) | Used for authenticode, LiveUpdate and OpenSSL verification |
+| openssl | [1.1.1u](https://www.openssl.org/source/openssl-1.1.1u.tar.gz) | Used for authenticode, LiveUpdate and OpenSSL verification |
 | gnupg | [2.2.41](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.41.tar.bz2) | Used for RPM, DEB and GPG verification |
 | libgcrypt | [1.10.1](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.1.tar.bz2) | Used for RPM, DEB and GPG verification |
 | rpm | [4.18.1](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.18.x/rpm-4.18.1.tar.bz2) | Used for RPM checking |
@@ -1527,7 +1527,7 @@ Software impacted by this risk
 
 | software | version | comment |
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [1.1.1t](https://www.openssl.org/source/openssl-1.1.1t.tar.gz) | only the functionality used by ssh impacted |
+| openssl | [1.1.1u](https://www.openssl.org/source/openssl-1.1.1u.tar.gz) | only the functionality used by ssh impacted |
 | lftp    | [4.9.2](https://lftp.yar.ru/ftp/lftp-4.9.2.tar.bz2) | Used for http, https, ftp, ftps, sftp |
  
 ### Risk: Attack against DSAS administrator authentication

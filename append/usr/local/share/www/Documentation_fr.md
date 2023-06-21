@@ -1549,7 +1549,7 @@ Logiciels impactés par ce risque
 
 | logiciel    | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
-| openssl     | [1.1.1t](https://www.openssl.org/source/openssl-1.1.1t.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
+| openssl     | [1.1.1u](https://www.openssl.org/source/openssl-1.1.1u.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
 | openssh     | [9.3p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.3p1.tar.gz) | ssh et sftp utilisé |
 
 ### Risque : Attaque sur la vérification des signatures 
@@ -1563,7 +1563,7 @@ Logiciels impactés par ce risque
 
 | logiciel      | version  |  commentaire                                                                      | 
 |--------------|----------|------------------------------------------------------------------------------|
-| openssl      | [1.1.1t](https://www.openssl.org/source/openssl-1.1.1t.tar.gz) | Utilisé pour la vérification authenticode, LiveUpdate et OpenSSL |
+| openssl      | [1.1.1u](https://www.openssl.org/source/openssl-1.1.1u.tar.gz) | Utilisé pour la vérification authenticode, LiveUpdate et OpenSSL |
 | gnupg        | [2.2.41](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.41.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
 | libgcrypt    | [1.10.1](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.1.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
 | rpm          | [4.18.1](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.18.x/rpm-4.18.1.tar.bz2) | Utilisé pour la vérification RPM |
@@ -1595,7 +1595,7 @@ Logiciels impactés par ce risque
 
 | logiciel     | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
-| openssl     | [1.1.1t](https://www.openssl.org/source/openssl-1.1.1t.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
+| openssl     | [1.1.1u](https://www.openssl.org/source/openssl-1.1.1u.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
 | lftp    | [4.9.2](https://lftp.yar.ru/ftp/lftp-4.9.2.tar.bz2) | Utilsé pour http, https, ftp, ftps, sftp |
  
 ### Risque : Attaque contre l'authentification administrateur du DSAS
