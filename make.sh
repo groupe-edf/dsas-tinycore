@@ -268,6 +268,29 @@ install_tcz() {
         fi  
     done
 }
+ 
+build_pkg_cache() {
+  msg "setting up package cache dir for SNMP"
+  [ "$#" -ge 1 ] && _snmpdir="$1" || _snmpdir="/var/cache/hrmib"
+  _snmpdir="$extract/$_snmpdir"
+  mkdir -p "$_snmpdir"
+  while IFS= read -r -d '' _file; do
+     _pkg=$(basename $_file)
+     if test -f "$pkg_dir/$_pkg.pkg"; then
+       _version="_$(cat $pkg_dir/$_pkg.pkg | grep _version | cut -d= -f2)"
+     elif [ "$_pkg" = "dsas_js" ]; then
+       # Special case
+       _version="_$(cat ./js/src/DsasHelp.js | grep "dsasVersion =" | sed -e "s:^.* = \"\([0-9.]*\).*$:\1:")"
+     else
+       [ -f "$tcz_dir/$_pkg.tcz.info" ] || $curl_cmd -s -o "$tcz_dir/$_pkg.tcz.info" "$tcz_url/$_pkg.tcz.info"
+       _version=$(cat "$tcz_dir/$_pkg.tcz.info" | grep -i version: | cut -d: -f2 | xargs | tr "/" ".")
+       [ -z "$_version" ] || _version="_$_version"
+     fi
+     # Use amd64 for architecture for coherence with other distributions
+     [ "$arch" = "64" ] && touch -r $_file $_snmpdir/$_pkg${_version}_amd64 \
+       || touch -r $_file $_snmpdir/$_pkg${_version}_x86 
+  done < <(find "$extract/usr/local/tce.installed" -type "f" -print0)
+}
 
 get() {
   [ "$#" -gt 2 ] && _sourc=$3
@@ -1184,6 +1207,9 @@ docker)
     # Install PHP webdriver via composer. Needs php.ini configured
     install_webdriver
   fi
+
+  # Populate /var/cache/hrmib so that SNMP can detect installed software and versions
+  build_pkg_cache /var/cache/hrmib
 
   # prevent autologin of tc user
   ( cd "$extract/etc" || exit 1; sed -i -r 's/(.*getty)(.*autologin)(.*)/\1\3/g'  inittab; )
