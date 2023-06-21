@@ -479,6 +479,14 @@ config_network(){
 
 start_network(){
   NETDEVICES=$(getnetdevices)
+  i=0
+  while [ "$(echo "$NETDEVICES" | wc -w)" -lt 2 ] && [ "$i" -le "5" ]; do
+    [ "$i" = "0" ] && echo -n "${YELLOW}Waiting for network cards${NORMAL}" || echo -n " ."
+    sleep 1
+    i=$((i+1))
+    NETDEVICES=$(getnetdevices)
+  done
+  [ "$i" = "0" ] || echo ""
   if [ "$(echo "$NETDEVICES" | wc -w)" -lt 2 ]; then
     echo "${RED}At least two network devices are needed. Aborting !!${NORMAL}"
     exit 1
