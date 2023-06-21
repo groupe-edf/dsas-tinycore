@@ -6,6 +6,7 @@ Version 1.2.21 (XX Jun 2023)
 - Update Openssl (1.1.1t -> 1.1.1u)
 - Update Clamav (1.0.1 -> 1.1.0)
 - Update curl (7.88.1 -> 8.1.2)
+- Add delay in disk detection at startup to avoid issues
 
 Version 1.2.20 (27 Mar 2023)
 - Force use of gnu version of comm for stale file tests to avoid issues
