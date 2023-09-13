@@ -1,10 +1,10 @@
 _pkg=libgcrypt
-_version=1.10.1
-_uri=https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.1.tar.bz2
+_version=1.10.2
+_uri=https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.2.tar.bz2
 _dep="libgpg-error"
 _build_dep="libgpg-error"
 _build_dep="compiletc coreutils libgpg-error"
-_pkg_path=libgcrypt-1.10.1
+_pkg_path=libgcrypt-1.10.2
 _conf_cmd="setarch linux$arch ./configure"
 _make_cmd="make"
 _install_cmd="make install DESTDIR=" 

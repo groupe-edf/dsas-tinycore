@@ -1,10 +1,10 @@
 _pkg=node
 _disk_needed=8
-_version=18.15.0
-_uri=https://nodejs.org/dist/v18.15.0/node-v18.15.0.tar.xz
-_build_dep="compiletc coreutils python3.6 openssl-1.1.1-dev libnghttp2-dev libnghttp2-dev icu70-dev gcc_libs-dev"
+_version=18.17.1
+_uri=https://nodejs.org/dist/v18.17.0/node-v18.17.1.tar.xz
+_build_dep="compiletc coreutils python3.9 openssl-1.1.1-dev libnghttp2-dev libnghttp2-dev icu70-dev gcc_libs-dev"
 _dep="libnghttp2 openssl-1.1.1 icu70 gcc_libs"
-_pkg_path=node-v18.15.0
+_pkg_path=node-v18.17.1
 _pre_config=""
 _conf_cmd="setarch linux$arch ./configure --prefix=/usr/local --shared-openssl --shared-zlib --shared-nghttp2 --with-intl=system-icu"
 # make install seems to rebuild everything. So don't use "_make_cmd, install directly

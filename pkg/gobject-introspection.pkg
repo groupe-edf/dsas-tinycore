@@ -1,9 +1,9 @@
 _pkg=gobject-introspection
-_version=1.70.0
-_uri=https://mirror.accum.se/pub/GNOME/sources/gobject-introspection/1.70/gobject-introspection-1.70.0.tar.xz
+_version=1.76.0
+_uri=https://mirror.accum.se/pub/GNOME/sources/gobject-introspection/1.76/gobject-introspection-1.76.0.tar.xz
 _build_dep="compiletc meson cmake intltool glib2-dev python3.9-dev "
 _dep="glib2 python3.9"
-_pkg_path=gobject-introspection-1.70.0
+_pkg_path=gobject-introspection-1.76.0
 _pre_config="ln -s /bin/busybox /bin/bash; cd /usr/local/bin; rm python3; ln -s python3.9 python3"
 _conf_cmd="
 # See https://gitlab.gnome.org/GNOME/gobject-introspection/-/commit/effb1e09dee263cdac4ec593e8caf316e6f01fe2

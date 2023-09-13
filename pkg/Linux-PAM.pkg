@@ -1,9 +1,9 @@
 _pkg=Linux-PAM
-_version=1.5.2
-_uri="https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz"
+_version=1.5.3
+_uri="https://github.com/linux-pam/linux-pam/releases/download/v1.5.3/Linux-PAM-1.5.3.tar.xz"
 _dep="ncursesw"
 _build_dep="compiletc isl-dev ncursesw-dev"
-_pkg_path="Linux-PAM-1.5.2"
+_pkg_path="Linux-PAM-1.5.3"
 _pre_config=""
 _conf_cmd="setarch linux$arch ./configure --enable-db=no --prefix=/usr/local --exec-prefix=/usr/local --includedir=/usr/local/include/security"
 _make_cmd="make"

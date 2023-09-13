@@ -1,6 +1,6 @@
 _pkg=createrepo_c
-_version=0.20.1
-_uri=https://github.com/rpm-software-management/createrepo_c/archive/refs/tags/0.20.1.tar.gz
+_version=1.0.0
+_uri=https://github.com/rpm-software-management/createrepo_c/archive/refs/tags/1.0.0.tar.gz
 _src=createrep_c-0.20.1.tar.gz
 _dep="python3.9 bzip2 curl libxml2 rpm libzip liblzma libssh2 glib2 sqlite3 zck zstd libmodulemd"
 if [ "$arch" != "64" ]; then
@@ -8,7 +8,7 @@ if [ "$arch" != "64" ]; then
 else
   _build_dep="compiletc cmake python3.9-dev bzip2-dev curl-dev libxml2-dev rpm popt-dev libzip-dev yaml-dev liblzma-dev libssh2-dev glib2-dev sqlite3-dev zck-dev zstd-dev file-dev libmodulemd-dev"
 fi
-_pkg_path=createrepo_c-0.20.1
+_pkg_path=createrepo_c-1.0.0
 _pre_config=""
 _conf_cmd="mkdir build; cd build; cmake .."
 _make_cmd="cd build; make"

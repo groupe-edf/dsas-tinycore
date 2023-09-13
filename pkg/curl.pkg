@@ -1,9 +1,9 @@
 _pkg=curl
-_version=8.1.2
-_uri="https://curl.se/download/curl-8.1.2.tar.bz2"
+_version=8.3.0
+_uri="https://curl.se/download/curl-8.3.0.tar.bz2"
 _dep="ca-certificates openssl-1.1.1 isl"
 _build_dep="compiletc zlib_base-dev openssl-1.1.1-dev ca-certificates libssh2-dev ncursesw-dev"
-_pkg_path="curl-8.1.2"
+_pkg_path="curl-8.3.0"
 _conf_cmd="setarch linux$arch ./configure --with-openssl --with-zlib --with-libssh2 --with-ca-path=/usr/local/etc/ssl/certs"
 _make_cmd="make"
 _install_cmd="make install DESTDIR="
