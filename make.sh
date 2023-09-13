@@ -351,7 +351,9 @@ unpack() {
 }
 
 disksize(){
-  df --block-size=1G "$1" | tail -1 | xargs | cut -d' ' -f4
+  _d="$1"
+  while [ ! -e "$_d" ]; do _d=$(dirname $_d); done
+  df --block-size=1G "$_d" | tail -1 | xargs | cut -d' ' -f4
 }
 
 build_pkg() {
@@ -375,7 +377,7 @@ build_pkg() {
         # Use Linux-PAM.pkg as a non trivial source file to test with
         # shellcheck source=pkg/Linux-PAM.pkg
         . "$pkg_file"
-        [ -n "$_disk_needed" ] && [ "$(disksize "$extract")" -lt "$_disk_needed" ] && \
+        [ -z "$_disk_needed" ] || [ "$(disksize "$extract")" -lt "$_disk_needed" ] && \
           error "insufficent disk for package '$pkg' (needed ${_disk_needed}GB)"
 	[ -z "$_src" ] && _src=$(basename "$_uri")
         for dep in $_build_dep; do
