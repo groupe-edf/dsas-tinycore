@@ -1549,8 +1549,8 @@ Logiciels impactés par ce risque
 
 | logiciel    | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
-| openssl     | [1.1.1u](https://www.openssl.org/source/openssl-1.1.1u.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
-| openssh     | [9.3p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.3p1.tar.gz) | ssh et sftp utilisé |
+| openssl     | [1.1.1w](https://www.openssl.org/source/openssl-1.1.1w.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
+| openssh     | [9.4p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.4p1.tar.gz) | ssh et sftp utilisé |
 
 ### Risque : Attaque sur la vérification des signatures 
 
@@ -1563,12 +1563,12 @@ Logiciels impactés par ce risque
 
 | logiciel      | version  |  commentaire                                                                      | 
 |--------------|----------|------------------------------------------------------------------------------|
-| openssl      | [1.1.1u](https://www.openssl.org/source/openssl-1.1.1u.tar.gz) | Utilisé pour la vérification authenticode, LiveUpdate et OpenSSL |
-| gnupg        | [2.2.41](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.41.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
-| libgcrypt    | [1.10.1](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.1.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
+| openssl      | [1.1.1w](https://www.openssl.org/source/openssl-1.1.1w.tar.gz) | Utilisé pour la vérification authenticode, LiveUpdate et OpenSSL |
+| gnupg        | [2.4.3](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.4.3.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
+| libgcrypt    | [1.10.2](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.2.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
 | rpm          | [4.18.1](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.18.x/rpm-4.18.1.tar.bz2) | Utilisé pour la vérification RPM |
-| osslsigncode | [2.5.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.5/osslsigncode-2.5.tar.gz) | Utilisé pour la vérification authenticode |
-| clamav | [1.1.0](https://www.clamav.net/downloads/production/clamav-1.1.0.tar.gz) | Utilisé pour des tests antivirale |
+| osslsigncode | [2.6.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.6/osslsigncode-2.6.tar.gz) | Utilisé pour la vérification authenticode |
+| clamav | [1.2.0](https://www.clamav.net/downloads/production/clamav-1.2.0.tar.gz) | Utilisé pour des tests antivirale |
 
 ### Risque : Elevation des privilèges
 
@@ -1595,7 +1595,7 @@ Logiciels impactés par ce risque
 
 | logiciel     | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
-| openssl     | [1.1.1u](https://www.openssl.org/source/openssl-1.1.1u.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
+| openssl     | [1.1.1w](https://www.openssl.org/source/openssl-1.1.1w.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
 | lftp    | [4.9.2](https://lftp.yar.ru/ftp/lftp-4.9.2.tar.bz2) | Utilsé pour http, https, ftp, ftps, sftp |
  
 ### Risque : Attaque contre l'authentification administrateur du DSAS
@@ -1611,7 +1611,7 @@ Logiciels impactés par ce risque
 |-------------|----------|------------------------------------------------------------------------------|
 | php-cgi     | [8.0.1](http://tinycorelinux.net/14.x/x86/tcz/php-8.0-cgi.tcz) | Backend de la site d'administration |
 | lighttpd    | [1.4.58](http://tinycorelinux.net/14.x/x86/tcz/lighttpd.tcz) | Backend de la site d'administration |
-| Linux PAM | [1.5.2](https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz) | Authentification sur la site d'administration |
+| Linux PAM | [1.5.3](https://github.com/linux-pam/linux-pam/releases/download/v1.5.3/Linux-PAM-1.5.3.tar.xz) | Authentification sur la site d'administration |
 | site web DSAS | [2.0.0](https://gitlab.com/groupe-edf/dsas-tinycore) | Backend et frontend de la site d'administration |
 
 La site web du DSAS est développé spécialement pour ce projet. Une
