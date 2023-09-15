@@ -1,6 +1,6 @@
 Log of the principal changes to the DSAS
 
-Version 2.0.0 (XX XXX XXXX)
+Version 2.0.0 (15 Sep 2023)
 - Update Tinycore 13.1 -> 14.0
 - Add /var/cache/hrmib package cache directory for SNMP installed software
 - Minor fix for disk space calculation in build script
