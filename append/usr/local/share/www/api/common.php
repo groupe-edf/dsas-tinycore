@@ -215,6 +215,7 @@ function dsas_exec(mixed $args, string $cwd = null, array $stdin = []) : array {
  *     Returns true if user and password are valid. Waiting 3 seconds to return false otherwise
  */
 function dsas_checkpass(string $user, string $pass) : bool {
+    $error=""; // Keep phpstan happy
     if (pam_auth($user, $pass, $error, false, "php"))
       return true;
     else
@@ -674,7 +675,7 @@ function parse_gpg(string $cert) : array {
     $data = [];
     // This use of exec is ok as there are no user parameters, the user data is passed
     // as a file $tmp
-    if (exec(escapeshellcmd("/usr/local/bin/gpg -no-default-keyring -vv " . $tmp) . " 2>&1", $text, $retval)) {
+    if (exec(escapeshellcmd("/usr/local/bin/gpg -no-default-keyring -vv " . $tmp) . " 2>&1", $text, $ret)) {
       $text = implode(PHP_EOL, $text);                                                                                           
       preg_match("/uid\s+([^\n]+)/", $text, $matches); 
       $data["uid"] = $matches[1]; 

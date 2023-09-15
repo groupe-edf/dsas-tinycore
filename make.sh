@@ -198,7 +198,7 @@ get_tcz() {
         # In a new shell so that build doesn't modify local variables
         _old=$extract
         extract="$build"
-        ( build_pkg "$package"; )
+        ( build_pkg "$package"; ) || exit 1
         extract="$_old"
       elif test -f "$tce_dir/$package.tcz"; then
         msg "fetching package $package ..."
@@ -269,20 +269,23 @@ build_pkg_cache() {
   _snmpdir="$extract/$_snmpdir"
   mkdir -p "$_snmpdir"
   while IFS= read -r -d '' _file; do
-     _pkg=$(basename $_file)
+     _pkg=$(basename "$_file")
      if test -f "$pkg_dir/$_pkg.pkg"; then
-       _version="_$(cat $pkg_dir/$_pkg.pkg | grep _version | cut -d= -f2)"
+       _version="_$(grep _version "$pkg_dir/$_pkg.pkg" | cut -d= -f2)"
      elif [ "$_pkg" = "dsas_js" ]; then
        # Special case
-       _version="_$(cat ./js/src/DsasHelp.js | grep "dsasVersion =" | sed -e "s:^.* = \"\([0-9.]*\).*$:\1:")"
+       _version="_$(grep "dsasVersion =" ./js/src/DsasHelp.js | sed -e "s:^.* = \"\([0-9.]*\).*$:\1:")"
      else
        [ -f "$tcz_dir/$_pkg.tcz.info" ] || $curl_cmd -s -o "$tcz_dir/$_pkg.tcz.info" "$tcz_url/$_pkg.tcz.info"
-       _version=$(cat "$tcz_dir/$_pkg.tcz.info" | grep -i version: | cut -d: -f2 | xargs | tr "/" ".")
+       _version=$(grep -i version: "$tcz_dir/$_pkg.tcz.info" | cut -d: -f2 | xargs | tr "/" ".")
        [ -z "$_version" ] || _version="_$_version"
      fi
      # Use amd64 for architecture for coherence with other distributions
-     [ "$arch" = "64" ] && touch -r $_file $_snmpdir/$_pkg${_version}_amd64 \
-       || touch -r $_file $_snmpdir/$_pkg${_version}_x86 
+     if [ "$arch" = "64" ]; then
+       touch -r "$_file" "$_snmpdir/$_pkg${_version}_amd64"
+     else
+       touch -r "$_file" "$_snmpdir/$_pkg${_version}_x86" 
+     fi
   done < <(find "$extract/usr/local/tce.installed" -type "f" -print0)
 }
 
@@ -352,7 +355,7 @@ unpack() {
 
 disksize(){
   _d="$1"
-  while [ ! -e "$_d" ]; do _d=$(dirname $_d); done
+  while [ ! -e "$_d" ]; do _d=$(dirname "$_d"); done
   df --block-size=1G "$_d" | tail -1 | xargs | cut -d' ' -f4
 }
 
@@ -377,7 +380,7 @@ build_pkg() {
         # Use Linux-PAM.pkg as a non trivial source file to test with
         # shellcheck source=pkg/Linux-PAM.pkg
         . "$pkg_file"
-        [ -z "$_disk_needed" ] || [ "$(disksize "$extract")" -lt "$_disk_needed" ] && \
+        [ -n "$_disk_needed" ] && [ "$(disksize "$extract")" -lt "$_disk_needed" ] && \
           error "insufficent disk for package '$pkg' (needed ${_disk_needed}GB)"
 	[ -z "$_src" ] && _src=$(basename "$_uri")
         for dep in $_build_dep; do
@@ -557,15 +560,15 @@ get_tcz_and_deps() {
   _dest=$1
   shift
   for _pkg; do
-    [ -f "$dest/$_pkg.tcz" ] && continue
+    [ -f "$_dest/$_pkg.tcz" ] && continue
     msg "Copy $_pkg.tcz to $_dest"
-    cp $tcz_dir/$_pkg.tcz  $tcz_dir/$_pkg.tcz.dep $_dest
-    ( cd $_dest;  md5sum "$_pkg.tcz" > "$_pkg.tcz.md5.txt"; )
+    cp "$tcz_dir/$_pkg.tcz"  "$tcz_dir/$_pkg.tcz.dep" "$_dest"
+    ( cd "$_dest" || exit 1;  md5sum "$_pkg.tcz" > "$_pkg.tcz.md5.txt"; ) || exit 1
     _dep=$tcz_dir/$_pkg.tcz.dep
     if test -s "$_dep"; then
       # Want word splitting on arg to
       # shellcheck disable=SC2046
-      get_tcz_and_deps $_dest $(sed -e s/.tcz$// "$_dep")
+      get_tcz_and_deps "$_dest" $(sed -e s/.tcz$// "$_dep")
     fi
   done
 }
@@ -599,7 +602,7 @@ install_firefox(){
       mount -t proc /proc "$extract/proc"
 
       # FIXME : Fix missing links
-      # It appears that certain links are missings with the base intsall
+      # It appears tqhat certain links are missings with the base intsall
       # and they need to be forced
       ( cd "$extract/usr/lib" || exit 1; [ -e "libpthread.so" ] || ln -s ../../lib/libpthread.so.0 libpthread.so; )
       ( cd "$extract/usr/lib" || exit 1; [ -e "libdl.so" ] || ln -s ../../lib/libdl.so.2 libdl.so; )
@@ -610,14 +613,22 @@ install_firefox(){
       ( install_tcz "$latest" )
 
       # Find dependencies in "$latest" and install them to allow them to be
-      # cached and avoid too many downloads
+      # cached and avoid too many downloads. sqfsTools is useds in the eval 
+      # shellcheck disable=SC2034
       sqfsTools="squashfs-tools"
-      eval $(sed -n '/deps1="/,/"/p' $extract/usr/local/bin/$latest.sh | sed "s:\\\::g")
+      # disable wierd sheelcheck warning
+      # shellcheck disable=SC2046
+      eval $(sed -n '/deps1="/,/"/p' $extract/usr/local/bin/$latest.sh | sed -e "s:\\\::g" -e "/^\s*else/d"  -e "/^\s*echo/d")
       mkdir -p $extract/tmp/tce/optional
       chown -R $tc:$staff $extract/tmp/tce
       chmod 775 $extract/tmp/tce $extract/tmp/tce/optional
+      # deps1 is defined via the eval above. Yes I want word-splitting
+      # shellcheck disable=SC2154
+      # shellcheck disable=SC2086
       ( install_tcz $deps1 libssh2 )
-      ( get_tcz_and_deps  $extract/tmp/tce/optional $deps1 )
+      # Yes I want word-splitting
+      # shellcheck disable=SC2086     
+      ( get_tcz_and_deps  "$extract/tmp/tce/optional" $deps1 )
       chmod -R 644 "$extract/tmp/tce/optional"
       chmod 775 $extract/tmp/tce/optional
       chown -R $tc:$staff "$extract/tmp/tce/optional"
@@ -883,7 +894,7 @@ get_unpack_livecd(){
   if uname -r | grep -q tinycore; then
     _kern=$(uname -r)
   else
-    _kern=$(zcat ../work/newiso/boot/corepure64.gz | cpio -t 2> /dev/null | grep "/lib/modules/" | head -1 | tr '/' '\n' | grep tinycore)
+    _kern=$(zcat $work/newiso/boot/corepure64.gz | cpio -t 2> /dev/null | grep "/lib/modules/" | head -1 | tr '/' '\n' | grep tinycore)
   fi
 }
 
