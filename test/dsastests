@@ -2589,6 +2589,7 @@ try {
       exec("sudo rm -f /var/log/rsyslog", $output, $retval);
     if (file_exists("/usr/local/etc/rsyslog.conf.old"))
       exec("sudo mv -f /usr/local/etc/rsyslog.conf.old /usr/local/etc/rsyslog.conf", $output, $retval);
+    modal_delay();
 
     // Restore syslog configuration
     test("Restoring original syslog configuration", function () {

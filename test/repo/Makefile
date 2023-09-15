@@ -64,11 +64,11 @@ all: setup Repo.pub good-1-1.noarch.rpm unsigned-1-1.noarch.rpm bad-1-1.noarch.r
 	  { if (/<pem><\/pem>/) { print "      <pem>" pemcert "</pem>"; } else { print $$0; }}' ${XMLFILE} Repo.pub
 	mkdir -p ${HAUT}/Rpm/Packages
 	cp -f good-1-1.noarch.rpm unsigned-1-1.noarch.rpm bad-1-1.noarch.rpm virus-1-1.noarch.rpm ${HAUT}/Rpm/Packages
-	createrepo_c ${HAUT}/Rpm
+	createrepo_c --general-compress-type=gz ${HAUT}/Rpm
 	mkdir -p ${HAUT}/Repomd/Packages
 	cp -f good-1-1.noarch.rpm bad-checksum-1-1.noarch.rpm virus-1-1.noarch.rpm ${HAUT}/Repomd/Packages
 	echo "Bad" >> ${HAUT}/Repomd/Packages/bad-checksum-1-1.noarch.rpm
-	createrepo_c ${HAUT}/Repomd
+	createrepo_c --general-compress-type=gz ${HAUT}/Repomd
 	# Now that repodata is created change bad-checksum and unsigned file to the original file
 	cp bad-checksum-1-1.noarch.rpm unsigned-1-1.noarch.rpm ${HAUT}/Repomd/Packages
 	# Sign the repomd.xml file
