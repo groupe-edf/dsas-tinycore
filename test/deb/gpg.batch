@@ -1,5 +1,5 @@
 %echo Generating GPG key for DSAS test
-Key-Type: default
+Key-Type: RSA
 Name-Real: Deb User
 Name-Comment: GPG certification for DSAS testing
 Name-Email: deb@example.com

@@ -9,7 +9,7 @@ else
 fi
 _dep="openssl-1.1.1 gnupg osslsigncode rpm"
 _pkg_path=dsastestfiles-<VERSION>
-_pre_config="chgrp staff usr/local/var/lib/rpm"
+_pre_config="chgrp staff usr/local/var/lib/rpm && sed -i -e 's/box/box $(hostname) /' /etc/hosts"
 _conf_cmd=""
 _make_cmd="make all"
 _install_cmd="make install DEST="
