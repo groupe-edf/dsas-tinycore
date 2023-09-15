@@ -5,11 +5,11 @@ if [ "$arch" != "64" ]; then
   _dep="popt file libarchive3 libgcrypt lua-lib acl libxml2 sqlite3"
   _build_dep="compiletc lua-dev libarchive3 libarchive3-dev zlib_base-dev popt popt-dev file-dev libgcrypt acl-dev libxml2-dev sqlite3-dev"
 else
-  _dep="popt file libarchive3 libgcrypt lua-5.3-lib acl libxml2 sqlite3"
-  _build_dep="compiletc lua-5.3-dev libarchive3 libarchive3-dev zlib_base-dev popt popt-dev file-dev libgcrypt acl-dev libxml2-dev sqlite3-dev"
+  _dep="popt file libarchive3 libgcrypt lua-5.4-lib acl libxml2 sqlite3"
+  _build_dep="compiletc lua-5.4-dev libarchive3 libarchive3-dev zlib_base-dev popt popt-dev file-dev libgcrypt acl-dev libxml2-dev sqlite3-dev"
 fi
 _pkg_path=rpm-4.18.1
-_conf_cmd="setarch linux$arch ./configure --enable-ndb --disable-bdb"
+_conf_cmd="LUA_CFLAGS='-I/usr/local/include/lua5.4' setarch linux$arch ./configure --enable-ndb --disable-bdb"
 _make_cmd="make"
 _install_cmd="make install DESTDIR=" 
 # Why did the build leave the default database as Berkley when I explicitly disabled it ? 
