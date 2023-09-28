@@ -1,5 +1,8 @@
 Log of the principal changes to the DSAS
 
+Version 2.0.0 (XX XXX XXXX)
+- Update osslsigncode (2.6.0 -> 2.7.0)
+
 Version 2.0.0 (15 Sep 2023)
 - Update Tinycore 13.1 -> 14.0
 - Add /var/cache/hrmib package cache directory for SNMP installed software
