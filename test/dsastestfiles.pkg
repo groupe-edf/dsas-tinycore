@@ -3,11 +3,11 @@ _version=<VERSION>
 # Fake URI. The file must be put in place manually
 _uri=https://127.0.0.1/dsastestfiles-<VERSION>.tgz
 if [ "$arch" != "64" ]; then
-  _build_dep="compiletc coreutils ncursesw xz p7zip openssl-1.1.1 gnupg zip-unzip tar lcab osslsigncode rpm createrepo_c"
+  _build_dep="compiletc coreutils ncursesw xz p7zip openssl gnupg zip-unzip tar lcab osslsigncode rpm createrepo_c"
 else
-  _build_dep="compiletc coreutils ncursesw xz p7zip openssl-1.1.1 gnupg zip tar lcab osslsigncode rpm createrepo_c"
+  _build_dep="compiletc coreutils ncursesw xz p7zip openssl gnupg zip tar lcab osslsigncode rpm createrepo_c"
 fi
-_dep="openssl-1.1.1 gnupg osslsigncode rpm"
+_dep="openssl gnupg osslsigncode rpm"
 _pkg_path=dsastestfiles-<VERSION>
 _pre_config="chgrp staff usr/local/var/lib/rpm && sed -i -e 's/box/box $(hostname) /' /etc/hosts"
 _conf_cmd=""
