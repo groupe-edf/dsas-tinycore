@@ -682,12 +682,12 @@ install_webdriver(){
    dep=$target.dep
    if test ! -f "$target"; then
       # Install PHP composer
-      download -f "https:/getcomposer.org/installer" "$src_dir"
+      download -f "https:/getcomposer.org/installer" "$src_dir" "php_composer"
       mkdir -p "$extract/home/tc"
       chown ${tc}:${staff} "$extract/home/tc"
       chmod 750 "$extract/home/tc"
-      cp "$src_dir/installer" "$extract/home/tc"
-      chmod a+rx "$extract/home/tc/installer"
+      cp "$src_dir/php_composer" "$extract/home/tc"
+      chmod a+rx "$extract/home/tc/php_composer"
       chroot "$extract" chown -R ${tc}:${staff} "/home/tc/"
       cp /etc/resolv.conf "$extract/etc/resolv.conf" && msg "copy resolv.conf"
       # http_proxy is imported (or not) from the environment. Shellcheck 
@@ -697,8 +697,8 @@ export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 export http_proxy=${http_proxy:=}
 export https_proxy=${https_proxy:=}
 cd /home/tc
-env HOME=/home/tc php installer || exit 1
-rm installer
+env HOME=/home/tc php php_composer || exit 1
+rm php_composer
 EOF
       chmod a+x "$extract/tmp/script"
       msg "Install PHP Composer $extract"
