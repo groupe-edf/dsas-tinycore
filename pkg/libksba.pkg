@@ -1,9 +1,9 @@
 _pkg=libksba
-_version=1.6.4
-_uri=https://www.gnupg.org/ftp/gcrypt/libksba/libksba-1.6.4.tar.bz2
+_version=1.6.5
+_uri=https://www.gnupg.org/ftp/gcrypt/libksba/libksba-1.6.5.tar.bz2
 _dep="libgpg-error"
 _build_dep="compiletc coreutils libgpg-error"
-_pkg_path=libksba-1.6.4
+_pkg_path=libksba-1.6.5
 _conf_cmd="setarch linux$arch ./configure"
 _make_cmd="make"
 _install_cmd="make install DESTDIR=" 
