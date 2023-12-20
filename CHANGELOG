@@ -1,5 +1,20 @@
 Log of the principal changes to the DSAS
 
+Version 2.1.0 (XX XXX XXX)
+- openssl (1.1.1w -> 3.2.0)
+- Correct make.sh for upgrades that change dependencies
+- run './make.sh upgrade' to update all packages to use openssl3
+- Update clamav (1.2.0 -> 1.2.1)
+- Update curl (8.3.0 -> 8.5.0)
+- Update libgcrypt (1.10.2 -> 1.10.3)
+- Update libksba (1.6.4 -> 1.6.5)
+- Update gobject-introspection (1.76 -> 1.78)
+- Update openssh (9.4p1 -> 9.5p1)
+- Update php-pam (2.2.4 -> 2.2.5)
+- Update py3.9cairo (1.24.0 -> 1.25.1)
+- Update rust (1.72 -> 1.74.1)
+- update node (18.17.1 -> 20.10.0)
+
 Version 2.0.1 (10 Nov 2023)
 - Update osslsigncode (2.6.0 -> 2.7.0)
 
@@ -9,7 +24,7 @@ Version 2.0.0 (15 Sep 2023)
 - Minor fix for disk space calculation in build script
 - Update openssh (9.2p1 -> 9.4p1)
 - Update openssl (1.1.1t -> 1.1.1w)
-- Update Clamav (1.0.1 -> 1.2.0)
+- Update clamav (1.0.1 -> 1.2.0)
 - Update curl (7.88.1 -> 8.3.0)
 - Update busybox (1.36.0 -> 1.36.1)
 - createrepo_c (0.20.1 -> 1.0.0)
