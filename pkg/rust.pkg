@@ -1,16 +1,16 @@
 _pkg=rust
 _disk_needed=16 # Need at least 16GB to build
-_version=1.72.0
-_uri=https://static.rust-lang.org/dist/rustc-1.72.0-src.tar.gz
-_build_dep="compiletc python3.9 rsync ninja coreutils cmake curl-dev libssh2-dev clang llvm15-dev ca-certificates"
-_dep="llvm15-lib curl libssh2"
+_version=1.74.1
+_uri=https://static.rust-lang.org/dist/rustc-1.74.1-src.tar.gz
+_build_dep="compiletc python3.9 rsync ninja coreutils cmake curl-dev libssh2-dev clang llvm15-dev ca-certificates openssl openssl-dev"
+_dep="llvm15-lib curl libssh2 openssl"
 # FIXME: Why is ca-certificate not updated corrected at the install ?
 _pre_config="
 /usr/local/sbin/update-ca-certificates; 
 mkdir /lib64; 
 cd /lib64; 
 ln -s /lib/ld-linux-x86-64.so.2"
-_pkg_path=rustc-1.72.0-src
+_pkg_path=rustc-1.74.1-src
 _conf_cmd="
 cat << EOF > config.toml
 [llvm]
