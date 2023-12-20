@@ -986,8 +986,8 @@ static)
   install_tcz libssh2
   install_tcz libzip
   install_tcz bzip2-lib
-  install_tcz php-8.0-cgi
-  install_tcz php-8.0-ext
+  install_tcz php-8.2-cgi
+  install_tcz php-8.2-ext
   install_tcz php-pam
   install_tcz curl
   install_tcz rsync
@@ -1003,7 +1003,7 @@ static)
 
   if [ -z "$pkgs" ] || [ -z "${pkgs##*phpstan*}" ]; then
     # Install PHP cli and add iconv and phar extension
-    install_tcz php-8.0-cli
+    install_tcz php-8.2-cli
  
     # Copy /etc/resolv.conf file 
     mkdir -p "$extract/etc"
@@ -1174,8 +1174,8 @@ docker)
   install_tcz gnupg
   install_tcz lighttpd
   install_tcz clamav
-  install_tcz php-8.0-cgi
-  install_tcz php-8.0-ext
+  install_tcz php-8.2-cgi
+  install_tcz php-8.2-ext
   install_tcz php-pam
   install_tcz dialog
   install_tcz rpm
@@ -1226,7 +1226,7 @@ docker)
     install_tcz unifont 
 
     # Install PHP
-    install_tcz php-8.0-cli
+    install_tcz php-8.2-cli
 
     # Download and install the gecko (firefox) webdriver
     download "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux${arch}.tar.gz" "$src_dir"
