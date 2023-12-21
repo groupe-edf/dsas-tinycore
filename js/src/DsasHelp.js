@@ -26,7 +26,7 @@ import { modalMessage } from "./DsasModal";
 import { failLoggedin, dsasOrigin } from "./DsasUtil";
 
 // DSAS version variable
-const dsasVersion = "2.0.1";
+const dsasVersion = "2.1.0";
 
 function dsasHeadings() {
     const hs = Array.prototype.slice.call(document.querySelectorAll("h1, h2, h3"));

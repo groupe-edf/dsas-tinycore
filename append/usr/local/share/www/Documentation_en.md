@@ -1481,8 +1481,8 @@ Software impacted by this risk
 
 | software      | version    | comment                                                                        | 
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [1.1.1w](https://www.openssl.org/source/openssl-1.1.1w.tar.gz) | Only the functionality used by ssh impacted |
-| openssh | [9.4p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.3p1.tar.gz) | ssh and sftp used |
+| openssl | [3.2.0](https://www.openssl.org/source/openssl-3.2.0.tar.gz) | Only the functionality used by ssh impacted |
+| openssh | [9.5p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.5p1.tar.gz) | ssh and sftp used |
 
 ### Risk: Attack on signature verification
 
@@ -1495,12 +1495,12 @@ Software impacted by this risk
 
 | software | version | comment |
 | -------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [1.1.1w](https://www.openssl.org/source/openssl-1.1.1w.tar.gz) | Used for authenticode, LiveUpdate and OpenSSL verification |
+| openssl | [3.2.0](https://www.openssl.org/source/openssl-3.2.0.tar.gz) | Used for authenticode, LiveUpdate and OpenSSL verification |
 | gnupg | [2.4.3](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.4.3.tar.bz2) | Used for RPM, DEB and GPG verification |
-| libgcrypt | [1.10.2](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.2.tar.bz2) | Used for RPM, DEB and GPG verification |
+| libgcrypt | [1.10.3](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.3.tar.bz2) | Used for RPM, DEB and GPG verification |
 | rpm | [4.18.1](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.18.x/rpm-4.18.1.tar.bz2) | Used for RPM checking |
-| osslsigncode | [2.6.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.6/osslsigncode-2.6.tar.gz) | Used for authenticode verification |
-| clamav | [1.2.0](https://www.clamav.net/downloads/production/clamav-1.2.0.tar.gz) | Used for antivirus tests |
+| osslsigncode | [2.7.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.7/osslsigncode-2.7.tar.gz) | Used for authenticode verification |
+| clamav | [1.2.1](https://www.clamav.net/downloads/production/clamav-1.2.1.tar.gz) | Used for antivirus tests |
 
 ### Risque : Elevation of privileges
 
@@ -1527,7 +1527,7 @@ Software impacted by this risk
 
 | software | version | comment |
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [1.1.1w](https://www.openssl.org/source/openssl-1.1.1w.tar.gz) | only the functionality used by ssh impacted |
+| openssl | [3.2.0](https://www.openssl.org/source/openssl-3.2.0.tar.gz) | only the functionality used by ssh impacted |
 | lftp    | [4.9.2](https://lftp.yar.ru/ftp/lftp-4.9.2.tar.bz2) | Used for http, https, ftp, ftps, sftp |
  
 ### Risk: Attack against DSAS administrator authentication
@@ -1541,10 +1541,10 @@ Software impacted by this risk
 
 | software | version | comment |
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
-| php-cgi | [8.0.1](http://tinycorelinux.net/14.x/x86/tcz/php-8.0-cgi.tcz) | Backend of the administration site |
+| php-cgi | [8.2.0](http://tinycorelinux.net/14.x/x86/tcz/php-8.2-cgi.tcz) | Backend of the administration site |
 | lighttpd | [1.4.58](http://tinycorelinux.net/14.x/x86/tcz/lighttpd.tcz) | Backend of the administration site |
 | Linux PAM | [1.5.3](https://github.com/linux-pam/linux-pam/releases/download/v1.5.3/Linux-PAM-1.5.3.tar.xz) | Authentication on the administration site |
-| DSAS website | [2.0.1](https://gitlab.com/groupe-edf/dsas-tinycore) | Backend and frontend of the administration site |
+| DSAS website | [2.1.0](https://gitlab.com/groupe-edf/dsas-tinycore) | Backend and frontend of the administration site |
 
 The DSAS website is specially developed for this project. Static analysis
 of the code and a test suite is used on this code before each release to
