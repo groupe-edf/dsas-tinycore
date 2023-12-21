@@ -201,18 +201,18 @@ of the DSAS.
 
 ## Memory needed by the DSAS
 
-The DSAS needs an absolute minimum of 500 Mbytes of memory to boot and
+The DSAS needs an absolute minimum of 1024 Mbytes of memory to boot and
 run correctly. To this minimum additional space is needed depending on
 the configuration. In the standard virtual machine installation, the
 directory `/tmp` is part of the root filesystem and is stored in memory.
 As this directory is used extensively for the decompression of
 the archived files for testing, the size of the largest decompressed file
 is needed as additional memory. In testing we have found that this means
-that a minimum of __1 Gbyte__ is needed by both machines of the DSAS.
+that a minimum of __2 Gbyte__ is needed by both machines of the DSAS.
 
 If the DSAS is configured to use an antivirus, the antiviral daemon uses
 additional memory. The antivirus only runs on the `lower` machine and we
-found that with in this case a minimum of __3 Gbytes__ is needed.
+found that with in this case a minimum of __4 Gbytes__ is needed.
 
 The use of Docker might slightly change this calculation, but the docker
 image will share the hosts memory and so these number should not change

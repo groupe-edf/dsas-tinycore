@@ -206,20 +206,20 @@ chaque machine du DSAS.
 
 ## Mémoire nécessaire pour le DSAS
 
-Le DSAS a besoin un minimum absolu de 500 Mo de démarrage est de
+Le DSAS a besoin un minimum absolu de 1024 Mo de démarrage est de
 fonctionner correctement. A cet espace minimal, il faut compter des
 espaces supplémentaires dépendant sur la configuration du DSAS. Dans
 l'installation sur un machine virtuel classique, le dossier `/tmp` est un
 partie de la système fichier racine et stocké en mémoire. Par ce que ce
 dossier est largement utilisé pour la décompression des archives à
 vérifier, la taille maximale de fichier décompressé est nécessaire en
-mémoire de plus. En teste, nous avons trouvé qu'un minima de __1Go__ est
+mémoire de plus. En teste, nous avons trouvé qu'un minima de __2Go__ est
 nécessaire sur les deux machines du DSAS.
 
 Si le DSAS est configuré afin d'utiliser l'antivirus, le daemon de
 l'antivirus va utiliser de la mémoire supplémentaire. L'antivirus n'est
 qu'utiliser sur la machine `basse` et nous avons trouvé qu'un minima de
-__3Go__ sont nécessaire.
+__4Go__ sont nécessaire.
 
 L'utilisation de Docker pourrait légèrement modifier ces calculs, mais
 l'image Docker va partager la mémoire de l'hôte à un valeur semblant à
