@@ -1925,16 +1925,16 @@ for the installation of the package.
 A complete example of a `pkg / openssl-1.1.1.pkg` file is 
 
 ```
-_pkg=openssl-1.1.1
-_version=1.1.1s
-_uri=https://www.openssl.org/source/openssl-1.1.1s.tar.gz
+_pkg=openssl
+_version=3.2.0
+_uri=https://www.openssl.org/source/openssl-3.2.0.tar.gz
 _dep=""
 _build_dep="compiletc perl5"
-_pkg_path=openssl-1.1.1s
-_conf_cmd="./config --openssldir=/usr/local/etc/ssl"
+_pkg_path=openssl-3.2.0
+_conf_cmd="setarch linux$arch ./config --libdir=/usr/local/lib --openssldir=/usr/local/etc/ssl"
 _make_cmd="make"
 _install_cmd="make install DESTDIR="
-_pkgs="main{/usr/local/bin,/usr/local/etc,/usr/local/lib/*.so*,/usr/local/lib/engines-1.1};dev{/usr/local/include,/usr/local/lib/*.a,/usr/local/lib/pkgconfig};doc{/usr/local/share}"
+_pkgs="main{/usr/local/bin,/usr/local/etc,/usr/local/lib/*.so*,/usr/local/lib/engines-3,/usr/local/lib/ossl-modules};dev{/usr/local/include,/usr/local/lib/*.a,/usr/local/lib/pkgconfig};doc{/usr/local/share}"
 _post_install=\
 '#! /bin/sh
 [  -d /usr/local/etc/ssl/certs ] || mkdir -p /usr/local/etc/ssl/certs
@@ -1942,8 +1942,8 @@ _post_install=\
 [  -d /usr/local/etc/ssl/crl ] || mkdir -p /usr/local/etc/ssl/crl
 [  -d /usr/local/etc/ssl/newcerts ] || mkdir -p /usr/local/etc/ssl/newcerts
 [  -f /usr/local/etc/ssl/index.txt ] || touch /usr/local/etc/ssl/index.txt
-[  -f /usr/local/etc/ssl/serial ] || echo `01` > /usr/local/etc/ssl/serial
-[  -f /usr/local/etc/ssl/crlnumber ] || echo `01` > /usr/local/etc/ssl/crlnumber'
+[  -f /usr/local/etc/ssl/serial ] || echo "01" > /usr/local/etc/ssl/serial
+[  -f /usr/local/etc/ssl/crlnumber ] || echo "01" > /usr/local/etc/ssl/crlnumber'
 ```
 
 With the package defined, it is possible to create a binary package with
