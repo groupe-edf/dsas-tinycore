@@ -7,8 +7,8 @@ if [ "$arch" != "64" ]; then
   _dep="bzip2-lib json-c curl libxml2 ncursesw check openssl libssh2 pcre2 libzip"
   _build_dep="cmake rust bzip2-dev json-c-dev libxml2-dev ncursesw-dev check-dev curl-dev openssl-dev libssh2-dev pcre2-dev libzip-dev compiletc"
 else
-  _dep="bzip2-lib json-c curl libxml2 ncursesw check openssl libssh2 pcre21032 libzip"
-  _build_dep="cmake rust bzip2-dev json-c-dev libxml2-dev ncursesw-dev check-dev curl-dev openssl-dev libssh2-dev pcre21032-dev libzip-dev compiletc"
+  _dep="bzip2-lib json-c curl libxml2 ncursesw check openssl libssh2 pcre21042 libzip"
+  _build_dep="cmake rust bzip2-dev json-c-dev libxml2-dev ncursesw-dev check-dev curl-dev openssl-dev libssh2-dev pcre21042-dev libzip-dev compiletc"
 fi
 _pkg_path="clamav-1.2.1"
 _pre_config=""
