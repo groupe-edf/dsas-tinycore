@@ -61,7 +61,7 @@ mount_dsas(){
     if [ ! "$(mounted /home/dsas)" ]; then
       echo "Mounting ${GREEN}$DSAS${NORMAL} on ${GREEN}/home/dsas${NORMAL}"
       mkdir -p /home/dsas
-      chown root.staff /home/dsas
+      chown root:staff /home/dsas
       chmod 755 /home/dsas
       # remount main disk as noexec. Strip trail "/dsas" from $DSAS to get the real partition
       mount -o remount,noexec,nodev,nosuid "${DSAS:0:-5}"
@@ -76,7 +76,7 @@ mount_dsas(){
     mv /var/log var/log.old
     ln -s "${DSAS:0:-5}/log" /var/log
   fi
-  chown root.staff /home/dsas
+  chown root:staff /home/dsas
   chmod 755 /home/dsas
 }
 
@@ -154,7 +154,7 @@ EOF
     mount "${DEV}1" "${MNT}1"
     mkdir -p "${MNT}1/tce"
     chmod 770 "${MNT}1/tce"
-    chown root.staff "${MNT}1/tce"
+    chown root:staff "${MNT}1/tce"
  
     return 1
   else
@@ -205,22 +205,22 @@ get_dsas(){
     for _user in bas haut; do
       mkdir -p "$DISK/dsas/$_user"
       chmod -R 750 "$DISK/dsas/$_user"
-      chown -R "root.$_user" "$DISK/dsas/$_user"
+      chown -R "root:$_user" "$DISK/dsas/$_user"
 
       mkdir -p "$DISK/dsas/$_user/share"
       chmod -R 770 "$DISK/dsas/$_user/share"
       # g+s so that all files and subdirectories keep the same group
       chmod -R g+s "$DISK/dsas/$_user/share"
-      chown -R "$_user.$_user" "$DISK/dsas/$_user/share"
+      chown -R "$_user:$_user" "$DISK/dsas/$_user/share"
     done
     # Files created by "verif" in /home/dsas/bas must have the group "share"
     chgrp -R share  "$DISK/dsas/bas/share"
     mkdir -p "$DISK/dsas/log"
     chmod -R 770 "$DISK/dsas/log"
-    chown -R tc.verif "$DISK/dsas/log"
+    chown -R tc:verif "$DISK/dsas/log"
     mkdir -p "$DISK/log"
     chmod 750 "$DISK/log"
-    chown root.staff "$DISK/log"
+    chown root:staff "$DISK/log"
     DSAS=$DISK/dsas
   fi
 
@@ -257,25 +257,25 @@ audit_perms(){
   chmod 770 "$DSAS/log"
   chmod g+s "$DSAS/log"
   for _user in bas haut; do
-    chown "root.$_user" "$DSAS/$_user"
+    chown "root:$_user" "$DSAS/$_user"
     chmod 750 "$DSAS/$_user"
-    chown "$_user.$_user" "$DSAS/$_user/share"
+    chown "$_user:$_user" "$DSAS/$_user/share"
     chmod 770 "$DSAS/$_user/share"
     while IFS= read -r -d '' _d; do
-      [ "$_user" = "bas" ] || chown haut.haut "$_d"
-      [ "$_user" = "bas" ] && chown verif.share "$_d"
+      [ "$_user" = "bas" ] || chown haut:haut "$_d"
+      [ "$_user" = "bas" ] && chown verif:share "$_d"
       chmod 770 "$_d"
     done < <(find "$DSAS/$_user/share" -mindepth 1 -type d -print0)
   done
   while IFS= read -r -d '' _f; do
     if [ "$(stat -c%h "$_f")" -eq 1 ]; then
       # not hardlinked so only in haut
-      chown "$_user.$_user" "$_f"
+      chown "$_user:$_user" "$_f"
       chmod 640 "$_f"
     fi
   done < <(find "$DSAS/haut/share" -type f -print0)
   while IFS= read -r -d '' _f; do
-    chown verif.share "$_f"
+    chown verif:share "$_f"
     chmod 640 "$_f"
   done < <(find "$DSAS/bas/share" -type f -print0)
 }
@@ -566,7 +566,7 @@ stop_network(){
 
 start_web_admin(){
   cp "$VAR/admin.conf.dsas" "$VAR/admin.conf"
-  chown root.staff $VAR/admin.conf $VAR/admin.conf.dsas
+  chown root:staff $VAR/admin.conf $VAR/admin.conf.dsas
   chmod 640 $VAR/admin.conf $VAR/admin.conf.dsas
   NETDEVICES=$(getnetdevices)
   ETH0=$(echo "$NETDEVICES" | cut -d" " -f1)
@@ -749,8 +749,8 @@ config_sshd(){
     $as_tc ssh-keyscan "$INTERCO_HAUT" > /home/tc/.ssh/known_hosts
     $as_tc ssh-keyscan haut >> /home/tc/.ssh/known_hosts
     cp /home/tc/.ssh/known_hosts /home/haut/.ssh/known_hosts
-    chown tc.staff /home/tc/.ssh/known_hosts
-    chown haut.haut /home/haut/.ssh/known_hosts
+    chown tc:staff /home/tc/.ssh/known_hosts
+    chown haut:haut /home/haut/.ssh/known_hosts
     PASSWD="dSaO2021DSAS"  # Try default password first
 
     # Don't use $as_tc here as don't want the "-E"
@@ -762,7 +762,7 @@ config_sshd(){
     done
 
     cp /home/haut/.ssh/id_rsa.pub /tmp/authorized_keys
-    chown tc.staff /tmp/authorized_keys
+    chown tc:staff /tmp/authorized_keys
     chmod 600 /tmp/authorized_keys
     $as_tc scp /tmp/authorized_keys "tc@$INTERCO_HAUT:/tmp/authorized_keys"
     rm /tmp/authorized_keys
@@ -770,7 +770,7 @@ config_sshd(){
 sudo mkdir -p /home/bas/.ssh
 cat /tmp/authorized_keys >> /home/tc/.ssh/authorized_keys
 sudo mv -f /tmp/authorized_keys /home/bas/.ssh/authorized_keys
-sudo chown -R bas.bas /home/bas/.ssh
+sudo chown -R bas:bas /home/bas/.ssh
 sudo chmod -R 700 /home/bas/.ssh
 EOF
 
@@ -793,7 +793,7 @@ start_repo(){
   repo="$(xmllint --xpath 'string(dsas/config/web/repo)' "$VAR/dsas_conf.xml")"
   if [ "$repo" != "true" ]; then return 0; fi
   cp "$VAR/repo.conf.dsas" "$VAR/repo.conf"
-  chown root.repo $VAR/repo.conf $VAR/repo.conf.dsas
+  chown root:repo $VAR/repo.conf $VAR/repo.conf.dsas
   chmod 640 $VAR/repo.conf $VAR/repo.conf.dsas
   NETDEVICES=$(getnetdevices)
   ETH0=$(echo "$NETDEVICES" | cut -d" " -f1)
@@ -851,7 +851,7 @@ stop_ntp(){
 start_radius(){
   mkdir -p "$(dirname "$RADIUS_SERVER")"
   chmod 750 "$(dirname "$RADIUS_SERVER")"
-  chown root.staff "$(dirname "$RADIUS_SERVER")"
+  chown root:staff "$(dirname "$RADIUS_SERVER")"
   radius=$(xmllint --xpath "string(dsas/config/radius/active)" "$VAR/dsas_conf.xml")
   server=$(xmllint --xpath "string(dsas/config/radius/server)" "$VAR/dsas_conf.xml")
   secret=$(xmllint --xpath "string(dsas/config/radius/secret)" "$VAR/dsas_conf.xml")
@@ -863,7 +863,7 @@ start_radius(){
   echo "# server[:port]                   shared_secret                 timeout(s)    source_ip      vrf" > $RADIUS_SERVER
   printf "%-32s %-32s %-4s" "$server" "$secret" "3" >> $RADIUS_SERVER
   chmod 750 "$RADIUS_SERVER"
-  chown root.staff "$RADIUS_SERVER"
+  chown root:staff "$RADIUS_SERVER"
   sed -i -e '2s:^:auth           [success=3 ignore=ignore default=2]      pam_radius_auth.so localifdown conf=/etc/raddb/server\n:' /usr/local/etc/pam.d/common-auth
 }
 
@@ -878,7 +878,7 @@ start_antivirus(){
     ClamAVDir="/etc/sysconfig/tcedir/../dsas/bas/share/ClamAV"
     if [ -n "$ClamAVDir" ]; then
       mkdir -p $ClamAVDir
-      chown verif.share $ClamAVDir
+      chown verif:share $ClamAVDir
     fi
     # Start up is slow. So need to background. Also send output to /dev/null so that
     # web UI doesn't block waiting for clamd to fork after the initialisation
@@ -903,7 +903,7 @@ start_snmp(){
     snmp_privencrypt=$(xmllint --xpath "string(dsas/config/snmp/privencrypt)" "$VAR/dsas_conf.xml")
     dsas_oid=$(grep "OID=" /usr/local/sbin/snmpdsas | cut -d= -f2)
     mkdir -p /usr/local/etc/snmp
-    chown root.staff /usr/local/etc/snmp
+    chown root:staff /usr/local/etc/snmp
     chmod 750 /usr/local/etc/snmp
     cat << EOF > /usr/local/etc/snmp/snmpd.conf
 agentAddress udp:$ip:161
@@ -926,7 +926,7 @@ start_chroot(){
    if [ ! "$(mounted /opt/lftp/home/dsas/haut)" ]; then
      # Create chroot jail for lftp as user haut
      mkdir -p  /opt/lftp/home/dsas/haut
-     chown root.haut /opt/lftp/home/dsas/haut
+     chown root:haut /opt/lftp/home/dsas/haut
      chmod 755 /opt/lftp/home/dsas
      chmod 750 /opt/lftp/home/dsas/haut
      mount --noexec --nobind /home/dsas/haut /opt/lftp/home/dsas/haut
@@ -948,7 +948,7 @@ start_chroot(){
    else
      [ -f "/opt/lftp/home/haut/.ssh/known_hosts" ] || (umask 117; touch /opt/lftp/home/haut/.ssh/known_hosts)
    fi
-   chown -R root.haut /opt/lftp/home/haut
+   chown -R root:haut /opt/lftp/home/haut
    chmod 0660 /opt/lftp/home/haut/.ssh/known_hosts
    if [ ! "$(mounted /opt/lftp/dev/pts)" ]; then
      # Create pty for chroot jail
@@ -989,14 +989,14 @@ config_ssl(){
   openssl req -x509 -sha256 -days 180 -subj "/C=FR/ST=Paris/L=Paris/O=DSAS/OU=DSAS/CN=dsas.example.com" -key "$VAR/dsas_priv.pem" -out "$VAR/dsas_pub.pem"
   cat "$VAR/dsas_priv.pem" "$VAR/dsas_pub.pem" > "$VAR/dsas.pem"
   chmod 640 "$VAR/dsas_priv.pem" "$VAR/dsas_pub.pem" "$VAR/dsas.pem" "$VAR/dsas.csr"
-  chown tc.repo "$VAR/dsas_priv.pem" "$VAR/dsas_pub.pem" "$VAR/dsas.pem" "$VAR/dsas.csr"
+  chown tc:repo "$VAR/dsas_priv.pem" "$VAR/dsas_pub.pem" "$VAR/dsas.pem" "$VAR/dsas.csr"
 }
 
 save_config(){
   # Make a copy of the config file for later comparison
   $as_tc cp -f $VAR/dsas_conf.xml "$VAR/dsas_conf.xml.active"
   $as_tc chmod 640 $VAR/dsas_conf.xml "$VAR/dsas_conf.xml.active"
-  $as_tc chown tc.verif $VAR/dsas_conf.xml "$VAR/dsas_conf.xml.active"
+  $as_tc chown tc:verif $VAR/dsas_conf.xml "$VAR/dsas_conf.xml.active"
 
   echo "Saving DSAS configuration"
   $as_tc filetool.sh -b
@@ -1010,7 +1010,7 @@ check_xml_version(){
     # Don't use xmllint here as can't easily add nodes. Just use sed
     mv $VAR/dsas_conf.xml $VAR/dsas_conf.xml.old
     sed -i -e "s:<dsas>:<dsas>\n  <version>0.5</version>:" "$VAR/dsas_conf.xml"
-    chown tc.staff $VAR/dsas_conf.xml
+    chown tc:staff $VAR/dsas_conf.xml
     chmod 644 $VAR/dsas_conf.xml
     _ver="0.5"
   fi
@@ -1072,7 +1072,7 @@ check_xml_version(){
     # The version 0.13 of the DSAS needs the authorized_keys of "bas" copied to "tc"
     if [ -f "$VAR/dsas_typ" ] && [ "$(cat $VAR/dsas_typ)" = "haut" ]; then
       cat /home/bas/.ssh/authorized_keys >> /home/tc/.ssh/authorized_keys
-      chown -R tc.staff /home/tc/.ssh
+      chown -R tc:staff /home/tc/.ssh
       chmod -R 700 /home/tc/.ssh
     fi
   fi
@@ -1142,7 +1142,7 @@ case "${1}" in
       start_snmp
       # Put root crontab file in place so it only runs on the machine bas
       /bin/cp $VAR/crontab.dsas /var/spool/cron/crontabs/root
-      chown root.root /var/spool/cron/crontabs/root
+      chown root:root /var/spool/cron/crontabs/root
       chmod 600 /var/spool/cron/crontabs/root
       start_cron
     fi
@@ -1181,7 +1181,7 @@ case "${1}" in
   reconfig)
     TYP="$(dialog --stdout --no-cancel --radiolist 'Select machine type:' 0 0 0 haut 'Haut/High' on bas 'Bas/Low' off)"
     echo "$TYP" > "$VAR/dsas_typ"
-    chown 640 "$VAR/dsas_typ"
+    chmod 640 "$VAR/dsas_typ"
     echo "Machine configured as type: ${GREEN}$TYP${NORMAL}"
     config_interco
     setup_interco

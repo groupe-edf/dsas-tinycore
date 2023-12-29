@@ -1,9 +1,9 @@
 _pkg=open-vm-tools
-_version=12.1.0
-_uri=https://www.github.com/vmware/open-vm-tools/archive/refs/tags/stable-12.1.0.tar.gz
-_build_dep="compiletc coreutils autoconf automake libtool-dev libmspack glib2-dev Linux-PAM-dev openssl-1.1.1-dev libxml2-dev libtirpc-dev rpcsvc-proto"
-_dep="libmspack glib2 Linux-PAM openssl-1.1.1 libxml2 libtirpc"
-_pkg_path=open-vm-tools-stable-12.1.0/open-vm-tools
+_version=12.3.0
+_uri=https://www.github.com/vmware/open-vm-tools/archive/refs/tags/stable-12.3.0.tar.gz
+_build_dep="compiletc coreutils autoconf automake libtool-dev libmspack glib2-dev Linux-PAM-dev openssl-dev libxml2-dev libtirpc-dev rpcsvc-proto"
+_dep="libmspack glib2 Linux-PAM openssl libxml2 libtirpc"
+_pkg_path=open-vm-tools-stable-12.3.0/open-vm-tools
 _conf_cmd="setarch linux$arch autoupdate; setarch linux$arch autoreconf -i; setarch linux$arch ./configure --disable-vgauth --without-x --with-pam-prefix=/usr/local/etc"
 _make_cmd="make"
 _install_cmd="make install DESTDIR="

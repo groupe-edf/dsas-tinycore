@@ -1,0 +1,11 @@
+_pkg=gobject-introspection
+_version=1.78.0
+_uri=https://mirror.accum.se/pub/GNOME/sources/gobject-introspection/1.78/gobject-introspection-1.78.0.tar.xz
+_build_dep="compiletc meson cmake intltool glib2-dev python3.9-dev git libssh2 util-linux-dev openssl"
+_dep="glib2 python3.9 util-linux"
+_pkg_path=gobject-introspection-1.78.0
+_pre_config="ln -s /bin/busybox /bin/bash; cd /usr/local/bin; rm python3; ln -s python3.9 python3"
+_conf_cmd="setarch linux$arch meson build --prefix=/usr/local --localstatedir=/var --buildtype=plain -D doctool=disabled"
+_make_cmd="cd build; ninja"
+_install_cmd="cd build; ninja install #"
+_pkgs='main{/usr/local/bin,/usr/local/lib/g*,/usr/local/lib/*.so*,/usr/local/share/gir-*};dev{/usr/local/include,/usr/local/lib/pkgconfig,/usr/local/share/aclocal,/usr/local/share/gobject-introspection-*};doc{/usr/local/share/man}'

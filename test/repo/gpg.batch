@@ -1,5 +1,5 @@
 %echo Generating GPG key for DSAS test
-Key-Type: default
+Key-Type: RSA
 Name-Real: Repo User
 Name-Comment: GPG certification for DSAS testing
 Name-Email: repo@example.com
@@ -7,7 +7,7 @@ Expire-Date: 0
 Passphrase: DummyPassPhrase
 %commit
 %echo Generating Bad GPG key for DSAS test
-Key-Type: default
+Key-Type: RSA
 Name-Real: Bad Repo User
 Name-Comment: GPG certification for DSAS testing
 Name-Email: bad@example.com

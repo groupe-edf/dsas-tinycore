@@ -9,7 +9,7 @@ prod: package.json
 package.json:
 	which npm >& /dev/null || { echo "Install Node.js before continuing"; exit 1; }
 	npm init -y || { rm -fr node_modules package-lock.json package.json; exit 1; }
-	npm install --save marked || { rm -fr node_modules package-lock.json package.json; exit 1; }
+	npm install --save marked marked-gfm-heading-id || { rm -fr node_modules package-lock.json package.json; exit 1; }
 	npm install --save bootstrap @popperjs/core || { rm -fr node_modules package-lock.json package.json; exit 1; }
 	npm install --save-dev webpack webpack-cli || { rm -fr node_modules package-lock.json package.json; exit 1; }
 	npm install --save-dev autoprefixer css-loader postcss-loader sass sass-loader style-loader || { rm -fr node_modules package-lock.json package.json; exit 1; }

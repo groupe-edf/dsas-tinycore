@@ -1,11 +1,11 @@
 _pkg=Linux-PAM
-_version=1.5.2
-_uri="https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz"
+_version=1.5.3
+_uri="https://github.com/linux-pam/linux-pam/releases/download/v1.5.3/Linux-PAM-1.5.3.tar.xz"
 _dep="ncursesw"
 _build_dep="compiletc isl-dev ncursesw-dev"
-_pkg_path="Linux-PAM-1.5.2"
+_pkg_path="Linux-PAM-1.5.3"
 _pre_config=""
-_conf_cmd="setarch linux$arch ./configure --enable-db=no --prefix=/usr/local --exec-prefix=/usr/local --includedir=/usr/local/include/security"
+_conf_cmd="setarch linux$arch ./configure --enable-db=no --prefix=/usr/local --exec-prefix=/usr/local --includedir=/usr/local/include/security --enable-sconfigdir=/usr/local/etc/security"
 _make_cmd="make"
 _install_cmd="make install DESTDIR="
 _post_build=\
@@ -69,7 +69,7 @@ EOF
 # Disable core dumps 
 sed -i -e 's:^#\(.*\)soft\(.*\)core.*$:\1 hard\2core            0:' usr/local/etc/security/limits.conf
 "
-_pkgs="main{/usr/local/sbin,/usr/local/etc,/usr/local/lib/*.so*,/usr/local/lib/security/*.so*,/usr/local/lib/systemd,/usr/local/share/locale};dev{/usr/local/include,/usr/local/lib/*.a,/usr/local/lib/*.la,/usr/local/lib/secutity/*.a,/usr/local/lib/secutiy/*.la,/usr/local/lib/pkgconfig};doc{/usr/local/share/doc,/usr/local/share/man}"
+_pkgs="main{/usr/local/sbin,/usr/local/etc,/usr/local/lib/*.so*,/usr/local/lib/security/*.so*,/usr/local/lib/systemd,/usr/local/share/locale};dev{/usr/local/include,/usr/local/lib/*.a,/usr/local/lib/*.la,/usr/local/lib/security/*.a,/usr/local/lib/security/*.la,/usr/local/lib/pkgconfig};doc{/usr/local/share/doc,/usr/local/share/man}"
 _post_install=\
 "[ -d /var/run/sepermit ] || mkdir -p /var/run/sepermit
 [ -d /usr/local/etc/security/limits.d ] || mkdir -p /usr/local/etc/security/limits.d

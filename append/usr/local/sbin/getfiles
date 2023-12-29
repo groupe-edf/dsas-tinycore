@@ -114,10 +114,10 @@ check_checksum() {
   local chk
 
   case $3 in
-    sha512) chk=$($as_haut sha512sum "$1" | sed -e "s:  $1$::g") ;;
-    sha256) chk=$($as_haut sha256sum "$1" | sed -e "s:  $1$::g") ;;
-    sha) chk=$($as_haut sha1sum "$1" | sed -e "s:  $1$::g") ;;
-    md5) chk=$($as_haut md5sum "$1" | sed -e "s:  $1$::g") ;;
+    sha512) chk=$($as_haut /usr/local/bin/sha512sum "$1" | sed -e "s:  $1$::g") ;;
+    sha256) chk=$($as_haut /usr/local/bin/sha256sum "$1" | sed -e "s:  $1$::g") ;;
+    sha) chk=$($as_haut /usr/local/bin/sha1sum "$1" | sed -e "s:  $1$::g") ;;
+    md5) chk=$($as_haut /usr/local/bin/md5sum "$1" | sed -e "s:  $1$::g") ;;
     *) return 0 ;;
   esac
   [ "$chk" != "$2" ] && return 0
@@ -262,6 +262,7 @@ get_packages() {
   local dest="$1"
   local uri="$2"
   local opt="$3"
+  local n="$((($# - 3) / 3))"
   shift 3
   while [ "$#" -gt 2 ]; do
     if [ "${1: -3}" = "rpm" ]; then
@@ -292,6 +293,8 @@ get_packages() {
       fi
     fi
     shift 3
+    # Ocassionally print something to avoid ssh timeouts
+    [ "$(($# % 1500))" = "0" ] && myecho "Remaining files to check for download $(($# / 3)) of $n" 
   done
 }
 
@@ -388,14 +391,14 @@ getrepo() {
        fi
 
        # Remove the files in our tree not listed in primary.xml
-       _str="$DSAS_HAUT/$dir"
-       _len=$((${#_str} + 1))
-       for _file in $($as_haut find "$DSAS_HAUT/$dir" -path "$DSAS_HAUT/$dir/repodata" -prune -type f -o -type f) ; do
-         if [[ "$filetable" != "*${_file:$_len}*" ]]; then
-           myecho "Removing stale file ${_file:$_len}"
-           $as_haut rm -f "$_file"
-         fi
-       done
+       # Using the "comm" function to detecting stale files is by far the fastest here
+       $as_haut zcat "$DSAS_HAUT/$dir/$filelist" | grep "<location " | sed -e 's:.*href="\(.*\)"/>$:\1:g'  | sort > /tmp/_files1.$$ 
+       $as_haut find "$DSAS_HAUT/$dir" -path "$DSAS_HAUT/$dir/repodata" -prune -type f -o -type f | sed -e "s:$DSAS_HAUT/$dir/::g" | sort > /tmp/_files2.$$
+       while IFS= read -r -d '' _file; do
+           myecho "Removing stale file $_file"
+           $as_haut rm -f "$DSAS_HAUT/$dir/$_file"
+       done < <(/usr/local/bin/comm -13  --nocheck-order /tmp/_files1.$$ /tmp/_files2.$$ | tr \\n \\0)
+       /bin/rm /tmp/_files1.$$ /tmp/_files2.$$
 
        # Download the packages
        #

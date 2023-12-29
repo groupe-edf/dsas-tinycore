@@ -190,10 +190,11 @@ verifauthenticode(){
   id=$1
   tempdir="$2"
   file="$3"
+  _time=$(stat -c%Y "$file")  # Verification date same as file createion date
 
   if [ -f "$tempdir/cert.0" ]; then
-    osslsigncode verify -CAfile "$tempdir/cert.0" "$file" > /dev/null 2>&1 || \
-        osslsigncode verify -CAfile "$tempdir/cert.0" -TSA-CAfile "$tempdir/cert.0" "$file" > /dev/null 2>&1 || \
+    osslsigncode verify -CAfile "$tempdir/cert.0" -time "$_time" "$file" > /dev/null 2>&1 || \
+        osslsigncode verify -CAfile "$tempdir/cert.0" -TSA-CAfile "$tempdir/cert.0" -time "$_time" "$file" > /dev/null 2>&1 || \
         return 1
   else
     osslsigncode verify "$file" > /dev/null 2>&1 || return 1

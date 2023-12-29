@@ -206,20 +206,20 @@ chaque machine du DSAS.
 
 ## Mémoire nécessaire pour le DSAS
 
-Le DSAS a besoin un minimum absolu de 500 Mo de démarrage est de
+Le DSAS a besoin un minimum absolu de 1024 Mo de démarrage est de
 fonctionner correctement. A cet espace minimal, il faut compter des
 espaces supplémentaires dépendant sur la configuration du DSAS. Dans
 l'installation sur un machine virtuel classique, le dossier `/tmp` est un
 partie de la système fichier racine et stocké en mémoire. Par ce que ce
 dossier est largement utilisé pour la décompression des archives à
 vérifier, la taille maximale de fichier décompressé est nécessaire en
-mémoire de plus. En teste, nous avons trouvé qu'un minima de __1Go__ est
+mémoire de plus. En teste, nous avons trouvé qu'un minima de __2Go__ est
 nécessaire sur les deux machines du DSAS.
 
 Si le DSAS est configuré afin d'utiliser l'antivirus, le daemon de
 l'antivirus va utiliser de la mémoire supplémentaire. L'antivirus n'est
 qu'utiliser sur la machine `basse` et nous avons trouvé qu'un minima de
-__3Go__ sont nécessaire.
+__4Go__ sont nécessaire.
 
 L'utilisation de Docker pourrait légèrement modifier ces calculs, mais
 l'image Docker va partager la mémoire de l'hôte à un valeur semblant à
@@ -1549,8 +1549,8 @@ Logiciels impactés par ce risque
 
 | logiciel    | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
-| openssl     | [1.1.1q](https://www.openssl.org/source/openssl-1.1.1q.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
-| openssh     | [9.1p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.1p1.tar.gz) | ssh et sftp utilisé |
+| openssl     | [3.2.0](https://www.openssl.org/source/openssl-3.2.0.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
+| openssh     | [9.5p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.5p1.tar.gz) | ssh et sftp utilisé |
 
 ### Risque : Attaque sur la vérification des signatures 
 
@@ -1563,12 +1563,12 @@ Logiciels impactés par ce risque
 
 | logiciel      | version  |  commentaire                                                                      | 
 |--------------|----------|------------------------------------------------------------------------------|
-| openssl      | [1.1.1q](https://www.openssl.org/source/openssl-1.1.1q.tar.gz) | Utilisé pour la vérification authenticode, LiveUpdate et OpenSSL |
-| gnupg        | [2.2.27](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.27.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
-| libgcrypt    | [1.10.1](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.1.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
-| rpm          | [4.18.0](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.17.x/rpm-4.18.0.tar.bz2) | Utilisé pour la vérification RPM |
-| osslsigncode | [2.5.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.5/osslsigncode-2.5.tar.gz) | Utilisé pour la vérification authenticode |
-| clamav | [0.105.1](https://www.clamav.net/downloads/production/clamav-0.105.1.tar.gz) | Utilisé pour des tests antivirale |
+| openssl      | [3.2.0](https://www.openssl.org/source/openssl-3.2.0.tar.gz) | Utilisé pour la vérification authenticode, LiveUpdate et OpenSSL |
+| gnupg        | [2.4.3](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.4.3.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
+| libgcrypt    | [1.10.3](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.3.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
+| rpm          | [4.18.1](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.18.x/rpm-4.18.1.tar.bz2) | Utilisé pour la vérification RPM |
+| osslsigncode | [2.7.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.7/osslsigncode-2.7.tar.gz) | Utilisé pour la vérification authenticode |
+| clamav | [1.2.0](https://www.clamav.net/downloads/production/clamav-1.2.0.tar.gz) | Utilisé pour des tests antivirale |
 
 ### Risque : Elevation des privilèges
 
@@ -1581,7 +1581,7 @@ Logiciels impactés par ce risque
 
 | logiciel    | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
-| noyau linux | [5.15.10](https://tinycorelinux.net/13.x/x86/release/src/kernel/linux-5.15.10-patched.txz) | Des CVE d'élévation de privilège sont les seuls à traiter |
+| noyau linux | [6.1.2](https://tinycorelinux.net/14.x/x86/release/src/kernel/linux-6.1.2-patched.txz) | Des CVE d'élévation de privilège sont les seuls à traiter |
 
 
 ### Risque : Attaque sur le moyen de téléchargement des fichiers 
@@ -1595,7 +1595,7 @@ Logiciels impactés par ce risque
 
 | logiciel     | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
-| openssl     | [1.1.1q](https://www.openssl.org/source/openssl-1.1.1q.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
+| openssl     | [3.2.0](https://www.openssl.org/source/openssl-3.2.0.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
 | lftp    | [4.9.2](https://lftp.yar.ru/ftp/lftp-4.9.2.tar.bz2) | Utilsé pour http, https, ftp, ftps, sftp |
  
 ### Risque : Attaque contre l'authentification administrateur du DSAS
@@ -1609,10 +1609,10 @@ Logiciels impactés par ce risque
 
 | logiciel     | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
-| php-cgi     | [8.0.1](http://tinycorelinux.net/12.x/x86/tcz/php-8.0-cgi.tcz) | Backend de la site d'administration |
-| lighttpd    | [1.4.58](http://tinycorelinux.net/12.x/x86/tcz/lighttpd.tcz) | Backend de la site d'administration |
-| Linux PAM | [1.5.2](https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz) | Authentification sur la site d'administration |
-| site web DSAS | [1.2.19](https://gitlab.com/groupe-edf/dsas-tinycore) | Backend et frontend de la site d'administration |
+| php-cgi     | [8.2.0](http://tinycorelinux.net/14.x/x86/tcz/php-8.2-cgi.tcz) | Backend de la site d'administration |
+| lighttpd    | [1.4.58](http://tinycorelinux.net/14.x/x86/tcz/lighttpd.tcz) | Backend de la site d'administration |
+| Linux PAM | [1.5.3](https://github.com/linux-pam/linux-pam/releases/download/v1.5.3/Linux-PAM-1.5.3.tar.xz) | Authentification sur la site d'administration |
+| site web DSAS | [2.1.0](https://gitlab.com/groupe-edf/dsas-tinycore) | Backend et frontend de la site d'administration |
 
 La site web du DSAS est développé spécialement pour ce projet. Une
 analyse statique et suite de test de la code est utilisé à chaque version
@@ -1624,7 +1624,7 @@ de la code afin de limiter les risques.
 
 Vous auriez besoin une machine de build. Le plus simple est d'utiliser la
 même souche que utilisé par le DSAS lui-même. Par exemple la souche 
-[CorePlus v13.x](http://tinycorelinux.net/13.x/x86/release/CorePlus-current.iso)
+[CorePlus v14.x](http://tinycorelinux.net/14.x/x86/release/CorePlus-current.iso)
 est utilisé actuellement pour la build du DSAS. Le DSAS a besoin au moins
 4 Go de mémoire (notamment pour le build de clamav). Tant que vous avez
 mise en place cette machine, vous auriez besoin un certain nombre
@@ -1996,16 +1996,16 @@ avec l'extension `-doc` sera créé avec les fichiers dans `/usr/local/doc`
 Un exemple complet d'un fichier `pkg/openssl-1.1.1.pkg` est
 
 ```
-_pkg=openssl-1.1.1
-_version=1.1.1s
-_uri=https://www.openssl.org/source/openssl-1.1.1s.tar.gz
+_pkg=openssl
+_version=3.2.0
+_uri=https://www.openssl.org/source/openssl-3.2.0.tar.gz
 _dep=""
 _build_dep="compiletc perl5"
-_pkg_path=openssl-1.1.1s
-_conf_cmd="./config --openssldir=/usr/local/etc/ssl"
+_pkg_path=openssl-3.2.0
+_conf_cmd="setarch linux$arch ./config --libdir=/usr/local/lib --openssldir=/usr/local/etc/ssl"
 _make_cmd="make"
 _install_cmd="make install DESTDIR="
-_pkgs="main{/usr/local/bin,/usr/local/etc,/usr/local/lib/*.so*,/usr/local/lib/engines-1.1};dev{/usr/local/include,/usr/local/lib/*.a,/usr/local/lib/pkgconfig};doc{/usr/local/share}"
+_pkgs="main{/usr/local/bin,/usr/local/etc,/usr/local/lib/*.so*,/usr/local/lib/engines-3,/usr/local/lib/ossl-modules};dev{/usr/local/include,/usr/local/lib/*.a,/usr/local/lib/pkgconfig};doc{/usr/local/share}"
 _post_install=\
 '#! /bin/sh
 [  -d /usr/local/etc/ssl/certs ] || mkdir -p /usr/local/etc/ssl/certs

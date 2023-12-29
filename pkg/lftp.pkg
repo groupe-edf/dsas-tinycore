@@ -1,8 +1,8 @@
 _pkg=lftp
 _version=4.9.2
 _uri="https://lftp.yar.ru/ftp/lftp-4.9.2.tar.bz2"
-_dep="openssl-1.1.1 readline libidn2"
-_build_dep="compiletc openssl-1.1.1-dev readline-dev libidn2-dev"
+_dep="openssl readline libidn2"
+_build_dep="compiletc openssl-dev readline-dev libidn2-dev"
 _pkg_path="lftp-4.9.2"
 _conf_cmd="
 sed -i -e 's:ac_header in curses.h term.h ncurses/curses.h ncurses/term.h termcap.h:ac_header in curses.h term.h ncursesw/curses.h ncursesw/term.h termcap.h:' configure

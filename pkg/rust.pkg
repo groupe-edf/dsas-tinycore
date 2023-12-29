@@ -1,48 +1,17 @@
 _pkg=rust
 _disk_needed=16 # Need at least 16GB to build
-_version=1.68.0
-_uri=https://static.rust-lang.org/dist/rustc-1.68.0-src.tar.gz
-_build_dep="compiletc python3.6 rsync ninja coreutils cmake curl-dev libssh2-dev clang llvm-dev ca-certificates"
-_dep="llvm-lib curl libssh2"
+_version=1.74.1
+_uri=https://static.rust-lang.org/dist/rustc-1.74.1-src.tar.gz
+_build_dep="compiletc python3.9 rsync ninja coreutils cmake curl-dev libssh2-dev clang llvm15-dev ca-certificates openssl openssl-dev"
+_dep="llvm15-lib curl libssh2 openssl"
 # FIXME: Why is ca-certificate not updated corrected at the install ?
 _pre_config="
 /usr/local/sbin/update-ca-certificates; 
 mkdir /lib64; 
 cd /lib64; 
 ln -s /lib/ld-linux-x86-64.so.2"
-_pkg_path=rustc-1.68.0-src
-# FIXME problem missing llvm-tools (see https://github.com/rust-lang/issues/108948)
-# external llvm-config so these aren't even needed !!
+_pkg_path=rustc-1.74.1-src
 _conf_cmd="
-cat << EOF | patch src/bootstrap/install.rs
---- src/bootstrap/install.rs.orig	2023-03-14 22:36:17.470754110 +0000
-+++ src/bootstrap/install.rs	2023-03-14 22:36:19.340754143 +0000
-@@ -209,12 +209,6 @@
-             );
-         }
-     };
--    LlvmTools, alias = \"llvm-tools\", Self::should_build(_config), only_hosts: true, {
--        let tarball = builder
--            .ensure(dist::LlvmTools { target: self.target })
--            .expect(\"missing llvm-tools\");
--        install_sh(builder, \"llvm-tools\", self.compiler.stage, Some(self.target), &tarball);
--    };
-     Rustfmt, alias = \"rustfmt\", Self::should_build(_config), only_hosts: true, {
-         if let Some(tarball) = builder.ensure(dist::Rustfmt {
-             compiler: self.compiler,
-EOF
-cat << EOF | patch src/bootstrap/builder.rs
---- src/bootstrap/builder.rs.orig	2023-03-14 22:32:39.287416969 +0000
-+++ src/bootstrap/builder.rs	2023-03-14 22:34:28.734085544 +0000
-@@ -779,7 +779,6 @@
-                 install::RustDemangler,
-                 install::Clippy,
-                 install::Miri,
--                install::LlvmTools,
-                 install::Analysis,
-                 install::Src,
-                 install::Rustc
-EOF
 cat << EOF > config.toml
 [llvm]
 targets = \"X86\"
@@ -54,7 +23,7 @@ extended = true
 
 [install]
 prefix = \"/usr/local\"
-docdir = \"share/doc/rustc-1.68.0\"
+docdir = \"share/doc/rustc-1.72.0\"
 
 [rust]
 channel = \"stable\"

@@ -109,21 +109,15 @@ done
 # Longer curl timeout
 curl_cmd="curl --connect-timeout 300"
 
-# Setup kernel name for package dependencies include "-KERNEL"
-# FIXME can't use "uname -r" to allow build en non tinycore system.
-# FIXME this will need updating if tinycore version changed
-[ "$arch" = 64 ] && _kern="5.15.10-tinycore64"
-[ "$arch" = 32 ] && _kern="5.15.10-tinycore"
-
 # tiny core related
 if [ "$arch" != "64" ]; then
-  livecd_url=http://tinycorelinux.net/13.x/x86/release/Core-current.iso
-  tcz_url=http://tinycorelinux.net/13.x/x86/tcz
-  tcz_src=http://tinycorelinux.net/13.x/x86/release/src
+  livecd_url=http://tinycorelinux.net/14.x/x86/release/Core-current.iso
+  tcz_url=http://tinycorelinux.net/14.x/x86/tcz
+  tcz_src=http://tinycorelinux.net/14.x/x86/release/src
 else
-  livecd_url=http://tinycorelinux.net/13.x/x86_64/release/CorePure64-current.iso
-  tcz_url=http://tinycorelinux.net/13.x/x86_64/tcz
-  tcz_src=http://tinycorelinux.net/13.x/x86_64/release/src
+  livecd_url=http://tinycorelinux.net/14.x/x86_64/release/CorePure64-current.iso
+  tcz_url=http://tinycorelinux.net/14.x/x86_64/tcz
+  tcz_src=http://tinycorelinux.net/14.x/x86_64/release/src
 fi
 export tcz_src
 
@@ -204,7 +198,7 @@ get_tcz() {
         # In a new shell so that build doesn't modify local variables
         _old=$extract
         extract="$build"
-        ( build_pkg "$package"; )
+        ( build_pkg "$package"; ) || exit 1
         extract="$_old"
       elif test -f "$tce_dir/$package.tcz"; then
         msg "fetching package $package ..."
@@ -267,6 +261,32 @@ install_tcz() {
             fi
         fi  
     done
+}
+
+build_pkg_cache() {
+  msg "setting up package cache dir for SNMP"
+  [ "$#" -ge 1 ] && _snmpdir="$1" || _snmpdir="/var/cache/hrmib"
+  _snmpdir="$extract/$_snmpdir"
+  mkdir -p "$_snmpdir"
+  while IFS= read -r -d '' _file; do
+     _pkg=$(basename "$_file")
+     if test -f "$pkg_dir/$_pkg.pkg"; then
+       _version="_$(grep _version "$pkg_dir/$_pkg.pkg" | cut -d= -f2)"
+     elif [ "$_pkg" = "dsas_js" ]; then
+       # Special case
+       _version="_$(grep "dsasVersion =" ./js/src/DsasHelp.js | sed -e "s:^.* = \"\([0-9.]*\).*$:\1:")"
+     else
+       [ -f "$tcz_dir/$_pkg.tcz.info" ] || $curl_cmd -s -o "$tcz_dir/$_pkg.tcz.info" "$tcz_url/$_pkg.tcz.info"
+       _version=$(grep -i version: "$tcz_dir/$_pkg.tcz.info" | cut -d: -f2 | xargs | tr "/" ".")
+       [ -z "$_version" ] || _version="_$_version"
+     fi
+     # Use amd64 for architecture for coherence with other distributions
+     if [ "$arch" = "64" ]; then
+       touch -r "$_file" "$_snmpdir/$_pkg${_version}_amd64"
+     else
+       touch -r "$_file" "$_snmpdir/$_pkg${_version}_x86" 
+     fi
+  done < <(find "$extract/usr/local/tce.installed" -type "f" -print0)
 }
 
 get() {
@@ -334,7 +354,9 @@ unpack() {
 }
 
 disksize(){
-  df --block-size=1G "$1" | tail -1 | xargs | cut -d' ' -f4
+  _d="$1"
+  while [ ! -e "$_d" ]; do _d=$(dirname "$_d"); done
+  df --block-size=1G "$_d" | tail -1 | xargs | cut -d' ' -f4
 }
 
 build_pkg() {
@@ -402,7 +424,7 @@ build_pkg() {
         mkdir -p "$extract/$builddir"
         mkdir -p "$extract/$destdir"
         unpack "$src_dir/$_src" "$extract/$builddir" || error "Can not unpack $_src"
-        chroot "$extract" chown -R ${tc}.${staff} /home/tc
+        chroot "$extract" chown -R ${tc}:${staff} /home/tc
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 export http_proxy=${http_proxy:=}
@@ -533,6 +555,24 @@ EOF
   done
 }
 
+# Special version for firefox
+get_tcz_and_deps() {
+  _dest=$1
+  shift
+  for _pkg; do
+    [ -f "$_dest/$_pkg.tcz" ] && continue
+    msg "Copy $_pkg.tcz to $_dest"
+    cp "$tcz_dir/$_pkg.tcz"  "$tcz_dir/$_pkg.tcz.dep" "$_dest"
+    ( cd "$_dest" || exit 1;  md5sum "$_pkg.tcz" > "$_pkg.tcz.md5.txt"; ) || exit 1
+    _dep=$tcz_dir/$_pkg.tcz.dep
+    if test -s "$_dep"; then
+      # Want word splitting on arg to
+      # shellcheck disable=SC2046
+      get_tcz_and_deps "$_dest" $(sed -e s/.tcz$// "$_dep")
+    fi
+  done
+}
+
 install_firefox(){
   package=firefox
   target=$tcz_dir/$package.tcz
@@ -562,7 +602,7 @@ install_firefox(){
       mount -t proc /proc "$extract/proc"
 
       # FIXME : Fix missing links
-      # It appears that certain links are missings with the base intsall
+      # It appears tqhat certain links are missings with the base intsall
       # and they need to be forced
       ( cd "$extract/usr/lib" || exit 1; [ -e "libpthread.so" ] || ln -s ../../lib/libpthread.so.0 libpthread.so; )
       ( cd "$extract/usr/lib" || exit 1; [ -e "libdl.so" ] || ln -s ../../lib/libdl.so.2 libdl.so; )
@@ -572,12 +612,33 @@ install_firefox(){
       ( install_tcz coreutils )
       ( install_tcz "$latest" )
 
+      # Find dependencies in "$latest" and install them to allow them to be
+      # cached and avoid too many downloads. sqfsTools is useds in the eval 
+      # shellcheck disable=SC2034
+      sqfsTools="squashfs-tools"
+      # disable wierd sheelcheck warning
+      # shellcheck disable=SC2046
+      eval $(sed -n '/deps1="/,/"/p' $extract/usr/local/bin/$latest.sh | sed -e "s:\\\::g" -e "/^\s*else/d"  -e "/^\s*echo/d")
+      mkdir -p $extract/tmp/tce/optional
+      chown -R $tc:$staff $extract/tmp/tce
+      chmod 775 $extract/tmp/tce $extract/tmp/tce/optional
+      # deps1 is defined via the eval above. Yes I want word-splitting
+      # shellcheck disable=SC2154
+      # shellcheck disable=SC2086
+      ( install_tcz $deps1 libssh2 )
+      # Yes I want word-splitting
+      # shellcheck disable=SC2086     
+      ( get_tcz_and_deps  "$extract/tmp/tce/optional" $deps1 )
+      chmod -R 644 "$extract/tmp/tce/optional"
+      chmod 775 $extract/tmp/tce/optional
+      chown -R $tc:$staff "$extract/tmp/tce/optional"
+
       # Copy /etc/resolv.conf file
       mkdir -p "$extract/etc"
       cp -p /etc/resolv.conf "$extract/etc/resolv.conf"
 
       mkdir -p "$extract/home/tc"
-      chown ${tc}.${staff} "$extract/home/tc"
+      chown ${tc}:${staff} "$extract/home/tc"
       echo tc > "$extract/etc/sysconfig/tcuser"
 
       cat << EOF > "$extract/tmp/script"
@@ -585,15 +646,15 @@ export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 export http_proxy=${http_proxy:=}
 export https_proxy=${https_proxy:=}
 export USER=tc
-mkdir /tmp/tce
 sudo tce-setup
+sudo update-ca-certificates
 $latest.sh -e || exit 1
 EOF
       chmod a+x "$extract/tmp/script"
       msg "Constructing package $package"
       HOME=/home/tc chroot --userspec=${tc} "$extract" /tmp/script || error error constructing $package
 
-      msg "fecthing package $package"
+      msg "fetching package $package"
       cp "$extract/tmp/tce/optional/$package.tcz" "$target"
       if ! test -f "$extract/tmp/tce/optional/$package.tcz.dep"; then
         touch "$tce_dir/$package.tcz.dep"
@@ -621,13 +682,13 @@ install_webdriver(){
    dep=$target.dep
    if test ! -f "$target"; then
       # Install PHP composer
-      download -f "https:/getcomposer.org/installer" "$src_dir"
+      download -f "https:/getcomposer.org/installer" "$src_dir" "php_composer"
       mkdir -p "$extract/home/tc"
-      chown ${tc}.${staff} "$extract/home/tc"
+      chown ${tc}:${staff} "$extract/home/tc"
       chmod 750 "$extract/home/tc"
-      cp "$src_dir/installer" "$extract/home/tc"
-      chmod a+rx "$extract/home/tc/installer"
-      chroot "$extract" chown -R ${tc}.${staff} "/home/tc/"
+      cp "$src_dir/php_composer" "$extract/home/tc"
+      chmod a+rx "$extract/home/tc/php_composer"
+      chroot "$extract" chown -R ${tc}:${staff} "/home/tc/"
       cp /etc/resolv.conf "$extract/etc/resolv.conf" && msg "copy resolv.conf"
       # http_proxy is imported (or not) from the environment. Shellcheck 
       # complains if we don't force a default value here
@@ -636,8 +697,8 @@ export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 export http_proxy=${http_proxy:=}
 export https_proxy=${https_proxy:=}
 cd /home/tc
-env HOME=/home/tc php installer || exit 1
-rm installer
+env HOME=/home/tc php php_composer || exit 1
+rm php_composer
 EOF
       chmod a+x "$extract/tmp/script"
       msg "Install PHP Composer $extract"
@@ -681,21 +742,21 @@ install_phpstan(){
    dep=$target.dep
    if test ! -f "$target"; then
       # Install PHP composer
-      download -f "https:/getcomposer.org/installer" "$src_dir"
+      download -f "https:/getcomposer.org/installer" "$src_dir" "php_composer"
       mkdir -p "$extract/home/tc"
-      chown ${tc}.${staff} "$extract/home/tc"
+      chown ${tc}:${staff} "$extract/home/tc"
       chmod 750 "$extract/home/tc"
-      cp "$src_dir/installer" "$extract/home/tc"
-      chmod a+rx "$extract/home/tc/installer"
-      chroot "$extract" chown -R ${tc}.${staff} "/home/tc/"
+      cp "$src_dir/php_composer" "$extract/home/tc"
+      chmod a+rx "$extract/home/tc/php_composer"
+      chroot "$extract" chown -R ${tc}:${staff} "/home/tc/"
       cp /etc/resolv.conf "$extract/etc/resolv.conf" && msg "copy resolv.conf"
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 export http_proxy=${http_proxy:=}
 export https_proxy=${https_proxy:=}
 cd /home/tc
-env HOME=/home/tc php installer || exit 1
-rm installer
+env HOME=/home/tc php php_composer || exit 1
+rm php_composer
 EOF
       chmod a+x "$extract/tmp/script"
       msg "Install PHP Composer $extract"
@@ -779,7 +840,7 @@ install_dsas_js() {
       # Copy DSAS files to build tree
       mkdir -p $extract/home/tc/dsas
       tar cf - --exclude tmp --exclude=work --exclude=.git . | tar -C $extract/home/tc/dsas -xvf - 
-      chown -R ${tc}.${staff} $extract/home/tc
+      chown -R ${tc}:${staff} $extract/home/tc
       if [ "$testcode" = "1" ]; then
          maketype="dev"
       else
@@ -825,6 +886,15 @@ get_unpack_livecd(){
     mount | grep $livecd0 > /dev/null || cmd mount $livecd0 $mnt
     cmd rsync -av --exclude=boot.cat $mnt/ $newiso/
     cmd umount $mnt
+  fi
+
+  # Setup kernel name for package dependencies include "-KERNEL"
+  # If on tinycore, can get it from $(uname -r), otherwise from
+  # a tinycore image and find "*lib/modules/KERNEL-tinycore*" directory
+  if uname -r | grep -q tinycore; then
+    _kern=$(uname -r)
+  else
+    _kern=$(zcat $work/newiso/boot/corepure64.gz | cpio -t 2> /dev/null | grep "/lib/modules/" | head -1 | tr '/' '\n' | grep tinycore)
   fi
 }
 
@@ -889,6 +959,8 @@ upgrade)
       rm -f "$file"
       msg "Fetching package $_file ..."
       $curl_cmd -o "$file" "$tcz_url/$_file" || exit 1
+      $curl_cmd -o "${file}.dep" "$tcz_url/${_file}.dep" || exit 1
+      [ -f "${file}.info" ] || $curl_cmd -o "${file}.info" "$tcz_url/${_file}.info" || exit 1
       md5sum "$file" | sed -e "s:  $file$::g" > "$file.md5.txt"
     fi
   done < <(find $tcz_dir -name "*.tcz" -print0)
@@ -909,33 +981,33 @@ static)
 
   # Install the needed packages
   install_tcz compiletc
-  install_tcz openssl-1.1.1
+  install_tcz openssl
   install_tcz libxml2
   install_tcz libssh2
   install_tcz libzip
   install_tcz bzip2-lib
-  install_tcz php-8.0-cgi
-  install_tcz php-8.0-ext
+  install_tcz php-8.2-cgi
+  install_tcz php-8.2-ext
   install_tcz php-pam
   install_tcz curl
   install_tcz rsync
   install_tcz node
 
-  # FIXME Tinycore 32bit doesn't include the right pcre dependance and 64bit uses a
-  # a difference dependance. Only install PCRE2 on 32bit platforms
-  [ "$arch" != 64 ] && install_tcz pcre2
+  # FIXME Force installation of a PCRE that works with PHP composer
+  [ "$arch" != 64 ] && install_tcz pcre2 || install_tcz pcre21042
 
   # Copy DSAS code to test tree  
   mkdir -p $extract/home/tc/dsas
-  tar cf - --exclude tmp --exclude=work --exclude=.git . | tar -C $extract/home/tc/dsas -xvf - 
+  tar cf - --exclude tmp --exclude=work --exclude=.git . | tar -C $extract/home/tc/dsas -xvf -
+  chown -R ${tc}:${staff} $extract/home/tc 
+
+  # Copy /etc/resolv.conf file 
+  mkdir -p "$extract/etc"
+  cp -f /etc/resolv.conf "$extract/etc/resolv.conf"
 
   if [ -z "$pkgs" ] || [ -z "${pkgs##*phpstan*}" ]; then
     # Install PHP cli and add iconv and phar extension
-    install_tcz php-8.0-cli
- 
-    # Copy /etc/resolv.conf file 
-    mkdir -p "$extract/etc"
-    cp -p /etc/resolv.conf "$extract/etc/resolv.conf"
+    install_tcz php-8.2-cli
 
     cp $append/usr/local/etc/php/php.ini $extract/usr/local/etc/php/php.ini
     sed -i -e "s/;extension=phar/extension=phar/" $extract/usr/local/etc/php/php.ini
@@ -953,7 +1025,7 @@ parameters:
   paths:
     - dsas/append/usr/local/share/www/api
 EOF
-    chown -R ${tc}.${staff} $extract/home/tc
+    chown -R ${tc}:${staff} $extract/home/tc
 
     cat << EOF > $extract/tmp/script
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
@@ -1092,7 +1164,7 @@ docker)
 
   # Install the needed packages
   install_tcz busybox  # Busybox with PAM and TMOUT support
-  install_tcz openssl-1.1.1  # explicitly install openssl first so avail to ca-certificate
+  install_tcz openssl  # explicitly install openssl first so avail to ca-certificate
   install_tcz kmaps
   install_tcz openssh
   install_tcz sshpass
@@ -1102,8 +1174,8 @@ docker)
   install_tcz gnupg
   install_tcz lighttpd
   install_tcz clamav
-  install_tcz php-8.0-cgi
-  install_tcz php-8.0-ext
+  install_tcz php-8.2-cgi
+  install_tcz php-8.2-ext
   install_tcz php-pam
   install_tcz dialog
   install_tcz rpm
@@ -1151,11 +1223,10 @@ docker)
     install_firefox
     install_tcz harfbuzz fribidi # FIXME missing firefox dependency !!
     install_tcz Xorg-fonts
-    install_tcz xfonts-unifont
     install_tcz unifont 
 
     # Install PHP
-    install_tcz php-8.0-cli
+    install_tcz php-8.2-cli
 
     # Download and install the gecko (firefox) webdriver
     download "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux${arch}.tar.gz" "$src_dir"
@@ -1171,10 +1242,10 @@ docker)
   msg Append DSAS files
   rsync -rlptv "$append/" "$extract/"
   mkdir -p "$extract/home/tc"
-  chown root.root "$extract"
+  chown root:root "$extract"
   chmod 755 "$extract/home"
 
-  # Now that phop.ini is copied, if in test mode add iconv, phar, etc 
+  # Now that php.ini is copied, if in test mode add iconv, phar, etc 
   if [ "$testcode" = "1" ]; then
     sed -i -e "s/;extension=phar/extension=phar/" $extract/usr/local/etc/php/php.ini
     sed -i -e "s/;extension=iconv/extension=iconv/" $extract/usr/local/etc/php/php.ini
@@ -1184,6 +1255,9 @@ docker)
     # Install PHP webdriver via composer. Needs php.ini configured
     install_webdriver
   fi
+
+  # Populate /var/cache/hrmib so that SNMP can detect installed software and versions
+  build_pkg_cache /var/cache/hrmib
 
   # prevent autologin of tc user
   ( cd "$extract/etc" || exit 1; sed -i -r 's/(.*getty)(.*autologin)(.*)/\1\3/g'  inittab; )
@@ -1202,7 +1276,7 @@ cat << EOF >> "$create_users"
 echo tc:dSaO2021DSAS | chpasswd -c sha512
 mkdir /home/tc/.ssh
 chmod 700 /home/tc/.ssh
-chown tc.staff /home/tc/.ssh
+chown tc:staff /home/tc/.ssh
 EOF
 
   msg adding user 'verif'
@@ -1221,7 +1295,7 @@ adduser -s /bin/false -u 2001 -D -h /home/bas bas
 echo bas:$pass | chpasswd -c sha512
 mkdir /home/bas/.ssh
 chmod 700 /home/bas/.ssh
-chown bas.bas /home/bas/.ssh
+chown bas:bas /home/bas/.ssh
 EOF
 
   msg adding user 'haut'
@@ -1232,7 +1306,7 @@ adduser -s /bin/false -u 2002 -D -h /home/haut haut
 echo bas:$pass | chpasswd -c sha512
 mkdir /home/haut/.ssh
 chmod 700 /home/haut/.ssh
-chown haut.haut /home/haut/.ssh
+chown haut:haut /home/haut/.ssh
 EOF
 
   cat << EOF >> "$create_users"
@@ -1251,18 +1325,18 @@ addgroup -g 51 users
 # Hardening
 # Fix directory and file permissions
 chmod 440 /etc/sudoers
-chown root.root /etc/sudoers
+chown root:root /etc/sudoers
 chmod 700 /root
 chmod -R g-s /home
-chown -R tc.staff /home/tc
+chown -R tc:staff /home/tc
 chmod -R o-rwx /home/tc /home/haut /home/bas /home/verif 
-chown -R root.staff /var/dsas
+chown -R root:staff /var/dsas
 chmod 775 /var/dsas          # Write perm for verif
 chmod 640 /var/dsas/?*.dsas
 chmod 660 /var/dsas/dsas_conf.xml
-chown tc.verif /var/dsas/dsas_conf.xml
-chown root.repo /var/dsas/repo.conf.dsas
-chown -R root.staff /opt
+chown tc:verif /var/dsas/dsas_conf.xml
+chown root:repo /var/dsas/repo.conf.dsas
+chown -R root:staff /opt
 chmod 770 /opt
 chmod 770 /opt/.filetool.lst
 chmod 644 /usr/local/share/www/?* /usr/local/share/www/api/?* /usr/local/share/www/en/?* /usr/local/share/www/fr/?*
@@ -1298,7 +1372,7 @@ sed -i -e "s:\(swap\s*defaults,\):\1swap,:" /etc/init.d/tc-config
 # set noexec,nosuid,nodev on /dev/shm (suggestion lynis)
 sed -i -e "s:\(/dev/shm\s*tmpfs\s*defaults\):\1,noexec,nosuid,nodev:" /etc/fstab
 
-# Use hidepid=2 on /prc (suggestion lynis)
+# Use hidepid=2 on /proc (suggestion lynis)
 sed -i -e "s:\(proc\s*defaults\):\1,hidepid=2:" /etc/fstab
 
 EOF
@@ -1306,6 +1380,14 @@ EOF
   chmod 755 "$create_users"
   chroot "$extract" /tmp/create_users.sh
   rm "$create_users"
+
+  # FIXME 6.x kernels deprecated the use of 'chown user.group' and this still
+  # appears in a couple of places that are rather annoying. The block below
+  # fixes the issues I known about in TinyCore 14.0. This block will be to be
+  # adpated or dropped as these are fixed in Tinycore or other places are found
+  sed -i -e 's/\(chown.*\)\.staff/\1:staff/g' ${extract}/etc/init.d/tc-functions
+  sed -i -e 's/\(chown.*\)\.staff/\1:staff/g' ${extract}/usr/bin/tce-setdrive
+  sed -i -e 's/\(chown.*\)\.staff/\1:staff/g' ${extract}/usr/bin/tce-setup
 
   # Special case, very limited busybox for chroot with only /bin/ash and /usr/bin/env installed
   _old=$extract
@@ -1321,11 +1403,12 @@ EOF
   _ldir=/opt/lftp
   (umask 022; mkdir -p \$_ldir/lib \$_ldir/dev \$_ldir/etc \$_ldir/tmp \$_ldir/home)
   chmod 775 \$_ldir/tmp
-  chown root.staff \$_ldir/tmp
+  chown root:staff \$_ldir/tmp
   (umask 027; mkdir -p \$_ldir/home/haut)
-  chown haut.haut \$_ldir/home/haut
+  chown haut:haut \$_ldir/home/haut
   cp -p /lib/ld-linux* \$_ldir/lib
   grep ^haut /etc/passwd > \$_ldir/etc/passwd
+  echo haut:x:2002: > \$_ldir/etc/group
   cp -p /etc/host.conf /etc/nsswitch.conf \$_ldir/etc
   for _file in /usr/local/bin/lftp /usr/local/etc/lftp.conf /usr/local/bin/ssh; do
     while [ -L "\$_file" ]; do

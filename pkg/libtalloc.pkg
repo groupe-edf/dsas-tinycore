@@ -1,9 +1,9 @@
 _pkg=libtalloc
-_version=2.4.0
-_uri=http://www.samba.org/ftp/talloc/talloc-2.4.0.tar.gz
+_version=2.4.1
+_uri=http://www.samba.org/ftp/talloc/talloc-2.4.1.tar.gz
 _dep="libtirpc"
 _build_dep="compiletc coreutils python3.6 python3.6-dev libtirpc-dev"
-_pkg_path=talloc-2.4.0
+_pkg_path=talloc-2.4.1
 _conf_cmd="setarch linux$arch ./configure"
 _make_cmd="make"
 _install_cmd="make install DESTDIR=" 

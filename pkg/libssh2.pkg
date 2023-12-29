@@ -1,0 +1,10 @@
+_pkg=libssh2
+_version=1.11.0
+_uri=https://www.libssh2.org/download/libssh2-1.11.0.tar.gz
+_build_dep="compiletc openssl-dev"
+_dep="openssl"
+_pkg_path=libssh2-1.11.0
+_conf_cmd="setarch linux$arch ./configure --prefix=/usr/local --disable-static --localstatedir=/var"
+_make_cmd="find . -name Makefile -type f -exec sed -i 's/-g//g' {} \; && make"
+_install_cmd="make install DESTDIR=" 
+_pkgs='main{/usr/local/lib/*.so*};dev{/usr/local/include,/usr/local/lib/pkgconfig};doc{/usr/local/share}'

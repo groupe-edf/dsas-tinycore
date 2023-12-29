@@ -1,18 +1,17 @@
 _pkg=busybox
-_version=1.36.0
-_uri="https://busybox.net/downloads/busybox-1.36.0.tar.bz2"
+_version=1.36.1
+_uri="https://busybox.net/downloads/busybox-1.36.1.tar.bz2"
 _dep="Linux-PAM"
 _build_dep="compiletc Linux-PAM-dev sstrip curl libssh2"
-_pkg_path="busybox-1.36.0"
+_pkg_path="busybox-1.36.1"
 _pre_config=\
 "cd $builddir/$_pkg_path
 for file in busybox-1.27.1-wget-make-default-timeout-configurable.patch \
             busybox-1.29.3_root_path.patch \
             busybox-1.33.0_modprobe.patch \
-            busybox-1.33.0_tc_depmod.patch \
-            busybox-1.33.0_skip-loop-control.patch; do
+            busybox-1.33.0_tc_depmod.patch; do
   curl -L -o \$file $tcz_src/busybox/\$file
-  if \$(grep -q '\-\-\- a/' \$file); then
+  if \$(grep -q '+++ b/' \$file); then
     patch -Np1 -i \$file
   else
     patch -Np0 -i \$file
@@ -22,10 +21,10 @@ done
 # Make a copy of source as will build twice
 mkdir $builddir/$_pkg_path.nosuid
 tar -cf - * | tar -xpC $builddir/$_pkg_path.nosuid -f -
-chown -R tc.staff $builddir/$_pkg_path.nosuid
+chown -R tc:staff $builddir/$_pkg_path.nosuid
  
 # Config for SUID version of busybox
-curl -L -o .config $tcz_src/busybox/busybox-1.34.1_config_suid
+curl -L -o .config $tcz_src/busybox/busybox-1.36.0_config_suid
 
 # Allow TMOUT in ash
 sed -i -e 's/^# CONFIG_ASH_IDLE_TIMEOUT.*/CONFIG_ASH_IDLE_TIMEOUT=y/' .config
@@ -34,28 +33,11 @@ sed -i -e 's/^# CONFIG_PAM.*/CONFIG_PAM=y/' .config
 # Remove support of NFS/CIFS from mount as RPC support dropped in glibc >= 2.32
 sed -i -e 's/CONFIG_FEATURE_MOUNT_NFS=y/CONFIG_FEATURE_MOUNT_NFS=n/' .config
 sed -i -e 's/CONFIG_FEATURE_MOUNT_CIFS=y/CONFIG_FEATURE_MOUNT_CIFS=n/' .config
-# New options since busybox 1.33.0
-cat << EOF >> .config
-CONFIG_FEATURE_TIMEZONE=y
-CONFIG_SHA1_SMALL=1
-CONFIG_SHA1_HWACCEL=y
-CONFIG_SHA256_HWACCEL=y
-
-# CONFIG_LOOP_CONFIGURE is not set
-# CONFIG_NO_LOOP_CONFIGURE is not set
-CONFIG_TRY_LOOP_CONFIGURE=y
-
-# CONFIG_CRC32 is not set
-# CONFIG_ASCII is not set
-# CONFIG_TSORT is not set
-# CONFIG_SEEDRNG is not set
-# CONFIG_TREE is not set
-EOF
-chown tc.staff .config
+chown tc:staff .config
 
 # Config for NOSUID version of busybox
 cd $builddir/$_pkg_path.nosuid
-curl -L -o .config $tcz_src/busybox/busybox-1.34.1_config_nosuid
+curl -L -o .config $tcz_src/busybox/busybox-1.36.0_config_nosuid
 
 # Allow TMOUT in ash
 sed -i -e 's/^# CONFIG_ASH_IDLE_TIMEOUT.*/CONFIG_ASH_IDLE_TIMEOUT=y/' .config
@@ -64,34 +46,7 @@ sed -i -e 's/^# CONFIG_PAM.*/CONFIG_PAM=y/' .config
 # Remove support of NFS/CIFS from mount as RPC support dropped in glibc >= 2.32
 sed -i -e 's/CONFIG_FEATURE_MOUNT_NFS=y/CONFIG_FEATURE_MOUNT_NFS=n/' .config
 sed -i -e 's/CONFIG_FEATURE_MOUNT_CIFS=y/CONFIG_FEATURE_MOUNT_CIFS=n/' .config
-# New options since busybox 1.34.1
-cat << EOF >> .config
-CONFIG_FEATURE_TIMEZONE=y
-CONFIG_FEATURE_CPIO_IGNORE_DEVNO=y
-CONFIG_FEATURE_CPIO_RENUMBER_INODES=y
-CONFIG_FEATURE_FIND_ATIME=y
-CONFIG_FEATURE_FIND_CTIME=y
-
-CONFIG_FEATURE_FIND_AMIN=y
-CONFIG_FEATURE_FIND_CMIN=y
-CONFIG_FEATURE_FIND_SAMEFILE=y
-CONFIG_FEATURE_WGET_FTP=y
-
-CONFIG_ASH_SLEEP=y
-
-CONFIG_SHA1_SMALL=1
-CONFIG_SHA1_HWACCEL=y
-CONFIG_SHA256_HWACCEL=y
-
-# CONFIG_LOOP_CONFIGURE is not set
-# CONFIG_NO_LOOP_CONFIGURE is not set
-CONFIG_TRY_LOOP_CONFIGURE=y
-
-CONFIG_TSORT=y
-CONFIG_SEEDRNG=y
-CONFIG_TREE=y
-EOF
-chown tc.staff .config
+chown tc:staff .config
 "
 _conf_cmd="setarch linux$arch make oldconfig; cd $builddir/$_pkg_path.nosuid; setarch linux$arch make oldconfig"
 _make_cmd=\

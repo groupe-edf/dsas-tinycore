@@ -47,7 +47,7 @@ all: MyCert.pem good.cab bad.cab virus.cab unsigned.cab
 	awk -i inplace 'BEGIN { while (getline < ARGV[2]) { pemcert = pemcert $$0 "\n" } delete ARGV[2]; } \
 	  { if (/<pem><\/pem>/) { print "      <pem>" pemcert "</pem>"; } else { print $$0; }}' ${XMLFILE} MyCert.pem
 	mkdir -p ${HAUT}/Authenticode
-	cp -f good.cab bad.cab virus.cab unsigned.cab  ${HAUT}/Authenticode
+	cp -f good.cab bad.cab virus.cab unsigned.cab ${HAUT}/Authenticode
 
 MyCert.key:
 	openssl genrsa -out MyCert.key 4096
@@ -86,6 +86,7 @@ unsigned.cab:
 	rm -f unsigned.txt unsigned.cab 
 	echo "Unsigned test file" > unsigned.txt
 	lcab unsigned.txt unsigned.cab
+	rm -f unsigned.txt
 
 clean: 
 	rm -f good.txt good-unsigned.cab good.cab bad.txt bad-unsigned.cab bad.cab 

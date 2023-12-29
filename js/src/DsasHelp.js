@@ -20,13 +20,14 @@
 // Relies on "marked.js" being imported first
 import "./github-markdown.min.css";
 import "./dsas.css";
-import { setOptions, parse } from "marked";
+import { use, parse } from "marked";
+import { gfmHeadingId } from "marked-gfm-heading-id";
 import { _ } from "./MultiLang";
 import { modalMessage } from "./DsasModal";
 import { failLoggedin, dsasOrigin } from "./DsasUtil";
 
 // DSAS version variable
-const dsasVersion = "1.2.19";
+const dsasVersion = "2.1.0";
 
 function dsasHeadings() {
     const hs = Array.prototype.slice.call(document.querySelectorAll("h1, h2, h3"));
@@ -101,7 +102,7 @@ export default function dsasDisplayHelp() {
         // If user text was passed here we'd need to sanitize it, but the
         // documentation is supplied with the DSAS.
         // FIXME Fortigate SSL VPN F***'s up here. Kludge to fix it.
-        setOptions({ baseUrl: dsasOrigin() });
+        use(gfmHeadingId({ baseUrl: dsasOrigin(), prefix: "toc-" }));
         document.getElementById("Documentation").innerHTML = "<article class=\"markdown-body\">"
         + parse(text).replace(/fgt_sslvpn.url_rewrite\(/g, "") + "</article>";
         dsasHelpTOC();
