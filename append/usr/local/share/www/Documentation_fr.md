@@ -1550,7 +1550,7 @@ Logiciels impactés par ce risque
 | logiciel    | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
 | openssl     | [3.2.0](https://www.openssl.org/source/openssl-3.2.0.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
-| openssh     | [9.5p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.5p1.tar.gz) | ssh et sftp utilisé |
+| openssh     | [9.6p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.6p1.tar.gz) | ssh et sftp utilisé |
 
 ### Risque : Attaque sur la vérification des signatures 
 
