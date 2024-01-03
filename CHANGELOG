@@ -1,5 +1,9 @@
 Log of the principal changes to the DSAS
 
+Version 2.1.1 (XX XXX XXXX)
+- Bump version number
+- Update openssh (9.5p1 -> 9.6p1)
+
 Version 2.1.0 (21 dec 2023)
 - openssl (1.1.1w -> 3.2.0)
 - Correct make.sh for upgrades that change dependencies
