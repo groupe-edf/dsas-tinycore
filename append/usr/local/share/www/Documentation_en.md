@@ -1481,7 +1481,7 @@ Software impacted by this risk
 
 | software      | version    | comment                                                                        | 
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [3.2.0](https://www.openssl.org/source/openssl-3.2.0.tar.gz) | Only the functionality used by ssh impacted |
+| openssl | [3.2.1](https://www.openssl.org/source/openssl-3.2.1.tar.gz) | Only the functionality used by ssh impacted |
 | openssh | [9.6p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.6p1.tar.gz) | ssh and sftp used |
 
 ### Risk: Attack on signature verification
@@ -1495,12 +1495,12 @@ Software impacted by this risk
 
 | software | version | comment |
 | -------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [3.2.0](https://www.openssl.org/source/openssl-3.2.0.tar.gz) | Used for authenticode, LiveUpdate and OpenSSL verification |
-| gnupg | [2.4.3](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.4.3.tar.bz2) | Used for RPM, DEB and GPG verification |
+| openssl | [3.2.1](https://www.openssl.org/source/openssl-3.2.1.tar.gz) | Used for authenticode, LiveUpdate and OpenSSL verification |
+| gnupg | [2.4.4](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.4.4.tar.bz2) | Used for RPM, DEB and GPG verification |
 | libgcrypt | [1.10.3](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.3.tar.bz2) | Used for RPM, DEB and GPG verification |
 | rpm | [4.18.1](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.18.x/rpm-4.18.1.tar.bz2) | Used for RPM checking |
 | osslsigncode | [2.7.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.7/osslsigncode-2.7.tar.gz) | Used for authenticode verification |
-| clamav | [1.2.1](https://www.clamav.net/downloads/production/clamav-1.2.1.tar.gz) | Used for antivirus tests |
+| clamav | [1.3.0](https://www.clamav.net/downloads/production/clamav-1.3.0.tar.gz) | Used for antivirus tests |
 
 ### Risque : Elevation of privileges
 
@@ -1527,7 +1527,7 @@ Software impacted by this risk
 
 | software | version | comment |
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [3.2.0](https://www.openssl.org/source/openssl-3.2.0.tar.gz) | only the functionality used by ssh impacted |
+| openssl | [3.2.1](https://www.openssl.org/source/openssl-3.2.1.tar.gz) | only the functionality used by ssh impacted |
 | lftp    | [4.9.2](https://lftp.yar.ru/ftp/lftp-4.9.2.tar.bz2) | Used for http, https, ftp, ftps, sftp |
  
 ### Risk: Attack against DSAS administrator authentication

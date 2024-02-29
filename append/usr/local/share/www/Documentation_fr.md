@@ -1549,7 +1549,7 @@ Logiciels impactés par ce risque
 
 | logiciel    | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
-| openssl     | [3.2.0](https://www.openssl.org/source/openssl-3.2.0.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
+| openssl     | [3.2.1](https://www.openssl.org/source/openssl-3.2.1.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
 | openssh     | [9.6p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.6p1.tar.gz) | ssh et sftp utilisé |
 
 ### Risque : Attaque sur la vérification des signatures 
@@ -1563,12 +1563,12 @@ Logiciels impactés par ce risque
 
 | logiciel      | version  |  commentaire                                                                      | 
 |--------------|----------|------------------------------------------------------------------------------|
-| openssl      | [3.2.0](https://www.openssl.org/source/openssl-3.2.0.tar.gz) | Utilisé pour la vérification authenticode, LiveUpdate et OpenSSL |
-| gnupg        | [2.4.3](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.4.3.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
+| openssl      | [3.2.1](https://www.openssl.org/source/openssl-3.2.1.tar.gz) | Utilisé pour la vérification authenticode, LiveUpdate et OpenSSL |
+| gnupg        | [2.4.4](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.4.'.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
 | libgcrypt    | [1.10.3](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.3.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
 | rpm          | [4.18.1](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.18.x/rpm-4.18.1.tar.bz2) | Utilisé pour la vérification RPM |
 | osslsigncode | [2.7.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.7/osslsigncode-2.7.tar.gz) | Utilisé pour la vérification authenticode |
-| clamav | [1.2.0](https://www.clamav.net/downloads/production/clamav-1.2.0.tar.gz) | Utilisé pour des tests antivirale |
+| clamav | [1.3.0](https://www.clamav.net/downloads/production/clamav-1.3.0.tar.gz) | Utilisé pour des tests antivirale |
 
 ### Risque : Elevation des privilèges
 
@@ -1595,7 +1595,7 @@ Logiciels impactés par ce risque
 
 | logiciel     | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
-| openssl     | [3.2.0](https://www.openssl.org/source/openssl-3.2.0.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
+| openssl     | [3.2.1](https://www.openssl.org/source/openssl-3.2.1.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
 | lftp    | [4.9.2](https://lftp.yar.ru/ftp/lftp-4.9.2.tar.bz2) | Utilsé pour http, https, ftp, ftps, sftp |
  
 ### Risque : Attaque contre l'authentification administrateur du DSAS
@@ -1637,7 +1637,7 @@ faut configurer l'accès les variable d'environnement `http_proxy` et
 ```shell
 export http_proxy=http://<hostname>:<port>
 export https_proxy=http://<hostname>:<port>
-```
+```s
 
 Ça sera utile à ajouter ces deux lignes au fichier `~/.profile` afin
 qu'il soit configuré à chaque fois. Après, la commande
