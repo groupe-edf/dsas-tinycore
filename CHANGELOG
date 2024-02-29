@@ -3,6 +3,7 @@ Log of the principal changes to the DSAS
 Version 3.0.0 (XX XXX XXX)
 - Bump version to 3.0.0
 - Update Tinycore 14.0 -> 15.0
+- Add package icu74 needed for node build
 
 Version 2.1.1 (29 Feb 2024)
 - Bump version number
