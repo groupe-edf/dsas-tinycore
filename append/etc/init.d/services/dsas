@@ -757,8 +757,11 @@ config_sshd(){
     while ! sudo -u tc /usr/local/bin/sshpass -p "$PASSWD" ssh-copy-id -i /home/tc/.ssh/id_rsa.pub -f "tc@$INTERCO_HAUT" ; do
       # FIXME Sleep to allow any error messages to be seen. Maybe remove later
       sleep 5
-      dialog --msgbox "Password incorrect" 0 0
-      PASSWD="$(dialog --stdout --no-cancel --insecure --passwordbox 'Password user tc:' 0 0)"
+      dialog --msgbox "Password incorrect?" 0 0
+      if ! PASSWD="$(dialog --stdout --insecure --passwordbox 'Password user tc:' 0 0)"; then
+        echo "${RED}Upper Machine not found. Aborting${NORMAL}"
+        exit 1
+      fi
     done
 
     cp /home/haut/.ssh/id_rsa.pub /tmp/authorized_keys
