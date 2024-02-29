@@ -111,13 +111,13 @@ curl_cmd="curl --connect-timeout 300"
 
 # tiny core related
 if [ "$arch" != "64" ]; then
-  livecd_url=http://tinycorelinux.net/14.x/x86/release/Core-current.iso
-  tcz_url=http://tinycorelinux.net/14.x/x86/tcz
-  tcz_src=http://tinycorelinux.net/14.x/x86/release/src
+  livecd_url=http://tinycorelinux.net/15.x/x86/release/Core-current.iso
+  tcz_url=http://tinycorelinux.net/15.x/x86/tcz
+  tcz_src=http://tinycorelinux.net/15.x/x86/release/src
 else
-  livecd_url=http://tinycorelinux.net/14.x/x86_64/release/CorePure64-current.iso
-  tcz_url=http://tinycorelinux.net/14.x/x86_64/tcz
-  tcz_src=http://tinycorelinux.net/14.x/x86_64/release/src
+  livecd_url=http://tinycorelinux.net/15.x/x86_64/release/CorePure64-current.iso
+  tcz_url=http://tinycorelinux.net/15.x/x86_64/tcz
+  tcz_src=http://tinycorelinux.net/15.x/x86_64/release/src
 fi
 export tcz_src
 
@@ -1380,14 +1380,6 @@ EOF
   chmod 755 "$create_users"
   chroot "$extract" /tmp/create_users.sh
   rm "$create_users"
-
-  # FIXME 6.x kernels deprecated the use of 'chown user.group' and this still
-  # appears in a couple of places that are rather annoying. The block below
-  # fixes the issues I known about in TinyCore 14.0. This block will be to be
-  # adpated or dropped as these are fixed in Tinycore or other places are found
-  sed -i -e 's/\(chown.*\)\.staff/\1:staff/g' ${extract}/etc/init.d/tc-functions
-  sed -i -e 's/\(chown.*\)\.staff/\1:staff/g' ${extract}/usr/bin/tce-setdrive
-  sed -i -e 's/\(chown.*\)\.staff/\1:staff/g' ${extract}/usr/bin/tce-setup
 
   # Special case, very limited busybox for chroot with only /bin/ash and /usr/bin/env installed
   _old=$extract
