@@ -1,10 +1,16 @@
 Log of the principal changes to the DSAS
 
-Version 2.1.1 (XX XXX XXXX)
+Version 2.1.1 (29 Feb 2024)
 - Bump version number
+- Add ability to quit endless loop on install if upper machine is missing.
 - Update openssh (9.5p1 -> 9.6p1)
+- Update libgpg-error (1.47 -> 1.48)
+- Update libskba (1.6.5 -> 1.6.6)
+- Update Gnupg (2.4.3 -> 2.4.4)
+- Update ClamAv (1.2.0 -> 1.3.0)
+- Update OpenSSL (3.2.0 -> 3.2.1)
 
-Version 2.1.0 (21 dec 2023)
+Version 2.1.0 (21 Dec 2023)
 - openssl (1.1.1w -> 3.2.0)
 - Correct make.sh for upgrades that change dependencies
 - run './make.sh upgrade' to update all packages to use openssl3

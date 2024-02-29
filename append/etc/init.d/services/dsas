@@ -1136,7 +1136,9 @@ case "${1}" in
     start_sshd
     start_syslog
     if [ "$TYP" = "bas" ]; then
-      [ -n "$CONFIG_SSH" ] && config_sshd
+      if [ -n "$CONFIG_SSH" ]; then
+        config_sshd || exit 1
+      fi
       start_web_admin
       start_repo
       start_ntp
