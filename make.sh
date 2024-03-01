@@ -993,8 +993,11 @@ static)
   install_tcz rsync
   install_tcz node
 
+  [ "$arch" != 64 ] && install_tcz pcre2
+  [ "$arch" = 64 ] && install_tcz pcre21032
+  
   # FIXME Force installation of a PCRE that works with PHP composer
-  [ "$arch" != 64 ] && install_tcz pcre2 || install_tcz pcre21042
+  install_tcz pcre21042
 
   # Copy DSAS code to test tree  
   mkdir -p $extract/home/tc/dsas
@@ -1252,6 +1255,9 @@ docker)
     sed -i -e "s/;extension=curl/extension=curl/" $extract/usr/local/etc/php/php.ini
     sed -i -e "s/;extension=zip/extension=zip/" $extract/usr/local/etc/php/php.ini
 
+    # FIXME Force installation of a PCRE that works with PHP composer
+    install_tcz pcre21042
+    
     # Install PHP webdriver via composer. Needs php.ini configured
     install_webdriver
   fi
