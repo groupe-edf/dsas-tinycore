@@ -24,7 +24,7 @@ tar -cf - * | tar -xpC $builddir/$_pkg_path.nosuid -f -
 chown -R tc:staff $builddir/$_pkg_path.nosuid
  
 # Config for SUID version of busybox
-curl -L -o .config $tcz_src/busybox/busybox-1.36.0_config_suid
+curl -L -o .config $tcz_src/busybox/busybox-1.36.1_config_suid
 
 # Allow TMOUT in ash
 sed -i -e 's/^# CONFIG_ASH_IDLE_TIMEOUT.*/CONFIG_ASH_IDLE_TIMEOUT=y/' .config
@@ -37,7 +37,7 @@ chown tc:staff .config
 
 # Config for NOSUID version of busybox
 cd $builddir/$_pkg_path.nosuid
-curl -L -o .config $tcz_src/busybox/busybox-1.36.0_config_nosuid
+curl -L -o .config $tcz_src/busybox/busybox-1.36.1_config_nosuid
 
 # Allow TMOUT in ash
 sed -i -e 's/^# CONFIG_ASH_IDLE_TIMEOUT.*/CONFIG_ASH_IDLE_TIMEOUT=y/' .config
