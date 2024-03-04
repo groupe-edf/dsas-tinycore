@@ -720,7 +720,7 @@ config_sshd(){
   if [ "$TYP" = "bas" ]; then
     # Wait for machine haut to become available
     i=0
-    echo -ne "Waiting for SSH server on machine haut /"
+    echo -ne "Waiting for SSH server on upper machine /"
     while :; do
       case $(($((i++)) % 4)) in
         0)
@@ -737,6 +737,7 @@ config_sshd(){
           ;;
       esac 
       ping -W 1 -c 1 "$INTERCO_HAUT" > /dev/null  2>&1 && break
+      [ "$i" -gt 60 ] && echo "${RED}Upper Machine not found. Aborting${NORMAL}" && exit 1
     done
     echo -e "\b"
     echo "SSH server on machine haut available"
