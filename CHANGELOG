@@ -1,5 +1,8 @@
 Log of the principal changes to the DSAS
 
+Version 3.0.1 (04 Mar 2024)
+- Timeout looking for upper machine correctly
+
 Version 3.0.0 (01 Mar 2024)
 - Bump version to 3.0.0
 - Update Tinycore 14.0 -> 15.0
