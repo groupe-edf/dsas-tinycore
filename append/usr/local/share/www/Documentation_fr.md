@@ -1549,8 +1549,8 @@ Logiciels impactés par ce risque
 
 | logiciel    | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
-| openssl     | [3.2.0](https://www.openssl.org/source/openssl-3.2.0.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
-| openssh     | [9.5p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.5p1.tar.gz) | ssh et sftp utilisé |
+| openssl     | [3.2.1](https://www.openssl.org/source/openssl-3.2.1.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
+| openssh     | [9.6p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.6p1.tar.gz) | ssh et sftp utilisé |
 
 ### Risque : Attaque sur la vérification des signatures 
 
@@ -1563,12 +1563,12 @@ Logiciels impactés par ce risque
 
 | logiciel      | version  |  commentaire                                                                      | 
 |--------------|----------|------------------------------------------------------------------------------|
-| openssl      | [3.2.0](https://www.openssl.org/source/openssl-3.2.0.tar.gz) | Utilisé pour la vérification authenticode, LiveUpdate et OpenSSL |
-| gnupg        | [2.4.3](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.4.3.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
+| openssl      | [3.2.1](https://www.openssl.org/source/openssl-3.2.1.tar.gz) | Utilisé pour la vérification authenticode, LiveUpdate et OpenSSL |
+| gnupg        | [2.4.4](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.4.'.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
 | libgcrypt    | [1.10.3](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.3.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
 | rpm          | [4.18.1](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.18.x/rpm-4.18.1.tar.bz2) | Utilisé pour la vérification RPM |
 | osslsigncode | [2.7.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.7/osslsigncode-2.7.tar.gz) | Utilisé pour la vérification authenticode |
-| clamav | [1.2.0](https://www.clamav.net/downloads/production/clamav-1.2.0.tar.gz) | Utilisé pour des tests antivirale |
+| clamav | [1.3.0](https://www.clamav.net/downloads/production/clamav-1.3.0.tar.gz) | Utilisé pour des tests antivirale |
 
 ### Risque : Elevation des privilèges
 
@@ -1581,7 +1581,7 @@ Logiciels impactés par ce risque
 
 | logiciel    | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
-| noyau linux | [6.1.2](https://tinycorelinux.net/14.x/x86/release/src/kernel/linux-6.1.2-patched.txz) | Des CVE d'élévation de privilège sont les seuls à traiter |
+| noyau linux | [6.6.8](https://tinycorelinux.net/15.x/x86/release/src/kernel/linux-6.6.8-patched.txz) | Des CVE d'élévation de privilège sont les seuls à traiter |
 
 
 ### Risque : Attaque sur le moyen de téléchargement des fichiers 
@@ -1595,7 +1595,7 @@ Logiciels impactés par ce risque
 
 | logiciel     | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
-| openssl     | [3.2.0](https://www.openssl.org/source/openssl-3.2.0.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
+| openssl     | [3.2.1](https://www.openssl.org/source/openssl-3.2.1.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
 | lftp    | [4.9.2](https://lftp.yar.ru/ftp/lftp-4.9.2.tar.bz2) | Utilsé pour http, https, ftp, ftps, sftp |
  
 ### Risque : Attaque contre l'authentification administrateur du DSAS
@@ -1609,10 +1609,10 @@ Logiciels impactés par ce risque
 
 | logiciel     | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
-| php-cgi     | [8.2.0](http://tinycorelinux.net/14.x/x86/tcz/php-8.2-cgi.tcz) | Backend de la site d'administration |
-| lighttpd    | [1.4.58](http://tinycorelinux.net/14.x/x86/tcz/lighttpd.tcz) | Backend de la site d'administration |
+| php-cgi     | [8.2.0](http://tinycorelinux.net/15.x/x86/tcz/php-8.2-cgi.tcz) | Backend de la site d'administration |
+| lighttpd    | [1.4.58](http://tinycorelinux.net/15.x/x86/tcz/lighttpd.tcz) | Backend de la site d'administration |
 | Linux PAM | [1.5.3](https://github.com/linux-pam/linux-pam/releases/download/v1.5.3/Linux-PAM-1.5.3.tar.xz) | Authentification sur la site d'administration |
-| site web DSAS | [2.1.0](https://gitlab.com/groupe-edf/dsas-tinycore) | Backend et frontend de la site d'administration |
+| site web DSAS | [3.0.1](https://gitlab.com/groupe-edf/dsas-tinycore) | Backend et frontend de la site d'administration |
 
 La site web du DSAS est développé spécialement pour ce projet. Une
 analyse statique et suite de test de la code est utilisé à chaque version
@@ -1624,7 +1624,7 @@ de la code afin de limiter les risques.
 
 Vous auriez besoin une machine de build. Le plus simple est d'utiliser la
 même souche que utilisé par le DSAS lui-même. Par exemple la souche 
-[CorePlus v14.x](http://tinycorelinux.net/14.x/x86/release/CorePlus-current.iso)
+[CorePlus v15.x](http://tinycorelinux.net/15.x/x86/release/CorePlus-current.iso)
 est utilisé actuellement pour la build du DSAS. Le DSAS a besoin au moins
 4 Go de mémoire (notamment pour le build de clamav). Tant que vous avez
 mise en place cette machine, vous auriez besoin un certain nombre
@@ -1637,7 +1637,7 @@ faut configurer l'accès les variable d'environnement `http_proxy` et
 ```shell
 export http_proxy=http://<hostname>:<port>
 export https_proxy=http://<hostname>:<port>
-```
+```s
 
 Ça sera utile à ajouter ces deux lignes au fichier `~/.profile` afin
 qu'il soit configuré à chaque fois. Après, la commande

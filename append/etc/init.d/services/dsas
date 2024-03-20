@@ -720,7 +720,7 @@ config_sshd(){
   if [ "$TYP" = "bas" ]; then
     # Wait for machine haut to become available
     i=0
-    echo -ne "Waiting for SSH server on machine haut /"
+    echo -ne "Waiting for SSH server on upper machine /"
     while :; do
       case $(($((i++)) % 4)) in
         0)
@@ -737,6 +737,7 @@ config_sshd(){
           ;;
       esac 
       ping -W 1 -c 1 "$INTERCO_HAUT" > /dev/null  2>&1 && break
+      [ "$i" -gt 60 ] && echo "${RED}Upper Machine not found. Aborting${NORMAL}" && exit 1
     done
     echo -e "\b"
     echo "SSH server on machine haut available"
@@ -757,8 +758,11 @@ config_sshd(){
     while ! sudo -u tc /usr/local/bin/sshpass -p "$PASSWD" ssh-copy-id -i /home/tc/.ssh/id_rsa.pub -f "tc@$INTERCO_HAUT" ; do
       # FIXME Sleep to allow any error messages to be seen. Maybe remove later
       sleep 5
-      dialog --msgbox "Password incorrect" 0 0
-      PASSWD="$(dialog --stdout --no-cancel --insecure --passwordbox 'Password user tc:' 0 0)"
+      dialog --msgbox "Password incorrect?" 0 0
+      if ! PASSWD="$(dialog --stdout --insecure --passwordbox 'Password user tc:' 0 0)"; then
+        echo "${RED}Upper Machine not found. Aborting${NORMAL}"
+        exit 1
+      fi
     done
 
     cp /home/haut/.ssh/id_rsa.pub /tmp/authorized_keys
@@ -1133,7 +1137,9 @@ case "${1}" in
     start_sshd
     start_syslog
     if [ "$TYP" = "bas" ]; then
-      [ -n "$CONFIG_SSH" ] && config_sshd
+      if [ -n "$CONFIG_SSH" ]; then
+        config_sshd || exit 1
+      fi
       start_web_admin
       start_repo
       start_ntp

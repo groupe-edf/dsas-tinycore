@@ -1,0 +1,12 @@
+_pkg=icu74
+_version=7.4.2
+_uri=https://github.com/unicode-org/icu/releases/download/release-74-2/icu4c-74_2-src.tgz
+_build_dep="compiletc coreutils"
+_dep=""
+_pkg_path="icu/source"
+_pre_config=""
+_conf_cmd="sed -i -e 's|LDFLAGSICUDT|#LDFLAGSICUDT|' config/mh-linux && setarch linux$arch ./configure --prefix=/usr/local"
+_make_cmd="make"
+_install_cmd="make install DESTDIR="
+_post_build="cd usr/local/lib/icu && ln -s $_version current"
+_pkgs='main{usr/local/lib/*.so*};dev{usr/local/include,usr/local/share,usr/local/bin/icu-config,usr/local/lib/pkgconfig,usr/local/lib/icu};bin{usr/local/bin/!(icu-config),usr/local/sbin}'
