@@ -593,7 +593,7 @@ dans la fenêtre.
 
 ![Entrée du mot de passe pendant la configuration SSH](fr/init10.png)
 
-Par défaut le mot de passe du DSAS est __dSa02021DSAS__ mais à la
+Par défaut le mot de passe du DSAS est __dSaO2021DSAS__ mais à la
 première utilisation de l'interface d'administration vous serez forcé de
 changer ce mot de passe.
 

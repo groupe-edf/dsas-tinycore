@@ -574,7 +574,7 @@ the privileged users __tc__ password must be entered in the window.
 
 ![Enter password during SSH configuration](en/init10.png)
 
-By default, the DSAS password is __dSa02021DSAS__ but the first time you
+By default, the DSAS password is __dSaO2021DSAS__ but the first time you
 use the administration interface you will be forced to change this
 password.
 
