@@ -245,6 +245,8 @@ audit_perms(){
 
   echo "Auditing permissions of ${GREEN}$DSAS${NORMAL} in the background"
   grep -q users /etc/group || addgroup -g 51 users
+  chmod 640 $VAR/*
+  chmod 644 $VAR/dsas_typ
   while IFS= read -r -d '' _d; do
     _d=$(basename "$_d")
     for _user in bas haut log; do
