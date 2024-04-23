@@ -1,5 +1,9 @@
 Log of the principal changes to the DSAS
 
+Version 3.0.3 (23 Apr 2024)
+- Bump version
+- Use 'mktemp -u' in checkfiles to avoid early creation of files
+
 Version 3.0.2 (23 Apr 2024)
 - Update osslsigncode (2.7 -> 2.8)
 - Add -ignore-crl flag to osslsigncode
