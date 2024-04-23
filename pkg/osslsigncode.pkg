@@ -1,12 +1,43 @@
 _pkg=osslsigncode
-_version=2.7.0
-_uri=https://github.com/mtrojnar/osslsigncode/archive/refs/tags/2.7.tar.gz
-_src=osslsigncode-2.7.tar.gz
+_version=2.8.0
+_uri=https://github.com/mtrojnar/osslsigncode/archive/refs/tags/2.8.tar.gz
+_src=osslsigncode-2.8.tar.gz
 _dep="curl openssl libssh2"
 _build_dep="compiletc coreutils cmake openssl openssl-dev curl-dev libssh2-dev python3.9"
-_pkg_path=osslsigncode-2.7
+_pkg_path=osslsigncode-2.8
 _pre_config="sudo -u tc mkdir -p $builddir/$_pkg_path/build"
-_conf_cmd="cd build; setarch linux$arch cmake -S .."
+_conf_cmd="
+# Base64 encoded zipped patch
+echo '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
+2unjUPF7eedfnUZRdK8dAAA=' | base64 -d | zcat | patch -p0
+cd build;
+setarch linux$arch cmake -S .."
 _make_cmd="cd build; cmake --build ."
 _install_cmd="cd build; make install DESTDIR=" 
 _pkgs='main{/usr}'
