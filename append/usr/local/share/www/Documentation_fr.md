@@ -1567,7 +1567,7 @@ Logiciels impactés par ce risque
 | gnupg        | [2.4.4](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.4.'.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
 | libgcrypt    | [1.10.3](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.3.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
 | rpm          | [4.18.1](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.18.x/rpm-4.18.1.tar.bz2) | Utilisé pour la vérification RPM |
-| osslsigncode | [2.7.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.7/osslsigncode-2.7.tar.gz) | Utilisé pour la vérification authenticode |
+| osslsigncode | [2.8.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.8/osslsigncode-2.8.tar.gz) | Utilisé pour la vérification authenticode |
 | clamav | [1.3.0](https://www.clamav.net/downloads/production/clamav-1.3.0.tar.gz) | Utilisé pour des tests antivirale |
 
 ### Risque : Elevation des privilèges

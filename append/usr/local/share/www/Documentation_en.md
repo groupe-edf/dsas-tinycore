@@ -1499,7 +1499,7 @@ Software impacted by this risk
 | gnupg | [2.4.4](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.4.4.tar.bz2) | Used for RPM, DEB and GPG verification |
 | libgcrypt | [1.10.3](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.3.tar.bz2) | Used for RPM, DEB and GPG verification |
 | rpm | [4.18.1](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.18.x/rpm-4.18.1.tar.bz2) | Used for RPM checking |
-| osslsigncode | [2.7.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.7/osslsigncode-2.7.tar.gz) | Used for authenticode verification |
+| osslsigncode | [2.8.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.8/osslsigncode-2.8.tar.gz) | Used for authenticode verification |
 | clamav | [1.3.0](https://www.clamav.net/downloads/production/clamav-1.3.0.tar.gz) | Used for antivirus tests |
 
 ### Risque : Elevation of privileges
