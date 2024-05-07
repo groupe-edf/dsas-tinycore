@@ -1,7 +1,7 @@
 _pkg=py3.9cairo
 _version=1.25.1
 _uri=https://github.com/pygobject/pycairo/releases/download/v1.25.1/pycairo-1.25.1.tar.gz
-_build_dep="compiletc python3.9-dev cairo-dev"
+_build_dep="compiletc python3.9-dev python3.9-setuptools cairo-dev"
 _dep="python3.9 cairo"
 _pkg_path=pycairo-1.25.1
 _pre_config=""
