@@ -309,7 +309,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
                 case "ppc64el":
                 case "s390x":
                 // Architecture ok
-                  if ($arch["active"])
+                  if ($arch["active"] == "true")
                     $newarch->addChild("arch", $arch["arch"]);
                 break;
               }
