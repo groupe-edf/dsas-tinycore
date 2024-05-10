@@ -2,6 +2,7 @@ Log of the principal changes to the DSAS
 
 Version 3.0.4 (XX XXX XXXX)
 - Update Linux-PAM (1.5.3 -> 1.6.1)
+- Update ClamAV (1.3.0 -> 1.3.1)
 - Add pam-modules to allow use of pam_regex.so
 - Correct treatment of debian architectures
 - Add possibility to add domain name to radius authentification requests 
