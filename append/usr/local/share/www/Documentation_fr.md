@@ -1568,7 +1568,7 @@ Logiciels impactés par ce risque
 | logiciel    | version  |  commentaire                                                                      | 
 |-------------|----------|------------------------------------------------------------------------------|
 | openssl     | [3.2.1](https://www.openssl.org/source/openssl-3.2.1.tar.gz) | Que la fonctionnalité utilisé par ssh impacté |
-| openssh     | [9.6p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.6p1.tar.gz) | ssh et sftp utilisé |
+| openssh     | [9.7p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.7p1.tar.gz) | ssh et sftp utilisé |
 
 ### Risque : Attaque sur la vérification des signatures 
 
@@ -1582,11 +1582,11 @@ Logiciels impactés par ce risque
 | logiciel      | version  |  commentaire                                                                      | 
 |--------------|----------|------------------------------------------------------------------------------|
 | openssl      | [3.2.1](https://www.openssl.org/source/openssl-3.2.1.tar.gz) | Utilisé pour la vérification authenticode, LiveUpdate et OpenSSL |
-| gnupg        | [2.4.4](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.4.'.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
+| gnupg        | [2.4.5](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.4.5.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
 | libgcrypt    | [1.10.3](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.3.tar.bz2) | Utilisé pour la vérification RPM, DEB et GPG |
 | rpm          | [4.18.1](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.18.x/rpm-4.18.1.tar.bz2) | Utilisé pour la vérification RPM |
 | osslsigncode | [2.8.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.8/osslsigncode-2.8.tar.gz) | Utilisé pour la vérification authenticode |
-| clamav | [1.3.0](https://www.clamav.net/downloads/production/clamav-1.3.0.tar.gz) | Utilisé pour des tests antivirale |
+| clamav | [1.3.1](https://www.clamav.net/downloads/production/clamav-1.3.1.tar.gz) | Utilisé pour des tests antivirale |
 
 ### Risque : Elevation des privilèges
 
@@ -1629,7 +1629,7 @@ Logiciels impactés par ce risque
 |-------------|----------|------------------------------------------------------------------------------|
 | php-cgi     | [8.2.0](http://tinycorelinux.net/15.x/x86/tcz/php-8.2-cgi.tcz) | Backend de la site d'administration |
 | lighttpd    | [1.4.58](http://tinycorelinux.net/15.x/x86/tcz/lighttpd.tcz) | Backend de la site d'administration |
-| Linux PAM | [1.5.3](https://github.com/linux-pam/linux-pam/releases/download/v1.5.3/Linux-PAM-1.5.3.tar.xz) | Authentification sur la site d'administration |
+| Linux PAM | [1.6.1](https://github.com/linux-pam/linux-pam/releases/download/v1.6.1/Linux-PAM-1.6.1.tar.xz) | Authentification sur la site d'administration |
 | site web DSAS | [3.0.4](https://gitlab.com/groupe-edf/dsas-tinycore) | Backend et frontend de la site d'administration |
 
 La site web du DSAS est développé spécialement pour ce projet. Une
