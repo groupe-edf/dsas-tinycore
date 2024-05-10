@@ -612,7 +612,7 @@ configuration, don't forget to log out using the command
 
 ``` shell
 $ exit
-``` 
+```
 
 ## First login to the administration interface
 
