@@ -1,0 +1,11 @@
+_pkg=pam-modules
+_version=2.5
+_uri=https://download.gnu.org.ua/pub/release/pam-modules/pam-modules-2.5.tar.xz
+
+_build_dep="compiletc coreutils Linux-PAM-dev groff"
+_dep="Linux-PAM"
+_pkg_path=pam-modules-2.5
+_conf_cmd="setarch linux$arch ./configure"
+_make_cmd="make"
+_install_cmd="make install DESTDIR=" 
+_pkgs='main{/usr/local/bin,/usr/local/lib/*.so*,/usr/local/lib/security/*.so};doc{/usr/local/share};dev{/usr/local/lib/*.la,/usr/local/lib/security/*.la}'

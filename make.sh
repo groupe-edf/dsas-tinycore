@@ -1186,6 +1186,7 @@ docker)
   [ "$arch" = 64 ] && install_tcz zip unzip
   [ "$arch" != 64 ] && install_tcz zip-unzip     # Needed to allow repacking of unsigned zip files
   install_tcz Linux-PAM
+  install_tcz pam-modules   # Needed for pam-regex.so
   install_tcz net-snmp
   install_tcz lftp
   install_tcz libpam-radius-auth
