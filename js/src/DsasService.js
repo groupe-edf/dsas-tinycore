@@ -35,6 +35,7 @@ function dsasChangeService(what) {
         const nchk = !document.getElementById("radius").checked;
         document.getElementById("radius_server").disabled = nchk;
         document.getElementById("radius_secret").disabled = nchk;
+        document.getElementById("radius_domain").disabled = nchk;
     } else if (what === "syslog") {
         document.getElementById("syslog_server").disabled = !document.getElementById("syslog").checked;
     } else if (what === "ntp") {
@@ -63,10 +64,12 @@ function dsasChangeService(what) {
                 serv.radius.active = (document.getElementById("radius").checked ? "true" : "false");
                 serv.radius.server = document.getElementById("radius_server").value;
                 serv.radius.secret = document.getElementById("radius_secret").value;
+                serv.radius.domain = document.getElementById("radius_domain").value;
             } else {
                 serv.radius.active = "false";
                 serv.radius.server = "";
                 serv.radius.secret = "";
+                serv.radius.domain = "";
             }
             serv.syslog.active = (document.getElementById("syslog").checked ? "true" : "false");
             serv.syslog.server = document.getElementById("syslog_server").value;
@@ -159,12 +162,15 @@ export default function dsasDisplayService(what = "all") {
                     document.getElementById("radius").checked = false;
                     document.getElementById("radius_server").disabled = true;
                     document.getElementById("radius_secret").disabled = true;
+                    document.getElementById("radius_domain").disabled = true;
                 } else {
                     document.getElementById("radius").checked = (serv.radius.active === "true");
                     document.getElementById("radius_server").value = printObj(serv.radius.server);
                     document.getElementById("radius_server").disabled = (serv.radius.active !== "true");
                     document.getElementById("radius_secret").value = printObj(serv.radius.secret);
                     document.getElementById("radius_secret").disabled = (serv.radius.active !== "true");
+                    document.getElementById("radius_domain").value = printObj(serv.radius.domain);
+                    document.getElementById("radius_domain").disabled = (serv.radius.active !== "true");
                 }
             }
         }

@@ -34,7 +34,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
       case "all":
         /** @var array{ssh: array{active: string, user_tc: string, 
           *                       user_bas: string, user_haut: string},
-          *            radius: array{active: string, server: string, secret: string},
+          *            radius: array{active: string, server: string, secret: string, domain: string},
           *            syslog: array{active: string, server: string},
           *            ntp: array{active: string, server: array{string}},
           *            antivirus: array{active: string, uri: string},
@@ -104,6 +104,13 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $dsas->config->radius->secret = $radius_secret;
         else
           $errors[] = ["radius_secret" => "Illegal radius secret"]; // Avoid XSS at least
+        $radius_domain = htmlspecialchars(trim($data["radius"]["domain"]));
+        if (! empty($radius_domain))
+          $radius_domain_err = (preg_match("/^[a-zA-Z\d][a-zA-Z\d-]*$/", $radius_domain) ? "" : "The radius domain is invalid");
+        if (empty($radius_domain_err))
+          $dsas->config->radius->domain = $radius_domain;
+        else
+          $errors[] = ["radius_domain" => $radius_domain_err];
         $dsas->config->syslog->active = ($data["syslog"]["active"] === "true" ? "true" : "false");
         $dsas->config->ntp->active = ($data["ntp"]["active"] === "true" ? "true" : "false");
 
@@ -213,6 +220,9 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
     header("HTTP/1.0 500 Internal Server Error");
   else {
     header("Content-Type: application/json");
+    // Ensure that the JSON includes the radius domain even if the xml doesn't
+    if (! isset($dsas->config->radius->domain))
+      $dsas->config->radius->domain = "";
     echo json_encode($dsas->config);
   }
 }

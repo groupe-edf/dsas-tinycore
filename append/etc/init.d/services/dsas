@@ -861,20 +861,32 @@ start_radius(){
   radius=$(xmllint --xpath "string(dsas/config/radius/active)" "$VAR/dsas_conf.xml")
   server=$(xmllint --xpath "string(dsas/config/radius/server)" "$VAR/dsas_conf.xml")
   secret=$(xmllint --xpath "string(dsas/config/radius/secret)" "$VAR/dsas_conf.xml")
+  domain=$(xmllint --xpath "string(dsas/config/radius/domain)" "$VAR/dsas_conf.xml")
 
   [ "$radius" != "true" ] && return
   [ -z "$server" ] && return
   [ -z "$secret" ] && return
-  echo "Configuring radius client to use the server ${GREEN}$server${NORMAL}." 
+  echo "Configuring radius client to use the server ${GREEN}$server${NORMAL}."
+
   echo "# server[:port]                   shared_secret                 timeout(s)    source_ip      vrf" > $RADIUS_SERVER
   printf "%-32s %-32s %-4s" "$server" "$secret" "3" >> $RADIUS_SERVER
   chmod 750 "$RADIUS_SERVER"
   chown root:staff "$RADIUS_SERVER"
-  sed -i -e '2s:^:auth           [success=3 ignore=ignore default=2]      pam_radius_auth.so localifdown conf=/etc/raddb/server\n:' /usr/local/etc/pam.d/common-auth
+  if [ -z "$domain" ]; then
+    sed -i -e '2s:^:auth           [success=3 ignore=ignore default=2]      pam_radius_auth.so localifdown conf=/etc/raddb/server\n:' /usr/local/etc/pam.d/common-auth
+  else
+    # The lines below are added backwards to simplify the calculation of where to add the lines
+    # The double remove of the domain name is needed to remove domain in username if successful 
+    # radius login. DON'T REMOVE IT..
+    sed -i -e "5s:^:auth           required                                 pam_regex.so extended transform=s|^$domain/||\n:" /usr/local/etc/pam.d/common-auth
+    sed -i -e "2s:^:auth           required                                 pam_regex.so extended transform=s|^$domain/||\n:" /usr/local/etc/pam.d/common-auth
+    sed -i -e '2s:^:auth           [success=4 ignore=ignore default=3]      pam_radius_auth.so localifdown conf=/etc/raddb/server\n:' /usr/local/etc/pam.d/common-auth
+    sed -i -e "2s:^:auth           required                                 pam_regex.so extended transform=s|^|$domain/|\n:" /usr/local/etc/pam.d/common-auth
+  fi
 }
 
 stop_radius(){
-  sed -i -e '/^.*pam_radius_auth.so.*/d' /usr/local/etc/pam.d/common-auth
+  sed -i -e '/^.*pam_radius_auth.so.*/d' -e '/^.*pam_regex.so.*/d' /usr/local/etc/pam.d/common-auth
   rm $RADIUS_SERVER > /dev/null 2>&1
 }
 
