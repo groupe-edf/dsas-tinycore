@@ -109,9 +109,9 @@ on to two distinct machines
 software pre-installed. We have chosen to use the [Tiny Core
 Linux](http://tinycorelinux.net/) operating system because it is
 regularly updated with a minimal installation (12 megabytes) including
-only the Linux kernel, busybox and a few boot scripts. No service is
+only the Linux kernel, Busyox and a few boot scripts. No service is
 started by default
-- Additional dependances are avoided wherever possible. For example,
+- Additional dependencies are avoided wherever possible. For example,
 perl, python, ... are not installed as the scripting language `ash` is
 already available.
 - Each of the machines of the DSAS has two network interfaces, with one
@@ -262,7 +262,7 @@ first card will be used for the connection to the outside of the DSAS and
 their configuration will be dependent upon the environment in which the
 DSAS is installed.
 
-The second card is always used for the interconnexion between the two
+The second card is always used for the interconnection between the two
 machines, and this network by default will be the static network
 "192.168.192.0/24". Several means could be used to configure this
 interconnection network, particularly if a firewall is placed on this
@@ -337,14 +337,14 @@ network, and it must be an address in the network supplied.
 
 #### Docker configuration of interconnection network
 
-The interconnexion network might be a virtual or a physical network
+The interconnection network might be a virtual or a physical network
 depending on the configuration. There are four variables that control its
 configuration
 
 - ETH1 - If a physical network is used this must be a valid network
 interface on the host machine. The network will be configured with the
 `macvlan` device of Linux as a physical interface
-- NET1 - The network of the interconnexion in CIDR format. By default, it
+- NET1 - The network of the interconnection in CIDR format. By default, it
 is assumed that the upper and lower machines are on the same LAN and so
 this network is the same on both machines. It is possible to have a
 firewall between the two machines of the DSAS and in that case the
@@ -453,7 +453,7 @@ In this case stop the machine and add a network card in the hypervisor.
 
 The configuration of the interconnection network should only be changed
 rarely, and its configuration is only available in this initial phase of
-configuration. The configuration of the interconnexion network depends on
+configuration. The configuration of the interconnection network depends on
 the environment in which the DSAS is installed. There are 2 typical means
 of configuring the interconnection network of the DSAS.
 
@@ -466,7 +466,7 @@ placed between them. In this case the IP addresses of both machines are
 independent and the gateways for both machines must be a valid IP address
 on the same LAN
 
-Both machines must know the interconnexion network configuration of both
+Both machines must know the interconnection network configuration of both
 machines and so this step must be carried out on both machines and be
 __identical__. If the configuration is incorrect, the lower machine will
 be unable to contact the upper machine and one or both machines must be
@@ -779,7 +779,7 @@ against the DSAS
 allows for an account to be temporarily suspended without deleting it.
 - ![](lock.svg) - By clicking on this icon, it is possible to change the
 local password of the user. This password is only used if the radius
-client est deactiviated or the radius server does not response.
+client est deactivated or the radius server does not response.
 - ![](x-lg.svg) - By clicking on this icon, it is possible to permanently
 delete the user.
  
@@ -792,7 +792,7 @@ might be
 The order of the users can easily be modified by dragging the user to the 
 desired position with the mouse. At this point it is recommended to press 
 the `Apply` button in order to make these changes permanent. Otherwise on 
-the next restart the old passwords will be requested.  
+the next restart the old passwords will be requested.
 
 ### Network configuration
 
@@ -1014,18 +1014,18 @@ The DSAS will update these files from this URI once a day.
 
 ### Radius Client
 
-The DSAS includes the possibility to use a radius serveur for the 
-authentification of user passwords. The user accounts must be setup on the
+The DSAS includes the possibility to use a radius server for the 
+authentication of user passwords. The user accounts must be setup on the
 DSAS with the same usernames as the Radius server, and only the role of 
 validating the user is delegated to the Radius Server. The accounts 
-themselves remain local to the DSAS. If, and only if, the radius serveur
+themselves remain local to the DSAS. If, and only if, the radius server
 is not available, the local password on the DSAS will be used.
 
 The DSAS radius client only uses PAP. Although radius PAP is encrypted it
 suffers from two major problems. 
 
 - It is based on the use of an MD5 hash, so to ensure its security the 
-shared secret must be as longer as possible (32 characters recommanded),
+shared secret must be as longer as possible (32 characters recommended),
 - The "nonce" is selected by the client, therefore a capture of the traffic
 RADIUS_REQUEST packet between the Radius client and server, can easily be
 replayed. This means the network connection between the client and server
@@ -1690,7 +1690,7 @@ install the needed packages for a Debian machine is
 
 ```shell
 apt-get install build-essential rsync genisoimage squashfs-tools git curl
-``` 
+```
 
 It should be noted that the DSAS build makes extensive use of the chroot
 command to create dedicated build environments for each package using
@@ -1818,7 +1818,7 @@ After, the build of a test version of the DSAS is performed with the command
 ./make.sh -t
 ```
 
-An ISO with the test version of teh DSAS is available in the file
+An ISO with the test version of the DSAS is available in the file
 `work/dsas-test.iso`. This ISO includes additional code and services to
 test all of the functions of the DSAS. To use this test ISO, you need to
 have two virtual machines configured and from the machine configured as
@@ -2285,7 +2285,8 @@ or if your version of grep doesn't include perl regular expressions
 
 ```shell
 $ echo -e `\x30\x82..\x30\x82` | LANG=C xargs -i grep -obUa {} sepWscSvc64.exe
-``` 
+```
+
 it is possible to identify the beginning of the certificates. The text
 `\x30\x82` corresponds to the ASN.1 code for a `SEQUENCE`. A sequence is
 always followed by a length encoded on two bytes, and a certificate
@@ -2432,7 +2433,7 @@ is publicly available, and the JAR files can be verified with openssl
 without the need to install JAVA on the DSAS. Particularly, the JAR files
 of Trend Micro needed for the signature are 
 
-MANIFEST.MF - A file containg teh names and hashes of all of the files in
+MANIFEST.MF - A file containing the names and hashes of all of the files in
 (or next to) the JAR file
 JAVA.SF - A file containing the hash of the manifest
 JAVA.RSA - A SMIME signature file of the file JAVA.SF
@@ -2446,7 +2447,7 @@ $ cat cert.pem >> cert.0
 $ cat cert[1-9].pem >> cert.1
 ```
 
-It should be noted that the root certificate for the sigend JAR files of 
+It should be noted that the root certificate for the signed JAR files of 
 Trend Micro is `Digicert Trusted Root G4`, a publicly available CA in the
 majority of certificate stores.
 

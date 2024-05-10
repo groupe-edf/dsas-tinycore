@@ -27,7 +27,8 @@ contrôler leurs intégrités et de les mettre à disposition dans les
 systèmes d’information. Il a également pour but la suppression de l'usage
 de clefs USB sur des infrastructures industrielles, et donc inclut la
 capacite de transfert des fichiers signé par des personnes habilités.
-Le DSAS assure également une rupture de session protocolaire entre les différentes zones de sécurité dans un contexte de défense en profondeur.
+Le DSAS assure également une rupture de session protocolaire entre les
+différentes zones de sécurité dans un contexte de défense en profondeur.
 
 ## La principe de vérification des signatures
 
@@ -54,19 +55,19 @@ d'avoir une moyen de vérifier chaque type de signature utilisé par les
 ### La chaine de confiance
 
 Le problème avec une vérification de signature est de savoir et limiter à
-qui on donne confiance. Pour ça la chaine de confiance de la signature
-est importante à connaitre. Cette chaine de confiance pourrait être lié à
+qui on donne confiance. Pour ça la chaîne de confiance de la signature
+est importante à connaitre. Cette chaîne de confiance pourrait être lié à
 des "Autorités de certification" (ou CA) dans la cas des certificats de
 type X509, soit à une confiance distribué avec des certificats eux-mêmes
 qui sont signé entre eux dans la cas des certificats PGP. Dans le cas des
 certificats PGP, la "toile de confiance" est implicite et il se passe
 avant l'inclusion des certificats dans la DSAS. Pour les certificats
-basés sur la norme X509 la chaine de confiance est inclut dans chaque
+basés sur la norme X509 la chaîne de confiance est inclut dans chaque
 fichier signés. Par exemple le certificat utilisé pour la signature d'une
 fichier est lui-même signé par un certificat intermédiaire, et ce
 certificat intermédiaire est signé par l'autorité de certification. Le
 DSAS permet de définir des taches de vérification limitant des fichiers
-permis à passer à une chaine de confiance complète et pas seulement
+permis à passer à une chaîne de confiance complète et pas seulement
 vérifier vis-à-vis des autorités de certification. Malheureusement, [les
 malveillantes peut acheter des certificats de signature
 aussi](https://duo.com/decipher/attackers-are-signing-malware-with-valid-certificates).
@@ -108,11 +109,11 @@ Ces contraintes nous poussent vers un des principes d'architecture avec
 
 - séparation du traitement des zones sensibles et non sensibles sur deux
 machines distinctes.
-- Utilisation d'une souche linux minimale avec le moins de logiciels
+- Utilisation d'une souche Linux minimale avec le moins de logiciels
 installés possible. Le choix d'utilisation de [Tiny Core Linux](http://tinycorelinux.net/)
 a été fait car cette souche est mise à jour régulièrement et
 l'installation minimale (de 12 mégaoctets) n'inclut que le noyau de
-Linux, busybox et quelques scripts de démarrage. Aucun service n'est
+Linux, BusyBox et quelques scripts de démarrage. Aucun service n'est
 démarré par défaut
 - Des dépendances supplémentaires sont à éviter ; par exemple perl,
 python, … ne sont pas installés et tout script utilisé par le DSAS est
@@ -196,12 +197,12 @@ Les mises à jour de Windows des "Patch Tuesday" sont souvent une centaine
 de mégaoctets en taille, donc multiplier ça par le nombre à garder
 représente potentiellement plusieurs giga-octets. Pour les mises à jour
 de Symantec le besoin est de l'ordre de 150 mégaoctets pour
-IntelligentUpdate mais de l'ordre de 50 giga-octets pour LiveUpdate.
+IntelligentUpdate mais de l'ordre de 50 gigaoctets pour LiveUpdate.
 
-Chaque repositoire de Linux pourrait avoir jusqu'à 50 giga-octets, donc
-Si on transfère des mises à jour de linux notre besoin de disque peut
+Chaque dépôt de Linux pourrait avoir jusqu'à 50 gigaoctets, donc
+Si on transfère des mises à jour de Linux notre besoin de disque peut
 vite exploser. Dans Les configurations suivantes, nous avons utilisé une
-taille de 50 giga-octets, mais nous recommandons au moins 500 Go pour
+taille de 50 gigaoctets, mais nous recommandons au moins 500 Go pour
 chaque machine du DSAS.
 
 ## Mémoire nécessaire pour le DSAS
@@ -249,8 +250,8 @@ configuration initiale devrait être
 un minimum de 256 mégaoctets est nécessaire afin de démarrer le DSAS.
 Mais en fonctionnement le DSAS pourrait utiliser plus de ressources. Sans
 l'antivirus, nous recommandons l'utilisation de 1 gigaoctet de mémoire,
-mais avec l'antivirus d'au moins 2 giga-octets de mémoire est nécessaire,
-mais nous recommandons 3 giga-octets.
+mais avec l'antivirus d'au moins 2 gigaoctets de mémoire est nécessaire,
+mais nous recommandons 3 gigaoctets.
 
 Le DSAS n'a pas besoin d'un format spécifique de disque. Nous avons
 choisi ici d'utiliser le format par défaut proposé par VirtualBox.
@@ -336,7 +337,7 @@ image Docker approprié sans utilisation du `Makefile`.
 Trois variables sont à configurer pour le réseau principal
 
 - NET0 - Le réseau en format CIDR. Par défaut le `Makefile` est configuré
-avec la machine basse avec le réseau `192.168.0.0/24` and the machine
+avec la machine basse avec le réseau `192.168.0.0/24` et la machine
 haut avec le réseau `192.168.1.0/24`. Ces réseaux sont à adapter comme
 besoin.
 - GW0 - Ceci est l'adresse de la passerelle du réseau, et il doit-être un
@@ -427,7 +428,7 @@ une deuxième phase depuis l'interface d'administration du DSAS.
 
 ### Formatage des disques
 
-Au premier démarrage le DSAS nous demande de formatter son disque. Un
+Au premier démarrage le DSAS nous demande de formater son disque. Un
 menu est présenté avec l'ensemble des disques trouvés connectés au DSAS.
 Ceci se présente comme
 
@@ -475,7 +476,7 @@ placement d'un pare-feu entre eux. Dans ce cas, les adresses IP des deux
 machines sont indépendant et les passerelle pour les deux machines
 devraient un adresse IP valide sur la même LAN.
 
-Les deux machines doivent connaitre le réseau d'interconnexion des deux
+Les deux machines doivent connaître le réseau d'interconnexion des deux
 machines et alors cette étape est à faire sur les deux machines et doit
 être __identique__. Si la configuration est incorrecte, la machine basse
 ne pourrait pas communiquer avec la machine haute. Une ou les deux
@@ -556,7 +557,7 @@ utilisé
 
 ![Configuration DNS avec une IP statique](fr/init8.png)
 
-avec ce domaine de recherche les hosts "ntp1" et "ntp1.example.com" 
+avec ce domaine de recherche les hôtes "ntp1" et "ntp1.example.com"
 seront équivalents. Après il faut définir des serveurs de noms,
 responsables pour la conversion des adresses DNS en IP. Par exemple 
 
@@ -618,7 +619,7 @@ de nouveau au menu de configuration.
 
 L'utilisateur à utiliser sur la console est 'tc' et le mot de passe à
 utiliser, si vous ne l'avez pas déjà modifié avec l'interface
-d'administration est comme plus haut. Un console linux classique avec un
+d'administration est comme plus haut. Un console Linux classique avec un
 minimum de fonctionnalités disponibles vous sera présenté. 
 
 La commande nécessaire avec de reconfigurer le DSAS est
@@ -657,7 +658,7 @@ il sera nécessaire d'accepter son usage dans votre navigateur. Si vous
 avez réussi à vous connecter à l'interface d'administration du DSAS
 l'écran de connexion suivant vous sera présenté :
 
-![Ecran de connexion du DSAS](fr/DSAS1.png)
+![Écran de connexion du DSAS](fr/DSAS1.png)
 
 L'utilisateur privilégié sur le DSAS est l'utilisateur __tc__, et le mot
 de passe par défaut est le __dSaO2021DSAS__. Il y a un délai de 3
@@ -698,7 +699,7 @@ demandé d'entrée un mot de passe pour la sauvegarde, comme
 
 ![Menu d'entrée de mot de passe de sauvegarde](fr/DSAS24.png)
 
-Les sauvegardes des deux machines du DSAS sont alors chiffré acec
+Les sauvegardes des deux machines du DSAS sont alors chiffré avec
 `openssl` utilisant le mode AES256 CBC et ce mot de passe et archivé ensemble.
 Si vous ne rentrée pas de mot de passe de sauvegarde, les fichiers sera 
 archivés sans l'étape de chiffrement.
@@ -720,7 +721,7 @@ Le DSAS est configuré afin de vérifier les droits de connexion à chaque
 opération, si plus de 10 minutes séparent une opération de la suivante,
 vous serez automatiquement déconnecté avec la message suivant :
 
-![Ecran de déconnexion automatique du DSAS](fr/DSAS3.png)
+![Écran de déconnexion automatique du DSAS](fr/DSAS3.png)
 
 En cliquant `Ok` sur ce message vous serez redirigé vers l'écran de
 connexion du DSAS.
@@ -731,7 +732,7 @@ Si ceci est votre première connexion au DSAS, il faut connecter avec
 l'utilisateur 'tc', un message d'erreur sera affiché et après, l'écran
 suivant vous sera présenté :
 
-![Ecran de changement des mots de passe initiale](fr/DSAS2.png)
+![Écran de changement des mots de passe initiale](fr/DSAS2.png)
 
 A votre première connexion, le mot de passe du compte 'tc' doit-être
 changé. Les limitations imposées sur les mots de passe sont 
@@ -765,7 +766,7 @@ distance.
 Un nouveau compte est créer en cliquant sur la bouton ![](plus-lg.svg) à
 droit de l'écran. Vous seriez demandé de rentrer le nom de l'utilisateur comme
 
-![Ecran d'ajout de nouveau utilisateur](fr/DSAS35.png)
+![Écran d'ajout de nouveau utilisateur](fr/DSAS35.png)
 
 Les noms d'utilisateurs de devraient être des noms valable POSIX.  Ceci
 veut dire que
@@ -805,10 +806,10 @@ de cette fonctionnalité est fortement déconseillés__ car elle ouvre la
 possibilité d'attaques contre le DSAS
 - __Active__ - Un compte pourrait existe mais ne pas être fonctionnel.
 Ceci permettre de temporairement désactiver un compte sans le supprimer
-- ![](lock.svg) - En cliquant sur cette icone nous pourrions modifier le
+- ![](lock.svg) - En cliquant sur cette icône nous pourrions modifier le
 mot de passe de l'utilisateur locale. Ce mot de passe n'est que utilisé
 si le client radius est désactivé ou le serveur radius ne réponds pas.
-- ![](x-lg.svg) - En cliquant sur cette icone, l'utilisateur pourrait
+- ![](x-lg.svg) - En cliquant sur cette icône, l'utilisateur pourrait
 être supprimé définitivement.
 
 Les modifications fait ne sera pas prise en compte tant que l'utilisateur
@@ -817,7 +818,7 @@ configuration des utilisateurs pourraient ressembler à
 
 ![Menu de configuration des utilisateurs du DSAS](fr/DSAS38.png)
 
-L'ordre des utilisateurs pourait facilement être modifié en bouggant
+L'ordre des utilisateurs pourrait facilement être modifié en bougeant
 l'utilisateur avec le souris à l'endroit desiré. A ce point il est
 recommandé d'appuyer sur le bouton `Appliquer` afin de rendre ces
 modifications permanentes. Sinon au prochain redémarrage les anciens mots
@@ -829,7 +830,7 @@ L'écran de configuration du réseau est accédé depuis le menu
 `Configuration` du DSAS, et l'option `réseau`. En cliquant dessus l'écran
 suivant vous sera présenté 
 
-![Ecran de configuration réseau du DSAS](fr/DSAS6.png)
+![Écran de configuration réseau du DSAS](fr/DSAS6.png)
 
 Le configuration réseau du DSAS est séparé en deux parties. Le réseau
 connecté vers le réseau sensible dénommé __bas__ et le réseau vers le
@@ -837,7 +838,7 @@ réseau non sensible dénommé __haut__.  Chacun de ces deux configurations
 pourraient être accédés en cliquant sur la flèche située à côté du type
 de réseau, comme
 
-![Ecran de configuration réseau du DSAS déroulé](fr/DSAS7.png)
+![Écran de configuration réseau du DSAS déroulé](fr/DSAS7.png)
 
 La configuration du réseau __bas__, précédemment entré est visible dans
 ce menu. Vérifier les configurations, modifier si nécessaire et appuyer
@@ -888,7 +889,7 @@ code pour la France est __FR__.
 - __O__ - L'organisation responsable pour le serveur. En France, il est
 obligatoirement le nom du société enregistré avec INSEE et doit être tout
 en majuscule.
-- __OU__ - Un identifiant of le sous organisation responsable pour le
+- __OU__ - Un identifiant du sous organisation responsable pour le
 serveur. Les certificats signés en France doivent inclure les KBIS, par
 exemple ici '0002 552081317' est un KBIS valable.
 - __CN__ - Pour un serveur, comme le DSAS ceci est obligatoirement le nom
@@ -906,7 +907,7 @@ téléchargé en cliquant sur le bouton ![](save.svg).
 
 ## Configuration des services
 
-Autre que le service web d'administration et service web de repositoire,
+Autre que le service web d'administration et service de dépôt web,
 il y a 7 services qui pourrait être démarrer sur les machines du DSAS;
 
 - Un serveur OpenSSH pour les connexions depuis l'extérieur,
@@ -930,7 +931,8 @@ Le serveur OpenSSH n'est jamais démarrer avec des accès ouverts à tous
 les utilisateurs sur le DSAS. Il faut explicitement donner l'accès à
 chaque utilisateur, et cet accès n'est valable que depuis certain zones
 de sécurité. Par exemple, ci-dessus le service OpenSSH est coché et 
-les utilisateurs administration  peut connecté que depuis des adresses IP dans le sous-réseau "10.0.2.0/24". Les utilisateurs de type bas et haut
+les utilisateurs administration  peut connecté que depuis des adresses
+IP dans le sous-réseau "10.0.2.0/24". Les utilisateurs de type bas et haut
 n'ont aucun droit d'accès.
 
 Les adresses d'écoute pour chaque utilisateur peuvent être très complexe
@@ -1004,7 +1006,7 @@ Un [fichier MIB avec ces OID est disponible pour téléchargement](DSAS-MIB.txt)
 ### Client syslogd
 
 Si le service `syslogd` du DSAS est activé, des logs des services sont
-fait localement au DSAS.Il est également possible à définir un serveur
+fait localement au DSAS. Il est également possible à définir un serveur
 distant pour le service rsyslogd pour des logs en UDP sur la port 514. 
 
 A noter que le service syslogd est fourni par BusyBox, et
@@ -1029,7 +1031,7 @@ flux vers des serveurs distantes
 ### Serveur antivirale
 
 Le DSAS inclut un serveur d'antivirus basé sur le produit `ClamAV`. Si
-l'option `Antivirus` est active, le serveur `clamd` sera demarré, et les
+l'option `Antivirus` est active, le serveur `clamd` sera démarré, et les
 tests de vérification du DSAS inclura des tests antivirale.
 
 En revanche ces tests dépendent sur des signatures virales qui devrait
@@ -1050,20 +1052,20 @@ préférable. Le DSAS mettra à jour ces signatures un fois par jour.
 ### Client Radius
 
 Le DSAS inclut la possibilité d'utiliser un serveur radius pour 
-l'authentication des mots de passe des utilisateurs. Les comptes des
+l'authentification des mots de passe des utilisateurs. Les comptes des
 utilisateurs sur le DSAS doit avoir les mêmes nom que le serveur Radius
-et seulement le rôle de validation des mots de passe est délugué au
+et seulement le rôle de validation des mots de passe est délégué au
 serveur. Les comptes eux-mêmes reste local au DSAS. Si, et seulement si,
-le serveur Radius n'est pas disponsible, les mots de passe locaux seraient
+le serveur Radius n'est pas disponible, les mots de passe locaux seraient
 utilisés.
 
 Le client Radius du DSAS ne peut que utiliser PAP. Même si PAP est chiffré,
-il souffre de deux problemes
+il souffre de deux problèmes
 
-- A la base il fonctionne sur la hash MD5, donc le secret partagé doi-être
-le plus long possible (32 caracteres recommandé)
-- Le "nonce" est selectionné par le client, et donc une cpature de la paquet
-RADIUS_REQUEST de la client et sa rejoue pourrait permettre un authetification
+- A la base il fonctionne sur la hash MD5, donc le secret partagé doit-être
+le plus long possible (32 caractères recommandé)
+- Le "nonce" est sélectionné par le client, et donc une capture de la paquet
+RADIUS_REQUEST de la client et sa rejoue pourrait permettre un authentification
 sans mot de passe. Ceci veut dire que la connexion réseau entre le client et
 serveur doit-être physiquement sécurisé.
 
@@ -1111,8 +1113,10 @@ d'exploitation.
 sur l'occupation des ressources de calcul de la machine. Un "Load
 Average" de "1" veut dire que l'équivalent d'un cœur du processeur est
 complètement occupé. Donc l'occupation total des ressources de calcul de
-la machine est à la point ou le "Load average" est égale à la nombre de cœur de la processeur. Sur la page de la DSAS le "Load average" est
-présenté de manière logarithmique et avec un échelle avec le nombre de cœur de la processeur à 50% de la longueur de la barre de statut. Si le
+la machine est à la point ou le "Load average" est égale à la nombre de
+cœur de la processeur. Sur la page de la DSAS le "Load average" est
+présenté de manière logarithmique et avec un échelle avec le nombre de
+cœur de la processeur à 50% de la longueur de la barre de statut. Si le
 barre de statut est plus longue que la moitie, il y a peut-être un
 problème avec le DSAS ou pas suffisamment de ressources de calcul. Le
 premier chose à refaire dans ce cas est de redémarrer le DSAS afin de
@@ -1134,7 +1138,8 @@ statuts des machines du DSAS, comme
 
 Le statut des vérifications des fichiers pourrait être sur plusieurs
 onglet. Le numéro de l'onglet est croissant avec l’âge des vérifications.
-Le premier onglet est la semaine en cours, le deuxième onglet la semaine dernière, etc.
+Le premier onglet est la semaine en cours, le deuxième onglet la semaine
+dernière, etc.
 
 Le statut de chaque fichier vérifié est donné sur une ligne de la page,
 et chaque ligne est composées de 4 éléments
@@ -1174,7 +1179,7 @@ fichiers ayant eu des problèmes.
 
 En cas d'identification d'un problème ou vulnérabilité ça pourrait être
 nécessaire à chercher dans les logs de vérification, soit pour le nom
-d'un logiciel, soit pour sa signature MD5en En tant d'indicateur de
+d'un logiciel, soit pour sa signature MD5. En tant d'indicateur de
 compromission. Le DSAS fournit un dialogue de recherche afin de trouver
 des entrées correspondant dans les logs de vérification. Taper la valeur
 à trouver dans la dialogue de recherche comme ci-dessous et la prochaine
@@ -1221,21 +1226,22 @@ certificat est à moins de 6 mois de l'expiration
 ne veut pas dire qu'il n'est plus utilisable, mais il n'est pas valable
 pour des fichiers signés après la date de expiration
 
-Les certificatifs racines préinstallées pourraient être utiliser pour les
+Les certificats racines préinstallées pourraient être utiliser pour les
 vérifications du DSAS. Mais l'utilisation de ces certificats seule n'est
 pas suffisante, parce que
 
 - Les certificats préinstallé n'incluent pas des certificats GPG utilisé 
 par les dépôts Linux
 - La vérification seulement contre un certificat racine n'ai pas un 
-garanti forte d'absence de malveillance. [Les certificats de type "code signing" ont été abusés par les 
+garanti forte d'absence de malveillance. [Les certificats de type
+"code signing" ont été abusés par les
 malveillantes](https://duo.com/decipher/attackers-are-signing-malware-with-valid-certificates) 
 afin de signer des malware.
 
 Donc idéalement il faut restreindre les vérifications par des
 vérifications des certificats de type intermédiaires la plus proche de
 l'éditeur de logiciel voulu. Par exemple un mise à jour de "Symantec
-Endpoint Protection" (SEP) comporte la chaine de confiance suivante
+Endpoint Protection" (SEP) comporte la chaîne de confiance suivante
 
 ```
 VeriSign Class 3 Public Primary Certification Authority - G5
@@ -1262,9 +1268,9 @@ sélectionnant l'option `Propriétés` nous pourrions voir le menu suivant
 ![Menu propriétés d'un binaire signé](fr/CERT1.png)
 
 En cliquant sur `Détails` et après `Afficher le certificat` nous
-pourrions voir la chaine de confiance suivante
+pourrions voir la chaîne de confiance suivante
 
-![Chaine de confiance d'un binaire signé](fr/CERT4.png)
+![Chaîne de confiance d'un binaire signé](fr/CERT4.png)
 
 Ceci permet de valider le certificat racine et l'ensemble des certificats
 Utilisés pendant la signature des binaires.
@@ -1312,7 +1318,7 @@ retrouver avec la commande
 ```shell
 $ openssl pkcs7 -inform der -in v.sig -outform pem -print_certs | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if(length($0) > 0) print > "cert" n ".pem"}
 ```
-sur une machine linux. A partir de la ligne de command Windows nous
+sur une machine linux. A partir de la ligne de commande Windows nous
 pourrions faire.
 
 ```shell
@@ -1355,8 +1361,8 @@ pour les clefs, les limitation sur leurs utilisations est inclut dans les
 clefs publiques SSL. Ces clefs sont utilisées dans les tâches __openssl__
 ou __cyberwatch__
 
-Parce qu’il existe aucune chaine de confiance pour des clefs publique, il
-est essentiel de maitriser la manière que les clefs utilisé avec le DSAS
+Parce qu’il existe aucune chaîne de confiance pour des clefs publique, il
+est essentiel de maîtriser la manière que les clefs utilisé avec le DSAS
 sont récupérés.
 
 ### Gestion des certificats GPG
@@ -1366,11 +1372,11 @@ Binaires de Linux, mais également pour d'autres fichiers signés par GPG
 (par exemple des fichiers de configuration développé par les utilisateurs
 du DSAS). 
 
-Les certificats GPG n'intègrent pas explicitement la chaine de confiance
+Les certificats GPG n'intègrent pas explicitement la chaîne de confiance
 dans les binaires signées. GPG utilise la concept de [toile de
 confiance](https://fr.wikipedia.org/wiki/Toile_de_confiance)
 ou les certificats eux-mêmes sont validés entre eux. Ceci est en dehors
-du scope du document et nous avons assumé que vous avez un confiance
+du périmètre du document et nous avons assumé que vous avez un confiance
 complet dans les certificats que vous avez choisi à télécharger sur le
 DSAS.
 
@@ -1381,7 +1387,7 @@ certificat des éditeurs de logiciels sont
 <!-- Keep these bullet points on a single line as it causes problems with forigate VPN SSL -->
 - [La page des certificats de RedHat](https://access.redhat.com/security/team/key) contient [le certificat utilisé pour la signatures des binaires de Redhat depuis 2010](https://www.redhat.com/security/data/fd431d51.txt)
 - [La page des certificats de CentOs](https://www.centos.org/keys/) contient notamment [le certificat utilisé pour CentOS7](https://www.centos.org/keys/RPM-GPG-KEY-CentOS-7)
-- [La page des certificats debian](https://ftp-master.debian.org/keys.html) contient notamment le certicat de [Debian Bullseye](https://ftp-master.debian.org/keys/archive-key-11.asc)
+- [La page des certificats debian](https://ftp-master.debian.org/keys.html) contient notamment le certificat de [Debian Bullseye](https://ftp-master.debian.org/keys/archive-key-11.asc)
 
 ### Importation d'un certificat dans le DSAS
 
@@ -1398,9 +1404,9 @@ recommandé de regarder les détails du certificat importé, comme
 ![Détails du certificat importé](fr/DSAS21.png)
 
 La positionne d'un certificat dans la liste des certificats pourrait être 
-modifié simplement en selectionnant le certificat avec le souris et placant 
-le certificat sur un autre certificat. La nouvelle positione du certificat 
-sera immediatement après ce certificat.
+modifié simplement en sélectionnant le certificat avec le souris et plaçant
+le certificat sur un autre certificat. La nouvelle positionne du certificat
+sera immédiatement après ce certificat.
 
 ## Configuration des taches
 
@@ -1420,7 +1426,7 @@ unique
 tâche sont stocké dans un dossier à part sur le DSAS. Ce dossier devrait
 être unique pour chaque tache.
 - `URI (pas de chargement si vide)` - L'adresse ou le DSAS va chercher 
-les fichiers associés avec une tâche. De laisser vide est permissible et 
+les fichiers associés avec une tâche. De laisser vide est permis et
 dans ce cas il est assumé que les fichiers associés avec le taches
 doit-être déposé sur la DSAS par l'utilisateur. le `URI` doit-être de la
 forme `protocole://site/dossier/` ou bien
@@ -1485,7 +1491,7 @@ A côté de chaque tache, l'icône ![](pencil-square.svg) permets de
 modifier le tache, ![](x-lg.svg) permet de supprimer le tache,
 ![](play.svg) permets à l'exécuter immédiatement et ![](info.svg) permets
 les logs du tâche à être examiner. Si la tâche est en cours d'exécution,
-un icône ![](kill.svg) va apparaitre à côté la tâche, permets l'arrêt de
+un icône ![](kill.svg) va apparaître à côté la tâche, permets l'arrêt de
 la tâche. Le statut de la tâche et fournit via la couleur du titre de la
 tâche. En bleu, la tâche n'a pas été exécuté, en vert l'exécution de la
 tâche a réussi, et en rouge l'exécution a échoué. La dernière exécution
@@ -1494,8 +1500,8 @@ de la tâche est visible en ouvrant la tâche comme
 ![Exemple d'exécution de tache réussi](fr/DSAS32.png)
 
 La positionne d'un tache dans la liste des taches pourrait être modifié
-simplement en selectionnant le tache avec le souris et placant le tache 
-sur un autre tache. La nouvelle positione du tache sera immediatement 
+simplement en sélectionnant le tache avec le souris et plaçant le tache
+sur un autre tache. La nouvelle positionne du tache sera immédiatement
 après ce tache.
 
 ### Sélection d'architecture pour Debian et Redhat
@@ -1507,7 +1513,7 @@ aucun machine Debian avec un architecture `arm64` dans votre
 installation, il n'y a aucun raison de télécharger des fichiers pour cet
 architecture.
 
-Debian et Redhat permet des fichiers à télécharger à être restrient, mais
+Debian et Redhat permet des fichiers à télécharger à être restreint, mais
 la manière d'y arriver avec le DSAS est différente, parce que Debian
 utilisé un seul dépôt monolithique et Redhat utilisé des dépôt différents
 pour chaque architecture et même peut-être par fonctions (main, extras et
@@ -1516,7 +1522,7 @@ updates pour Centos par exemple).
 Afin de limiter les fichiers à télécharger pour Debian, le tâche DSAS est
 directement créé ou modifié avec les architecture voulu comme ci-dessous 
 
-![Exemple de selection d'architecture Debian](fr/DSAS43.png)
+![Exemple de sélection d'architecture Debian](fr/DSAS43.png)
 
 Ou les architectures spéciaux 
 
@@ -1679,10 +1685,10 @@ git clone https://gitlab.com/groupe-edf/dsas-tinycore.git
 
 #### Préparation d'un arbre de source DSAS avec un git privée
 
-Lea compilation du DSAS a besoin que des packages seraient télécharger
+La compilation du DSAS a besoin que des packages seraient télécharger
 depuis l'internet. Dans le cas où le dépôt de git principal utilisé par
 le DSAS est sur le réseau privée, il va falloir utiliser un peu de magie
-de git afin d'assurer un accès à la fois à l'internet et le dêpôt de git.
+de git afin d'assurer un accès à la fois à l'internet et le dépôt de git.
 Cette étape n'est utile que dans ce cas spécifique.
 
 Pour cette étape il faut temporairement désactiver le proxy http en
@@ -1694,7 +1700,7 @@ unset https_proxy
 ```
 
 Prenant l'exemple du gitlab de mon propre entreprise, le certificat TLS
-utilisé par le dêpôt est signé par un autorité de certification privée,
+utilisé par le depôt est signé par un autorité de certification privée,
 ce qui n'est pas installé par défaut sur la machine de compilation. Un
 exemple de la manière de télécharger et de rendre disponible à git
 pourrait être 
@@ -1739,7 +1745,7 @@ commandes
 ```
 tce-load -wi less
 git config core.pager /usr/local/bin/less
-``` 
+```
 
 ### Souche de build autre que TinyCore
 
@@ -1759,7 +1765,7 @@ de configurer le build. L'équivalente commande sur Debian est
 
 ```shell
 apt-get install build-essential rsync genisoimage squashfs-tools git curl
-``` 
+```
 
 Il devrait être noter que la compilation du DSAS utilise largement la
 commande chroot afin de créer des environnement de build cloisonné pour
@@ -1810,7 +1816,8 @@ Le build de l'image ISO est fait avec la commande
 
 Une image ISO est créée dans le fichier `work/dsas.iso`. Nous pourrions
 garder les fichiers temporaires du build avec option "-keep". Ceci est
-utile afin de voir pourquoi quelque chose a été mal installé sur le DSAS, sans être obliger à démarrer un serveur avec le DSAS.
+utile afin de voir pourquoi quelque chose a été mal installé sur le DSAS,
+sans être obliger à démarrer un serveur avec le DSAS.
 
 Afin de faire le build d'un package à partir du code source (voir les
 fichiers `pkg/*.pkg`) une commande comme
@@ -1819,7 +1826,8 @@ fichiers `pkg/*.pkg`) une commande comme
 ./make.sh -build gnupg
 ```
 
-est utilisé. Afin de nettoyer les fichiers utilisés pendant le build vous pouvez faire
+est utilisé. Afin de nettoyer les fichiers utilisés pendant le build vous
+pouvez faire
 
 ```
 ./make.sh -clean
@@ -1846,7 +1854,8 @@ fichier `Makefile` à modifier avec les paramètres d'installation voulu.
 L'objective du processus de release est d'assurer la qualité de la
 release et que les modifications depuis le dernier release n'apporte pas
 des régressions dans la fonctionnalité et sécurité du DSAS. Le
-processus est séparé en deux phase; une phase de test et un phase de build de la release.
+processus est séparé en deux phase; une phase de test et un phase de build
+de la release.
 
 ### Processus de de test pour une release
 
@@ -1995,7 +2004,7 @@ que la commande  `_install_cmd` accepte le nom du dossier temporaire en
 dernier argument. L'exemple typique de la commande `_install_cmd` est
 `make install DESTDIR=`
 - `_post_build` [Optionnel] - Permets de définir une script qui sera
-éxécuté entre la compilation and packaging
+exécuté entre la compilation and packaging
 - `_pkgs` [Optionnel] - Le logiciel pourrait être splitté en plusieurs 
 sous packages. Cette variable permettre à définir la manière quel soit 
 découpé. Un exemple pourrait être
@@ -2003,7 +2012,7 @@ découpé. Un exemple pourrait être
 package principal est définit par `main{...}` et une deuxième package
 avec l'extension `-doc` sera créé avec les fichiers dans `/usr/local/doc`
 - `_post_install` [Optionnel] - Permets de définir une script qui sera 
-éxécuté pour l'installation du package.
+exécuté pour l'installation du package.
 
 Un exemple complet d'un fichier `pkg/openssl-1.1.1.pkg` est
 
@@ -2077,7 +2086,7 @@ droits de connexion avec un shell.
 | bas    | /bin/false | Utilisé pour connexion vers zone plus sensible  |
 | verif  | /bin/false | Utilisé que à l'intérieur du DSAS               |
 
-Chaque utilisateur ajouté via l'interface d'adminsitration du DSAS aurait
+Chaque utilisateur ajouté via l'interface d'administration du DSAS aurait
 le shell /bin/ash.
 
 ### Les droits d'écriture de chaque utilisateur
@@ -2106,14 +2115,15 @@ Les fichiers téléchargés et vérifiés par le DSAS sont tous stockés sur un
 disque. Ce disque est monté avec le flag "noexec" et aucun fichier 
 téléchargé par le DSAS sur ce disque pourrait être utilisé afin de 
 compromettre l'intégrité du DSAS.  Les utilisateurs "haut" et "bas" sont 
-restrient à copier les fichiers seulement sur cette disque. L'ensemble 
+restreint à copier les fichiers seulement sur cette disque. L'ensemble
 des fichiers exécutable du DSAS sont sur un "ramdisk" en mémoire de la 
 machine et copié depuis l'image ISO à chaque redémarrage.
 
-Un hardlink sous linux est exactement le même fichier dupliqué à un autre 
+Un hardlink sous Linux est exactement le même fichier dupliqué à un autre
 endroit. L'usage des hardlinks entre les fichiers du guichet haut du sas 
 et le guichet bas pourrait permettre un simplification de l'architecture, 
-car aucun moyen de tracer les fichiers téléchargés sera nécessaire et ça sans augmentation de l'espace disque.
+car aucun moyen de tracer les fichiers téléchargés sera nécessaire et ça
+sans augmentation de l'espace disque.
 
 En revanche les hardlinks doivent respecter les exigences d'accès entre 
 les guichets haut et bas. Quand un fichier existe dans les deux zones, il 
@@ -2305,7 +2315,7 @@ $ openssl asn1parse -i -inform der -in v.sig
 permettre de voir facilement que la fichier `.sig` contient, au moins
 deux certificats, une hache de la fichier `.grd` et la signature en 
 binaire lui-même. La texte "pkcs7-signedData" permettre d'identifier le 
-type de signature utilisé. Le problème est que la chaine de confiance des
+type de signature utilisé. Le problème est que la chaîne de confiance des
 fichiers `.sig` sont typiquement
 
 ```
@@ -2331,7 +2341,8 @@ Symantec Root CA
 ```
 
 pour des vielles fichiers. Aucun de ces certificats est publiquement 
-disponible, est ils sont embarquées directement dans le logiciel SEPM à son installation. La chaine des certificats utilisés sont inclut dans les 
+disponible, est ils sont embarquées directement dans le logiciel SEPM
+à son installation. La chaîne des certificats utilisés sont inclut dans les
 fichiers `.sig` et nous pourrions les sortir en format PEM avec une 
 commande
 
@@ -2359,7 +2370,7 @@ ou si ta version de grep inclut pas de regexp de type perl
 
 ```shell
 $ echo -e "\x30\x82..\x30\x82" | LANG=C xargs -i grep -obUa {} sepWscSvc64.exe
-``` 
+```
 
 c'est possible d'identifier la début des certificats. Le texte "\x30\x82"
 correspond à la code ASN.1 pour une `SEQUENCE`. Une séquence est toujours
@@ -2423,13 +2434,13 @@ est
 $ openssl cms -verify -CAfile SymantecRoot2005CA.pem -inform der -in v.sig -content v.grd
 ```
 
-qu'on va trouver deux autres problème avec les chaines de signature de 
+qu'on va trouver deux autres problème avec les chaînes de signature de
 Symantec. Deux des trois certificats racines utilisés par Symantec pour
 les signatures ont expiré, et Symantec n'ont pas utilisé des signatures 
-horodaté avec un server de temps openssl. Donc, `openssl` va refuser de 
+horodaté avec un serveur de temps openssl. Donc, `openssl` va refuser de
 valider les fichiers fournis par Symantec. Le deuxième problème est dans
 les champs `X509v3 Key Usage` et `X509v3 Extended Key Usage`. `openssl`
-demande que l'ensemble des certificats de la chaine de confiance support
+demande que l'ensemble des certificats de la chaîne de confiance support
 les mêmes options de signature, mais le certificat `Code Signing CA`
 support l'option `Code Signing`, mais les deux autres certificats dans la
 chaine ne le supportent pas. Deux autres options de `openssl` sont
@@ -2442,8 +2453,8 @@ $ openssl cms -verify -purpose any -no_check_time -CAfile SymantecRoot2005CA.pem
 Ceci suffit afin de vérifier que les fichiers de Symantec sont bien 
 signés par un certificat avec la racine `Symantec Root 2005 CA`, mais
 rien veut dire Symantec n'as pas autorisé un autre certificat 
-intermédiate sur cette racine. Donc ça sera plus propre de vérifier la 
-signature contre une chaine de confiance complète que nous contrôle. Pour
+intermédiaire sur cette racine. Donc ça sera plus propre de vérifier la
+signature contre une chaîne de confiance complète que nous contrôle. Pour
 ça le DSAS nous doit ignorer les certificats dans `v.sig` en prenant en
 compte que les données de signature, et nous sommes obligé à fournir les
 deux autres certificats utilisés pour les signatures, `cert.pem` et
@@ -2464,7 +2475,7 @@ Il y a deux types de vérification fait pour des fichiers de Trend Micro
 - Des vérifications des fichiers JAR signés
 - Des vérifications des fichiers `*.7z` signés en SMIME.
 
-Les chaines de certification utilisées pour ces deux moyens de 
+Les chaînes de certification utilisées pour ces deux moyens de
 vérifications sont indépendant, mais afin de simplifier des choses, ils
 sont traité par le DSAS comme un seul tache. Il est alors possible 
 d'inclure l'ensemble des certificats pour les deux types de vérification
@@ -2492,7 +2503,7 @@ $ openssl pkcs7 -inform der -in file.sig -outform pem -print_certs | awk 'split_
 ```
 
 Malheureusement, les certificats récupérés ne sont que des certificats
-intermédiat ou feuille. Aucun certificat racine semble être contenu dans
+intermédiât ou feuille. Aucun certificat racine semble être contenu dans
 les signatures SMIME de Trend Micro, et le certificat racine est auto généré par Trend Micro est n'est pas publiquement disponible
 
 FIXME: Comment récupérer le certificat racine ????
@@ -2512,7 +2523,7 @@ certificats intermédiat ou feuille désiré sont dans le fichier `cert.1`
 [Le format des fichiers JAR](https://docs.oracle.com/javase/7/docs/technotes/guides/jar/jar.html#Manifest-Overview) 
 est publiquement disponible, et les JAR pourrait être vérifier avec
 openssl sans besoin d'installer java sur le DSAS. Notamment les JAR
-fourneient par Trend Micro contient 3 fichiers important pour les 
+fourni par Trend Micro contient 3 fichiers important pour les
 signatures
 
 MANIFEST.MF - Un fichier contenant les noms et haches de l'ensemble des 
@@ -2529,7 +2540,7 @@ $ cat cert.pem >> cert.0
 $ cat cert[1-9].pem >> cert.1
 ```
 
-A noté que le certificate raçine des signature JAR de Trend Micro est 
+A noté que le certificat racine des signature JAR de Trend Micro est
 "Digicert Trusted Root G4", un publique CA disponible dans la plupart de
 store de certificat. 
 
@@ -2549,8 +2560,8 @@ sa signature `Release.gpg`. Depuis peu, il y a également un fichier
  `gpg` intégrée.
 
 Les dépôt Debian sont signés avec plusieurs clefs. Actuellement, à chaque
-nouvelle version de Debian un clef d'archive maitre est renouvelé. Le
-fichier `Release` est signé avec la clef maitre courant et la clef
+nouvelle version de Debian un clef d'archive maître est renouvelé. Le
+fichier `Release` est signé avec la clef maître courant et la clef
 antécédente. Les dépôts `stable`, `testing`, `security` ne sont signés
 que avec ces deux clefs. En revanche les dépôts des versions eux-mêmes
 tel-que `Buster`ou `BullsEye` sont également signés avec une troisième
@@ -2576,10 +2587,10 @@ $ gpg --detach-sig <file>
 $ gpg -a --detach-sig <file>
 ```
 
-Avec la premiere deux formes seulement ls fichier <file>.gpg ou 
+Avec la première deux formes seulement ls fichier <file>.gpg ou
 <file>.asc doivent être transmis au DSAS parce que ce fichier contient la
 signature et le fichier d'origine. Pour les deux formes avec les 
-signatures detachées le fichier d'origine et un fichier <file>.sig ou 
+signatures détachées le fichier d'origine et un fichier <file>.sig ou
 <file>.asc doit être fournis au DSAS.
 
 ### Vérification - openssl
@@ -2644,7 +2655,7 @@ signé à partir de son contenu. Le DSAS implémente cette parade
 ## Vérification - Antivirus
 
 ClamAV est utilisé pour des tests antivirale. C'est important de 
-connaitre les limitations des tests antivirale and la raison d'être de
+connaître les limitations des tests antivirale et la raison d'être de
 ces tests dans le DSAS.
 
 1. Un antivirus ne peut que fonctionner correctement si les signatures 
@@ -2732,7 +2743,7 @@ est disponible seulement en https sur la port `5000`. Le site est écrit
 en `HTML5, JS et bootstrap5` pour le frontend et `PHP8` pour le backend.  
 L'authentification sur le site est faite avec un connecteur à `Linux PAM` 
 aux comptes local à la machine `bas`. `PAM` est configuré de fonctionner 
-qu'avec des `Unix domain socket` complétement local à la machine, donc 
+qu'avec des `Unix domain socket` complètement local à la machine, donc
 accessible que au processus tournant sur la machine. Le backend retourne 
 une session identifiant pour un login réussite. Cet identifiant est
 vérifié a chaque opération sur le backend, et périmé après dix minutes 
@@ -2787,7 +2798,8 @@ dessus sur une installation de Docker par défaut.
 
 Parce que le DSAS utilise SSH pour plusieurs opérations, ce délai
 pourrait sérieusement dégrader la performance, et l'image Docker
-doit-être configuré avec un nombre réduit de descripteurs de fichier. Nous avons trouvé avec la limite réduite à `65535` une bonne performance 
+doit-être configuré avec un nombre réduit de descripteurs de fichier.
+Nous avons trouvé avec la limite réduite à `65535` une bonne performance
 est retrouvé, mais nous suggérons une valeur de `4096`. Ceci pourrait
 être configuré avec l'option `--ulimit nofile=4096` pendant la phase
 de création d'image Docker.
@@ -2796,7 +2808,7 @@ de création d'image Docker.
 
 Actuellement le seul privilège nécessaire pour le DSAS sur Docker est 
 CAP_NET_ADMIN. Ceci est nécessaire parce que le DSAS a besoin de 
-configurer ses réseaux, plutôt que le model de Docker ou le conteneur est
+configurer ses réseaux, plutôt que le modèle de Docker ou le conteneur est
 déjà préconfiguré avec ses réseaux. En revanche, des implications de 
 sécurité sont associé avec l'usage de CAP_NET_ADMIN qui doit-être 
 adressé.
@@ -2871,7 +2883,7 @@ attaques. Ces services de CDN utilisent (ou pas) nombreux outils comme
 
 Ces protections sont très efficaces en éliminant l'utilisation des `bots`
 afin d'accéder au site web et force les attaquants à utiliser autant de
-ressources qu'un navigateur modern afin de simuler ce navigateur et 
+ressources qu'un navigateur moderne afin de simuler ce navigateur et
 accéder au site web. Ceci pourrait réduire significativement la charge
 d'attaque. Malheureusement, les technologies légères utilisé par le DSAS
 veut dire que ces CDN vont considérer le DSAS comme un attaquant et ne
