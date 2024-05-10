@@ -71,7 +71,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             if ($passwd != str_replace("/\s+/", "", $passwd))
               $errors[] = [$name => "The password can not contain white spaces"];
             else if (! complexity_test($passwd))
-              $errors[] = [$name => "The password is insufficently complex"];
+              $errors[] = [$name => "The password is insufficiently complex"];
             else {
               $ret = change_passwd($name, $passwd, $dsas->config->users->hash);
               if ($ret["retval"] != 0) {

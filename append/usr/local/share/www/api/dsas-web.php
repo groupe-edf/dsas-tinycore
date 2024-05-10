@@ -76,7 +76,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           chmod (_DSAS_VAR . "/dsas.pem", 0640);
           chgrp (_DSAS_VAR . "/dsas.csr", "repo");
           if ($retval === 0 || $retval === false) 
-            $errors[] = ["renew" => "Error while saving the certiciates"];  
+            $errors[] = ["renew" => "Error while saving the certificates"];
           else
             $dsas->asXml(_DSAS_XML);
         }

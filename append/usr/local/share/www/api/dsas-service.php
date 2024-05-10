@@ -167,13 +167,13 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         else if ($snmp_password != str_replace("/\s+/", "", $snmp_password))
           $errors[] = ["snmp_pass" => "The SNMP password can not contain white spaces"];
         else if ($dsas->config->snmp->active == "true" && ! complexity_test($snmp_password))
-          $errors[] = ["snmp_pass" => "The SNMP password is insufficently complex"];
+          $errors[] = ["snmp_pass" => "The SNMP password is insufficiently complex"];
         else
           $dsas->config->snmp->password = $snmp_password;
         $snmp_encrypt = htmlspecialchars($data["snmp"]["encrypt"]);
         if ($snmp_encrypt !== "MD5" && $snmp_encrypt !== "SHA" 
             && $snmp_encrypt !== "SHA256" && $snmp_encrypt !== "SHA512")
-          $errors[] = ["error" => "The SNMP authentification encryption is illegal"];
+          $errors[] = ["error" => "The SNMP authentication encryption is illegal"];
         else
           $dsas->config->snmp->encrypt = $snmp_encrypt;
 
