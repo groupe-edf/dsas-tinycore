@@ -1067,6 +1067,18 @@ RADIUS_REQUEST de la client et sa rejoue pourrait permettre un authetification
 sans mot de passe. Ceci veut dire que la connexion réseau entre le client et
 serveur doit-être physiquement sécurisé.
 
+La configuration du Radius a besoin un adresse du serveur radius, un secret
+partagé avec le serveur radius et optionnellement une domaine.Si une domaine
+est configuré, le nom d'utilisateur local est modifié pour les requêtes
+radius comme
+
+```
+Domaine/Nom d'utilisateur
+```
+
+avec un slash entre la domaine et le nom d'utilisateur. Si la domaine n'est 
+pas fournit, le nom d'utilisateur local est utilisé pour les requêtes radius.
+
 # Exploitation du DSAS
 
 ## Statut des machines

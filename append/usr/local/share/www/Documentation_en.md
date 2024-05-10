@@ -1031,6 +1031,17 @@ RADIUS_REQUEST packet between the Radius client and server, can easily be
 replayed. This means the network connection between the client and server
 needs to be physically secured.
 
+The radius configuration needs an address of the radius server, a secret
+shared with the radius server and optionally a domain. If the domain is
+configured, the local user name is modified for the radius requests like
+
+```
+Domain/Username
+```
+
+with a slash between the domain and user name. If the domain is not supplied
+the local user name is used for the radius requests.
+
 # DSAS Operation
 
 ## Status of machines
@@ -1544,7 +1555,7 @@ Software impacted by this risk
 | php-cgi | [8.2.0](http://tinycorelinux.net/15.x/x86/tcz/php-8.2-cgi.tcz) | Backend of the administration site |
 | lighttpd | [1.4.58](http://tinycorelinux.net/15.x/x86/tcz/lighttpd.tcz) | Backend of the administration site |
 | Linux PAM | [1.5.3](https://github.com/linux-pam/linux-pam/releases/download/v1.5.3/Linux-PAM-1.5.3.tar.xz) | Authentication on the administration site |
-| DSAS website | [3.0.4](https://gitlab.com/groupe-edf/dsas-tinycore) | Backend and frontend of the administration site |
+| DSAS website | [3.0.3](https://gitlab.com/groupe-edf/dsas-tinycore) | Backend and frontend of the administration site |
 
 The DSAS website is specially developed for this project. Static analysis
 of the code and a test suite is used on this code before each release to
