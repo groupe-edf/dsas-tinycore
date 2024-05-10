@@ -2331,6 +2331,7 @@ try {
         $GLOBALS["serv"]["radius"] = $GLOBALS["driver"]->findElement(WebDriverBy::id("radius"))->isSelected();
         $GLOBALS["serv"]["radius_server"] = $GLOBALS["driver"]->findElement(WebDriverBy::id("radius_server"))->getAttribute("value");
         $GLOBALS["serv"]["radius_secret"] = $GLOBALS["driver"]->findElement(WebDriverBy::id("radius_secret"))->getAttribute("value");
+        $GLOBALS["serv"]["radius_domain"] = $GLOBALS["driver"]->findElement(WebDriverBy::id("radius_domain"))->getAttribute("value");
         return true;
       }, true);
 
@@ -2338,19 +2339,21 @@ try {
     if (! $GLOBALS["driver"]->findElement(WebDriverBy::id("radius"))->isSelected())
       $GLOBALS["driver"]->findElement(WebDriverBy::id("radius"))->click();
 
-    // Setting radius server and secret. Default radiusd secret is "testing123"
+    // Setting radius server, secret and domain. Default radiusd secret is "testing123"
     feedfn("Setting bad radius server address as a DNS name", "radius_server", "-example.com");
     modalfn("Setting good radius server address as a DNS name", "radius_server", "example.com");
     feedfn("Setting bad radius server address as an IP", "radius_server", "270.0.1.1");
     modalfn("Setting good radius server address", "radius_server", "127.0.0.1");
     feedfn("Setting radius secret with an XSS", "radius_secret", "<script>alert('Bad Secret')</script>");
     modalfn("Setting good radius secret", "radius_secret", "testing123");
+    feedfn("Setting bad radius domain", "radius_domain", "-example.com");
+    modalfn("Setting good radius domain", "radius_domain", "TEST");
     apply();
 
     // Remove stale users added to radiusd configuration
     exec("sudo sed -i -e 's/^[^#].*Cleartext-Password :=.*$//g' /usr/local/etc/raddb/mods-config/files/authorize", $output, $retval);
     // Setup user if /usr/local/etc/raddb/users. Don't yet start radiusd
-    exec("sudo sh -c 'echo \"" . _user . " Cleartext-Password := " . $GLOBALS["password"] . "_radius" . PHP_EOL . "\" >> /usr/local/etc/raddb/mods-config/files/authorize'" . PHP_EOL, $output, $retval);
+    exec("sudo sh -c 'echo \"TEST/" . _user . " Cleartext-Password := " . $GLOBALS["password"] . "_radius" . PHP_EOL . "\" >> /usr/local/etc/raddb/mods-config/files/authorize'" . PHP_EOL, $output, $retval);
 
     // Logout via navbar 
     test("Logging out via navbar", function () {
