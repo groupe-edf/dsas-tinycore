@@ -2022,7 +2022,7 @@ avec l'extension `-doc` sera créé avec les fichiers dans `/usr/local/doc`
 - `_post_install` [Optionnel] - Permets de définir une script qui sera 
 exécuté pour l'installation du package.
 
-Un exemple complet d'un fichier `pkg/openssl-1.1.1.pkg` est
+Un exemple complet d'un fichier `pkg/openssl.pkg` est
 
 ```
 _pkg=openssl
@@ -2049,7 +2049,7 @@ _post_install=\
 Avec cette package définit, il pourrait être créer avec la commande
 
 ```shell
-./make.sh build openssl-1.1.1
+./make.sh build openssl
 ```
 
 Un build du DSAS prendra en compte ce nouveau package pendant son build.
@@ -2688,7 +2688,7 @@ signatures de l'attaque vont être visible à ClamAV.
 
 Cependant, ClamAV ne peut pas aider quand l'attaquant aurait le contrôle
 sur le format des fichiers. Dans ce cas, l'attaquant peur choisir le type
-de fichier afin d'offusquer son contenu and cacher la code malveillante.
+de fichier afin d'offusquer son contenu et cacher la code malveillante.
 Ceci pourrait être le cas si attaquant aurait accès à un clef openssl ou 
 gpg. Il est alors critique d'assurer qui aurait accès aux clefs installé
 dans le DSAS.
@@ -2766,7 +2766,7 @@ considéré comme sûr est tout est vérifié. La fonctionne `proc_open` de
 l'administration, et
 
 - Appelé d'une façon à ne pas démarrer un shell
-- Avec tout argument vérifié est échappé afin d'éviter l'injection de 
+- Avec tout argument vérifié et échappé afin d'éviter l'injection de 
 commande
 
 Le site de dépôt optionnel est exécuté en tant que l'utilisateur `bas` et 
@@ -2828,9 +2828,10 @@ Comme discuté dans l'article [Docker running an app with NET_ADMIN
 capability: involved
 risks](https://unix.stackexchange.com/questions/508809/docker-running-an-app-with-net-admin-capability-involved-risks), 
 l'utilisation de CAP_NET_ADMIN va ouvrir la possibilité d'usage de ioctl 
-permettant la reprogrammation de la carte réseau (NIC). Ceci pourrait permettant un attaquant à rendre la carte réseau instable (même après un
+permettant la reprogrammation de la carte réseau (NIC). Ceci pourrait
+permettant un attaquant à rendre la carte réseau instable (même après un
 redémarrage), ou même dans des situation extrême, va permettre 
-l'installation de code dans l'EEPRIM du NIC permettant un attaque contre 
+l'installation de code dans l'EEPROM du NIC permettant un attaque contre 
 le noyau de la hôte et va permettant un accès root à la hôte.
 
 Il y a deux stratégies afin de traiter cette risque 
@@ -2850,7 +2851,8 @@ Ceci aurait certaines implications pour la configuration réseau qui pourrait ê
 machines du DSAS. Même si un attaque DOS contre un carte physique reste 
 réel, une attaque de reprogrammation de l'EEPROM semble relativement
 théorique. Donc de dédier une carte physique à interconnexion du DSAS 
-semble être un bon compromis. Une attaque réussie n'impactera que le DSAS lui-même.
+semble être un bon compromis. Une attaque réussie n'impactera que le DSAS
+lui-même.
 2. Ne pas garder CAP_NET_ADMIN : Dans ce cas le DSAS ne peut plus
 modifier les paramètres réseau. Dans un VM ou en version autonome, le
 DSAS a absolument besoin la capacité de modifier ses réseaux. Donc 

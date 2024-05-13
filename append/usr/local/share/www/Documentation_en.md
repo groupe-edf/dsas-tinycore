@@ -1869,7 +1869,6 @@ sudo rm work/tcz*/dsas_js.tcz*
 The ISO is then available in the file `work/dsas.iso`. At this point you
 can create the release on gitlab.
 
-
 ### Binary upgrade of the virtual machines
 
 The upgrade of the VM is a simple replacement of the existing ISO with
@@ -1938,7 +1937,7 @@ extension `-doc` will be created with the files in `/usr/local/doc`
 - `_post_install` [Optional] - Allows for a script which will be executed
 for the installation of the package.
 
-A complete example of a `pkg / openssl-1.1.1.pkg` file is 
+A complete example of a `pkg / openssl.pkg` file is 
 
 ```
 _pkg=openssl
@@ -1966,7 +1965,7 @@ With the package defined, it is possible to create a binary package with
 the command
 
 ```shell
-./make.sh build openssl-1.1.1
+./make.sh build openssl
 ```
 
 The next build of the DSAS will take into account this package in its
