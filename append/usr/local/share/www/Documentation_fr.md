@@ -241,8 +241,8 @@ avec VirtualBox, avec VMWare and avec Docker.
 
 #### Création des machines virtuelles
 
-L'ISO du DSAS est une souche linux en 32- ou 64-bits, et la machine virtuelle
-est à configurer en conséquence. Par exemple, sous VirtualBox la
+L'ISO du DSAS est une souche linux en 32- ou 64-bits, et la machine
+virtuelle est à configurer en conséquence. Par exemple, sous VirtualBox la
 configuration initiale devrait être
 
 ![Création d'une VM sous VirtualBox](fr/vbox1.png)
@@ -291,7 +291,8 @@ VirtualBox. Comme vue ci-dessous, la machine virtuelle est configuré avec
 - Un disque de taille voulu - Ici 150 Go ont été utilisé
 - Un lecteur de CD - Comme discuté ci-dessous.
 - Deux carte réseaux - La première carte est configuré pour les
-connexions vers les réseaux externes du DSAS et leur configuration dépendent de l'environnement où est installé le DSAS. La deuxième carte
+connexions vers les réseaux externes du DSAS et leur configuration dépendent
+de l'environnement où est installé le DSAS. La deuxième carte
 est toujours utilisé pour les interconnexion entre les deux machines.
 
 ![Création d'une machine virtuel sous VMWare](fr/vmware1.png)
@@ -322,7 +323,7 @@ simplification de l'installation de l'image Docker du DSAS.
 
 La configuration réseau dans le fichier `Makefile` est à adapter avant
 l'usage. Le DSAS doit également configurer le réseau (voir le section
- Docker à la fin du document), et la configuration réseau de Docker
+Docker à la fin du document), et la configuration réseau de Docker
 doit-être identique à la configuration dans le DSAS.
 
 #### Configuration réseau principal du Docker
@@ -700,9 +701,9 @@ demandé d'entrée un mot de passe pour la sauvegarde, comme
 ![Menu d'entrée de mot de passe de sauvegarde](fr/DSAS24.png)
 
 Les sauvegardes des deux machines du DSAS sont alors chiffré avec
-`openssl` utilisant le mode AES256 CBC et ce mot de passe et archivé ensemble.
-Si vous ne rentrée pas de mot de passe de sauvegarde, les fichiers sera 
-archivés sans l'étape de chiffrement.
+`openssl` utilisant le mode AES256 CBC et ce mot de passe et archivé
+ensemble. Si vous ne rentrée pas de mot de passe de sauvegarde, les fichiers
+sera archivés sans l'étape de chiffrement.
 
 Il est fortement conseillé de chiffrer ces archives, parce qu'il contient
 la configuration complète du DSAS, les certificats SSL et les éléments
@@ -764,7 +765,8 @@ désactivé ne pourrait que connecté depuis la console du DSAS, et pas à
 distance.
 
 Un nouveau compte est créer en cliquant sur la bouton ![](plus-lg.svg) à
-droit de l'écran. Vous seriez demandé de rentrer le nom de l'utilisateur comme
+droit de l'écran. Vous seriez demandé de rentrer le nom de l'utilisateur
+comme
 
 ![Écran d'ajout de nouveau utilisateur](fr/DSAS35.png)
 
@@ -990,8 +992,10 @@ avoir un `Nom d'utilisateur SNMP`, des `Mot de passe SNMP` valables.
 L'ensemble des données SNMP de la machine bas sera publié SNMP. Les
 données spécifique au DSAS sont disponible sur les OID
 
-- 1.3.6.1.4.1.16845.100.100.1.0     - Statut de la machine haute. `0` si la machine est disponible
-- 1.3.6.1.4.1.16845.100.100.2.0     - Statut des tâches du DSAS. `0` si l'ensemble des tâches sont ok.
+- 1.3.6.1.4.1.16845.100.100.1.0     - Statut de la machine haute. `0` 
+si la machine est disponible
+- 1.3.6.1.4.1.16845.100.100.2.0     - Statut des tâches du DSAS. `0` 
+si l'ensemble des tâches sont ok.
 - 1.3.6.1.4.1.16845.100.100.3.1.1.1 - Indice de la tâche 1.
 - 1.3.6.1.4.1.16845.100.100.3.1.1.N - Indice de la tâche N.
 - 1.3.6.1.4.1.16845.100.100.3.1.2.1 - Nom de la tâche 1.
@@ -1065,9 +1069,9 @@ il souffre de deux problèmes
 - A la base il fonctionne sur la hash MD5, donc le secret partagé doit-être
 le plus long possible (32 caractères recommandé)
 - Le "nonce" est sélectionné par le client, et donc une capture de la paquet
-RADIUS_REQUEST de la client et sa rejoue pourrait permettre un authentification
-sans mot de passe. Ceci veut dire que la connexion réseau entre le client et
-serveur doit-être physiquement sécurisé.
+RADIUS_REQUEST de la client et sa rejoue pourrait permettre un
+authentification sans mot de passe. Ceci veut dire que la connexion réseau
+entre le client et serveur doit-être physiquement sécurisé.
 
 La configuration du Radius a besoin un adresse du serveur radius, un secret
 partagé avec le serveur radius et optionnellement une domaine.Si une domaine
@@ -1079,15 +1083,16 @@ Domaine/Nom d'utilisateur
 ```
 
 avec un slash entre la domaine et le nom d'utilisateur. Si la domaine n'est 
-pas fournit, le nom d'utilisateur local est utilisé pour les requêtes radius.
+pas fournit, le nom d'utilisateur local est utilisé pour les requêtes
+radius.
 
 # Exploitation du DSAS
 
 ## Statut des machines
 
-La page de statut des fichier vérifiés et les machines et la page d'entrée dans
-la DSAS et la page principale. Elle est accédée en cliquant sur `DSAS` dans
-le menu en tête des pages et se présente comme
+La page de statut des fichier vérifiés et les machines et la page d'entrée
+dans la DSAS et la page principale. Elle est accédée en cliquant sur `DSAS`
+dans le menu en tête des pages et se présente comme
 
 ![Page de statut des taches et les machines](fr/DSAS14.png)
 
@@ -1216,7 +1221,8 @@ caractéristiques du certificat.
 
 - __Certificat CA__ - Avec un texte en noir. Le certificat est un
 certificat racine ou un certificat auto-signé. Les deux types de
-certificat se ressemble avec la différence étant la confiance ou pas donné au certificat.
+certificat se ressemble avec la différence étant la confiance ou pas donné
+au certificat.
 - __Certificat Intermédiat__ - Avec un texte en bleue. Ce certificat
 n'est pas un certificat racine, mais elle est signé par un autre
 certificat
@@ -1769,14 +1775,16 @@ apt-get install build-essential rsync genisoimage squashfs-tools git curl
 
 Il devrait être noter que la compilation du DSAS utilise largement la
 commande chroot afin de créer des environnement de build cloisonné pour
-chaque package. Le code de TinyCore est utilisé dans ces `chroot`. Ceci veut dire que
+chaque package. Le code de TinyCore est utilisé dans ces `chroot`. Ceci veut
+dire que
 
 - Le distribution utilisé doit avoir une architecture compatible avec ce
 utilisé par le DSAS. Seulement x86 et AMD64 sont actuellement supporté
 - Le noyau et bibliothèque glibc doit-être compatible avec la
 distribution de TinyCore, et particulièrement le shell. Si vous recevez
 la message "Kernel too old" pendant la compilation, la distribution est
-trop vielle afin de supporté la compilation du DSAS. Par exemple, au moins Debian Bullseye est nécessaire pour un build du DSAS.
+trop vielle afin de supporté la compilation du DSAS. Par exemple, au moins
+Debian Bullseye est nécessaire pour un build du DSAS.
 
 ### Commande de build du DSAS
 
@@ -1834,7 +1842,7 @@ pouvez faire
 ```
 
 Les ISOs du DSAS sont gardés, mais l'ensemble des fichiers intermédiaire
-sont détruit. Afin de complétement nettoyer le build utiliser la commande
+sont détruit. Afin de complètement nettoyer le build utiliser la commande
 
 ```
 ./make.sh -realclean
@@ -2133,7 +2141,8 @@ faut que
 guichet bas
 - L'utilisateur haut ne peut pas supprimer l'existence du fichier dans le 
 guichet bas
-- Que l'utilisateur haut pourrait supprimer l'existence du fichier dans le guichet haut
+- Que l'utilisateur haut pourrait supprimer l'existence du fichier dans le
+guichet haut
 - L'accès par les utilisateurs bas et haut devrait être cloisonné par un
  `chroot jail` et par conséquence le dossier principal de chaque
 utilisateur doit avoir un UID de `root`
@@ -2303,10 +2312,10 @@ SHA256=721473abd9d240d5170c9952a8a1d1644f177c1dbbef01b105e1d44705188db4
 ...
 ```
 
-Avec des haches de l'ensemble des fichiers contenu dans l'archive. Dans le cas des fichiers `*livetri.zip`
-les haches des fichiers pourraient correspondre également à un autre
-fichiers pas inclut directement dans l'archive mais à côté avec un nom 
-comme `NNNNNNNNNN*.*`. La commande
+Avec des haches de l'ensemble des fichiers contenu dans l'archive. Dans le
+cas des fichiers `*livetri.zip` les haches des fichiers pourraient
+correspondre également à un autre fichiers pas inclut directement dans
+l'archive mais à côté avec un nom comme `NNNNNNNNNN*.*`. La commande
 
 ```shell
 $ openssl asn1parse -i -inform der -in v.sig
@@ -2504,7 +2513,8 @@ $ openssl pkcs7 -inform der -in file.sig -outform pem -print_certs | awk 'split_
 
 Malheureusement, les certificats récupérés ne sont que des certificats
 intermédiât ou feuille. Aucun certificat racine semble être contenu dans
-les signatures SMIME de Trend Micro, et le certificat racine est auto généré par Trend Micro est n'est pas publiquement disponible
+les signatures SMIME de Trend Micro, et le certificat racine est auto généré
+par Trend Micro est n'est pas publiquement disponible
 
 FIXME: Comment récupérer le certificat racine ????
 
@@ -2557,7 +2567,7 @@ Et les autres fichiers sont vérifiés via leur hash.
 La base de la vérification des dépôt Debian est le fichier `Release` et
 sa signature `Release.gpg`. Depuis peu, il y a également un fichier
 `InRelease` qui est identique au fichier `Release` mais avec la signature
- `gpg` intégrée.
+`gpg` intégrée.
 
 Les dépôt Debian sont signés avec plusieurs clefs. Actuellement, à chaque
 nouvelle version de Debian un clef d'archive maître est renouvelé. Le
@@ -2568,7 +2578,8 @@ tel-que `Buster`ou `BullsEye` sont également signés avec une troisième
 clef lié à ce version.
 
 La vérification des dépôt Debian requiert que l'ensemble de ces clefs que 
-disponible pour les taches. Par exemple pour `BullsEye` les clefs nécessaire sont
+disponible pour les taches. Par exemple pour `BullsEye` les clefs nécessaire
+sont
 
 - [Debian 10/buster archive signing key](https://ftp-master.debian.org/keys/archive-key-10.asc)
 - [Debian 11/bullseye archive signing key](https://ftp-master.debian.org/keys/archive-key-11.asc)
@@ -2623,7 +2634,7 @@ sont signé, le zip peuvent caché d'autre données n'appartenaient pas au
 fichier zip. Ceci est voulu dans le design des fichiers zip afin de
 permettre la création d'autre format de zip, comme les fichiers __JAR__, 
 mais également afin d'inclure des zip dans des exécutable (des zips
-auto-éxtractant).Il y a également des façons d'abuser le format des 
+auto-éxtractant). Il y a également des façons d'abuser le format des 
 fichiers zip afin de cacher des données.
 
 Un fichier zip est compris de __N__ objets compressé suivi par une index 
@@ -2727,7 +2738,7 @@ Match User $TYP Address $USER
 
 les utilisateurs en `sftp` sont limité strictement a ou ils sont accès 
 est le `forwarding` est interdit. Le `umask` par défaut est forcé d'être
-007 afin d'assure un accès aux fichiers à l'utilisateur `verif`.
+007 afin d'assurer un accès aux fichiers à l'utilisateur `verif`.
 
 ## Service web
 
@@ -2740,7 +2751,7 @@ appartiennent les deux utilisateurs `tc` et `bas`.
 Le serveur d'administration est exécuté en tant qu'utilisateur `tc` est 
 ne peux accéder que des fichiers accessible à l'utilisateur `tc`. Le site 
 est disponible seulement en https sur la port `5000`. Le site est écrit 
-en `HTML5, JS et bootstrap5` pour le frontend et `PHP8` pour le backend.  
+en `HTML5, JS et bootstrap5` pour le frontend et `PHP8` pour le backend.
 L'authentification sur le site est faite avec un connecteur à `Linux PAM` 
 aux comptes local à la machine `bas`. `PAM` est configuré de fonctionner 
 qu'avec des `Unix domain socket` complètement local à la machine, donc

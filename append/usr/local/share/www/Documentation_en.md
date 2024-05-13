@@ -190,8 +190,8 @@ a copy of the compressed ISO only.
 The Windows "Patch Tuesday" updates are often a hundred or so megabytes,
 so we multiply that by the number of updates to keep available and we can
 easily find ourselves with several gigabytes. The "Symantec
-IntelligentUpdates" needs roughly 150 megabytes, while "Symantec LiveUpdates"
-needs 50 gigabytes.
+IntelligentUpdates" needs roughly 150 megabytes, while "Symantec
+LiveUpdates" needs 50 gigabytes.
 
 Each Linux repository could need up to 50 gigabytes, so if we need to
 transfer Linux update the needed disk space can easily explode. In the
@@ -419,8 +419,9 @@ from the DSAS administration interface.
 
 ### Formatting the disks
 
-As a first step, the DSAS will request to format its disk. A menu is presented
-with all the disks found connected to the DSAS. This menu resembles 
+As a first step, the DSAS will request to format its disk. A menu is
+presented with all the disks found connected to the DSAS. This menu
+resembles 
 
 ![Format DSAS disks](en/init1.png)
 
@@ -687,10 +688,10 @@ The user passwords will not be backed up.
 
 When restoring the same password will be requested, and so this password
 should be kept preciously. In case of a restoration, it will be applied 
-immediately. This could result in the DSAS becoming unavailable, particularly
-if the network configuration has changed between the backup and restoration.
-In this case, refer to the section [In the event of an initialization error
-of the DSAS](#in-the-event-of-a-dsas-initialization-error).
+immediately. This could result in the DSAS becoming unavailable,
+particularly if the network configuration has changed between the backup and
+restoration. In this case, refer to the section [In the event of an
+initialization error of the DSAS](#in-the-event-of-a-dsas-initialization-error).
 
 #### Automatic logout
 
@@ -716,7 +717,8 @@ changing the password. The limitations on passwords are
 
 - they are at least 8 characters long (12 recommended),
 - they do not contain spaces or tabs,
-- They contain at least 3 types of characters (upper case, lower case, number, special character).
+- They contain at least 3 types of characters (upper case, lower case,
+number, special character).
 
 Enter your new passwords and click on `Update`. You can now click on
 `Logout` and after logging in again with the user `tc` you will have
@@ -733,10 +735,9 @@ At the first connection only the default user `tc` is configured. It is
 recommended to create nominative users account for each user and to
 deactivate the account `tc`. The user `tc` is the only one with the
 rights to become `root` on the DSAS. Even though the account is
-deactivated
-it remains usable from the console of the DSAS and other administrative
-users, knowing the password for the account `tc` can use this knowledge
-to become `root`.
+deactivated it remains usable from the console of the DSAS and other
+administrative users, knowing the password for the account `tc` can use this
+knowledge to become `root`.
 
 A new account is created by clicking on the button ![](plus-lg.svg) to
 the right of the screen. You will be asked to enter a new username like
@@ -830,7 +831,8 @@ giving a list of name servers in order of their preference.
 
 To avoid the interconnection between the upper and lower machines being
 broken, the configuration of the interconnection network is not available
-via the UI. If it needs to be changed you should refer to the section [In the event of an initialization error of the 
+via the UI. If it needs to be changed you should refer to the section [In
+the event of an initialization error of the 
 DSAS](#in-the-event-of-a-dsas-initialization-error).
 
 ### Renewal of the web certificate
@@ -954,8 +956,10 @@ All the read only data available from a typical SNMP server on a Linux
 machine will be published. The data specific to the DSAS are available
 with the following OIDs 
 
-- 1.3.6.1.4.1.16845.100.100.1.0     - Status of the upper machine. `0` if the machine is available.
-- 1.3.6.1.4.1.16845.100.100.2.0     - Status of the DSAS tasks. `0` if all of the tasks are ok.
+- 1.3.6.1.4.1.16845.100.100.1.0     - Status of the upper machine. `0`
+if the machine is available.
+- 1.3.6.1.4.1.16845.100.100.2.0     - Status of the DSAS tasks. `0`
+if all of the tasks are ok.
 - 1.3.6.1.4.1.16845.100.100.3.1.1.1 - Index of the task 1.
 - 1.3.6.1.4.1.16845.100.100.3.1.1.N - Index of the task N.
 - 1.3.6.1.4.1.16845.100.100.3.1.2.1 - Name of the task 1.
@@ -1343,9 +1347,9 @@ example
 ![Imported certificate details](en/DSAS21.png) 
 
 The position of the certificate in the list of certificates can be reordered 
-by simply dragging the certificate and dropping it on another certificate. The 
-position of the dragged certificate will now be immediately after the position 
-where it has been dropped.
+by simply dragging the certificate and dropping it on another certificate.
+The position of the dragged certificate will now be immediately after the
+position where it has been dropped.
 
 ## Task configuration
 
@@ -1396,7 +1400,8 @@ Symantec LiveUpdate.
   * `openssl` - Task allowing the transfer of files signed by openssl
   * `gpg` - Task allowing the transfer of files signed by gpg.
   * `jar` - Task for the verification of signed JAR files
-  * `trend` - Task for the verification of Trend Micro DSP and Package files.
+  * `trend` - Task for the verification of Trend Micro DSP and Package
+  files.
 - `Periodicity of the task` - How often is the task executed
   * `never` - The task is never executed automatically, but can be executed manually
   * `quarter hourly` - The task is executed 4 times an hour
@@ -2388,7 +2393,8 @@ There are two types of verification for the files of Trend Micro
 The certificate chain used by these two methods are independent, but to
 simplify the use of the DSAS, they can be treated and as single task.
 Therefore, it is possible to include all of the certificates 
-used by both verification methods in a task of type `trend` and both verifications will be tested.
+used by both verification methods in a task of type `trend` and both
+verifications will be tested.
 
 The choice of which verification to used is made in the following way
 
@@ -2439,7 +2445,7 @@ JAVA.SF - A file containing the hash of the manifest
 JAVA.RSA - A SMIME signature file of the file JAVA.SF
 
 All of the certificates needed for the signature of the JAR files can be
-recovered with  
+recovered with
 
 ```shell
 $ openssl pkcs7 -inform der -in file.sig -outform pem -print_certs | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1}{if(length($0) > 0) print > `cert` n `.pem`}
@@ -2483,8 +2489,8 @@ these keys. For example, for `BullsEye` the needed keys are
 
 ### Verification - gpg
 
-GPG signatures can be embedded in the signed file or in a separate file. The DSAS
-assume that one of the following means is used to sign a file 
+GPG signatures can be embedded in the signed file or in a separate file. 
+The DSAS assumes that one of the following means is used to sign a file 
 
 ```shell
 $ gpg --sign <file>
@@ -2493,13 +2499,15 @@ $ gpg --detach-sig <file>
 $ gpg -a --detach-sig <file>
 ```
 
-With the first two forms, only <file>.gpg or <file>.asc needs to be sent to the DSAS, because
-both include the original file and its signature. For the two forms with detached signatures,
-the original file and <file>.sig ou <file>.asc both need to be provided to the DSAS.
+With the first two forms, only <file>.gpg or <file>.asc needs to be sent to
+the DSAS, because both include the original file and its signature. For the
+two forms with detached signatures, the original file and <file>.sig or
+<file>.asc both need to be provided to the DSAS.
 
 ### Verification - openssl
 
-The user must have already generated public and private keys for signing with
+The user must have already generated public and private keys for signing
+with
 
 ```shell
 $ openssl genrsa -out key.pem 4096
@@ -2680,7 +2688,8 @@ filesystems layered one on top of another use the the [FuseFS
 filesystem](https://en.wikipedia.org/wiki/Filesystem_in_Userspace). This
 has implications of the speed of certain `ioctl` used in the container. A
 case in point is the ioctl used by the filesystem command `fclose`. This
-case is important as several well-known programs, include `OpenSSH` use code like
+case is important as several well-known programs, include `OpenSSH` use code
+like
 
 ```
 do (int i=0; i < FD_MAX; i++)
@@ -2795,7 +2804,4 @@ a means of bypassing automatically this control via a `User-Agent` and
 UUID. The DSAS implements this bypass specific to ClamAV and the site
 `https://database.clamav.net` can only be used via this specific
 interface in the `Service` menu of the DSAS.
-
-
-
 
