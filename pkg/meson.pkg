@@ -1,0 +1,12 @@
+_pkg=meson
+_version=1.4.0
+_uri=https://github.com/mesonbuild/meson/releases/download/1.4.0/meson-1.4.0.tar.gz
+_build_dep="compiletc python3.9-dev python3.9-setuptools ninja"
+_dep="python3.9"
+_pkg_path=meson-1.4.0
+_pre_config=""
+_conf_cmd=""
+_make_cmd=""
+_install_cmd="python3.9 setup.py install --root="
+_post_build="sed -i -e 's:/usr/bin:/usr/local/bin:g' $destdir/usr/local/share/polkit-1/actions/com.mesonbuild.install.policy"
+_pkgs='main{/usr/local/lib,/usr/local/bin,/usr/local/share/polkit-1};doc{/usr/local/share/man}'
