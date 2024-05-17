@@ -1299,7 +1299,7 @@ function dsas_delete_cert($finger) {
  *
  * @param string $type
  * @param array{error: int, size: int, tmp_name: string} $file
- * @param string $mine
+ * @param string $mime
  *
  * @return array<int,mixed>
  *    An array of the errors found in the configuration
@@ -1312,7 +1312,7 @@ function dsas_upload_cert($type, $file, $mime) {
       throw new RuntimeException("Error loading XML file");
 
     // PEM files are detected as text/plain
-    check_files(file, $mime);
+    check_files($file, $mime);
 
     $cert = htmlspecialchars((string)file_get_contents($file["tmp_name"]));
     $cert = str_replace("\r", "", $cert);   // dos2unix
@@ -1332,7 +1332,7 @@ function dsas_upload_cert($type, $file, $mime) {
 
       case "pubkey":
         $pubkeynowrap = preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $cert);
-        if (($pubkey === $pubkeynowrap) || empty($pubkeynowrap))
+        if (($cert === $pubkeynowrap) || empty($pubkeynowrap))
           throw new RuntimeException("The public key must be in PEM format");
         $pubkeynowrap = (string)preg_replace('/\\s+/', '', $pubkeynowrap);
         $finger = hash("sha256", base64_decode($pubkeynowrap));
@@ -1354,8 +1354,8 @@ function dsas_upload_cert($type, $file, $mime) {
 
         foreach ($dsas->certificates->certificate as $certificate) {
           if ($certificate->type == "gpg") {
-            $cert =  parse_gpg(trim($certificate->pem));
-            if ($cert["fingerprint"] == $parse["fingerprint"])
+            $_cert =  parse_gpg(trim($certificate->pem));
+            if ($_cert["fingerprint"] == $parse["fingerprint"])
               throw new RuntimeException("The GPG certificate already exists");
           }
         }
@@ -1378,7 +1378,138 @@ function dsas_upload_cert($type, $file, $mime) {
     $errors[] = [$type . "_upload" => $e->getMessage()];
   }
 
-  return $errors
+  return $errors;
+}
+
+
+/**
+ * Function to change position of certificates in DSAS configuration
+ *
+ * usage:
+ *   dsas_drag_cert($from_finger, $to_finger)
+ *
+ * @param string $from_finger
+ *   The SHA256 fingerprint of the certificate to move
+ * @param string $to_finger
+ *   The SHA256 fingerprint of the certificate destination
+ *
+ * @return array<int,mixed>
+ *    An array of the errors found in the configuration
+ */
+function dsas_drag_cert($from_finger, $to_finger) {
+  $errors = array();
+  $type = "x509";
+  try {
+    $dsas = simplexml_load_file(_DSAS_XML);
+    if (! $dsas)
+      throw new RuntimeException("Error loading XML file");
+
+    $from = -1;
+    $to = -1;
+    $i = 0;
+    foreach ($dsas->certificates->certificate as $certificate) {
+      if ($certificate->type == "x509") {
+        if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $from_finger) {
+          $from = $i;
+          $type = "x509";
+        }
+        if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $to_finger) {
+          $to = $i;
+        }
+      } else if ($certificate->type == "pubkey") {
+        $pem = htmlspecialchars(trim($certificate->pem));
+        $pemnowrap = (string)preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pem);
+        $pemnowrap = (string)preg_replace('/\\s+/', '', $pemnowrap);
+        if (hash("sha256", base64_decode($pemnowrap)) == $from_finger) {
+          $from = $i;
+          $type = "pubkey";
+        }
+        if (hash("sha256", base64_decode($pemnowrap)) == $to_finger) {
+          $to = $i;
+        }
+      } else {
+        $cert = parse_gpg(trim($certificate->pem));
+        if ($cert["fingerprint"]  == $from_finger) {
+          $from = $i;
+          $type = "gpg";
+        }
+        if ($cert["fingerprint"]  == $to_finger) {
+          $to = $i;
+        }
+      }
+      if ($from !== -1 && $to !== -1) break;
+      $i++;
+    }
+
+    if ($from == -1) {
+      $errors[] = ["error" => "The certificate drag from value is invalid"];
+    } else if ($to == -1) {
+      $errors[] = ["error" => "The certificate drag to value is invalid"];
+    } else {
+      $nt =  $dsas->certificates[0]->count();
+      if ($from !== $to && $from !== $to + 1) {
+        $cert = new SimpleXMLElement($dsas->certificates[0]->certificate[$from]->asXML());
+        $cert_to = $dsas->certificates[0]->certificate[$to];
+        unset($dsas->certificates->certificate[$from]);
+        simplexml_insert_after($cert, $cert_to);
+      }
+    }
+   } catch (RuntimeException $e) {
+    $errors[] = [$type . "_upload" => $e->getMessage()];
+  }
+
+  return $errors;
+}     
+
+/**
+ * Function to list all certificates available to the DSAS 
+ *
+ * usage:
+ *   dsas_get_cert()
+ *
+ * @return array{array{dsas: array{x509: array<int,mixed>, pubkey: array<int,mixed>, gpg: array<int,mixed>}, ca: array<int,mixed>}}
+ */
+function dsas_get_cert() {
+  $dsas = simplexml_load_file(_DSAS_XML);
+  if (! $dsas)
+    throw new RuntimeException("Error loading XML file");
+
+  $cafile = dsas_ca_file();
+  if ($cafile)
+    $ca = parse_x509($cafile);
+  else
+    $ca = array();
+  $dsas_x509 = array();
+  $dsas_gpg = array();
+  $dsas_pubkey = array();
+  foreach ($dsas->certificates->certificate as $certificate) {
+    if ($certificate->type == "x509") {
+      $p = openssl_x509_parse(trim($certificate->pem));
+      if ($p !== false) {
+        $cert =  utf8ize($p);
+        $cert["pem"] = trim($certificate->pem[0]);
+        $cert["fingerprint"] = openssl_x509_fingerprint(trim($certificate->pem[0]), "sha256");
+        $cert["authority"] = trim($certificate->authority);
+        $dsas_x509[] = $cert;
+      }
+    } else if ($certificate->type == "gpg") {
+      $cert = utf8ize(parse_gpg($certificate->pem));
+      $cert["pem"] = trim($certificate->pem[0]);
+      $cert["authority"] = trim($certificate->authority);
+      $dsas_gpg[] = $cert;
+    } else if ($certificate->type == "pubkey") {
+      $cert = array();
+      $cert["pem"] = trim($certificate->pem[0]);
+      $cert["name"] = trim($certificate->name);
+      $cert["authority"] = trim($certificate->authority);
+      $pemnowrap = (string)preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', (string)$certificate->pem[0]);
+      $pemnowrap = (string)preg_replace('/\\s+/', '', $pemnowrap);
+      $cert["fingerprint"] = hash("sha256", base64_decode($pemnowrap));
+      $dsas_pubkey[] = $cert;
+    } 
+  } 
+
+  return [["dsas" => ["x509" => $dsas_x509, "pubkey" => $dsas_pubkey, "gpg" => $dsas_gpg], "ca" => $ca]];
 }
 
 ?>

@@ -26,17 +26,23 @@ $uri = explode( '/', $uri );
 // FIXME: Should this code be split up more into seperate functions ?
 
 // This code is responsable for the routing of the REST API requests 
-// The only API that non admin users can see if "/api/*/passwd"
 if (count($uri) < 4) {
   header("HTTP/1.1 404 Not Found");
   exit();
 } else if ($uri[3] == "passwd") {
+  // The API /api/*/passwd is accessible by non admin users
   if (! dsas_loggedin(true, false)) {
     header("HTTP/1.0 403 Forbidden");
     exit();
   }
-} else {
+} else if (($uri[3] !! "status" ) || ($uri[3] == "logs") || ((count($uri) > 4) && ($uri[3] == "tasks") && ($uri[4] == "info"))) {
+  // These APIs should update the logout timer, as automatic
   if (! dsas_loggedin(false)) {
+    header("HTTP/1.0 403 Forbidden");
+    exit();
+  }
+} else {
+  if (! dsas_loggedin()) {
     header("HTTP/1.0 403 Forbidden");
     exit();
   }
@@ -72,6 +78,7 @@ try {
 
         switch ($uri[4]) {
           case "drag":
+            $errors = dsas_drag_cert($_POST["from"], $_POST["to"]);
             break;
             
           case "x509":
@@ -82,6 +89,9 @@ try {
           case "gpg":
             $errors = dsas_upload_cert($uri[4], $_FILES["file"], "application/pgp-keys");
             break;
+
+          default:
+            throw new RuntimeException("Not found");
         }
         header("Content-Type: application/json");
         if ($errors == []) {
@@ -451,7 +461,14 @@ try {
         break;
 
       case "cert":
-      
+        if (count($uri) != 4)
+          throw new RuntimeException("Not found");
+        try {
+          header("Content-Type: application/json");
+          echo json_encode(dsas_get_cert());
+        } catch (RuntimeException $e) {
+          header("HTTP/1.0 500 Internal Server Error");
+        }
         break;
 
       case "logout":
@@ -649,7 +666,7 @@ try {
         $errors = [];
         if (count($uri) != 5)
           throw new RuntimeException("Not found");  
-        $error = dsas_delete_cert($uri[4]);
+        $errors = dsas_delete_cert($uri[4]);
         header("Content-Type: application/json");
         if ($errors == [])
           echo json_encode(["retval" => 0]);
@@ -691,7 +708,7 @@ try {
             $errors[] = ["error" => ["The user '{0}' does not exist",  (string)$data["username"]]];
         }
         header("Content-Type: application/json");
-        if ($dsas !== && $errors == []) {
+        if ($dsas != false && $errors == []) {
           $dsas->asXml(_DSAS_XML);
           echo json_encode(["retval" => 0]);
         } else
