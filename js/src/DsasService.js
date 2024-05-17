@@ -50,7 +50,7 @@ function dsasChangeService(what) {
         document.getElementById("snmp_passpriv").disabled = nchk;
         document.getElementById("snmp_privencrypt").disabled = nchk;
     } else if (what !== "repo") {
-        fetch("api/dsas-service.php").then((response) => {
+        fetch("api/v2/service").then((response) => {
             if (response.ok) { return response.json(); }
             return Promise.reject(new Error(response.statusText));
         }).then((srv) => {
@@ -117,19 +117,16 @@ function dsasChangeService(what) {
             serv.antivirus.uri = document.getElementById("antivirus_uri").value;
 
             const formData = new FormData();
-            formData.append("op", "all");
             formData.append("data", JSON.stringify(serv));
-            fetch("api/dsas-service.php", { method: "POST", body: formData }).then((response) => {
-                if (response.ok) { return response.text(); }
+            fetch("api/v2/service", { method: "POST", body: formData }).then((response) => {
+                if (response.ok) { return response.json(); }
                 return Promise.reject(new Error(response.statusText));
-            }).then((text) => {
-                try {
-                    const errors = JSON.parse(text);
-                    modalErrors(errors, true);
-                } catch (e) {
-                    // Its text => here always just "Ok"
+            }).then((json) => {
+                if (Object.prototype.hasOwnProperty.call(json, "retval")) {
                     clearFeedback();
                     modalMessage(_("Changes successfully saved"));
+                } else {
+                    modalErrors(json);
                 }
             }).catch((error) => {
                 modalMessage(_("Error : {0}", (error.message ? error.message : error)));
@@ -141,7 +138,7 @@ function dsasChangeService(what) {
 }
 
 export default function dsasDisplayService(what = "all") {
-    fetch("api/dsas-service.php").then((response) => {
+    fetch("api/v2/service").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((serv) => {

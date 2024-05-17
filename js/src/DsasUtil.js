@@ -167,7 +167,7 @@ export function dsasCheckWarnings() {
         failLoggedin(error);
     });
 
-    fetch("api/dsas-get-warning.php").then((response) => {
+    fetch("api/v2/warning").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((obj) => {
