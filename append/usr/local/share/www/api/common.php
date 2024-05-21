@@ -1455,6 +1455,7 @@ function dsas_drag_cert($from_finger, $to_finger) {
         unset($dsas->certificates->certificate[$from]);
         simplexml_insert_after($cert, $cert_to);
       }
+      $dsas->asXml(_DSAS_XML);
     }
    } catch (RuntimeException $e) {
     $errors[] = [$type . "_upload" => $e->getMessage()];
