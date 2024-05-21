@@ -323,7 +323,7 @@ function dsasUploadCert(type = "x509", name = "", file = null) {
     }
     formData.append("name", name);
 
-    fetch("api/v2/cert/upload/" + type, {
+    fetch("api/v2/cert/" + type, {
         method: "POST",
         body: formData,
     }).then((response) => {

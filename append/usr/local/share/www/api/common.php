@@ -1374,6 +1374,8 @@ function dsas_upload_cert($type, $file, $mime) {
         $parse["extensions"]["subjectKeyIdentifier"])) ? "true" : "false");
     else
       $newcert->authority = "true";
+
+    $dsas->asXml(_DSAS_XML);
   } catch (RuntimeException $e) {
     $errors[] = [$type . "_upload" => $e->getMessage()];
   }

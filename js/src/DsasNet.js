@@ -33,7 +33,7 @@ function dsasChangeNet(what = "all", i = 0) {
         document.getElementById("iface_dns_domain" + i).disabled = chk;
         document.getElementById("iface_nameserver" + i).disabled = chk;
     } else {
-        fetch("api/V2/net").then((response) => {
+        fetch("api/v2/net").then((response) => {
             if (response.ok) { return response.json(); }
             return Promise.reject(new Error(response.statusText));
         }).then((net) => {

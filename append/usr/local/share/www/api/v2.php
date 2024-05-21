@@ -29,8 +29,8 @@ $uri = explode( '/', $uri );
 if (count($uri) < 4) {
   header("HTTP/1.1 404 Not Found");
   exit();
-} else if ($uri[3] == "passwd") {
-  // The API /api/*/passwd is accessible by non admin users
+} else if (($uri[3] == "passwd") || ($uri[3] == "logout")) {
+  // The API /api/*/passwd and /api/*/logout are accessible to non admin users
   if (! dsas_loggedin(true, false)) {
     header("HTTP/1.0 403 Forbidden");
     exit();
@@ -381,12 +381,12 @@ try {
       case "users":
         $user="";
         if (count($uri) == 6) {
-          if ($uri[4] != "add")
+          if (($uri[4] != "add") && ($uri[4] != "passwd"))
             throw new RuntimeException("Not found");
+          $user = $uri[5];
         } else if (count($uri) != 5) {
           throw new RuntimeException("Not found");      
-        } else
-          $user = $uri[5];
+        }
         
         $dsas = simplexml_load_file(_DSAS_XML);
         if ($dsas === false) {

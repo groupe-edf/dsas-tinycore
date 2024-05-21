@@ -126,7 +126,7 @@ function dsasChangeService(what) {
                     clearFeedback();
                     modalMessage(_("Changes successfully saved"));
                 } else {
-                    modalErrors(json);
+                    modalErrors(json, true);
                 }
             }).catch((error) => {
                 modalMessage(_("Error : {0}", (error.message ? error.message : error)));
