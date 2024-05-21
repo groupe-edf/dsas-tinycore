@@ -219,6 +219,96 @@ Response :
 - Return :
   * array{bas: array<string, mixed>, haut: array<string, mixed>}
 
+## /api/v2/tasks
+- Method : GET
+- Param :
+- Response :
+  * 200 Success
+  * 500 Internal Server Error
+- Return :
+  * Success : array<int, mixed>
+  * Failure : array<string, string>
+  
+## /api/v2/tasks/add
+- Method : POST
+- Param :
+  * data : array{name: string, id: string, type: string, 
+                 run: string, directory: string, uri: string,
+                 ca: array{name: string, fingerprint: string},
+                 archs: array{array{arch: string, active: string}},
+                 certs: array{array{name: string, fingerprint: string}}} 
+- Response :
+  * 200 Success
+- Return :
+  * Success : array{retval: int}
+  * Failure : array<string, string>
+  
+## /api/v2/tasks-all/<id>
+- Method : DELETE
+- Param :
+- Response :
+  * 200 Success
+- Return :
+  * Success : array{retval: int}
+  * Failure : array<string, string>
+  
+## /api/v2/tasks/<id>
+- Method : DELETE
+- Param :
+- Response :
+  * 200 Success
+- Return :
+  * Success : array{retval: int}
+  * Failure : array<string, string>
+
+## /api/v2/tasks/drag
+- Method : POST
+- Param :
+  * from : int
+  * to : int
+- Response :
+  * 200 Success
+- Return :
+  * Success : array{retval: int}
+  * Failure : array<string, string>
+
+## /api/v2/tasks/info/<id>
+- Method : GET
+- Param :
+- Response :
+  * 200 Success
+- Return :
+  * Success : array{retval: int}
+  * Failure : array<string, string>
+
+## /api/v2/tasks/kill/<id>
+- Method : POST
+- Param :
+- Response :
+  * 200 Success
+- Return :
+  * Success : array{retval: int}
+  * Failure : array<string, string>
+
+## /api/v2/tasks/name/<id>
+- Method : POST
+- Param :
+  * data : array{old: string, new: string}
+- Response :
+  * 200 Success
+- Return :
+  * Success : array{retval: int}
+  * Failure : array<string, string>
+
+## /api/v2/tasks/run/<id>
+- Method : POST
+- Param :
+- Response :
+  * 200 Success
+- Return :
+  * Success : array{retval: int}
+  * Failure : array<string, string>
+
 ## /api/v2/users
 - Method : GET
 - Param : None
@@ -238,9 +328,9 @@ Response :
   * Success : array{retval: int}
   * Failure : array<string, string>
 
-## /api/v2/users/drag/<string>
-- Method : POST
+## /api/v2/users/drag
 - Param :
+  * from : int
   * to : int
 - Response :
   * 200 Success
@@ -326,4 +416,4 @@ Response :
 
 
 
-  
+

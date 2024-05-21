@@ -1512,4 +1512,308 @@ function dsas_get_cert() {
   return [["dsas" => ["x509" => $dsas_x509, "pubkey" => $dsas_pubkey, "gpg" => $dsas_gpg], "ca" => $ca]];
 }
 
+/**
+ * Function to add a task to DSAS settings
+ *
+ * usage:
+ *   dsas_add_task($data)
+ *
+ * @param array{name: string, id: string, type: string, 
+ *              run: string, directory: string, uri: string,
+ *              ca: array{name: string, fingerprint: string},
+ *              archs: array{array{arch: string, active: string}},
+ *              certs: array{array{name: string, fingerprint: string}}} $data
+ *
+ * @return array<int,mixed>
+ *    An array of the errors found in the configuration
+ */
+function dsas_add_task($data) {
+  $errors = array();
+  try {
+    $dsas = simplexml_load_file(_DSAS_XML);
+    if (! $dsas)
+      throw new RuntimeException("Error loading XML file");
+
+    $name = htmlspecialchars($data["name"]);
+    if ($name != $data["name"])
+      $errors[] = ["error" => "Illegal task name"];
+    if (trim($name) == "")
+      $errors[] = ["error" => "The name can not be empty"];
+    $id = $data["id"];
+    $directory = htmlspecialchars($data["directory"]);
+    if ($directory != $data["directory"])
+      $errors[] = ["error" => "Illegal directory name"];
+    if (trim($directory) == "")
+      $errors[] = ["error" => "The directory name can not be empty"];
+    $uri =  htmlspecialchars($data["uri"]);
+    if ($uri != $data["uri"])
+      $errors[] = ["error" => "Illegal uri"];
+    $type = $data["type"];
+    if ($type !== "rpm" && $type !== "repomd" && $type !== "deb" && $type !== "authenticode" &&
+        $type !== "openssl" && $type !== "gpg" && $type !== "liveupdate" && $type !== "cyberwatch" &&
+        $type != "jar" && $type !== "trend")
+      $errors[] = ["error" => "The task type is illegal"];
+    $run = $data["run"];
+    if ($run !== "never" && $run !== "quarterhourly" && $run !== "hourly" && $run !== "daily" && $run !== "weekly" && $run !== "monthly")
+      $errors[] = ["error" => "The period between execution of the task is illegal"];
+    $ca = $data["ca"];
+    $ca_finger = strtolower(trim($ca["fingerprint"]));
+    $ca_name = htmlspecialchars(trim($ca["name"]));
+    if ($ca_finger !== "" && $ca_finger !== "self") {
+      $ca_ok = false;
+      foreach ($dsas->certificates->certificate as $certificate) {
+        if ($certificate->type == "x509") {
+          if ($certificate->authority == "true") {
+            if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $ca_finger) {
+              $ca_ok = true;
+              break;
+            }
+          }
+        }
+      }
+      if (! $ca_ok)
+        $errors[] = ["error" => "Certificate authority not found"];
+    }
+
+    if ($type === "deb") {
+      foreach ($data["archs"] as $arch) {
+        switch ($arch["arch"]){
+          case "source":
+          case "all":
+          case "amd64":
+          case "arm64":
+          case "armel":
+          case "armhf":
+          case "i386":
+          case "mips64el":
+          case "mipsel":
+          case "ppc64el":
+          case "s390x":
+            // Architecture ok
+            if ($arch["active"] !== "true" && $arch["active"] !== "false") {
+              $errors[] = ["error" => "Invalid debian architecture"];
+              break 2;
+            }
+            break;
+          default:
+            $errors[] = ["error" => "Invalid debian architecture"];
+            break 2;
+        }
+      }
+    }
+
+    $certs = array();
+    $have_ca = false;
+    $have_pubkey = false;
+    $have_x509 = false;
+    foreach ($data["certs"] as $cert) {
+      $certok = false;
+      $certname = "";
+      foreach ($dsas->certificates->certificate as $certificate) {
+        if ($certificate->type == "x509") {
+          if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $cert["fingerprint"]) {
+            if ($certificate->authority == "true") {
+              if ($have_ca && $type !== "liveupdate" && $type !== "trend") {
+                $errors[] = ["error" => ["The task type '{0}' only supports one root certificate", $type]];
+                break 2;
+              }
+              $have_ca = true;
+            }
+            if ($type === "rpm" || $type === "repomd" || $type === "deb" || $type === "gpg") {
+              $errors[] = ["error" => ["The task type '{0}' does not support {1} certificates", $type, "X509"]];
+              break 2;
+            }
+            
+            if ($have_pubkey && ($type === "cyberwatch" || $type === "openssl")) {
+              $errors[] = ["error" => ["The task type '{0}' can not include both public keys and X509 certificates", $type]];
+              break 2;
+            } 
+
+            $certok = true;
+            $have_x509 = true;
+            $x509_cert = openssl_x509_parse(trim($certificate->pem));
+            if ($x509_cert === false)
+              $certname ="";
+            else if ($x509_cert["subject"]["CN"])
+              $certname = $x509_cert["subject"]["CN"];
+            else if ($x509_cert["subject"]["OU"])
+              $certname = $x509_cert["subject"]["OU"];
+            else if ($x509_cert["subject"]["O"])
+              $certname = $x509_cert["subject"]["O"];
+            else if ($x509_cert["extensions"]["subjectKeyIdentifier"])
+              $certname = $x509_cert["extensions"]["subjectKeyIdentifier"];
+            else
+              $certname = "";
+            break;
+          }
+        }
+        if ($certificate->type == "gpg") {
+          $gpg_cert =  parse_gpg(trim($certificate->pem));
+          if ($gpg_cert["fingerprint"] == $cert["fingerprint"]) {
+            if ($type === "authenticode" || $type === "openssl" || $type === "liveupdate" || $type === "jar" || $type === "trend") {
+              $errors[] = ["error" => ["The task type '{0}' does not support {1} certificates", $type, "GPG"]];
+              break 2;
+            }
+            if ($type == "gpg" && $have_ca) {
+              $errors[] = ["error" => ["The task type '{0}' only supports one GPG certificate", $type]];
+              break 2;
+            }
+            $certname = $gpg_cert["uid"];
+            $certok = true;
+            $have_ca = true;
+            break;
+          }
+        }
+
+        if ($certificate->type == "pubkey") {
+          $pem = trim($certificate->pem[0]);
+          $pemnowrap = (string)preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pem);
+          $pemnowrap = (string)preg_replace('/\\s+/', '', $pemnowrap);
+          if (hash("sha256", base64_decode($pemnowrap)) == $cert["fingerprint"]) {
+            if ($type === "rpm" || $type === "repomd" || $type === "deb" || 
+                $type === "authenticode" || $type === "gpg" || $type === "liveupdate" ||
+                $type === "jar" || $type === "trend") {
+              $errors[] = ["error" => ["The task type '{0}' does not support public keys", $type]];
+              break 2;
+            }
+            if ($have_x509) {
+              $errors[] = ["error" => ["The task type '{0}' can not include both public keys and X509 certificates", $type]];
+              break 2;
+            }
+            if ($have_pubkey) {
+              $errors[] = ["error" => ["The task type '{0}' can only support a single public key", $type]];
+              break 2;
+            }
+
+            $certname = $certificate->name;
+            $certok = true;
+            $have_pubkey = true;
+            break;
+          }
+        }
+      }
+
+      if (! $certok) {
+        $cafile = dsas_ca_file();                                                      
+        if ($cafile) {
+          // The format of an x509 can be quite arbitrary. So only 
+          // declare the bits I need here
+          /** @var array{array{fingerprint: string, pem: string, 
+            * subject: array{CN: string, OU: string, O: string}, 
+            * extensions: array{subjectKeyIdentifier: string}}} $ca */
+          $ca = parse_x509($cafile);
+          foreach ($ca as $x509_cert) {
+            if ($x509_cert["fingerprint"] == $cert["fingerprint"]) {
+              if ($type === "rpm" || $type === "repomd" || $type === "deb" || $type === "gpg") {
+                $errors[] = ["error" => ["The task type '{0}' does not support {1} certificates", $type, "X509"]];
+                break 2;
+              }
+              if ($have_ca) {
+                $errors[] = ["error" => ["The task type '{0}' only supports one root certificate", $type]];
+                break 2;
+              }
+              if ($have_pubkey) {
+                $errors[] = ["error" => ["The task type '{0}' can not include both public keys and X509 certificates", $type]];
+                break 2;
+              } 
+              $have_ca = true;
+              $certok = true;
+
+              if ($x509_cert["subject"]["CN"])
+                $certname = $x509_cert["subject"]["CN"];
+              else if ($x509_cert["subject"]["OU"])
+                $certname = $x509_cert["subject"]["OU"];
+              else if ($x509_cert["subject"]["O"])
+                $certname = $x509_cert["subject"]["O"];
+              else if ($x509_cert["extensions"]["subjectKeyIdentifier"])
+                $certname = $x509_cert["extensions"]["subjectKeyIdentifier"];
+              else
+                $certname = "";
+              break;
+            }
+          }
+        }
+      }
+
+      if ($certok)
+        $certs[] = ["name" => $certname, "fingerprint" => $cert["fingerprint"]];
+      else
+        $errors[] = ["error" => "One of the certificates does not exist"];
+    }
+
+    if ($type === "rpm" || $type === "repomd" || $type === "gpg") {
+if (count($certs) != 1)
+        $errors[] = ["error" => ["The task type '{0}' requires a GPG certificate", $type]]; 
+    }
+
+    if ($type === "openssl" || $type === "cyberwatch" || $type == "deb") {
+if (count($certs) < 1)
+        $errors[] = ["error" => ["The task type '{0}' at least one certificate or public key", $type]]; 
+    }
+
+    if ($errors == []) {
+      $nt = 0;
+      foreach ($dsas->tasks->task as $task) {
+        if ($task->id == $id) {
+          if ($directory != $task->directory) {
+            dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "haut", "mv", "-n", _DSAS_HAUT . "/" . $task->directory, _DSAS_HAUT . "/" . $directory]);
+            dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "verif", "mv", "-n", _DSAS_BAS . "/" . $task->directory, _DSAS_BAS . "/" . $directory]);
+            dsas_exec(["sudo", "sudo", "-u", "haut", "mv", "-n", _DSAS_HAUT . "/" . $task->directory, _DSAS_HAUT . "/" . $directory]);
+            dsas_exec(["sudo", "sudo", "-u", "verif", "mv", "-n", _DSAS_BAS . "/" . $task->directory, _DSAS_BAS . "/" . $directory]);
+          }
+          while ($dsas->tasks[0]->task[$nt]->cert[0])
+            unset($dsas->tasks[0]->task[$nt]->cert[0]);
+          unset($dsas->tasks[0]->task[$nt]->archs[0]);
+          break;
+        }
+        $nt++;
+      }
+      if ($nt === $dsas->tasks->task->count()) {
+        $task = $dsas->tasks[0]->addChild("task");
+        $task->id[0] = dsasid();
+        $task->name[0] = $name;
+      }
+      $dsas->tasks[0]->task[$nt]->directory[0] = $directory;
+      $dsas->tasks[0]->task[$nt]->uri[0] =  $uri;
+      $dsas->tasks[0]->task[$nt]->type[0] = $type;
+      $dsas->tasks[0]->task[$nt]->run[0] = $run;
+      $dsas->tasks[0]->task[$nt]->ca[0]->fingerprint[0] = $ca_finger;
+      $dsas->tasks[0]->task[$nt]->ca[0]->name[0] = $ca_name;
+      foreach ($certs as $cert) {
+        $newcert = $dsas->tasks[0]->task[$nt]->addChild("cert");
+        $newcert->name[0] = $cert["name"];
+        $newcert->fingerprint[0] = $cert["fingerprint"];
+      }
+      if ($type === "deb") {
+        $newarch = $dsas->tasks[0]->task[$nt]->addChild("archs");
+        foreach ($data["archs"] as $arch) {
+          switch ($arch["arch"]){
+            case "source":
+            case "all":
+            case "amd64":
+            case "arm64":
+            case "armel":
+            case "armhf":
+            case "i386":
+            case "mips64el":
+            case "mipsel":
+            case "ppc64el":
+            case "s390x":
+            // Architecture ok
+              if ($arch["active"] == "true")
+                $newarch->addChild("arch", $arch["arch"]);
+            break;
+          }
+        }
+      }
+    }
+  } catch (Exception $e) {
+     $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
+  }
+  if ($dsas !== false && $errors == [])
+    $dsas->asXml(_DSAS_XML);
+
+  return $errors;
+}
+
 ?>

@@ -35,7 +35,7 @@ if (count($uri) < 4) {
     header("HTTP/1.0 403 Forbidden");
     exit();
   }
-} else if (($uri[3] !! "status" ) || ($uri[3] == "logs") || ((count($uri) > 4) && ($uri[3] == "tasks") && ($uri[4] == "info"))) {
+} else if (($uri[3] == "status" ) || ($uri[3] == "logs") || ((count($uri) > 4) && ($uri[3] == "tasks") && ($uri[4] == "info"))) {
   // These APIs should update the logout timer, as automatic
   if (! dsas_loggedin(false)) {
     header("HTTP/1.0 403 Forbidden");
@@ -207,6 +207,176 @@ try {
           echo json_encode($errors);
         }
         break;
+        
+      case "tasks":
+        $id="";
+        if (count($uri) == 5) {
+          if (($uri[4] != "add") && ($uri[4] != "drag"))
+            throw new RuntimeException("Not found");
+        } else if (count($uri) != 6) {
+          throw new RuntimeException("Not found");      
+        } else
+          $id = $uri[5];
+
+        $info = "";
+        $errors = array();
+        $dsas = simplexml_load_file(_DSAS_XML);
+        if (! $dsas)
+          $errors[] = ["error" => "Error loading XML file"];
+        else {
+          switch ($uri[4]) {
+            case "add":
+              /** @var array{name: string, id: string, type: string, 
+                * run: string, directory: string, uri: string,
+                * ca: array{name: string, fingerprint: string},
+                * archs: array{array{arch: string, active: string}},
+                * certs: array{array{name: string, fingerprint: string}}} $data */
+              $data = json_decode($_POST["data"], true);
+              $errors = dsas_add_task($data);
+              break;
+
+            case "drag":
+              $from = $_POST["from"];
+              $to = $_POST["to"];
+              if (! ctype_digit($from)) {
+                $errors[] = ["error" => "The task drag from value is invalid"];
+              } else if (! ctype_digit($to)) {
+                $errors[] = ["error" => "The task drag to value is invalid"];
+              } else {
+                $from = intval($from);
+                $to = intval($to);
+                $nt =  $dsas->tasks[0]->count();
+                if ($from < 0 || $to < 0 || $from > $nt - 1 || $to > $nt - 1) {
+                  $errors[] = ["error" => "The task drag is invalid"];
+                } else  if ($from !== $to && $from !== $to + 1) {
+                  $task = new SimpleXMLElement($dsas->tasks[0]->task[$from]->asXML());
+                  $task_to = $dsas->tasks[0]->task[$to];
+                  unset($dsas->tasks->task[$from]);
+                  simplexml_insert_after($task, $task_to);
+                }
+              }
+              break;
+
+            case "info":
+              $len = $_POST["len"];
+              if (! ctype_xdigit($id)) {
+                $errors[] = ["error" => "The task ID is invalid"];
+              } else {
+                $dsas_active = simplexml_load_file(_DSAS_XML . ".active");
+                if (! $dsas_active)
+                  $errors[] = ["error" => "Error loading XML file"];
+                else {
+                  $infotask = false;
+                  foreach ($dsas_active->tasks->task as $task) {
+                    if ($task->id == $id) {
+                      $infotask = true;
+                      break;
+                    }
+                  }
+                  if ( ! $infotask) {
+                    $errors[] = ["error" => ["The task '{0}' is not active. Try applying before use",  $id]];
+                  } else {
+                   if (empty($len))
+                     $len = 0;
+                   $info = dsas_get_log($len, _DSAS_LOG . "/tasks/" . $id . ".log");
+                  }
+                }
+              }          
+              break;
+
+            case "kill":
+              if (! ctype_xdigit($id)) {
+                $errors[] = ["error" => "The task ID is invalid"];
+              } else {
+                $dsas_active = simplexml_load_file(_DSAS_XML . ".active");
+                if (! $dsas_active)
+                  $errors[] = ["error" => "Error loading XML file"];
+                else {
+                  $killtask = false;
+                  foreach ($dsas_active->tasks->task as $task) {
+                    if ($task->id == $id) {
+                      $killtask = true;
+                      break;
+                    }
+                  }
+                  if ( ! $killtask) {
+                    $errors[] = ["error" => ["The task '{0}' is not active. Try applying before use",  $id]];
+                  } else if (! dsas_task_running($id)) {
+                    $errors[] = ["error" => ["The task '{0}' is not running",  $id]];
+                  } else {
+                     dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "/usr/local/sbin/killtask", $id]);
+                     dsas_exec(["sudo", "/usr/local/sbin/killtask", $id]);
+                  }
+                }
+              }
+              break;
+
+            case "name":
+              /** @var array{old: string, new: string} */
+              $data = json_decode($_POST["data"], true);
+              $old = $data["old"];
+              foreach ($dsas->tasks->task as $task) {
+                if ($task->name == $old && $task->id == $id) {
+                  $task->name = $data["new"];
+                  break;
+                }
+              }
+              break;
+
+            case "run":
+              if (! ctype_xdigit($id)) {
+                $errors[] = ["error" => "The task ID is invalid"];
+              } else {
+                $dsas_active = simplexml_load_file(_DSAS_XML . ".active");
+                if (! $dsas_active)
+                  $erros[] = ["error" => "Error loading XML file"];
+                else {
+                  $runtask = false;
+                  $i = 0;
+                  foreach ($dsas_active->tasks->task as $task) {
+                    if ($task->id == $id) {
+                      $runtask = true;
+                      break;
+                    }
+                    $i++;
+                  }
+                  if ( ! $runtask) {
+                    $errors[] = ["error" => ["The task '{0}' is not active. Try applying before use",  $id]];
+                  } else if (dsas_task_running($id)) {
+                    $errors[] = ["error" => ["The task '{0}' is already running",  $id]];
+                  } else if ($dsas->tasks->task[$i]->asXml() !== $dsas_active->tasks->task[$i]->asXml()) {
+                    $errors[] = ["error" => ["The task '{0}' is modified. Try applying before use",  $id]];
+                  } else {
+                    // Create task log directory if needed
+                    if (! is_dir(_DSAS_LOG . "/tasks")) {
+                      mkdir(_DSAS_LOG . "/tasks", 0775);
+                      chgrp(_DSAS_LOG . "/tasks", "verif");
+                    }
+                    // Force the execution of the task with the "-f" flag.
+                    // FIXME : seems that we can't use dsas_exec as it stands
+                    exec("runtask -v -f " . $id . " >& " . _DSAS_LOG . "/tasks/" . $id . ".log &");
+                  }
+                }
+              }
+              break;
+              
+            default:
+              header("HTTP/1.1 404 Not Found");
+              exit();
+          }
+        }
+        header("Content-Type: application/json");
+        if (($dsas != false) && ($errors == [])) {
+          if ($uri[4] === "name" || $uri[4] === "drag")
+            $dsas->asXml(_DSAS_XML);
+          if ($uri[4] == "info")
+            echo json_encode($info);
+          else
+            echo json_encode(["retval" => 0]);
+        } else {
+          echo json_encode($errors);
+        } 
+        break;
 
       case "users":
         $user="";
@@ -330,11 +500,11 @@ try {
             header("HTTP/1.1 404 Not Found");
             exit();
         }
+        header("Content-Type: application/json");
         if ($errors == []) {
           $dsas->asXml(_DSAS_XML);
           echo json_encode(["retval" => 0]);
-        } else  {
-          header("Content-Type: application/json");
+        } else {
           echo json_encode($errors);
         }        
         break;
@@ -607,6 +777,30 @@ try {
         header("Content-Type: application/json");
         echo json_encode(dsas_status());
         break;
+        
+      case "tasks":
+        if (count($uri) != 4)
+          throw new RuntimeException("Not found");      
+      
+        $dsas = simplexml_load_file(_DSAS_XML);
+        if (! $dsas)
+          header("HTTP/1.0 500 Internal Server Error");
+        else {
+          $i=1;
+          foreach ($dsas->tasks->task as $task) {
+            $tmp = dsas_run_log($task->id);
+            $task->last = $tmp["last"];
+            $task->status = $tmp["status"];
+            if (empty($task->ca->fingerprint)) {
+              $task->ca->name = "";
+              $task->ca->fingerprint = "";
+            }
+            $i++;
+          }
+          header("Content-Type: application/json");
+          echo json_encode($dsas->tasks);
+        }      
+        break;
 
       case "users":
         if (count($uri) != 4)
@@ -679,15 +873,13 @@ try {
         if (count($uri) != 5)
           throw new RuntimeException("Not found");  
         $user = $uri[4];
-        /** @var array{username: string} $data */
-        $data = json_decode($_POST["data"], true);
         $dsas = simplexml_load_file(_DSAS_XML);
         if ($dsas == false || $dsas == null) {
           $errors[] = ["error" => "Error loading XML file"];
         } else if ($user === "tc") {
           $errors[] = [ "error" => "Can not remove the user 'tc'"];
         } else if ($user === $_SESSION["username"]) {
-          $errors[] = [ "error" => ["Can not remove loggedin user '{0}'", $data["username"]]];
+          $errors[] = [ "error" => ["Can not remove loggedin user '{0}'", $user]];
         } else {        
           $found = false;
           $i = 0;
@@ -705,7 +897,7 @@ try {
             $i++;
           }
           if (! $found)
-            $errors[] = ["error" => ["The user '{0}' does not exist",  (string)$data["username"]]];
+            $errors[] = ["error" => ["The user '{0}' does not exist",  (string)$user]];
         }
         header("Content-Type: application/json");
         if ($dsas != false && $errors == []) {
@@ -714,7 +906,51 @@ try {
         } else
           echo json_encode($errors);
         break;
+
+      case "tasks":
+      case "tasks-all":
+        $errors = [];
+        if (count($uri) != 5)
+          throw new RuntimeException("Not found");  
+        $id = $uri[4];
         
+        $dsas = simplexml_load_file(_DSAS_XML);
+        if ($dsas == false || $dsas == null) {
+          $errors[] = ["error" => "Error loading XML file"];
+        } else if (! ctype_xdigit($id)) {
+          $errors[] = ["error" => "The task ID is invalid"];
+        } else {
+          $deltask = false;
+          $i = 0;
+          foreach ($dsas->tasks->task as $task) {
+            if ($task->id == $id) {
+              if (dsas_task_running($id)) {
+                $errors[] = ["error" => "Can not delete running task"];
+              } else {
+                if ($uri[3] == "tasks-all") {
+                  dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "haut", "rm", "-fr", _DSAS_HAUT . "/" . $task->directory]);
+                  dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "verif", "rm", "-fr", _DSAS_BAS . "/" . $task->directory]);
+                  dsas_exec(["sudo", "sudo", "-u", "haut", "rm", "-fr", _DSAS_HAUT . "/" . $task->directory]);
+                  dsas_exec(["sudo", "sudo", "-u", "verif", "rm", "-fr", _DSAS_BAS . "/" . $task->directory]);
+                }
+                unset($dsas->tasks->task[$i]);
+              }
+              $deltask = true;
+              break;
+            }
+            $i++;
+          }
+          if (! $deltask)
+            $errors[] = ["error" => "The task was not found"];
+        }
+        header("Content-Type: application/json");
+        if ($dsas != false && $errors == []) {
+          $dsas->asXml(_DSAS_XML);
+          echo json_encode(["retval" => 0]);
+        } else
+          echo json_encode($errors);
+        break;      
+
       default:
         header("HTTP/1.1 404 Not Found");
         break;
