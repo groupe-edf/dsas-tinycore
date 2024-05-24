@@ -11,10 +11,10 @@ The objective of the "Decontaminating Security Access Service" DSAS is to downlo
 security updates, to control their integrity and to make them available to the
 sensitive systems. The DSAS will also allow the use of USB keys to be eliminated
 on our industrial infrastructures, and therefore the DSAS includes the ability
-to transfer files signed by authorized people. Finally, the DSAS ensures a 
+to transfer files signed by authorized people. Finally, the DSAS ensures a
 protocol break between the various security zones in a defense in depth strategy.
 
-The DSAS comes with a __[complete documentation](append/usr/local/share/www/Documentation_en.md)__ 
+The DSAS comes with a __[complete documentation](append/usr/local/share/www/Documentation_en.md)__
 
 # Quick Start
 
@@ -27,10 +27,10 @@ is possible. A 64-bit build machine is needed to perform the static code analysi
 
 ## Tools needed
 
-You need the following tools to build the DSAS 
+You need the following tools to build the DSAS
 
 * A x86 ou AMD64 linux machine with root access via sudo
-* make, gcc  and all the other classic build tools 
+* make, gcc  and all the other classic build tools
 * rsync
 * genisoimage or mkisofs
 * squashfs-tools
@@ -47,7 +47,7 @@ Or with debian
 
 ```shell
 apt-get install build-essential rsync genisoimage squashfs-tools git curl
-``` 
+```
 
 ## The build process
 
@@ -75,7 +75,7 @@ The build of a 32-bit version of the DSAS on a 64-bit is possible with the comma
 
 ```
 ./make.sh -32
-``` 
+```
 
 The ISO of the DSAS is then in the file `work/dsas.iso`.
 
@@ -87,7 +87,7 @@ To clean all of the temporary files created during the build, the command is
 ./make.sh clean
 ```
 
-This keeps the ISO, built packages and the downloaded files, but the intermediate 
+This keeps the ISO, built packages and the downloaded files, but the intermediate
 files are deleted. To completely clean the build tree the command is
 
 
