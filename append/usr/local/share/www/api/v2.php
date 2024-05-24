@@ -25,7 +25,7 @@ $uri = explode( '/', $uri );
 
 // FIXME: Should this code be split up more into seperate functions ?
 
-// This code is responsable for the routing of the REST API requests 
+// This code is responsable for the routing of the REST API requests
 if (count($uri) < 4) {
   header("HTTP/1.1 404 Not Found");
   exit();
@@ -55,7 +55,7 @@ try {
         if (count($uri) != 4)
           throw new RuntimeException("Not found");
         try {
-          // This will throw an error in case of a problem which is caught below 
+          // This will throw an error in case of a problem which is caught below
           check_files($_FILES["file"], "application/gzip");
 
           // The contents of the tar files is controlled in dsasbackup
@@ -80,7 +80,7 @@ try {
           case "drag":
             $errors = dsas_drag_cert($_POST["from"], $_POST["to"]);
             break;
-            
+
           case "x509":
           case "pubkey":
             $errors = dsas_upload_cert($uri[4], $_FILES["file"], "text/plain");
@@ -95,34 +95,34 @@ try {
         }
         header("Content-Type: application/json");
         if ($errors == []) {
-          echo json_encode(["retval" => 0]); 
+          echo json_encode(["retval" => 0]);
         } else {
           echo json_encode($errors);
-        } 
+        }
         break;
 
       case "net":
         if (count($uri) != 4)
           throw new RuntimeException("Not found");
 
-        /** @var array{bas: array{dhcp: string, cidr: string, gateway: string, 
+        /** @var array{bas: array{dhcp: string, cidr: string, gateway: string,
           *                       dns: array{domain: string, nameserver: string[]}},
-          *            haut: array{dhcp: string, cidr: string, gateway: string, 
+          *            haut: array{dhcp: string, cidr: string, gateway: string,
           *                       dns: array{domain: string, nameserver: string[]}}} $data */
         $data = json_decode($_POST["data"], true);
         $errors = dsas_net($data);
         header("Content-Type: application/json");
         if ($errors == []) {
-          echo json_encode(["retval" => 0]); 
+          echo json_encode(["retval" => 0]);
         } else {
           echo json_encode($errors);
-        } 
+        }
         break;
-        
+
       case "passwd":
         if (count($uri) != 4)
           throw new RuntimeException("Not found");
-          
+
         $dsas = simplexml_load_file(_DSAS_XML);
         if ($dsas === false) {
           header("Content-Type: application/json");
@@ -156,8 +156,8 @@ try {
                   // To make the password change permanent across a reboot need to backup
                   // /etc/shadow on both machines. Can't use 'filetool.sh -b' for this as
                   // unsaved changes by an adminstrator will also be backed up. Have to
-                  // untar the existing backup in tgz format, replace /etc/shadow and 
-                  // rearchive it. This is going to be ugly !! Package the ugliness in a 
+                  // untar the existing backup in tgz format, replace /etc/shadow and
+                  // rearchive it. This is going to be ugly !! Package the ugliness in a
                   // script
                   $output = dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@haut", "/usr/local/sbin/dsaspasswd"]);
                   if ($output["retval"] != 0)
@@ -166,7 +166,7 @@ try {
                     $output = dsas_exec(["/usr/local/sbin/dsaspasswd"]);
                     if ($output["retval"] != 0)
                       $errors[] = ["error" => ["Error during user addition '{0}'", (string)$output["stderr"]]];
-                  }            
+                  }
                 }
               }
               break;
@@ -181,14 +181,14 @@ try {
         } else  {
           header("Content-Type: application/json");
           echo json_encode($errors);
-        }    
+        }
         break;
 
       case "service" :
         if (count($uri) != 4)
           throw new RuntimeException("Not found");
-          
-         /** @var array{ssh: array{active: string, user_tc: string, 
+
+         /** @var array{ssh: array{active: string, user_tc: string,
           *                       user_bas: string, user_haut: string},
           *            radius: array{active: string, server: string, secret: string, domain: string},
           *            syslog: array{active: string, server: string},
@@ -196,7 +196,7 @@ try {
           *            antivirus: array{active: string, uri: string},
           *            web: array{repo: string},
           *            snmp: array{active: string, username: string, password: string,
-                                   encrypt: string, passpriv: string, 
+                                   encrypt: string, passpriv: string,
                                    privencrypt: string}} $data */
         $data = json_decode($_POST["data"], true);
         $errors = dsas_service($data);
@@ -207,14 +207,14 @@ try {
           echo json_encode($errors);
         }
         break;
-        
+
       case "tasks":
         $id="";
         if (count($uri) == 5) {
           if (($uri[4] != "add") && ($uri[4] != "drag"))
             throw new RuntimeException("Not found");
         } else if (count($uri) != 6) {
-          throw new RuntimeException("Not found");      
+          throw new RuntimeException("Not found");
         } else
           $id = $uri[5];
 
@@ -226,7 +226,7 @@ try {
         else {
           switch ($uri[4]) {
             case "add":
-              /** @var array{name: string, id: string, type: string, 
+              /** @var array{name: string, id: string, type: string,
                 * run: string, directory: string, uri: string,
                 * ca: array{name: string, fingerprint: string},
                 * archs: array{array{arch: string, active: string}},
@@ -281,7 +281,7 @@ try {
                    $info = dsas_get_log($len, _DSAS_LOG . "/tasks/" . $id . ".log");
                   }
                 }
-              }          
+              }
               break;
 
             case "kill":
@@ -359,7 +359,7 @@ try {
                 }
               }
               break;
-              
+
             default:
               header("HTTP/1.1 404 Not Found");
               exit();
@@ -375,7 +375,7 @@ try {
             echo json_encode(["retval" => 0]);
         } else {
           echo json_encode($errors);
-        } 
+        }
         break;
 
       case "users":
@@ -385,16 +385,16 @@ try {
             throw new RuntimeException("Not found");
           $user = $uri[5];
         } else if (count($uri) != 5) {
-          throw new RuntimeException("Not found");      
+          throw new RuntimeException("Not found");
         }
-        
+
         $dsas = simplexml_load_file(_DSAS_XML);
         if ($dsas === false) {
           header("Content-Type: application/json");
           echo json_encode(["error" => "Error loading XML file"]);
           die();
         }
-        
+
         $errors = array();
         switch ($uri[4]) {
           case "add":
@@ -423,7 +423,7 @@ try {
               }
             }
             break;
-            
+
           case "drag" :
             $from = intval($_POST["from"]);
             $to = intval($_POST["to"]);
@@ -437,14 +437,14 @@ try {
               simplexml_insert_after($_user, $user_to);
             }
             break;
-            
+
           case "modify":
             /** @var array{username: string, passwd: string, description: string, type: string, active: string} $data */
             $data = json_decode($_POST["data"], true);
-            /** @var array{username: string, passwd: string, description: string, type: string, active: string} $duser */  
+            /** @var array{username: string, passwd: string, description: string, type: string, active: string} $duser */
             foreach ($data as $duser) {
               $found = false;
-              $i = 0;         
+              $i = 0;
               foreach ($dsas->config->users->user as $_user) {
                 if ($duser["username"] == $_user->username) {
                   $found = true;
@@ -467,7 +467,7 @@ try {
                 $i++;
               }
               if (! $found)
-                $errors[] = ["error" => ["The user '{0}' does not exist",  $duser["username"]]];          
+                $errors[] = ["error" => ["The user '{0}' does not exist",  $duser["username"]]];
             }
             break;
 
@@ -493,9 +493,9 @@ try {
               }
             }
             if (! $found)
-              $errors[] = ["error" => ["The user '{0}' does not exist",  (string)$user]];            
+              $errors[] = ["error" => ["The user '{0}' does not exist",  (string)$user]];
             break;
-            
+
           default:
             header("HTTP/1.1 404 Not Found");
             exit();
@@ -506,14 +506,14 @@ try {
           echo json_encode(["retval" => 0]);
         } else {
           echo json_encode($errors);
-        }        
+        }
         break;
-        
+
       case "web":
         $errors = [];
         if (count($uri) != 5)
           throw new RuntimeException("Not found");
-      
+
         switch ($uri[4]) {
           case "upload":
             try {
@@ -523,21 +523,21 @@ try {
               $crt = str_replace("\r", "", $crt);   // dos2unix
               if (!openssl_x509_parse($crt))
                 throw new RuntimeException("The CRT file must be in PEM format");
-              
+
               $priv = file_get_contents(_DSAS_VAR . "/dsas_priv.pem");
               $retval = file_put_contents(_DSAS_VAR . "/dsas_pub.pem", $crt);
               chmod (_DSAS_VAR . "/dsas_pub.pem", 0600);
-              if ($retval !== 0 && $retval !== false) 
+              if ($retval !== 0 && $retval !== false)
                 $retval = file_put_contents(_DSAS_VAR . "/dsas.pem", $priv . PHP_EOL . $crt);
               chmod (_DSAS_VAR . "/dsas.pem", 0600);
-              if ($retval === 0 || $retval === false) 
+              if ($retval === 0 || $retval === false)
                 throw new RuntimeException("Error while saving the CRT");
 
             } catch (RuntimeException $e) {
               $errors[] = ["upload" => $e->getMessage()];
-            }          
+            }
             break;
-            
+
           case "renew":
             $options = array(
               "countryName" => htmlspecialchars(trim($_POST["countryName"])),
@@ -551,19 +551,19 @@ try {
             $validity = intval($_POST["validity"]);
             $errors = renew_web_cert($options, $validity);
             break;
-            
+
           default:
             header("HTTP/1.1 404 Not Found");
             exit();
         }
-        
+
         header("Content-Type: application/json");
         if ($errors == [])
           echo json_encode(["retval" => 0]);
         else
           echo json_encode($errors);
         break;
-        
+
       default:
         header("HTTP/1.1 404 Not Found");
         break;
@@ -573,18 +573,18 @@ try {
       case "apply":
         if (count($uri) != 4)
           throw new RuntimeException("Not found");
-            
+
         // exec here for now, use proc_open to avoid shell if user input is supplied
         $haut = interco_haut();
 
         // FIXME Can't use dsas_exec here as this command sent a HUP to the very server
-        // on which this PHP code is running. So dsas_exec will hang in this case. 
+        // on which this PHP code is running. So dsas_exec will hang in this case.
         // exceptionally we use "exec" that seems to work.
         exec("sudo /etc/init.d/services/dsas apply", $dummy, $retval);
         $output["stderr"] = "Error in apply on lower machine";
         $output["retval"] = $retval;
 
-        if ($output["retval"] == 0) 
+        if ($output["retval"] == 0)
           $output = dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . $haut, "cp", "/var/dsas/dsas_conf.xml", "/var/dsas/dsas_conf.xml.old"]);
         if ($output["retval"] == 0) {
           copy("/var/dsas/dsas_conf.xml", "/tmp/dsas_conf.xml");
@@ -594,9 +594,9 @@ try {
         }
         if ($output["retval"] == 0)
           $output = dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . $haut, "mv", "/tmp/dsas_conf.xml", "/var/dsas/dsas_conf.xml"]);
-        if ($output["retval"] == 0) 
+        if ($output["retval"] == 0)
           $output = dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . $haut, "chgrp", "verif", "/var/dsas/dsas_conf.xml"]);
-        if ($output["retval"] == 0) 
+        if ($output["retval"] == 0)
           $output = dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . $haut, "chmod", "640", "/var/dsas/dsas_conf.xml"]);
         if ($output["retval"] == 0)
           $output = dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . $haut, "sudo", "/etc/init.d/services/dsas", "apply"]);
@@ -644,7 +644,7 @@ try {
       case "logout":
         if (count($uri) != 4)
           throw new RuntimeException("Not found");
-          
+
         $cnxstr = $_SERVER["REMOTE_ADDR"];
         if (!empty($_SERVER["HTTP_X_FORWARDED_FOR"]))
            $cnxstr = $cnxstr . " [" . $_SERVER["HTTP_X_FORWARDED_FOR"] . "]";
@@ -665,7 +665,7 @@ try {
       case "logs":
         if (count($uri) != 4)
           throw new RuntimeException("Not found");
-          
+
         header("Content-Type: application/json");
         if (! array_key_exists("REFRESH_LEN", $_GET)) {
           echo json_encode(dsas_get_logs());
@@ -673,24 +673,24 @@ try {
           echo json_encode(dsas_get_log($_GET["REFRESH_LEN"]));
         }
         break;
-        
+
       case "net":
         if (count($uri) != 4)
           throw new RuntimeException("Not found");
-          
+
         $dsas = simplexml_load_file(_DSAS_XML);
         if (! $dsas)
           header("HTTP/1.0 500 Internal Server Error");
         else {
           header("Content-Type: application/json");
           echo json_encode($dsas->config->network);
-        }  
+        }
         break;
-        
+
       case "passwd":
         if (count($uri) != 4)
           throw new RuntimeException("Not found");
-          
+
         $dsas = simplexml_load_file(_DSAS_XML);
         if (! $dsas)
           header("HTTP/1.0 500 Internal Server Error");
@@ -713,7 +713,7 @@ try {
       case "reboot":
         if (count($uri) != 4)
           throw new RuntimeException("Not found");
-          
+
         // Must use exec here as dsas_exec returns an unwanted error while web server is shutting down
         exec("sudo sudo -u haut ssh tc@" . interco_haut() . " /usr/bin/sudo /sbin/reboot", $output, $retval);
         // The above will give an error is the machine haut is down. So don't test for an error
@@ -730,7 +730,7 @@ try {
       case "save":
         if (count($uri) != 4)
           throw new RuntimeException("Not found");
-          
+
         $output = dsas_exec(["/usr/bin/sudo", "/usr/bin/filetool.sh", "-b"]);
         if ($output["retval"] != 0)
           header("HTTP/1.0 500 Internal Server Error");
@@ -739,7 +739,7 @@ try {
           echo json_encode($output);
         }
         break;
-        
+
       case "service" :
         $dsas = simplexml_load_file(_DSAS_XML);
         if (! $dsas)
@@ -756,7 +756,7 @@ try {
       case "shutdown":
         if (count($uri) != 4)
           throw new RuntimeException("Not found");
-          
+
         // Must use exec here as dsas_exec returns an unwanted error while web server is shutting down
         exec("sudo sudo -u haut ssh tc@" . interco_haut() . " /usr/bin/sudo /sbin/poweroff", $output, $retval);
         // The above will give an error is the machine haut is down. So don't test for an error
@@ -767,21 +767,21 @@ try {
         else {
           header("Content-Type: application/json");
           echo json_encode(["retval" => $retval, "output" => $output]);
-        }      
+        }
         break;
-        
+
       case "status":
         if (count($uri) != 4)
           throw new RuntimeException("Not found");
-          
+
         header("Content-Type: application/json");
         echo json_encode(dsas_status());
         break;
-        
+
       case "tasks":
         if (count($uri) != 4)
-          throw new RuntimeException("Not found");      
-      
+          throw new RuntimeException("Not found");
+
         $dsas = simplexml_load_file(_DSAS_XML);
         if (! $dsas)
           header("HTTP/1.0 500 Internal Server Error");
@@ -799,7 +799,7 @@ try {
           }
           header("Content-Type: application/json");
           echo json_encode($dsas->tasks);
-        }      
+        }
         break;
 
       case "users":
@@ -818,7 +818,7 @@ try {
       case "warning":
         if (count($uri) != 4)
           throw new RuntimeException("Not found");
-          
+
         $dsas = simplexml_load_file(_DSAS_XML);
         $warn = array();
 
@@ -827,7 +827,7 @@ try {
         else {
           if (force_passwd()) $warn[] =
              ["type" => "error", "msg" => "First use. All of the passwords must be changed."];
-          if ($dsas->tasks->task->count() == 0) $warn[] = 
+          if ($dsas->tasks->task->count() == 0) $warn[] =
              ["type" => "warn", "msg" => "No tasks are configured."];
         }
         header("Content-Type: application/json");
@@ -837,7 +837,7 @@ try {
       case "web":
         if (count($uri) != 4)
           throw new RuntimeException("Not found");
-          
+
         $dsas = simplexml_load_file(_DSAS_XML);
         if (! $dsas)
           header("HTTP/1.0 500 Internal Server Error");
@@ -859,7 +859,7 @@ try {
       case "cert":
         $errors = [];
         if (count($uri) != 5)
-          throw new RuntimeException("Not found");  
+          throw new RuntimeException("Not found");
         $errors = dsas_delete_cert($uri[4]);
         header("Content-Type: application/json");
         if ($errors == [])
@@ -867,11 +867,11 @@ try {
         else
           echo json_encode($errors);
         break;
-        
+
       case "users":
         $errors = [];
         if (count($uri) != 5)
-          throw new RuntimeException("Not found");  
+          throw new RuntimeException("Not found");
         $user = $uri[4];
         $dsas = simplexml_load_file(_DSAS_XML);
         if ($dsas == false || $dsas == null) {
@@ -880,7 +880,7 @@ try {
           $errors[] = [ "error" => "Can not remove the user 'tc'"];
         } else if ($user === $_SESSION["username"]) {
           $errors[] = [ "error" => ["Can not remove loggedin user '{0}'", $user]];
-        } else {        
+        } else {
           $found = false;
           $i = 0;
           foreach ($dsas->config->users->user as $_user) {
@@ -911,9 +911,9 @@ try {
       case "tasks-all":
         $errors = [];
         if (count($uri) != 5)
-          throw new RuntimeException("Not found");  
+          throw new RuntimeException("Not found");
         $id = $uri[4];
-        
+
         $dsas = simplexml_load_file(_DSAS_XML);
         if ($dsas == false || $dsas == null) {
           $errors[] = ["error" => "Error loading XML file"];
@@ -949,7 +949,7 @@ try {
           echo json_encode(["retval" => 0]);
         } else
           echo json_encode($errors);
-        break;      
+        break;
 
       default:
         header("HTTP/1.1 404 Not Found");
