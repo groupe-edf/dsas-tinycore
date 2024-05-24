@@ -29,12 +29,12 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
    $dsas = simplexml_load_file(_DSAS_XML);
    if (! $dsas)
      throw new RuntimeException("Error loading XML file");
-     
+
     switch ($_POST["op"]){
       case "all":
-        /** @var array{bas: array{dhcp: string, cidr: string, gateway: string, 
+        /** @var array{bas: array{dhcp: string, cidr: string, gateway: string,
           *                       dns: array{domain: string, nameserver: string[]}},
-          *            haut: array{dhcp: string, cidr: string, gateway: string, 
+          *            haut: array{dhcp: string, cidr: string, gateway: string,
           *                       dns: array{domain: string, nameserver: string[]}}} $data */
         $data = json_decode($_POST["data"], true);
         $ifaces = get_ifaces();
@@ -70,7 +70,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
              $dsas->config->network->{$iface}->dns->domain = $net["dns"]["domain"];
           else
              $errors[] = [ "iface_dns_domain" . $j => "Domain is invalid"];
-          
+
           foreach ($net["dns"]["nameserver"] as $server) {
             if (!empty($dns_err = ip_valid($server, -1)))
               break;
@@ -87,16 +87,16 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
 
       default:
-        $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]]; 
+        $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]];
         break;
     }
   } catch (Exception $e) {
      $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
   }
- 
+
   if ($dsas !== false && $errors == []) {
     echo "Ok";
-    $dsas->asXml(_DSAS_XML);    
+    $dsas->asXml(_DSAS_XML);
   } else {
     header("Content-Type: application/json");
     echo json_encode($errors);

@@ -29,10 +29,10 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
     $dsas = simplexml_load_file(_DSAS_XML);
     if (! $dsas)
       throw new RuntimeException("Error loading XML file");
-         
+
     switch ($_POST["op"]){
       case "all":
-        /** @var array{ssh: array{active: string, user_tc: string, 
+        /** @var array{ssh: array{active: string, user_tc: string,
           *                       user_bas: string, user_haut: string},
           *            radius: array{active: string, server: string, secret: string, domain: string},
           *            syslog: array{active: string, server: string},
@@ -40,7 +40,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           *            antivirus: array{active: string, uri: string},
           *            web: array{repo: string},
           *            snmp: array{active: string, username: string, password: string,
-                                   encrypt: string, passpriv: string, 
+                                   encrypt: string, passpriv: string,
                                    privencrypt: string}} $data */
         $data = json_decode($_POST["data"], true);
         // Lines like these stop the users from passing values other than true/false
@@ -51,7 +51,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         if (! empty($user_tc)) {
           foreach (explode(",",$user_tc) as $inet) {
             if (substr($inet,0,1) === "!")
-              $inet = substr($inet,1,strlen($inet)-1); 
+              $inet = substr($inet,1,strlen($inet)-1);
             if ($user_tc_err = ip_valid($inet, 0))
               break;
           }
@@ -66,7 +66,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         if (! empty($user_bas)) {
           foreach (explode(",",$user_bas) as $inet) {
             if (substr($inet,0,1) === "!")
-              $inet = substr($inet,1,strlen($inet)-1); 
+              $inet = substr($inet,1,strlen($inet)-1);
             if ($user_bas_err = ip_valid($inet, 0))
               break;
           }
@@ -81,7 +81,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         if (! empty($user_haut)) {
           foreach (explode(",",$user_haut) as $inet) {
             if (substr($inet,0,1) === "!")
-              $inet = substr($inet,1,strlen($inet)-1); 
+              $inet = substr($inet,1,strlen($inet)-1);
             if ($user_haut_err = ip_valid($inet, 0))
               break;
           }
@@ -171,7 +171,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         else
           $dsas->config->snmp->password = $snmp_password;
         $snmp_encrypt = htmlspecialchars($data["snmp"]["encrypt"]);
-        if ($snmp_encrypt !== "MD5" && $snmp_encrypt !== "SHA" 
+        if ($snmp_encrypt !== "MD5" && $snmp_encrypt !== "SHA"
             && $snmp_encrypt !== "SHA256" && $snmp_encrypt !== "SHA512")
           $errors[] = ["error" => "The SNMP authentication encryption is illegal"];
         else
@@ -187,10 +187,10 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         else
           $dsas->config->snmp->passpriv = $snmp_passpriv;
         $snmp_privencrypt = htmlspecialchars($data["snmp"]["privencrypt"]);
-        if ($snmp_privencrypt !== "DES" && $snmp_privencrypt !== "AES" 
+        if ($snmp_privencrypt !== "DES" && $snmp_privencrypt !== "AES"
             // These additional non-standard options require that net-snmp is compiled with
-            // the --enable-blumenthal-aes 
-            // && $snmp_privencrypt !== "AES192" && $snmp_privencrypt !== "AES192C" 
+            // the --enable-blumenthal-aes
+            // && $snmp_privencrypt !== "AES192" && $snmp_privencrypt !== "AES192C"
             // && $snmp_privencrypt !== "AES256" && $snmp_privencrypt !== "AES256C"
             )
           $errors[] = ["error" => "The SNMP privacy encryption is illegal"];
@@ -200,16 +200,16 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
 
       default:
-        $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]]; 
+        $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]];
         break;
     }
   } catch (Exception $e) {
      $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
   }
- 
+
   if ($dsas !== false && $errors == []) {
     echo "Ok";
-    $dsas->asXml(_DSAS_XML);    
+    $dsas->asXml(_DSAS_XML);
   } else {
     header("Content-Type: application/json");
     echo json_encode($errors);

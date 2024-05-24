@@ -31,7 +31,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
    $dsas = simplexml_load_file(_DSAS_XML);
    if (! $dsas)
      throw new RuntimeException("Error loading XML file");
-  
+
     switch ($_POST["op"]){
       case "renew":
         $options = array(
@@ -44,7 +44,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           "emailAddress" => htmlspecialchars(trim($_POST["emailAddress"])),
         );
         $validity = intval($_POST["validity"]);
-        $validity = ($validity < 1 ? 1 : ($validity > 5 ? 5 : $validity)); 
+        $validity = ($validity < 1 ? 1 : ($validity > 5 ? 5 : $validity));
         $days = $validity * 365;
         $validity = (string)$validity; // convert to string
 
@@ -75,7 +75,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           if ($retval !== 0 && $retval !== false) $retval = file_put_contents(_DSAS_VAR . "/dsas.pem", $priv . PHP_EOL . $cert);
           chmod (_DSAS_VAR . "/dsas.pem", 0640);
           chgrp (_DSAS_VAR . "/dsas.csr", "repo");
-          if ($retval === 0 || $retval === false) 
+          if ($retval === 0 || $retval === false)
             $errors[] = ["renew" => "Error while saving the certificates"];
           else
             $dsas->asXml(_DSAS_XML);
@@ -83,7 +83,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
 
       case "upload" :
-       
+
         try {
           check_files($_FILES["file"], "text/plain");
 
@@ -91,14 +91,14 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $crt = str_replace("\r", "", $crt);   // dos2unix
           if (!openssl_x509_parse($crt))
             throw new RuntimeException("The CRT file must be in PEM format");
-          
+
           $priv = file_get_contents(_DSAS_VAR . "/dsas_priv.pem");
           $retval = file_put_contents(_DSAS_VAR . "/dsas_pub.pem", $crt);
           chmod (_DSAS_VAR . "/dsas_pub.pem", 0600);
-          if ($retval !== 0 && $retval !== false) 
+          if ($retval !== 0 && $retval !== false)
             $retval = file_put_contents(_DSAS_VAR . "/dsas.pem", $priv . PHP_EOL . $crt);
           chmod (_DSAS_VAR . "/dsas.pem", 0600);
-          if ($retval === 0 || $retval === false) 
+          if ($retval === 0 || $retval === false)
             throw new RuntimeException("Error while saving the CRT");
 
         } catch (RuntimeException $e) {
@@ -107,13 +107,13 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
 
       default:
-        $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]]; 
+        $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]];
         break;
     }
   } catch (Exception $e) {
      $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
   }
- 
+
   if ($errors == [])
     echo "Ok";
   else {
@@ -132,5 +132,5 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
     echo json_encode($web);
   }
 }
-  
+
 ?>

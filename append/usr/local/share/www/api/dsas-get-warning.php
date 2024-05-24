@@ -31,7 +31,7 @@ else {
   else {
     if (force_passwd()) $warn[] =
        ["type" => "error", "msg" => "First use. All of the passwords must be changed."];
-    if ($dsas->tasks->task->count() == 0) $warn[] = 
+    if ($dsas->tasks->task->count() == 0) $warn[] =
        ["type" => "warn", "msg" => "No tasks are configured."];
   }
   header("Content-Type: application/json");

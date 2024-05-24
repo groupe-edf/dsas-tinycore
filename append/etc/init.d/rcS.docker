@@ -25,8 +25,8 @@ while [ "$#" -gt 0 ]; do
       ;;
   esac
 done
- 
+
 /usr/bin/filetool.sh -r
 /etc/init.d/services/crond start
 /etc/init.d/services/dsas start
-sleep infinity 
+sleep infinity

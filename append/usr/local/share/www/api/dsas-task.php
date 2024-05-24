@@ -34,10 +34,10 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
    $dsas = simplexml_load_file(_DSAS_XML);
    if (! $dsas)
      throw new RuntimeException("Error loading XML file");
-  
+
     switch ($_POST["op"]){
       case "add":
-        /** @var array{name: string, id: string, type: string, 
+        /** @var array{name: string, id: string, type: string,
           * run: string, directory: string, uri: string,
           * ca: array{name: string, fingerprint: string},
           * archs: array{array{arch: string, active: string}},
@@ -132,11 +132,11 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
                   $errors[] = ["error" => ["The task type '{0}' does not support {1} certificates", $type, "X509"]];
                   break 2;
                 }
-                
+
                 if ($have_pubkey && ($type === "cyberwatch" || $type === "openssl")) {
                   $errors[] = ["error" => ["The task type '{0}' can not include both public keys and X509 certificates", $type]];
                   break 2;
-                } 
+                }
 
                 $certok = true;
                 $have_x509 = true;
@@ -179,7 +179,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
               $pemnowrap = (string)preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pem);
               $pemnowrap = (string)preg_replace('/\\s+/', '', $pemnowrap);
               if (hash("sha256", base64_decode($pemnowrap)) == $cert["fingerprint"]) {
-                if ($type === "rpm" || $type === "repomd" || $type === "deb" || 
+                if ($type === "rpm" || $type === "repomd" || $type === "deb" ||
                     $type === "authenticode" || $type === "gpg" || $type === "liveupdate" ||
                     $type === "jar" || $type === "trend") {
                   $errors[] = ["error" => ["The task type '{0}' does not support public keys", $type]];
@@ -203,12 +203,12 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           }
 
           if (! $certok) {
-            $cafile = dsas_ca_file();                                                      
+            $cafile = dsas_ca_file();
             if ($cafile) {
-              // The format of an x509 can be quite arbitrary. So only 
+              // The format of an x509 can be quite arbitrary. So only
               // declare the bits I need here
-              /** @var array{array{fingerprint: string, pem: string, 
-                * subject: array{CN: string, OU: string, O: string}, 
+              /** @var array{array{fingerprint: string, pem: string,
+                * subject: array{CN: string, OU: string, O: string},
                 * extensions: array{subjectKeyIdentifier: string}}} $ca */
               $ca = parse_x509($cafile);
               foreach ($ca as $x509_cert) {
@@ -224,7 +224,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
                   if ($have_pubkey) {
                     $errors[] = ["error" => ["The task type '{0}' can not include both public keys and X509 certificates", $type]];
                     break 2;
-                  } 
+                  }
                   $have_ca = true;
                   $certok = true;
 
@@ -252,12 +252,12 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
 
         if ($type === "rpm" || $type === "repomd" || $type === "gpg") {
 	  if (count($certs) != 1)
-            $errors[] = ["error" => ["The task type '{0}' requires a GPG certificate", $type]]; 
+            $errors[] = ["error" => ["The task type '{0}' requires a GPG certificate", $type]];
         }
 
         if ($type === "openssl" || $type === "cyberwatch" || $type == "deb") {
 	  if (count($certs) < 1)
-            $errors[] = ["error" => ["The task type '{0}' at least one certificate or public key", $type]]; 
+            $errors[] = ["error" => ["The task type '{0}' at least one certificate or public key", $type]];
         }
 
         if ($errors == []) {
@@ -317,8 +317,8 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           }
         }
         break;
- 
-     case "delete":   
+
+     case "delete":
         $id =  $_POST["id"];
         $del = $_POST["delete"];
         if (! ctype_xdigit($id)) {
@@ -356,7 +356,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         } else {
           $dsas_active = simplexml_load_file(_DSAS_XML . ".active");
           if (! $dsas_active)
-            throw new RuntimeException("Error loading XML file");  
+            throw new RuntimeException("Error loading XML file");
           $runtask = false;
           $i = 0;
           foreach ($dsas_active->tasks->task as $task) {
@@ -393,7 +393,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         } else {
           $dsas_active = simplexml_load_file(_DSAS_XML . ".active");
           if (! $dsas_active)
-            throw new RuntimeException("Error loading XML file"); 
+            throw new RuntimeException("Error loading XML file");
           $killtask = false;
           foreach ($dsas_active->tasks->task as $task) {
             if ($task->id == $id) {
@@ -421,7 +421,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         } else {
           $dsas_active = simplexml_load_file(_DSAS_XML . ".active");
           if (! $dsas_active)
-            throw new RuntimeException("Error loading XML file"); 
+            throw new RuntimeException("Error loading XML file");
           $infotask = false;
           foreach ($dsas_active->tasks->task as $task) {
             if ($task->id == $id) {
@@ -476,13 +476,13 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
 
       default:
-        $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]]; 
+        $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]];
         break;
     }
   } catch (Exception $e) {
      $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
   }
- 
+
   if ($dsas !== false && $errors == []) {
     if ($_POST["op"] !== "info")
       echo "Ok";

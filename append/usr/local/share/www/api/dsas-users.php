@@ -113,12 +113,12 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $errors[] = ["error" => ["The user '{0}' does not exist",  (string)$data["username"]]];
         }
         break;
-     
+
       case "modify":
-        /** @var array{username: string, passwd: string, description: string, type: string, active: string} $duser */  
+        /** @var array{username: string, passwd: string, description: string, type: string, active: string} $duser */
         foreach ($data as $duser) {
           $found = false;
-          $i = 0;         
+          $i = 0;
           foreach ($dsas->config->users->user as $user) {
             if ($duser["username"] == $user->username) {
               $found = true;
@@ -141,7 +141,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             $i++;
           }
           if (! $found)
-            $errors[] = ["error" => ["The user '{0}' does not exist",  $duser["username"]]];          
+            $errors[] = ["error" => ["The user '{0}' does not exist",  $duser["username"]]];
         }
         break;
 
@@ -160,7 +160,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         break;
 
       default:
-        $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]]; 
+        $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]];
         break;
     }
     if ($errors == []) {

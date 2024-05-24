@@ -407,7 +407,7 @@ class DSASHeader extends HTMLElement {
           <a class="dropdown-item" href="net.html" data-i18n>Network</a>
           <a class="dropdown-item" href="web.html" data-i18n>Web</a>
         </div>
-      </li> 
+      </li>
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" data-i18n>System</a>
         <div class="dropdown-menu">

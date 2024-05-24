@@ -136,7 +136,7 @@ function dsas_user_active(string $user) : bool {
  * @param array<string>|string $args list of arguments to pass to proc_open
  * @param string $cwd Current working directory
  * @param array<string> $stdin An array of strings representing line by line the input
- * @return array{retval: int, stdout: string, stderr: string} 
+ * @return array{retval: int, stdout: string, stderr: string}
  */
 function dsas_exec(mixed $args, string $cwd = null, array $stdin = []) : array {
   // Simplify the call to proc_open with the means to avoids spawning a shell
@@ -152,7 +152,7 @@ function dsas_exec(mixed $args, string $cwd = null, array $stdin = []) : array {
   // Call command as an array to avoid creating a shell
   $process = proc_open($args, $descriptorspec, $pipes, $cwd);
   if (is_resource($process)) {
-    // Make the output pipes non-blocking so we can just read them 
+    // Make the output pipes non-blocking so we can just read them
     // after all of the inputs are done
     stream_set_blocking($pipes[1], false);
     stream_set_blocking($pipes[2], false);
@@ -200,7 +200,7 @@ function dsas_exec(mixed $args, string $cwd = null, array $stdin = []) : array {
     $retval = proc_close($process);
     return ["retval" => $retval, "stdout" => $stdout, "stderr" => $stderr];
   } else {
-    return ["retval" => -1, "stdout" => "", "stderr" => ""];    
+    return ["retval" => -1, "stdout" => "", "stderr" => ""];
   }
 }
 
@@ -241,11 +241,11 @@ function complexity_test(string $passwd) : bool {
    // Don't permit the characters "'` or spaces because however
    $luds = 0;
    if (preg_match("/[a-z]/", $passwd))
-     $luds += 1; 
+     $luds += 1;
    if (preg_match("/[A-Z]/", $passwd))
      $luds += 1;
    if (preg_match("/[0-9]/", $passwd))
-     $luds += 1;   
+     $luds += 1;
    if (preg_match("/[!#$%&\(\)*+,-.\/:;<=>?@\[\\\]^_\{|\}~]/", $passwd))
      $luds += 1;
    if ($luds < 3)
@@ -288,7 +288,7 @@ function force_passwd() : bool {
  *     The hash type to be used. By default 'sha512'
  * @return array{retval: int, stdout: string, stderr: string}
  *     A keyed array containg the output of the attempted password change. 'retval' is zero if
- *     sucessful 
+ *     sucessful
  */
 function change_passwd(string $name, string $passwd, string $hash = "sha512") : array {
  // Remove all white space to avoid RCE. Space illegal in username and password
@@ -301,9 +301,9 @@ function change_passwd(string $name, string $passwd, string $hash = "sha512") : 
     2 => array("pipe", "w") //stderr
   );
   $cwd="/tmp";
-  
+
   // Only change password on machine haut if the user is "tc". The only users aren't
-  // installed on the machine haut. Use proc_open with a command array to avoid spawning 
+  // installed on the machine haut. Use proc_open with a command array to avoid spawning
   // a shell that can be attacked. Set the machine "haut" first as it might not be available
   if ($name == "tc") {
     $process = proc_open(["ssh", "tc@" . interco_haut(), "sudo", "/usr/sbin/chpasswd", "-c", $hash], $descriptorspec, $pipes, $cwd);
@@ -313,13 +313,13 @@ function change_passwd(string $name, string $passwd, string $hash = "sha512") : 
     // password and username can't be used to attack here as
     // there is no shell to attack. At this point its also too late
     // to pass args to chpasswd like "-c md5" to force a weak hash
-    // So this is safe. 
+    // So this is safe.
     fwrite($pipes[0], $name . ":" . $passwd . PHP_EOL);
     fclose($pipes[0]);
     fclose($pipes[1]);
     $stderr = (string)fgets($pipes[2]);
     fclose($pipes[2]);
-    $retval = proc_close($process); 
+    $retval = proc_close($process);
     if ($retval != 0)
       return ["retval" => $retval, "stdout" => "", "stderr" => $stderr];
   }
@@ -328,7 +328,7 @@ function change_passwd(string $name, string $passwd, string $hash = "sha512") : 
   $process = proc_open(["sudo", "/usr/sbin/chpasswd", "-c", $hash], $descriptorspec, $pipes, $cwd);
   if ($process === false || $pipes[0] === false)
     return ["retval" => 1, "stdout" => "", "stderr" => "can not change password"];
-  
+
   fwrite($pipes[0], $name . ":" . $passwd . PHP_EOL);
   fclose($pipes[0]);
   fclose($pipes[1]);
@@ -345,7 +345,7 @@ function change_passwd(string $name, string $passwd, string $hash = "sha512") : 
  * @param string $mask
  *     The mask to convert to CIDR format
  * @return string
- *     The mask in CIDR format 
+ *     The mask in CIDR format
  */
 function mask2cidr(string $mask) : string {
   $long = ip2long($mask);
@@ -361,54 +361,54 @@ function mask2cidr(string $mask) : string {
  * @return string
  *     The ip address of the interface and its mask in CIDR format
  */
-function ip_interface(string $interface) : string{  
+function ip_interface(string $interface) : string{
   $pattern1 = "/inet addr:(\d+\.\d+\.\d+\.\d+)/";
   $pattern2 = "/Mask:(\d+\.\d+\.\d+\.\d+)/";
-  $output = dsas_exec(["/sbin/ifconfig", $interface]);      
+  $output = dsas_exec(["/sbin/ifconfig", $interface]);
   if ($output["retval"] === 0) {
     $text = $output["stdout"];
     if (! is_string($text))
-      $text = implode(" ", $text);                                                
-    preg_match($pattern1, $text, $matches);                                     
-    if (count($matches) < 2)                                                    
-      return "";                           
-    else {                                 
-      $ip = $matches[1];    
+      $text = implode(" ", $text);
+    preg_match($pattern1, $text, $matches);
+    if (count($matches) < 2)
+      return "";
+    else {
+      $ip = $matches[1];
       preg_match($pattern2, $text, $matches);
-      $mask = $matches[1];                   
-      return $ip . "/" . mask2cidr($mask);   
-    }                                        
-  } else                                  
-    return "";                            
-}             
+      $mask = $matches[1];
+      return $ip . "/" . mask2cidr($mask);
+    }
+  } else
+    return "";
+}
 
 /**
  * Returns a string array of the non trival interfaces on the local machine
- * 
+ *
  * @return array<int, array{name: string, net: string}>
  *    Return an array where each element is an interface and its IP address
  */
-function get_ifaces() : array {                                                          
-  $handle = opendir("/sys/class/net");                                          
+function get_ifaces() : array {
+  $handle = opendir("/sys/class/net");
   $ifaces = array();
   if ($handle = opendir("/sys/class/net")) {
-    $count = 0;                                                                   
-    while (false !== ($entry = readdir($handle))) {                               
-      switch ($entry) {                                                           
-        case ".":                                                                 
-        case "..":                                                                
-        case "lo":                                                                
-        case (preg_match("/dummy/", $entry) ? true : false):                      
+    $count = 0;
+    while (false !== ($entry = readdir($handle))) {
+      switch ($entry) {
+        case ".":
+        case "..":
+        case "lo":
+        case (preg_match("/dummy/", $entry) ? true : false):
         case (preg_match("/tunl/", $entry) ? true : false):
-          break;                                       
-        default:                                            
+          break;
+        default:
           $ifaces[$count++] = array("name" => $entry, "net" => ip_interface($entry));
       }
     }
     closedir($handle);
   }
-  return $ifaces;                                                               
-}                                                                               
+  return $ifaces;
+}
 
 /**
  * A function to test whether a string representation of an IPv4 address is valid. The
@@ -477,7 +477,7 @@ function inet_valid(string $addr) : string {
 
 /**
  * Tests whether a URI is valid, having a protocol that is supported; Protocol must be
- * one of ftp, ftps, sftp, http or https 
+ * one of ftp, ftps, sftp, http or https
  *
  * @param string $uri
  *     The URI to test
@@ -486,7 +486,7 @@ function inet_valid(string $addr) : string {
  */
 function uri_valid(string $uri) : string {
   $tmp = preg_split('!://!', $uri);
-  if (!$tmp || ($tmp[0] != "ftp" && $tmp[0] != "ftps" && $tmp[0] != "sftp" && 
+  if (!$tmp || ($tmp[0] != "ftp" && $tmp[0] != "ftps" && $tmp[0] != "sftp" &&
                 $tmp[0] != "http" && $tmp[0] != "https"))
     return "The protocol is invalid";
   $s = preg_split(':/:', $tmp[1]);
@@ -501,8 +501,8 @@ function uri_valid(string $uri) : string {
  *
  * @param string $_file
  *     The base name of the logfile to return. The log $file is return in the first place
- *     $file.0 in the second if it exists, $file.1 in the next, etc  
- * @return array<int, string> 
+ *     $file.0 in the second if it exists, $file.1 in the next, etc
+ * @return array<int, string>
  *     An array of log files
  */
 function dsas_get_logs(string $_file = _DSAS_LOG . "/dsas_verif.log") : array {
@@ -516,7 +516,7 @@ function dsas_get_logs(string $_file = _DSAS_LOG . "/dsas_verif.log") : array {
 }
 
 /**
- * Returns a string with the requested part of a log file. This allow incrementally downloading 
+ * Returns a string with the requested part of a log file. This allow incrementally downloading
  * new log elements to the file, skipping the parts alreay downloaded
  *
  * @param int $len
@@ -565,7 +565,7 @@ function renew_web_cert(array $options, int $days) : array {
     openssl_pkey_export($privkey, $pkeyout);
   } else
     $pkeyout = "";
-  
+
   if (($csr = openssl_csr_new($options, $privkey, array("digest_alg" => "sha256")))
     && ($x509 = openssl_csr_sign($csr, null, $privkey, $days, array("digest_alg" => "sha256")))) {
     openssl_csr_export($csr, $csrout);
@@ -593,13 +593,13 @@ function parse_x509(string $certfile) : array {
     $incert = false;
     $cert = "";
     while (($line = fgets($fp)) !== false) {
-  
+
       if ("-----BEGIN CERTIFICATE-----" === substr($line,0,-1)){
         if ($incert)
           echo "error parsing ca-bundle.crt";
         else {
           $cert = $line;
-          $incert = true;  
+          $incert = true;
         }
       } else if ("-----END CERTIFICATE-----" === substr($line,0,-1)){
         if (!$incert)
@@ -620,7 +620,7 @@ function parse_x509(string $certfile) : array {
     fclose($fp);
     return $certs;
   } else
-    return []; 
+    return [];
 }
 
 /**
@@ -665,10 +665,10 @@ function _utf8ize(mixed $d) : mixed {
  *     The certificate in PEM format
  * @return array<string,string>
  *     The certificated returned as a keyed array. The fields are
- *     "uid", "size", "keyid", "fingerprint", "created", "expires", "pem" 
+ *     "uid", "size", "keyid", "fingerprint", "created", "expires", "pem"
  *     and "authority"
  */
-function parse_gpg(string $cert) : array { 
+function parse_gpg(string $cert) : array {
   $retval = [];
   if ($tmp = tempnam("/tmp", "dsas_")) {
     file_put_contents($tmp, $cert);
@@ -676,22 +676,22 @@ function parse_gpg(string $cert) : array {
     // This use of exec is ok as there are no user parameters, the user data is passed
     // as a file $tmp
     if (exec(escapeshellcmd("/usr/local/bin/gpg -no-default-keyring -vv " . $tmp) . " 2>&1", $text, $ret)) {
-      $text = implode(PHP_EOL, $text);                                                                                           
-      preg_match("/uid\s+([^\n]+)/", $text, $matches); 
-      $data["uid"] = $matches[1]; 
-      preg_match("/pub\s+([^\s]+)/", $text, $matches); 
-      $data["size"] = $matches[1];  
-      preg_match("/keyid:\s+([^\s]+)/", $text, $matches); 
-      $data["keyid"] = $matches[1];  
-      preg_match("/" . PHP_EOL . "pub.*" . PHP_EOL . "\s+([^\s]+)/", $text, $matches);   
+      $text = implode(PHP_EOL, $text);
+      preg_match("/uid\s+([^\n]+)/", $text, $matches);
+      $data["uid"] = $matches[1];
+      preg_match("/pub\s+([^\s]+)/", $text, $matches);
+      $data["size"] = $matches[1];
+      preg_match("/keyid:\s+([^\s]+)/", $text, $matches);
+      $data["keyid"] = $matches[1];
+      preg_match("/" . PHP_EOL . "pub.*" . PHP_EOL . "\s+([^\s]+)/", $text, $matches);
       $data["fingerprint"] = $matches[1];
-      preg_match("/created\s+([\d]+)/", $text, $matches); 
+      preg_match("/created\s+([\d]+)/", $text, $matches);
       $data["created"] = $matches[1];
       preg_match("/expires\s+([\d]+)/", $text, $matches);
       $data["expires"] = $matches[1];
       $retval = $data;
     }
-                          
+
     unlink($tmp);
   }
   return $retval;
@@ -749,7 +749,7 @@ function dsasid(int $len = 24) : string {
  * @param string $id
  *    The ID string of the task to test the status of
  * @return bool
- *    Return true if the task is running 
+ *    Return true if the task is running
  */
 function dsas_task_running(string $id) : bool {
    $ret = dsas_exec(["sudo", "pgrep", "-f", "$id"]);
@@ -795,10 +795,10 @@ function dsas_run_log(string $id) : array {
  *    A file extracted form $_FILES to be checked
  * @param string $mime_type
  *    The desired mime-type of the file. Really test it rather than depending
- *    on what the user tells us it is   
+ *    on what the user tells us it is
  */
 function check_files(array $files, string $mime_type) : void {
-  // Protect against corrupted $_FILES array, so yes it is normal that we're 
+  // Protect against corrupted $_FILES array, so yes it is normal that we're
   // testing that we aren't passed what we want. Tell PHPSTAN to shutup
   // @phpstan-ignore-next-line
   if (!isset($files["error"]) || is_array($files["error"]))

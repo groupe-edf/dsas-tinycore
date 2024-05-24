@@ -38,7 +38,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                        "samesite" => "strict"]);
             session_start();
         }
- 
+
         if ($newid = session_create_id("dsas-")) {
           // Store data in session variables
           $_SESSION["loggedin"] = true;

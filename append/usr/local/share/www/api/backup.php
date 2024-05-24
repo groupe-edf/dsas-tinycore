@@ -24,7 +24,7 @@ if (! dsas_loggedin())
   header("HTTP/1.0 403 Forbidden");
 else if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
-      // This will throw an error in case of a problem which is caught below 
+      // This will throw an error in case of a problem which is caught below
       check_files($_FILES["file"], "application/gzip");
 
       // The contents of the tar files is controlled in dsasbackup

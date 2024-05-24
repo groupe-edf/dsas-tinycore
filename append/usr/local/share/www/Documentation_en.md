@@ -1,7 +1,7 @@
 # Introduction
 
 The isolation of industrial infrastructures is essential to limit
-the possibility of malicious attack. However, this isolation limits 
+the possibility of malicious attack. However, this isolation limits
 the ability to automate the downloading of software updates (operating
 systems, viral signatures, other updates) that are essential to the
 health of all sensitive systems. Configuration and other files are also
@@ -233,9 +233,9 @@ VirtualBox, with VMWare and with Docker.
 
 #### Creation of the virtual machines
 
-The ISO of the DSAS is a 32- or 64-bit Linux, and the virtual machine must 
+The ISO of the DSAS is a 32- or 64-bit Linux, and the virtual machine must
 be configured accordingly. For example, under VirtualBox the initial
-configuration should be 
+configuration should be
 
 ![Creation of a VM with VirtualBox](en/vbox1.png)
 
@@ -249,7 +249,7 @@ we have chosen VirtualBox's default format
 ![Disk configuration with VirtualBox](en/vbox2.png)
 
 After the boot disk must be defined with the DSAS ISO image in `IDE
-primary master` 
+primary master`
 
 ![Boot of the ISO with VirtualBox](en/vbox3.png)
 
@@ -288,11 +288,11 @@ the DSAS.
 ![Creation of a VM with VMWare](en/vmware1.png)
 
 The ISO boot image can be uploaded by clicking on the device, uploading a
-new image with the menu below, selecting it and saving the changes 
+new image with the menu below, selecting it and saving the changes
 
 ![Selection of the ISO boot image with VMWare](en/vmware2.png)
 
-### Installation on Docker 
+### Installation on Docker
 
 The docker image of the DSAS is supplied in a file `docker.tgz`. This
 image must first be decompressed with the command
@@ -308,7 +308,7 @@ the root directory of the DSAS with Docker
 - Dockerfile - This contains the instructions need to convert the file
 `rootfs64.tar.gz` into a valid Docker image
 - Makefile - This file contains a number of make targets that allow the
-simplification of the installation of the Docker image of the DSAS 
+simplification of the installation of the Docker image of the DSAS
 
 The network configuration in the `Makefile` must be adapted before use.
 The DSAS will also configure the network (see the section on Docker at
@@ -325,7 +325,7 @@ route this network as well. If a different type of network is needed, the
 user is responsible for the creation of an appropriate Docker
 image and cannot use the supplied Makefile.
 
-Three variables are used to configure the principal network interface 
+Three variables are used to configure the principal network interface
 
 - NET0 - The network in CIDR format. By default, the Makefile with
 configured so that the lower machine is configured with the network
@@ -348,7 +348,7 @@ interface on the host machine. The network will be configured with the
 is assumed that the upper and lower machines are on the same LAN and so
 this network is the same on both machines. It is possible to have a
 firewall between the two machines of the DSAS and in that case the
-networks will be different. By default, the network used is 
+networks will be different. By default, the network used is
 `192.168.192.0/24`.
 - GW1 - If the machines of the DSAS are on the same network, the gateway
 can be left empty or undefined. Otherwise, it must be configured with an
@@ -371,7 +371,7 @@ This step will start the next step of the installation process as
 [shown in the next section](#first-initialisation-phase). At the end of
 this step the docker container is installed and configured. Before
 continuing with the installation of the lower machine, the upper machine
-must be running. This can be done either via the Makefile with 
+must be running. This can be done either via the Makefile with
 
 ```
 make start CONTAINER=haut
@@ -421,7 +421,7 @@ from the DSAS administration interface.
 
 As a first step, the DSAS will request to format its disk. A menu is
 presented with all the disks found connected to the DSAS. This menu
-resembles 
+resembles
 
 ![Format DSAS disks](en/init1.png)
 
@@ -484,11 +484,11 @@ address is "192.168.192.2/24".
 
 Next, the gateway of the upper interconnection network. If the two
 machines are on the same network, the gateway can be left blank. It is
-configured as 
+configured as
 
 ![Configuration of the upper interconnection gateway](en/init16.png)
 
-The lower network is configured in an identical manner 
+The lower network is configured in an identical manner
 
 ![Configuration of the lower interconnection network](en/init17.png)
 
@@ -504,7 +504,7 @@ The network configuration of the upper machine is done via the
 administration interface of the lower machine. Consequently, this section
 only concerns the lower machine. However, if the network is not at least
 partially configured on the lower machine, the administration interface
-might not be available. Therefore a initial configuration of the 
+might not be available. Therefore a initial configuration of the
 network of the lower machine is made from the console.
 
 The first step is to choose if the network is static or if it uses DHCP
@@ -541,14 +541,14 @@ where here a search domain "example.com" is used
 
 ![DNS configuration with a static IP](en/init8.png)
 
-with this search domain the hosts "ntp1" and "ntp1.example.com" will be 
-equivalent. Then you must define name servers, responsible for 
+with this search domain the hosts "ntp1" and "ntp1.example.com" will be
+equivalent. Then you must define name servers, responsible for
 converting DNS names to IP addresses. For example,
 
 ![DNS configuration with a static IP](en/init9.png)
 
 Several IP addresses separated by spaces could be entered, giving a list
-of name servers in order of their preferred usage. 
+of name servers in order of their preferred usage.
 
 ### SSH configuration
 
@@ -620,7 +620,7 @@ $ exit
 The address for the DSAS administration interface will depend on your
 Installation but without NAT between you and the DSAS, the IP address
 will be the one entered previously. On the other hand, the DSAS
-administration port is always __port 5000__. 
+administration port is always __port 5000__.
 So, if your IP is 10.0.15.2 as used in the example above you will need to
 connect to https://10.0.2.15:5000 for the DSAS administration interface.
 
@@ -629,7 +629,7 @@ functions. So a recent browser (after 2016) will be necessary in order to
 use the interface. If you cannot connect, there is either a routing
 problem between you and the DSAS and it is necessary review the router
 configurations between you and the DSAS, or the network configuration
-of the above is incorrect. In this case, refer to the section [In the 
+of the above is incorrect. In this case, refer to the section [In the
 event of an initialization error of the DSAS](#in-the-event-of-a-dsas-initialization-error).
 
 The SSL certificate used by the DSAS in the initial phase is self-signed
@@ -676,8 +676,8 @@ password for the backup, like
 
 ![Backup password entry menu](en/DSAS24.png)
 
-The backups of the two DSAS machines are then encrypted with `openssl` 
-with AES-256 CDC mode using the supplied password  and archived together. 
+The backups of the two DSAS machines are then encrypted with `openssl`
+with AES-256 CDC mode using the supplied password  and archived together.
 If you do not enter a backup password, the files will be archived without
 the encryption step.
 
@@ -687,7 +687,7 @@ The password does not have to be the same password as used for the DSAS.
 The user passwords will not be backed up.
 
 When restoring the same password will be requested, and so this password
-should be kept preciously. In case of a restoration, it will be applied 
+should be kept preciously. In case of a restoration, it will be applied
 immediately. This could result in the DSAS becoming unavailable,
 particularly if the network configuration has changed between the backup and
 restoration. In this case, refer to the section [In the event of an
@@ -759,7 +759,7 @@ For each user several modifications or actions are possible
 
 - __Description__ - Information about the user can be freely added in
 this field
-- __Type__ _ Three types of users are possible 
+- __Type__ _ Three types of users are possible
   * __administrator__ - An administration user of the DSAS. It has all
 the privileges on the DSAS, and if `ssh` is active for administrators, it
 can be used to connect with `ssh` for advanced maintenance on the DSAS.
@@ -783,16 +783,16 @@ local password of the user. This password is only used if the radius
 client est deactivated or the radius server does not response.
 - ![](x-lg.svg) - By clicking on this icon, it is possible to permanently
 delete the user.
- 
+
 The modifications will not be taken into account unless the `Save
 Changes` button has been pressed. An example of the user configuration
-might be 
+might be
 
 ![DSAS user configuration menu](en/DSAS38.png)
 
-The order of the users can easily be modified by dragging the user to the 
-desired position with the mouse. At this point it is recommended to press 
-the `Apply` button in order to make these changes permanent. Otherwise on 
+The order of the users can easily be modified by dragging the user to the
+desired position with the mouse. At this point it is recommended to press
+the `Apply` button in order to make these changes permanent. Otherwise on
 the next restart the old passwords will be requested.
 
 ### Network configuration
@@ -832,7 +832,7 @@ giving a list of name servers in order of their preference.
 To avoid the interconnection between the upper and lower machines being
 broken, the configuration of the interconnection network is not available
 via the UI. If it needs to be changed you should refer to the section [In
-the event of an initialization error of the 
+the event of an initialization error of the
 DSAS](#in-the-event-of-a-dsas-initialization-error).
 
 ### Renewal of the web certificate
@@ -935,7 +935,7 @@ users of type __upper__ only have access with sftp and only to the DSAS
 zones with the unverified files.
 
 If the SSH service is enabled towards a zone, port 22 is open on the DSAS
-machine concerned. 
+machine concerned.
 
 ### HTTPS Repository
 
@@ -950,11 +950,11 @@ available with authentication and encryption and so only SNMPv3 is
 supported. Selecting `SNMPv3` the service will be activated. After
 protocols for the authentication and encryption must be selected, a valid
 `SNMP Username` and valid `SNMP Password` must be entered for both the
-authentication and encryption. 
+authentication and encryption.
 
 All the read only data available from a typical SNMP server on a Linux
 machine will be published. The data specific to the DSAS are available
-with the following OIDs 
+with the following OIDs
 
 - 1.3.6.1.4.1.16845.100.100.1.0     - Status of the upper machine. `0`
 if the machine is available.
@@ -990,7 +990,7 @@ connections to a remote server.
 The DSAS includes the possibility of synchronizing via the ntp protocol.
 One or more ntp hosts could be configured. The addresses of the ntp hosts
 could be IP addresses or hostnames as provided by DNS. In the second case
-the DNS must be configured as discussed in the section 
+the DNS must be configured as discussed in the section
 [Network configuration](network-configuration).
 
 Using ntp does not open a port on the DSAS but only connections to remote
@@ -1018,17 +1018,17 @@ The DSAS will update these files from this URI once a day.
 
 ### Radius Client
 
-The DSAS includes the possibility to use a radius server for the 
+The DSAS includes the possibility to use a radius server for the
 authentication of user passwords. The user accounts must be setup on the
-DSAS with the same usernames as the Radius server, and only the role of 
-validating the user is delegated to the Radius Server. The accounts 
+DSAS with the same usernames as the Radius server, and only the role of
+validating the user is delegated to the Radius Server. The accounts
 themselves remain local to the DSAS. If, and only if, the radius server
 is not available, the local password on the DSAS will be used.
 
 The DSAS radius client only uses PAP. Although radius PAP is encrypted it
-suffers from two major problems. 
+suffers from two major problems.
 
-- It is based on the use of an MD5 hash, so to ensure its security the 
+- It is based on the use of an MD5 hash, so to ensure its security the
 shared secret must be as longer as possible (32 characters recommended),
 - The "nonce" is selected by the client, therefore a capture of the traffic
 RADIUS_REQUEST packet between the Radius client and server, can easily be
@@ -1088,7 +1088,7 @@ If the DSAS lower machine is not available, you will be unable to connect
 to the administration interface. On the other hand, if the upper machine
 is faulty, the page status informs you with the following screen
 
-![Status page, upper machine unavailable](en/DSAS15.png) 
+![Status page, upper machine unavailable](en/DSAS15.png)
 
 ## Status of verified files
 
@@ -1131,7 +1131,7 @@ between a mode where `all logs` are visible or a mode or that `errors only`
 are visible. This will allow you to quickly identify the files that had
 problems.
 
-### Search in verification logs 
+### Search in verification logs
 
 In the case of a problem or a vulnerability being identified it might be
 necessary to examine the verification logs, for either the name of a file
@@ -1283,7 +1283,7 @@ above](#verification-symantec-liveupdate).
 To facilitate the use of Symantec LiveUpdate, and other software vendors
 typically used with the DSAS, the certificates to be installed on the
 DSAS are available in [the attached certificate
-bundle](Certificates.zip). 
+bundle](Certificates.zip).
 
 #### Special case Trend Micro certificates
 
@@ -1344,9 +1344,9 @@ To confirm the correct importation of the certificate into the DSAS, it
 is recommend to examine the details of the imported certificate, for
 example
 
-![Imported certificate details](en/DSAS21.png) 
+![Imported certificate details](en/DSAS21.png)
 
-The position of the certificate in the list of certificates can be reordered 
+The position of the certificate in the list of certificates can be reordered
 by simply dragging the certificate and dropping it on another certificate.
 The position of the dragged certificate will now be immediately after the
 position where it has been dropped.
@@ -1422,17 +1422,17 @@ An example of an added task is
 Next to each task, the icon ![](pencil-square.svg) allows the task to be
 modified, ![](x-lg.svg) allows the task to be removed, ![](play.svg)
 allows the task to be executed immediately and ![](info.svg) allows the
-logs of the task to be examined. If the task is running an icon 
+logs of the task to be examined. If the task is running an icon
 ![](kill.svg) will appear next to the task, allowing the running task to
 be terminated. The status of the task is provided via the color of the
 task title. In blue, the task was not executed, in green, the execution
 of the task was successful, and in red the execution has failed. The last
 execution of the task is visible by opening the task as
 
-![Example of successful task execution](en/DSAS32.png) 
+![Example of successful task execution](en/DSAS32.png)
 
 The position of the tasks in the list of tasks can be reordered by simply
-dragging the task and dropping it on another task. The position of the 
+dragging the task and dropping it on another task. The position of the
 dragged task will now be immediately after the position where it has been
 dropped.
 
@@ -1495,7 +1495,7 @@ a software component is required.
 
 Software impacted by this risk
 
-| software      | version    | comment                                                                        | 
+| software      | version    | comment                                                                        |
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
 | openssl | [3.2.1](https://www.openssl.org/source/openssl-3.2.1.tar.gz) | Only the functionality used by ssh impacted |
 | openssh | [9.7p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.7p1.tar.gz) | ssh and sftp used |
@@ -1527,7 +1527,7 @@ Software impacted by this risk
 
 Software impacted by this risk
 
-| software    | version  |  comment                                                                      | 
+| software    | version  |  comment                                                                      |
 |-------------|----------|------------------------------------------------------------------------------|
 | Linux kernel| [6.6.8](https://tinycorelinux.net/15.x/x86/release/src/kernel/linux-6.6.8-patched.txz) | Only elevation of privileges CVE need be considered. |
 
@@ -1545,7 +1545,7 @@ Software impacted by this risk
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
 | openssl | [3.2.1](https://www.openssl.org/source/openssl-3.2.1.tar.gz) | only the functionality used by ssh impacted |
 | lftp    | [4.9.2](https://lftp.yar.ru/ftp/lftp-4.9.2.tar.bz2) | Used for http, https, ftp, ftps, sftp |
- 
+
 ### Risk: Attack against DSAS administrator authentication
 
 | Risk | Attack against DSAS administrator authentication |
@@ -1564,7 +1564,7 @@ Software impacted by this risk
 
 The DSAS website is specially developed for this project. Static analysis
 of the code and a test suite is used on this code before each release to
-minimize the risk. 
+minimize the risk.
 
 ## DSAS build process
 
@@ -1594,7 +1594,7 @@ it is configured at each login. After the command
 tce-load -wi Xorg-7.7 compiletc rsync coreutils mkisofs-tools squashfs-tools git curl ncursesw-dev tar
 ```
 
-will install all the tools necessary for the build. 
+will install all the tools necessary for the build.
 
 #### Non-English keyboard
 
@@ -1605,9 +1605,9 @@ command like
 /usr/local/bin/setxkmap fr
 ```
 
-to the `~/.xession` file or run this command from an X11 console. 
+to the `~/.xession` file or run this command from an X11 console.
 
-#### Preparing the DSAS source tree 
+#### Preparing the DSAS source tree
 
 
 ```shell
@@ -1622,7 +1622,7 @@ on the private network, a bit a git magic will be needed to ensure that
 access to both the git repository and the internet is assured. This
 step is only needed for this case and can be safely skipped otherwise
 
-We first must temporarily disable the http proxy like 
+We first must temporarily disable the http proxy like
 
 ```shell
 unset http_proxy
@@ -1632,8 +1632,8 @@ unset https_proxy
 Taking the example of the gitlab used by my own company, the TLS
 certificate used is signed by a private certification authority, which is
 not installed by default on the build machine. An example of the means to
-download the CA and install it for use with 
-git might be 
+download the CA and install it for use with
+git might be
 
 ```shell
 mkdir ~/.git-certs
@@ -1645,7 +1645,7 @@ EOF
 ```
 
 where the site used for the CA and location of the git should be adapted
-to your needs. 
+to your needs.
 
 Now we are ready to download the DSAS source code with the command
 
@@ -1667,7 +1667,7 @@ Can we now restore the values of the proxy environment variables.
 
 The version of `less` that is installed by default doesn't accept the
 option `-R` needed to correctly color the output of the command `git
-diff`. To allow this the commands 
+diff`. To allow this the commands
 
 ```
 tce-load -wi less
@@ -1713,7 +1713,7 @@ least Debian Bullseye to be built.
 
 All the DSAS build process is preformed from the command line with the
 script `make.sh`. The usage string of this script is available via the
-command `./make.sh -h` 
+command `./make.sh -h`
 
 
 ```shell
@@ -1740,7 +1740,7 @@ Valid options are
      -h|--help       Print this help
 ```
 
-To build the ISO image of the DSAS the command is 
+To build the ISO image of the DSAS the command is
 
 
 ```
@@ -1754,13 +1754,13 @@ server with the DSAS installed. The compilation time of the "node" and
 "clamav" packages is extremely long and so, this compilation will
 take several hours the first time it is performed.
 
-To build a source package (see the files `pkg/*.pkg`) a command like 
+To build a source package (see the files `pkg/*.pkg`) a command like
 
 ```
 ./make.sh build gnupg
 ```
 
-is used. To clean the files used during the build, the command 
+is used. To clean the files used during the build, the command
 
 ```
 ./make.sh clean
@@ -1817,7 +1817,7 @@ with the commands
 ./make.sh static shellcheck
 ```
 
-After, the build of a test version of the DSAS is performed with the command 
+After, the build of a test version of the DSAS is performed with the command
 
 ```
 ./make.sh -t
@@ -1827,7 +1827,7 @@ An ISO with the test version of the DSAS is available in the file
 `work/dsas-test.iso`. This ISO includes additional code and services to
 test all of the functions of the DSAS. To use this test ISO, you need to
 have two virtual machines configured and from the machine configured as
-the `lower` machine run as the user `tc` the command 
+the `lower` machine run as the user `tc` the command
 
 ```
 dsastests
@@ -1835,7 +1835,7 @@ dsastests
 
 This is a PHP script using a webdriver based on `gecko` to test all of
 the function of the DSAS and ensure that the DSAS correctly performs its
-role to filter the files. An example of the feedback from this script is 
+role to filter the files. An example of the feedback from this script is
 
 ![Example of passed tests from the script `dsastest`](en/DSAS44.png)
 
@@ -1848,7 +1848,7 @@ Ensure that all tests pass in the script `dsastests` before continuing.
 
 ### Processus de compilation une release
 
-Now that you are ready to create a release, you must ensure that 
+Now that you are ready to create a release, you must ensure that
 
 - The CHANGELOG file is updated, including the release version and date
 of release
@@ -1884,7 +1884,7 @@ make install CONTAINER=haut
 docker container start haut
 ```
 
-and 
+and
 
 ```
 docker container stop bas
@@ -1897,13 +1897,13 @@ will reinstall the image, without losing the existing configuration
 ## Source package upgrades
 
 If a vulnerability is identified with a DSAS package and a binary update
-is not available, we have the option to create a package for DSAS from 
+is not available, we have the option to create a package for DSAS from
 the source code. We already have several packages made from source code
 
 - `_pkg` [Required] - The name of the package, it must be identical to a
 name of the file minus the `.pkg` extension
 -  `_disk_needed` [Optional] - The free disk space needed for the compilation
-in gigabytes 
+in gigabytes
 - `_version` [Optional] - The software version number
 - `_uri` [Required] - The address to look for the source software package
 - `_src` [Optional] - The name to use for the downloaded filee. If ommitted
@@ -1937,7 +1937,7 @@ extension `-doc` will be created with the files in `/usr/local/doc`
 - `_post_install` [Optional] - Allows for a script which will be executed
 for the installation of the package.
 
-A complete example of a `pkg / openssl.pkg` file is 
+A complete example of a `pkg / openssl.pkg` file is
 
 ```
 _pkg=openssl
@@ -1989,7 +1989,7 @@ the DSAS to ensure its security.
 | sensitive network | lower             | 161         | udp     | snmp     | optional  | surveillance of the DSAS      |
 | open network      | upper             | 22          | tcp     | sftp     | not reco. | user 'haut' file deposit      |
 | lower             | sensitive network | 123         | udp     | ntp      | optional  | time synchronization          |
-| lower             | sensitive network | 514         | udp     | syslog   | optional  | log service                   | 
+| lower             | sensitive network | 514         | udp     | syslog   | optional  | log service                   |
 | lower             | sensitive network | 1812        | udp     | radius   | optional  | radius authentification       |
 | lower             | sensitive network | 1813        | udp     | radius   | optional  | radius accounting             |
 | upper             | open network      | 22          | tcp     | sftp/scp |    -      | task : sftp/scp               |
@@ -2007,7 +2007,7 @@ connect with a shell.
 | account | shell      | comment                                         |
 |---------|------------|-------------------------------------------------|
 | root    | /bin/false |                                                 |
-| tc      | /bin/ash   | Only user with the rights to use sudo do        | 
+| tc      | /bin/ash   | Only user with the rights to use sudo do        |
 | haut    | /bin/false | Used for connection to the non-sensitive zone   |
 | bas     | /bin/false | Used for connection to the sensitive zone       |
 | verif   | /bin/false | Used internally to the DSAS                     |
@@ -2035,7 +2035,7 @@ that the `verif` user can install GPG certificates for `rpm` without
 having `sudo` rights. Pre-existing rpm certificates are erased at each
 use, and so this right for the `verif` user is risk-free.
 
-## Disk partitioning 
+## Disk partitioning
 
 The files downloaded and verified by the DSAS are all stored on a disk.
 This disk is mounted with the `noexec` flag and no file downloaded by the
@@ -2057,10 +2057,10 @@ necessary that
 - The haut(upper) user cannot modify the file visible in the lower
 partition
 - The haut (upper) user cannot delete the existence of the file in the
-lower partition 
+lower partition
 - That the haut (upper) user can delete a file in the upper partition
 - The users `haut` and `bas` must be isolated with a `chroot jail` and so
-the ownership of the principal directory must be `root` 
+the ownership of the principal directory must be `root`
 
 With the following permissions
 
@@ -2093,7 +2093,7 @@ audited at each reboot
 There are 3 types of Linux repository verification,
 
 * rpm - The signature of each RPM file is verified with `rpm -K`
-* repomd - The repomd.xml file is verified and only the hashes of each 
+* repomd - The repomd.xml file is verified and only the hashes of each
 file are checked
 * deb - The Release file is verified and only the hashes of each file are
 checked
@@ -2208,7 +2208,7 @@ these archives contain two files, typically named `v.grd` and` v.sig`.
 These files could have another name, but the extensions `.grd` and` .sig`
 are always used
 
-The contents of the `.grd` file are in format like 
+The contents of the `.grd` file are in format like
 
 ```
 [GuardHeader]
@@ -2227,13 +2227,13 @@ SHA256=721473abd9d240d5170c9952a8a1d1644f177c1dbbef01b105e1d44705188db4
 With hashes of all the files contained in the archive. In the case of
 `*livetri.zip` files the hashes of the files could also correspond to
 another file not included directly in the archive but next to it with a
-name like `NNNNNNNNNN*.*`. The command 
+name like `NNNNNNNNNN*.*`. The command
 
 ```shell
 $ openssl asn1parse -i -inform der -in v.sig
 ```
 
-makes it easy to see that the `.sig` file contains at least two 
+makes it easy to see that the `.sig` file contains at least two
 certificates, a hash of the `.grd` file and the binary signature itself.
 The text `pkcs7-signedData` make it possible to identify the type of
 signature used. The problem is that the chain of trust of `.sig` files
@@ -2279,13 +2279,13 @@ files. We examine the executable of SEP to find the three root
 certificates used by SEPM.
 
 All SEP 64bit client workstations include the executable
-`sepWscSvc64.exe`. Looking with the command 
+`sepWscSvc64.exe`. Looking with the command
 
 ```shell
 $ LANG=C grep -obUaP `\x30\x82..\x30\x82` sepWscSvc64.exe
 ```
 
-or if your version of grep doesn't include perl regular expressions 
+or if your version of grep doesn't include perl regular expressions
 
 ```shell
 $ echo -e `\x30\x82..\x30\x82` | LANG=C xargs -i grep -obUa {} sepWscSvc64.exe
@@ -2297,7 +2297,7 @@ always followed by a length encoded on two bytes, and a certificate
 always starts with two `SEQUENCE`. So the regexp `\x30\x82..\x30\x82` is
 suitable for find the beginnings of certificates, but not only. This
 command finds the binary offsets of the corresponding to start of
-certificates like 
+certificates like
 
 ```
 $ echo -e `\x30\x82..\x30\x82` | LANG=C xargs -i grep -obUa {} sepWscSvc64.exe
@@ -2336,7 +2336,7 @@ $ dd bs=1667008 skip=1 if=sepWscSvc64.exe | openssl x509 -inform der -in - -outf
 
 The format `PMCS7` is the format used by `SMIME`, and here the signatures
 are in `DER`format. The normal `SMIME` signature verification command is
- 
+
 ```shell
 $ openssl cms -verify -inform der -in v.sig -content v.grd
 ```
@@ -2344,7 +2344,7 @@ $ openssl cms -verify -inform der -in v.sig -content v.grd
 this command will verify the signatures in `v.sig` against the root
 certifcates installed on the machine and compare against the hash of the
 file `v.grd`. The root certificate typically used is `Symantec Root 2005
-CA`, and so the real verification to use is 
+CA`, and so the real verification to use is
 
 ```shell
 $ openssl cms -verify -CAfile SymantecRoot2005CA.pem -inform der -in v.sig -content v.grd
@@ -2359,7 +2359,7 @@ Usage` and `X509v3 Extended Key Usage`. `openssl` requires that all
 certificates in the chain of trust supports the same signing options, but
 the `Code Signing CA` certificate supports the `Code Signing` option,
 but the other two certificates in the chain do not support it. Two other
-options of `openssl` are necessary to bypass such problems, 
+options of `openssl` are necessary to bypass such problems,
 
 ```shell
 $ openssl cms -verify -purpose any -no_check_time -CAfile SymantecRoot2005CA.pem -inform der -in v.sig -content v.grd
@@ -2391,7 +2391,7 @@ There are two types of verification for the files of Trend Micro
 
 The certificate chain used by these two methods are independent, but to
 simplify the use of the DSAS, they can be treated and as single task.
-Therefore, it is possible to include all of the certificates 
+Therefore, it is possible to include all of the certificates
 used by both verification methods in a task of type `trend` and both
 verifications will be tested.
 
@@ -2429,14 +2429,14 @@ openssl cms -verify -inform DER -in file.sig -content file.7Z -purpose any -CAfi
 ```
 
 The root certificate is in the file `cert.0` and all of the other
-intermediate and leaf certificates are in the file `cert.1`. 
+intermediate and leaf certificates are in the file `cert.1`.
 
 #### Jar File Signatures
 
 [The format of JAR files](https://docs.oracle.com/javase/7/docs/technotes/guides/jar/jar.html#Manifest-Overview)
 is publicly available, and the JAR files can be verified with openssl
 without the need to install JAVA on the DSAS. Particularly, the JAR files
-of Trend Micro needed for the signature are 
+of Trend Micro needed for the signature are
 
 MANIFEST.MF - A file containing the names and hashes of all of the files in
 (or next to) the JAR file
@@ -2452,11 +2452,11 @@ $ cat cert.pem >> cert.0
 $ cat cert[1-9].pem >> cert.1
 ```
 
-It should be noted that the root certificate for the signed JAR files of 
+It should be noted that the root certificate for the signed JAR files of
 Trend Micro is `Digicert Trusted Root G4`, a publicly available CA in the
 majority of certificate stores.
 
-The signature verification is then performed as 
+The signature verification is then performed as
 
 ```
 openssl cms -verify -inform DER -in JAVA.RSA -content JAVA.SF -purpose any -CAfile cert.0 -nointern -certfile cert.1
@@ -2480,7 +2480,7 @@ However, the repositories of the Debian versions themselves, such as
 the version.
 
 The verification tasks of Debian repositories require access to all of
-these keys. For example, for `BullsEye` the needed keys are 
+these keys. For example, for `BullsEye` the needed keys are
 
 - [Debian 10/buster archive signing key](https://ftp-master.debian.org/keys/archive-key-10.asc)
 - [Debian 11/bullseye archive signing key](https://ftp-master.debian.org/keys/archive-key-11.asc)
@@ -2488,8 +2488,8 @@ these keys. For example, for `BullsEye` the needed keys are
 
 ### Verification - gpg
 
-GPG signatures can be embedded in the signed file or in a separate file. 
-The DSAS assumes that one of the following means is used to sign a file 
+GPG signatures can be embedded in the signed file or in a separate file.
+The DSAS assumes that one of the following means is used to sign a file
 
 ```shell
 $ gpg --sign <file>
@@ -2522,7 +2522,7 @@ $ openssl dgst -sign key.pem -keyform PEM -sha256 -out <file>.sig -binary <file>
 
 The signatures are always stored in separate files, and the DSAS assumes
 that the signatures are in a file with a .sig extension. Both files must
-be provided to DSAS. 
+be provided to DSAS.
 
 ### Special case - unsigned zip file
 
@@ -2564,7 +2564,7 @@ implements this behavior
 
 The antivirus tests use the software ClamAV. It is important to
 understand the limitations of antiviral tests and the purpose of these
-tests in the DSAS. 
+tests in the DSAS.
 
 1. An antivirus can only function correctly if the signatures used for
 the viral detection is up to date. The DSAS must therefore be configured
@@ -2575,7 +2575,7 @@ must be able to control the file format.
 
 The risk that the use of an antivirus in the DSAS is attempting to
 address is the case of a compromised software repositories with at least
-one malicious package uploaded. For example, a 
+one malicious package uploaded. For example, a
 [recent compromission of php.net](https://arstechnica.com/gadgets/2021/03/hackers-backdoor-php-source-code-after-breaching-internal-git-server)
 allowed attackers to install backdoors in compromised packages. In this
 scenario, the attacker has no control on the format of the supplied
@@ -2594,7 +2594,7 @@ openssl and gpg keys installed in the DSAS.
 
 All of possible SSH flux are
 
-| Source            |  Destination    | User        | Service  | Optional  | 
+| Source            |  Destination    | User        | Service  | Optional  |
 |-------------------|-----------------|-------------|----------|-----------|
 | sensitive network | lower           | tc          | ssh      | optional  |
 | sensitive network | lower           | bas         | sftp     | optional  |
@@ -2608,7 +2608,7 @@ of the presence of the stream not recommended from the open network, the
 service only listens to the connections from the more sensitive network
 with OpenSSH's `Listen` configuration option. By default, all user
 access if forbidden, and each user must be explicitly added. The
-configuration for `tc` users are of the form 
+configuration for `tc` users are of the form
 
 ```
 Match User tc Address $USER_TC
@@ -2618,7 +2618,7 @@ Match User tc Address $USER_TC
 
 where `$ USER_TC` is a list of allowed IP or CIDR addresses to connect to
 the server. In order to secure the DSAS this list should be limited. For
-other users the configuration of sshd is 
+other users the configuration of sshd is
 
 ```
 Match User $TYP Address $USER
@@ -2631,9 +2631,9 @@ Match User $TYP Address $USER
 	ForceCommand internal-sftp -u 0007 -d /share
 ```
 
-`sftp` users are strictly limited to where they can access and 
+`sftp` users are strictly limited to where they can access and
 `forwarding` is forbidden. The default `umask` is forced to be 007 to
-file access to the user `verif`. 
+file access to the user `verif`.
 
 ## Web service
 
@@ -2668,7 +2668,7 @@ files available to the user `bas`. This list of files is very limited and
 basically only includes files preinstalled or verified by the DSAS. The
 site is only available in https on port `443`. Users of the repository
 only have the right download files and under no circumstances would they
-have the right to add files to the repository 
+have the right to add files to the repository
 
 ## Issues when using Docker
 
@@ -2700,13 +2700,13 @@ installation `FD_MAX` is `1024*1024`. For a standard installation the
 ioctl to fclose to an unopened file is so fast that the above code runs
 in a couple of milliseconds. However, in Docker with more than a million
 file descriptors to close the above takes more than 2 seconds on a
-default Docker installation. 
+default Docker installation.
 
 As the DSAS relies on SSH for several operations and so this delay
 seriously degrades the performance, and so the Docker image must be
 configured with a reduced number of file descriptors. We have found that
 the limit must be reduced under `65535` to have a reasonable performance
-and we suggest a value of `4096`. This is configured with the 
+and we suggest a value of `4096`. This is configured with the
 option `--ulimit nofile=4096` when creating the Docker image.
 
 ### Docker privileged mode
@@ -2719,13 +2719,13 @@ however security implications of the use of the CAP_NET_ADMIN flag that
 need to be taken into account.
 
 As discussed in the article [Docker running an app with NET_ADMIN
-capability: involved risks](https://unix.stackexchange.com/questions/508809/docker-running-an-app-with-net-admin-capability-involved-risks), 
+capability: involved risks](https://unix.stackexchange.com/questions/508809/docker-running-an-app-with-net-admin-capability-involved-risks),
 the use of CAP_NET_ADMIN opens the possibility to use the ioctl that
 allow reprogramming of the network card (NIC). This can allow the network
 card to be made unusable (even after a reboot for a physical card), or in
 extreme cases allow the installation of code in the EEPROM of the network
 card that might attack the hosts kernels and allow root access to the
-host. 
+host.
 
 This means there are two strategies to treat this issue
 
@@ -2750,9 +2750,9 @@ attack will only impact the DSAS itself.
 manager its own network. In a VM or standalone version of the DSAS, the
 capacity to manage the network is required. So, the implication of this
 is that there is either some complex logic in `dsas.js` and the `dsas`
-boot script to disable the configuration and use of the networking 
+boot script to disable the configuration and use of the networking
 or there is two entirely different versions of the DSAS. Neither of these
-is very attractive. 
+is very attractive.
 
 So for the moment the CAP_NET_ADMIN flag has been kept.
 
@@ -2767,7 +2767,7 @@ constraint.
 We could address this by not configuring the network in the DSAS as
 discussed above, but the constraints of this are not acceptable. The
 solution currently used is to change the prefix used by the principal
-interface of the DSAS with the option 
+interface of the DSAS with the option
 `--opt com.docker.network.container_iface_prefix=doc`. As the default
 interface prefix is `eth`, this means that the principal interface will
 always be alphabetically first. This option is only available on the

@@ -28,21 +28,21 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
   try {
     $dsas = simplexml_load_file(_DSAS_XML);
     if (! $dsas)
-      throw new RuntimeException("Error loading XML file");  
-  
+      throw new RuntimeException("Error loading XML file");
+
     switch ($_POST["op"]){
       case "x509_upload":
         try {
           // PEM files are detected as text/plain
           check_files($_FILES["file"], "text/plain");
-      
+
           $x509 = htmlspecialchars((string)file_get_contents($_FILES["file"]["tmp_name"]));
           $x509 = str_replace("\r", "", $x509);   // dos2unix
           $parse = openssl_x509_parse($x509);
           $finger = openssl_x509_fingerprint(trim($x509), "sha256");
           if (! $parse)
             throw new RuntimeException("The X509 file must be in PEM format");
-          
+
           foreach ($dsas->certificates->certificate as $certificate) {
             if ($certificate->type == "x509") {
               if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $finger)
@@ -52,15 +52,15 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
           $newcert = $dsas->certificates->addChild("certificate");
           $newcert->type = "x509";
           $newcert->pem = trim($x509);
-          $newcert->authority = (empty($parse["extensions"]["authorityKeyIdentifier"]) || 
+          $newcert->authority = (empty($parse["extensions"]["authorityKeyIdentifier"]) ||
             (!empty($parse["extensions"]["subjectKeyIdentifier"]) && str_contains($parse["extensions"]["authorityKeyIdentifier"],
             $parse["extensions"]["subjectKeyIdentifier"])) ? "true" : "false");
-          
+
         } catch (RuntimeException $e) {
           $errors[] = ["x509_upload" => $e->getMessage()];
         }
         break;
- 
+
      case "pubkey_upload":
         try {
           // PEM files are detected as text/plain
@@ -72,7 +72,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
             throw new RuntimeException("The public key must be in PEM format");
           $pubkeynowrap = (string)preg_replace('/\\s+/', '', $pubkeynowrap);
           $finger = hash("sha256", base64_decode($pubkeynowrap));
-          
+
           foreach ($dsas->certificates->certificate as $certificate) {
             if ($certificate->type == "pubkey") {
               $pem = htmlspecialchars(trim($certificate->pem));
@@ -217,16 +217,16 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
 
 
       default:
-        $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]]; 
+        $errors[] = ["error" => ["Unknown operation '{0}' requested", (string)$_POST["op"]]];
         break;
     }
   } catch (Exception $e) {
      $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
   }
- 
+
   if ($dsas !== false && $errors == []) {
     echo "Ok";
-    $dsas->asXml(_DSAS_XML);    
+    $dsas->asXml(_DSAS_XML);
   } else {
     header("Content-Type: application/json");
     echo json_encode($errors);
@@ -235,7 +235,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
   $dsas = simplexml_load_file(_DSAS_XML);
   if (! $dsas)
     header("HTTP/1.0 500 Internal Server Error");
-  else {  
+  else {
     $cafile = dsas_ca_file();
     if ($cafile)
       $ca = parse_x509($cafile);
@@ -268,7 +268,7 @@ else if($_SERVER["REQUEST_METHOD"] == "POST"){
         $pemnowrap = (string)preg_replace('/\\s+/', '', $pemnowrap);
         $cert["fingerprint"] = hash("sha256", base64_decode($pemnowrap));
         $dsas_pubkey[] = $cert;
-      } 
+      }
     }
     header("Content-Type: application/json");
     echo json_encode([["dsas" => ["x509" => $dsas_x509, "pubkey" => $dsas_pubkey, "gpg" => $dsas_gpg], "ca" => $ca]]);
