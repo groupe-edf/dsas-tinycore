@@ -404,10 +404,10 @@ try {
             throw new RuntimeException("Badly signed file not detected in '" . $task->type . "' verification");
           exec("sudo find /home/dsas/bas/share/" . $directory . " -name 'unsign*'", $data);
           if (! empty($data))
-            throw new RuntimeException("Unsigned file not detected in '" . $task->type . "' verification");          
+            throw new RuntimeException("Unsigned file not detected in '" . $task->type . "' verification");
           exec("sudo find /home/dsas/bas/share/" . $directory . " -name 'good*'", $data);
           if (empty($data))
-            throw new RuntimeException("No signed files not detected in '" . $task->type . "' verification");          
+            throw new RuntimeException("No signed files detected in '" . $task->type . "' verification");
           // FIXME Should we check that the right number of wanted files are passed ? 
           // How to do it generically ? Think about debian repos for example
           return true;

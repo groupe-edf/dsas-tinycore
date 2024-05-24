@@ -191,7 +191,7 @@ verifauthenticode(){
   tempdir="$2"
   file="$3"
 
-  # Verification date of teh file extarcted form ASN.1 if
+  # Verification date of the file extracted from ASN.1 if
   # possible, otherwise creation date of the file
   _pkcs7=$(mktemp -u)
   osslsigncode extract-signature -pem -out "$_pkcs7" -in "$file" > /dev/null 2>&1

@@ -53,13 +53,23 @@ MyCert.key:
 	openssl genrsa -out MyCert.key 4096
 
 MyCert.pem: MyCert.key
+	# FIXME : 'openssl req' doesn't  accept "-startdate' argument. So need 
+	# to set the date to pre-date the CA certificate to avoid problems
+	$(eval d0:=$(shell echo $$(($$(date +%s) - 7200)) ))
+	sudo date -s '@$(d0)'
 	yes '' | openssl req -x509 -nodes -key MyCert.key -extensions v3_ca -sha256 -days 180 -out MyCert.pem
+	$(eval d0:=$(shell echo $$(($$(date +%s) + 7200)) ))
+	sudo date -s '@$(d0)'
 
 BadCert.key: 
 	openssl genrsa -out BadCert.key 4096
 
 BadCert.pem: BadCert.key
+	$(eval d0:=$(shell echo $$(($$(date +%s) - 7200)) ))
+	sudo date -s '@$(d0)'
 	yes '' | openssl req -x509 -nodes -key BadCert.key -extensions v3_ca -sha256 -days 180 -out BadCert.pem
+	$(eval d0:=$(shell echo $$(($$(date +%s) + 7200)) ))
+	sudo date -s '@$(d0)'
 
 good.cab: MyCert.pem 
 	rm -f good.txt good-unsigned.cab good.cab
