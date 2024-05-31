@@ -1,7 +1,8 @@
 Log of the principal changes to the DSAS
 
-Version 3.0.5 (XX XXX XXXX)
+Version 3.0.5 (31 May 2024)
 - Add "-D CMAKE_BUILD_TYPE=Release" to ClamAV build, save 60MBytes !
+- Minor radius domain fix for Microsoft AD
 
 Version 3.0.4 (24 May 2024)
 - Update Linux-PAM (1.5.3 -> 1.6.1)

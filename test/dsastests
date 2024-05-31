@@ -2353,7 +2353,7 @@ try {
     // Remove stale users added to radiusd configuration
     exec("sudo sed -i -e 's/^[^#].*Cleartext-Password :=.*$//g' /usr/local/etc/raddb/mods-config/files/authorize", $output, $retval);
     // Setup user if /usr/local/etc/raddb/users. Don't yet start radiusd
-    exec("sudo sh -c 'echo \"TEST/" . _user . " Cleartext-Password := " . $GLOBALS["password"] . "_radius" . PHP_EOL . "\" >> /usr/local/etc/raddb/mods-config/files/authorize'" . PHP_EOL, $output, $retval);
+    exec("sudo sh -c 'echo \"TEST\\". _user . " Cleartext-Password := " . $GLOBALS["password"] . "_radius" . PHP_EOL . "\" >> /usr/local/etc/raddb/mods-config/files/authorize'" . PHP_EOL, $output, $retval);
 
     // Logout via navbar 
     test("Logging out via navbar", function () {
