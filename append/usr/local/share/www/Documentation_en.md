@@ -737,7 +737,16 @@ deactivate the account `tc`. The user `tc` is the only one with the
 rights to become `root` on the DSAS. Even though the account is
 deactivated it remains usable from the console of the DSAS and other
 administrative users, knowing the password for the account `tc` can use this
-knowledge to become `root`.
+knowledge to become `root`, via the commands
+
+```
+$ su tc
+<password tc>
+$ sudo sh
+```
+
+If the radius server is used and the radius server is accessible, the account
+'tc' is only accessible via the command `su tc`. 
 
 A new account is created by clicking on the button ![](plus-lg.svg) to
 the right of the screen. You will be asked to enter a new username like

@@ -1,5 +1,9 @@
 Log of the principal changes to the DSAS
 
+Version 3.0.6 (14 Jun 2024)
+- Increase memory for php to allow larger log files
+- Document that the user should use 'su tc && sudo sh' ti become root 
+
 Version 3.0.5 (31 May 2024)
 - Add "-D CMAKE_BUILD_TYPE=Release" to ClamAV build, save 60MBytes !
 - Minor radius domain fix for Microsoft AD

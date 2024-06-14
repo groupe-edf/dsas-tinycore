@@ -760,9 +760,16 @@ configuré. Il est recommandé de créer des comptes nominatifs pour chaque
 utilisateur et de désactiver le compte `tc`. L'utilisateur `tc` est le
 seul avec le droit de devenir `root` sur la DSAS. Si le compte `tc` est
 désactivé les autres utilisateurs pourrait que devenir `root` avec la
-connaissance de la mot de passe de l'utilisateur `tc`. Un utilisateur
-désactivé ne pourrait que connecté depuis la console du DSAS, et pas à
-distance.
+connaissance de la mot de passe de l'utilisateur `tc`, via les commandes
+
+```
+$ su tc
+<password tc>
+$ sudo sh
+```
+
+Si le serveur radius est utilisé et le serveur radius est accessible, le compte
+'tc' est seulement accesible depuis la commande `su tc`.
 
 Un nouveau compte est créer en cliquant sur la bouton ![](plus-lg.svg) à
 droit de l'écran. Vous seriez demandé de rentrer le nom de l'utilisateur
