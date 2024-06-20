@@ -1,6 +1,6 @@
 Log of the principal changes to the DSAS
 
-Version 3.0.6 (14 Jun 2024)
+Version 3.0.6 (20 Jun 2024)
 - Increase memory for php to allow larger log files
 - Document that the user should use 'su tc && sudo sh' ti become root 
 
