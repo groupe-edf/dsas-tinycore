@@ -545,10 +545,27 @@ EOF
          fi
        done
 
-       # For each file Packages.gz, and maybe Sources.gz, download the listed files 
+       # Find Packages and Sources files to use
+       packages=""
+       while IFS= read -r -d '' _d; do
+         # Only download files if desired architecture 
+         [[ "$archs" =~ ${_d##*-} ]] || continue       
+         [ -z "$packages" ] || packages="$packages "
+         [ -f "$_d/Packages" ] && packages="${packages}$_d/Packages" && continue
+         [ -f "$_d/Packages.gz" ] && packages="${packages}$_d/Packages.gz" && continue
+         [ -f "$_d/Packages.xz" ] && packages="${packages}$_d/Packages.xz"
+       done < <(find "$DSAS_HAUT/$dir" -name "Packages*" -print0 | xargs -0 dirname -z  | uniq -z)
+       if [[ "$archs" =~ "source" ]]; then
+         while IFS= read -r -d '' _d; do  
+           [ -z "$packages" ] || packages="$packages "
+           [ -f "$_d/Sources" ] && packages="${packages}$_d/Sources" && continue
+           [ -f "$_d/Sources.gz" ] && packages="${packages}$_d/Sources.gz" && continue
+           [ -f "$_d/Sources.xz" ] && packages="${packages}$_d/Sources.xz"
+         done < <(find "$DSAS_HAUT/$dir" -name "Sources*" -print0 | xargs -0 dirname -z  | uniq -z)
+       fi
+
+       # For each file Package, and maybe Source, download the listed files 
        # into the pool directory
-       packages=$($as_haut find "$DSAS_HAUT/$dir" -name "Packages.gz")
-       [[ "$archs" =~ "source" ]] && packages="$packages $($as_haut find "$DSAS_HAUT/$dir" -name "Sources.gz")"
        for package in $packages ; do
          myecho "Downloading files from $package"
          _file=""
