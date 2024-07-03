@@ -70,12 +70,11 @@ function timeToDate(t) {
 
 function dsasCertDrop(typ, from, to) {
     if (from !== to && from !== to + 1) {
-        fetch("api/dsas-cert.php").then((response) => {
+        fetch("api/v2/cert").then((response) => {
             if (response.ok) { return response.json(); }
             return Promise.reject(new Error(response.statusText));
         }).then((certs) => {
             const formData = new FormData();
-            formData.append("op", "drag");
             switch (typ) {
             case "x509":
                 formData.append("from", certs[0].dsas.x509[from].fingerprint);
@@ -92,17 +91,16 @@ function dsasCertDrop(typ, from, to) {
             default:
                 throw new Error("Unknown certificate drag type");
             }
-            fetch("api/dsas-cert.php", { method: "POST", body: formData }).then((response) => {
-                if (response.ok) { return response.text(); }
+            fetch("api/v2/cert/drag", { method: "POST", body: formData }).then((response) => {
+                if (response.ok) { return response.json(); }
                 return Promise.reject(new Error(response.statusText));
-            }).then((text) => {
-                try {
-                    const errors = JSON.parse(text);
-                    modalErrors(errors);
-                } catch (e) {
+            }).then((json) => {
+                if (Object.prototype.hasOwnProperty.call(json, "retval")) {
                     // Disable ESLINT here as circular refering behind the functions
                     /* eslint-disable-next-line no-use-before-define */
                     dsasDisplayCert(typ);
+                } else {
+                    modalErrors(json);
                 }
             }).catch((error) => {
                 if (!failLoggedin(error)) {
@@ -116,18 +114,11 @@ function dsasCertDrop(typ, from, to) {
 }
 
 function dsasCertRealDelete(name, finger) {
-    const formData = new FormData();
-    formData.append("op", "delete");
-    formData.append("finger", finger);
-    fetch("api/dsas-cert.php", { method: "POST", body: formData }).then((response) => {
-        if (response.ok) { return response.text(); }
+    fetch("api/v2/cert/" + finger, { method: "DELETE" }).then((response) => {
+        if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
-    }).then((text) => {
-        try {
-            const errors = JSON.parse(text);
-            modalErrors(errors);
-        } catch (e) {
-        // Its text => here always just "Ok"
+    }).then((json) => {
+        if (Object.prototype.hasOwnProperty.call(json, "retval")) {
             clearFeedback();
             // Disable ESLINT here as circular refering behind the functions
             /* eslint-disable-next-line no-use-before-define */
@@ -136,6 +127,8 @@ function dsasCertRealDelete(name, finger) {
             dsasDisplayCert("pubkey");
             /* eslint-disable-next-line no-use-before-define */
             dsasDisplayCert("gpg");
+        } else {
+            modalErrors(json);
         }
     }).catch((error) => {
         modalMessage(_("Error : {0}", (error.message ? error.message : error)));
@@ -322,7 +315,7 @@ function treatX509Certs(certs, node, added = false) {
 function dsasUploadCert(type = "x509", name = "", file = null) {
     const formData = new FormData();
     const cert = document.getElementById(type + "upload");
-    formData.append("op", type + "_upload");
+
     if (file === null) {
         formData.append("file", cert[0].files[0]);
     } else {
@@ -330,22 +323,20 @@ function dsasUploadCert(type = "x509", name = "", file = null) {
     }
     formData.append("name", name);
 
-    fetch("api/dsas-cert.php", {
+    fetch("api/v2/cert/" + type, {
         method: "POST",
         body: formData,
     }).then((response) => {
-        if (response.ok) { return response.text(); }
+        if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
-    }).then((text) => {
-        try {
-            const errors = JSON.parse(text);
-            modalErrors(errors);
-        } catch (e) {
-        // Its text => here always just "Ok"
+    }).then((json) => {
+        if (Object.prototype.hasOwnProperty.call(json, "retval")) {
             clearFeedback();
             // Don't use location.reload here as it closes the tabs
             /* eslint-disable-next-line no-use-before-define */
             modalMessage(_("Certificate successfully sent"), () => { dsasDisplayCert("all"); }, true);
+        } else {
+            modalErrors(json);
         }
     }).catch((error) => {
         if (!failLoggedin(error)) { modalMessage(_("Error : {0}", (error.message ? error.message : error))); }
@@ -371,7 +362,7 @@ function dsasPubkeyName() {
 }
 
 export default function dsasDisplayCert(what = "all") {
-    fetch("api/dsas-cert.php").then((response) => {
+    fetch("api/v2/cert").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((certs) => {

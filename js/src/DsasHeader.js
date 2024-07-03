@@ -57,7 +57,7 @@ function dsasApply() {
     modalApply.setAction();
     modalApply.show();
 
-    fetch("api/save.php").then((response) => {
+    fetch("api/v2/save").then((response) => {
         if (response.ok) { return response.text(); }
         return Promise.reject(new Error(response.statusText));
     }).then(() => {
@@ -67,7 +67,7 @@ function dsasApply() {
         el2 = spinner2.appendChild(document.createElement("span"));
         el2.textContent = _(" Application of the configuration in progress");
         modalApply.setBody(spinner2);
-        fetch("api/apply.php").then((response) => {
+        fetch("api/v2/apply").then((response) => {
             if (response.ok) { return response.text(); }
             return Promise.reject(new Error(response.statusText));
         }).then(() => {
@@ -94,10 +94,10 @@ function dsasApply() {
 
 function dsasRealBackup() {
     const passwd = document.getElementById("BackupPassword").value;
-    const uri = new URL("api/backup.php", dsasOrigin());
+    const uri = new URL("api/v2/backup", dsasOrigin());
     uri.search = new URLSearchParams({ passwd });
     fetch(uri).then((response) => {
-        if (response.ok) { return response.text(); }
+        if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((backup) => {
         const saveBase64 = (() => {
@@ -113,7 +113,7 @@ function dsasRealBackup() {
                 window.URL.revokeObjectURL(backupurl);
             };
         })();
-        saveBase64(backup, "dsas_backup.tgz");
+        saveBase64(backup.file, "dsas_backup.tgz");
     }).catch((error) => {
         if (!failLoggedin(error)) { modalMessage(_("Error : {0}", (error.message ? error.message : error))); }
     });
@@ -148,17 +148,16 @@ export default function dsasRealRestore(file = null, passwd = null) {
         formData.append("passwd", passwd);
     }
 
-    fetch("api/backup.php", {
+    fetch("api/v2/backup", {
         method: "POST",
         body: formData,
     }).then((response) => {
-        if (response.ok) { return response.text(); }
+        if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
-    }).then((text) => {
-        try {
-            const errors = JSON.parse(text);
-            modalErrors(errors);
-        } catch (e) {
+    }).then((json) => {
+        if (Object.prototype.hasOwnProperty.call(json, "restore")) {
+            modalErrors(json);
+        } else {
         // Can't apply directly from the restore script as the application
         // might restart the web server. Need to use use apply JS function
         // dsasApply with a pre setup modal
@@ -331,7 +330,7 @@ function dsasReboot() {
     // Clear status, task and login timeouts before continuing
     dsasClearAllTimeouts();
 
-    fetch("api/reboot.php").then((response) => {
+    fetch("api/v2/reboot").then((response) => {
         if (response.ok) { return setTimeout(waitreboot, 1000); }
         return Promise.reject(new Error(response.statusText));
     }).catch((error) => {
@@ -367,7 +366,7 @@ function dsasShutdown() {
     // Clear status and login timeouts before continuing
     dsasClearAllTimeouts();
 
-    fetch("api/shutdown.php").then((response) => {
+    fetch("api/v2/shutdown").then((response) => {
         if (response.ok) { return setTimeout(waitshutdown, 1000); }
         return Promise.reject(new Error(response.statusText));
     }).catch((error) => {
@@ -379,7 +378,7 @@ function dsasShutdown() {
 
 function dsasLogout() {
     // No error checking because, only possible error is that already logged out
-    fetch("api/logout.php").then(() => {
+    fetch("api/v2/logout").then(() => {
         window.location.href = "login.html";
     }).catch(() => { window.location.href = "login.html"; });
 }

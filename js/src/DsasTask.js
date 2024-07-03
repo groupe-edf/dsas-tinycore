@@ -29,6 +29,7 @@ import {
     certIsCa,
     dsasSetTimeout,
     dsasClearTimeout,
+    dsasOrigin,
 } from "./DsasUtil";
 
 // Global variable for the DisplayLog instance for the task log files
@@ -39,24 +40,23 @@ let dragfrom = NaN;
 let dragto = NaN;
 
 function dsasTaskRealDelete(id) {
-    const formData = new FormData();
-    const deleteFiles = document.getElementById("TaskDeleteFiles").checked;
-    formData.append("op", "delete");
-    formData.append("id", id);
-    formData.append("delete", deleteFiles);
-    fetch("api/dsas-task.php", { method: "POST", body: formData }).then((response) => {
-        if (response.ok) { return response.text(); }
+    let uri;
+    if (document.getElementById("TaskDeleteFiles").checked) {
+        uri = new URL("api/v2/tasks-all/" + id, dsasOrigin());
+    } else {
+        uri = new URL("api/v2/tasks/" + id, dsasOrigin());
+    }
+    fetch(uri, { method: "DELETE" }).then((response) => {
+        if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
-    }).then((text) => {
-        try {
-            const errors = JSON.parse(text);
-            modalErrors(errors);
-        } catch (e) {
-        // Its text => here always just "Ok"
+    }).then((json) => {
+        if (Object.prototype.hasOwnProperty.call(json, "retval")) {
             clearFeedback();
             // Circular referencing between these function is deliberate
             // eslint-disable-next-line no-use-before-define
             dsasDisplayTasks("tasks");
+        } else {
+            modalErrors(json);
         }
     }).catch((error) => {
         if (failLoggedin(error)) {
@@ -88,21 +88,16 @@ function dsasTaskDelete(id, name) {
 }
 
 function dsasTaskRealKill(id) {
-    const formData = new FormData();
-    formData.append("op", "kill");
-    formData.append("id", id);
-    fetch("api/dsas-task.php", { method: "POST", body: formData }).then((response) => {
-        if (response.ok) { return response.text(); }
+    fetch("api/v2/tasks/" + id, { method: "POST" }).then((response) => {
+        if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
-    }).then((text) => {
-        try {
-            const errors = JSON.parse(text);
-            modalErrors(errors);
-        } catch (e) {
-        // Its text => here always just "Ok"
+    }).then((json) => {
+        if (Object.prototype.hasOwnProperty.call(json, "retval")) {
             clearFeedback();
             // eslint-disable-next-line no-use-before-define
             dsasDisplayTasks("status");
+        } else {
+            modalErrors(json);
         }
     }).catch((error) => {
         if (failLoggedin(error)) {
@@ -190,7 +185,6 @@ function dsasAddTask(oldid = "") {
     [...document.getElementsByTagName("dsas-task-cert")].forEach((cert) => certs.push({ name: cert.getAttribute("name"), fingerprint: cert.getAttribute("fingerprint") }));
 
     const formData = new FormData();
-    formData.append("op", "add");
     formData.append("data", JSON.stringify({
         name,
         id: oldid,
@@ -202,18 +196,16 @@ function dsasAddTask(oldid = "") {
         certs,
         archs,
     }));
-    fetch("api/dsas-task.php", { method: "POST", body: formData }).then((response) => {
-        if (response.ok) { return response.text(); }
+    fetch("api/v2/tasks/add", { method: "POST", body: formData }).then((response) => {
+        if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
-    }).then((text) => {
-        try {
-            const errors = JSON.parse(text);
-            modalErrors(errors);
-        } catch (e) {
-        // Its text => here always just "Ok"
+    }).then((json) => {
+        if (Object.prototype.hasOwnProperty.call(json, "retval")) {
             clearFeedback();
             // eslint-disable-next-line no-use-before-define
             dsasDisplayTasks("status");
+        } else {
+            modalErrors(json);
         }
     }).catch((error) => {
         if (failLoggedin(error)) {
@@ -267,7 +259,7 @@ function modalTask(action = dsasAddTask, ca = "", taskchange = dsasAddTaskArch) 
     modalDSAS.show();
     modalDSAS.setBody(b);
 
-    fetch("api/dsas-cert.php").then((response) => {
+    fetch("api/v2/cert").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((certs) => {
@@ -342,13 +334,11 @@ function dsasModifyTask(oldname = "", oldid = "") {
     // modifying a task and we've changed the name.
     if (oldname && oldname !== name) {
         const formData = new FormData();
-        formData.append("op", "name");
         formData.append("data", JSON.stringify({
             old: oldname,
             new: name,
-            id: oldid,
         }));
-        fetch("api/dsas-task.php", { method: "POST", body: formData }).then((response) => {
+        fetch("api/v2/tasks/name/" + oldid, { method: "POST", body: formData }).then((response) => {
             if (response.ok) { dsasAddTask(oldid); }
             return Promise.reject(new Error(response.statusText));
         }).catch((error) => {
@@ -366,7 +356,7 @@ function dsasModifyTask(oldname = "", oldid = "") {
 // with the other dsas_task_* functions to make other code easier to use
 // eslint-disable-next-line no-unused-vars
 function dsasTaskModify(id, name) {
-    fetch("api/dsas-task.php").then((response) => {
+    fetch("api/v2/tasks").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((tasks) => {
@@ -413,22 +403,17 @@ function dsasTaskModify(id, name) {
 }
 
 function dsasTaskRealRun(id) {
-    const formData = new FormData();
-    formData.append("op", "run");
-    formData.append("id", id);
-    fetch("api/dsas-task.php", { method: "POST", body: formData }).then((response) => {
-        if (response.ok) { return response.text(); }
+    fetch("api/v2/tasks/run/" + id, { method: "POST" }).then((response) => {
+        if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
-    }).then((text) => {
-        try {
-            const errors = JSON.parse(text);
-            modalErrors(errors);
-        } catch (e) {
-        // Its text => here always just "Ok"
+    }).then((json) => {
+        if (Object.prototype.hasOwnProperty.call(json, "retval")) {
             clearFeedback();
             // Delay update of task status 0,5 seconds to allow runlog file to be updated first
             // eslint-disable-next-line no-use-before-define
             dsasSetTimeout("tasks", dsasDisplayTasks, 500, "status");
+        } else {
+            modalErrors(json);
         }
     }).catch((error) => {
         if (failLoggedin(error)) {
@@ -461,14 +446,11 @@ function modalInfo(name, body) {
 
 function dsasTaskInfo(id, name, len = 0) {
     const formData = new FormData();
-    formData.append("op", "info");
-    formData.append("id", id);
     formData.append("len", len);
-    fetch("api/dsas-task.php", { method: "POST", body: formData }).then((response) => {
-        if (response.ok) { return response.text(); }
+    fetch("api/v2/tasks/info/" + id, { method: "POST", body: formData }).then((response) => {
+        if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
-    }).then((text) => {
-        const info = JSON.parse(text);
+    }).then((info) => {
         if (info && (info[0].constructor === Object) && (Object.keys(info[0])[0] === "error")) {
             modalErrors(info);
             dsasClearTimeout("info");
@@ -512,20 +494,18 @@ function dsasTaskDrop(from, to) {
     if (from !== to && from !== to + 1) {
         dsasClearTimeout("tasks");
         const formData = new FormData();
-        formData.append("op", "drag");
         formData.append("from", from);
         formData.append("to", to);
-        fetch("api/dsas-task.php", { method: "POST", body: formData }).then((response) => {
-            if (response.ok) { return response.text(); }
+        fetch("api/v2/tasks/drag", { method: "POST", body: formData }).then((response) => {
+            if (response.ok) { return response.json(); }
             return Promise.reject(new Error(response.statusText));
-        }).then((text) => {
-            try {
-                const errors = JSON.parse(text);
-                modalErrors(errors);
-            } catch (e) {
+        }).then((json) => {
+            if (Object.prototype.hasOwnProperty.call(json, "retval")) {
                 // Disable ESLINT here as circular refering behind the functions
                 /* eslint-disable-next-line no-use-before-define */
                 dsasDisplayTasks("drag");
+            } else {
+                modalErrors(json);
             }
         }).catch((error) => {
             if (failLoggedin(error)) {
@@ -540,7 +520,7 @@ function dsasTaskDrop(from, to) {
 
 export default function dsasDisplayTasks(what = "all") {
     if (what === "all" || what === "drag" || what === "status") {
-        fetch("api/dsas-task.php").then((response) => {
+        fetch("api/v2/tasks").then((response) => {
             if (response.ok) { return response.json(); }
             return Promise.reject(new Error(response.statusText));
         }).then((tasks) => {

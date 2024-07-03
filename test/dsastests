@@ -1943,7 +1943,7 @@ try {
     $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#Tasks']"))->click();
 
     // Get a set valid uploaded certificates to use for the tasks
-    $_uri = "https://" . hostip() .":" . _adminport . "/api/dsas-cert.php";
+    $_uri = "https://" . hostip() .":" . _adminport . "/api/v2/cert";
     $_str = $GLOBALS["driver"]->executeScript("async function asyncfetch(uri) { const reponse = await fetch (uri); return reponse.text();}; return asyncfetch(\"" . $_uri ."\");");
     $_json = json_decode($_str);
 

@@ -546,10 +546,27 @@ function dsas_get_log(int $len = 0, string $_file = _DSAS_LOG . "/dsas_verif.log
  *
  * @param array<string, string> $options
  *     An array with the X509 options of the certificate to create
- * @return array{pub: string, priv: string, csr: string}
- *     An array with the various newly created certificates
+ * @return array<mixed>
+ *     An array with the errors during the renewal of the web certificate
  */
-function renew_web_cert(array $options, int $days) : array {
+function renew_web_cert(array $options, int $validity) : array {
+  $errors = [];
+  $dsas = simplexml_load_file(_DSAS_XML);
+  if (! $dsas) {
+    $errors[] = ["error" => ["Internal server error : {0}", "Error loading XML file"]];
+    return $errors;
+  }
+
+  $validity = ($validity < 1 ? 1 : ($validity > 5 ? 5 : $validity));
+  $days = $validity * 365;
+
+  foreach (array('countryName', 'stateOrProvinceName', 'localityName',
+             'organizationName', 'organizationalUnitName', 'commonName',
+             'commonName', 'emailAddress') as $key) {
+    $dsas->config->web->ssl->$key = $options[$key];
+  }
+  $dsas->config->web->ssl->validity = (string)$validity;
+
   foreach (array('countryName', 'stateOrProvinceName', 'localityName',
                  'organizationName', 'organizationalUnitName', 'commonName',
                  'commonName', 'emailAddress') as $key) {
@@ -575,8 +592,27 @@ function renew_web_cert(array $options, int $days) : array {
     $certout = "";
   }
 
-  return array("pub" => $certout, "priv" => $pkeyout, "csr" => $csrout);
-
+  if (empty($csrout) || empty($certout) || empty($pkeyout))
+    $errors[] =  ["renew" => "Error during the generation of the certificates"];
+  else {
+    $retval = file_put_contents(_DSAS_VAR . "/dsas.csr", $csrout);
+    chmod (_DSAS_VAR . "/dsas.csr", 0640);
+    chgrp (_DSAS_VAR . "/dsas.csr", "repo");
+    if ($retval !== 0 && $retval !== false) $retval = file_put_contents(_DSAS_VAR . "/dsas_pub.pem", $certout);
+    chmod (_DSAS_VAR . "/dsas_pub.pem", 0640);
+    chgrp (_DSAS_VAR . "/dsas_pub.pem", "repo");
+    if ($retval !== 0 && $retval !== false) $retval = file_put_contents(_DSAS_VAR . "/dsas_priv.pem", $pkeyout);
+    chmod (_DSAS_VAR . "/dsas_priv.pem", 0640);
+    chgrp (_DSAS_VAR . "/dsas_priv.pem", "repo");
+    if ($retval !== 0 && $retval !== false) $retval = file_put_contents(_DSAS_VAR . "/dsas.pem", $pkeyout . PHP_EOL . $certout);
+    chmod (_DSAS_VAR . "/dsas.pem", 0640);
+    chgrp (_DSAS_VAR . "/dsas.pem", "repo");
+    if ($retval === 0 || $retval === false)
+      $errors[] = ["renew" => "Error while saving the certificates"];
+    else
+      $dsas->asXml(_DSAS_XML);
+  }
+  return $errors;
 }
 
 /**
@@ -847,6 +883,940 @@ function simplexml_insert_after(SimpleXMLElement $insert, SimpleXMLElement $targ
     else
       $target_dom->parentNode->appendChild($insert_dom);
   }
+}
+
+/**
+ * Function retrieve the status of the two DSAS machines
+ *
+ * usage:
+ *   dsas_status()
+ *
+ * @return array{bas: array<string,mixed>, haut: array<string,mixed>}
+ *    The status of the two machines is returned independantly in two arrays
+ */
+function dsas_status() {
+  $output = dsas_exec(["free", "-b"]);
+  $free = $output["stdout"];
+  $free = (string)trim($free);
+  $free_arr = explode("\n", $free);
+  $mem = explode(" ", $free_arr[1]);
+  $mem = array_filter($mem);
+  $mem = array_merge($mem);
+  $output = dsas_exec(["cat", "/proc/cpuinfo"]);
+  $cpuinfo = $output["stdout"];
+  preg_match("/^cpu cores.*:(.*)$/m", $cpuinfo, $matches);
+  $cores = trim($matches[1]);
+  $output = dsas_exec(["cat", "/proc/loadavg"]);
+  $loadavg = explode(" ", $output["stdout"])[0];
+  $d = _DSAS_HOME;
+  $bas = ["disk" =>  $d,
+          "disk_free" => disk_free_space($d),
+          "disk_total" => disk_total_space($d),
+           // With a ramdisk, the free memory is pretty much false. Used 'Total - Avail' instead
+          "memory_used" => (float)$mem[1] - (float)$mem[6],
+          "memory_total" => (float)$mem[1],
+          "cores" => (int)$cores,
+          "loadavg" => (float)$loadavg];
+
+  # test if the machine haut is alive before proceeding
+  $hautip = interco_haut();
+  $output = dsas_exec(["ping", "-q", "-c", "1", "-W", "1", $hautip]);
+  if ($output["retval"] == 0) {
+    $output = dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "-M", "-S", "/tmp/sshsocket", "-o", "ControlPersist=5s", "tc@" . $hautip, "free", "-b"]);
+    $free = $output["stdout"];
+    $free = (string)trim($free);
+    $free_arr = explode("\n", $free);
+    $mem = explode(" ", $free_arr[1]);
+    $mem = array_filter($mem);
+    $mem = array_merge($mem);
+    $output = dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "-S", "/tmp/sshsocket", "tc@" . $hautip, "cat", "/proc/loadavg", "/proc/cpuinfo"]);
+    $loadavg = explode(" ", $output["stdout"])[0];
+    $cpuinfo = $output["stdout"];
+    preg_match("/^cpu cores.*:(.*)$/m", $cpuinfo, $matches);
+    $cores = trim($matches[1]);
+    $output = dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "-S", "/tmp/sshsocket", "tc@" . $hautip, "stat", "-f", "-c", "'%S %a %b'", $d]);
+    $output_arr = explode(" ", (string)trim($output["stdout"]));
+    $blksz = (int)$output_arr[0];
+    $free = (int)$output_arr[1] * $blksz;
+    $total = (int)$output_arr[2] * $blksz;
+    $haut = ["status" => "up",
+             "disk" =>  $d,
+             "disk_free" => $free,
+             "disk_total" => $total,
+             "memory_used" => (float)$mem[1] - (float)$mem[6],
+             "memory_total" => (float)$mem[1],
+             "cores" => (int)$cores,
+             "loadavg" => (float)$loadavg];
+  } else
+    $haut = ["status" => "down",
+             "disk" =>  $d,
+             "disk_free" => 1,
+             "disk_total" => 1,
+             "memory_used" => 0,
+             "memory_total" => 1,
+             "cores" => 1,
+             "loadavg" => (float)0.0];
+
+  return ["haut" => $haut, "bas" => $bas];
+}
+
+/**
+ * Function to set the DSAS network settings
+ *
+ * usage:
+ *   dsas_net($data)
+ *
+ * @param array{bas: array{dhcp: string, cidr: string, gateway: string,
+ *                       dns: array{domain: string, nameserver: string[]}},
+ *            haut: array{dhcp: string, cidr: string, gateway: string,
+ *                       dns: array{domain: string, nameserver: string[]}}} $data
+ *    The parameters to use for the network configuration of the two interface
+ *
+ * @return array<int,mixed>
+ *    An array of the errors found in the configuration
+ */
+function dsas_net($data) {
+  $errors = array();
+  try {
+    $dsas = simplexml_load_file(_DSAS_XML);
+    if (! $dsas)
+      throw new RuntimeException("Error loading XML file");
+
+    $ifaces = get_ifaces();
+    $j=0;
+    foreach (["bas", "haut"] as $iface) {
+      $net = $data[$iface];
+
+      if ($net["dhcp"] == "true") {
+        $dsas->config->network->{$iface}->dhcp = "true";
+        $j++;
+        continue;
+      } else
+        $dsas->config->network->{$iface}->dhcp = "false";
+
+      $cidr = htmlspecialchars(trim($net["cidr"]));
+      $cidr_err = ip_valid($cidr, 1);
+      if (empty($cidr_err))
+        $dsas->config->network->{$iface}->cidr = $cidr;
+      else
+        $errors[] = [ "iface_cidr" . $j => $cidr_err];
+
+      $gateway = htmlspecialchars(trim($net["gateway"]));
+      if (empty($gateway))
+        $gateway_err = "";
+      else
+        $gateway_err = ip_valid($gateway, -1);
+      if (empty($gateway_err))
+        $dsas->config->network->{$iface}->gateway = $gateway;
+      else
+        $errors[] = [ "iface_gateway" . $j => $gateway_err];
+
+      if (empty($net["dns"]["domain"]) || is_valid_domain($net["dns"]["domain"]))
+         $dsas->config->network->{$iface}->dns->domain = $net["dns"]["domain"];
+      else
+         $errors[] = [ "iface_dns_domain" . $j => "Domain is invalid"];
+
+      foreach ($net["dns"]["nameserver"] as $server) {
+        if (!empty($dns_err = ip_valid($server, -1)))
+          break;
+      }
+      if (empty($dns_err)) {
+        unset($dsas->config->network->{$iface}->dns->nameserver);
+        foreach ($net["dns"]["nameserver"] as $server)
+          $dsas->config->network->{$iface}->dns->nameserver[] = $server;
+      } else
+        $errors[] = ["iface_nameserver" .$j => $dns_err];
+
+      $j++;
+    }
+  } catch (Exception $e) {
+     $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
+  }
+  if ($dsas !== false && $errors == [])
+    $dsas->asXml(_DSAS_XML);
+
+  return $errors;
+}
+
+/**
+ * Function to set the DSAS service settings
+ *
+ * usage:
+ *   dsas_service($data)
+ *
+ * @param array{ssh: array{active: string, user_tc: string,
+ *                      user_bas: string, user_haut: string},
+ *                      radius: array{active: string, server: string, secret: string, domain: string},
+ *                      syslog: array{active: string, server: string},
+ *                      ntp: array{active: string, server: array{string}},
+ *                      antivirus: array{active: string, uri: string},
+ *                      web: array{repo: string},
+ *                      snmp: array{active: string, username: string, password: string,
+ *                                  encrypt: string, passpriv: string,
+ *                                  privencrypt: string}} $data
+ *
+ * @return array<int,mixed>
+ *    An array of the errors found in the configuration
+ */
+function dsas_service($data) {
+  $errors = array();
+  try {
+    $dsas = simplexml_load_file(_DSAS_XML);
+    if (! $dsas)
+      throw new RuntimeException("Error loading XML file");
+
+    $dsas->config->ssh->active = ($data["ssh"]["active"] === "true" ? "true" : "false");
+    $user_tc = htmlspecialchars(trim($data["ssh"]["user_tc"]));
+    $user_tc_err = "";
+    if (! empty($user_tc)) {
+      foreach (explode(",",$user_tc) as $inet) {
+        if (substr($inet,0,1) === "!")
+          $inet = substr($inet,1,strlen($inet)-1);
+        if ($user_tc_err = ip_valid($inet, 0))
+          break;
+      }
+    }
+    if (empty($user_tc_err))
+      $dsas->config->ssh->user_tc = $user_tc;
+    else
+      $errors[] = [ "user_tc" => $user_tc_err];
+
+    $user_bas = htmlspecialchars(trim($data["ssh"]["user_bas"]));
+    $user_bas_err = "";
+    if (! empty($user_bas)) {
+      foreach (explode(",",$user_bas) as $inet) {
+        if (substr($inet,0,1) === "!")
+          $inet = substr($inet,1,strlen($inet)-1);
+        if ($user_bas_err = ip_valid($inet, 0))
+          break;
+      }
+    }
+    if (empty($user_bas_err))
+      $dsas->config->ssh->user_bas = $user_bas;
+    else
+      $errors[] = [ "user_bas" => $user_bas_err];
+
+    $user_haut = htmlspecialchars(trim($data["ssh"]["user_haut"]));
+    $user_haut_err = "";
+    if (! empty($user_haut)) {
+      foreach (explode(",",$user_haut) as $inet) {
+        if (substr($inet,0,1) === "!")
+          $inet = substr($inet,1,strlen($inet)-1);
+        if ($user_haut_err = ip_valid($inet, 0))
+          break;
+      }
+    }
+    if (empty($user_haut_err))
+      $dsas->config->ssh->user_haut = $user_haut;
+    else
+      $errors[] = [ "user_haut" => $user_haut_err];
+    $dsas->config->radius->active = ($data["radius"]["active"] === "true" ? "true" : "false");
+    $radius_server = htmlspecialchars(trim($data["radius"]["server"]));
+    if (! empty($radius_server))
+      $radius_server_err = inet_valid($radius_server);
+    if (empty($radius_server_err))
+      $dsas->config->radius->server = $radius_server;
+    else
+      $errors[] = ["radius_server" => $radius_server_err];
+    $radius_secret = htmlspecialchars(trim($data["radius"]["secret"]));
+    # FIXME should we control the complexity of the radius secret ?
+    if ($radius_secret == trim($data["radius"]["secret"]))
+      $dsas->config->radius->secret = $radius_secret;
+    else
+      $errors[] = ["radius_secret" => "Illegal radius secret"]; // Avoid XSS at least
+    $radius_domain = htmlspecialchars(trim($data["radius"]["domain"]));
+    if (! empty($radius_domain))
+      $radius_domain_err = (preg_match("/^[a-zA-Z\d][a-zA-Z\d-]*$/", $radius_domain) ? "" : "The radius domain is invalid");
+    if (empty($radius_domain_err))
+      $dsas->config->radius->domain = $radius_domain;
+    else
+      $errors[] = ["radius_domain" => $radius_domain_err];
+    $dsas->config->syslog->active = ($data["syslog"]["active"] === "true" ? "true" : "false");
+    $dsas->config->ntp->active = ($data["ntp"]["active"] === "true" ? "true" : "false");
+
+    $syslog_server = htmlspecialchars(trim($data["syslog"]["server"]));
+    if (! empty($syslog_server))
+      $syslog_err = inet_valid($syslog_server);
+    if (empty($syslog_err))
+      $dsas->config->syslog->server = $syslog_server;
+    else
+      $errors[] = ["syslog_server" => $syslog_err];
+
+    foreach ($data["ntp"]["server"] as $server) {
+      if (!empty($pool_err = inet_valid($server)))
+        break;
+    }
+    if (empty($pool_err)) {
+      unset($dsas->config->ntp->server);
+      foreach ($data["ntp"]["server"] as $server)
+        // The ntp[0] is here just to avoid a level 9 PHPStan error
+        $dsas->config->ntp[0]->server[] = $server;
+    } else
+      $errors[] = ["ntp_pool" => $pool_err];
+
+    $dsas->config->antivirus->active = ($data["antivirus"]["active"] === "true" ? "true" : "false");
+    $antivirus_uri = htmlspecialchars(trim($data["antivirus"]["uri"]));
+    if (! empty($antivirus_uri))
+      $antivirus_err = uri_valid($antivirus_uri);
+    // Set ClamAV client UUID if empty
+    if (empty($dsas->config->antivirus->uuid))
+      $dsas->config->antivirus->uuid = sprintf("%04x%04x-%04x-%04x-%04x-%04x%04x%04x",
+        mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+        mt_rand(0, 0xffff), mt_rand(0, 0x0fff) | 0x4000, // 4 MSB contain version 4 number
+        mt_rand(0, 0x3fff) | 0x8000, // 2 MSB holds DCE1.1 variant
+        mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff));
+    if (empty($antivirus_err))
+      $dsas->config->antivirus->uri = $antivirus_uri;
+    else
+      $errors[] = ["antivirus_uri" => $antivirus_err];
+
+    $dsas->config->web->repo = ($data["web"]["repo"] === "true" ? "true" : "false");
+
+    $dsas->config->snmp->active = ($data["snmp"]["active"] === "true" ? "true" : "false");
+    $snmp_username = htmlspecialchars(trim($data["snmp"]["username"]));
+    if (($data["snmp"]["active"] === "true") && empty($snmp_username))
+      $errors[] = ["snmp_user" => "Empty SMNP Username"];
+    else if (preg_match('/[^A-Za-z0-9]/', $snmp_username))
+      $errors[] = ["snmp_user" => ["Username '{0}' is illegal", $snmp_username]];
+    else
+      $dsas->config->snmp->username = $snmp_username;
+
+    $snmp_password = htmlspecialchars($data["snmp"]["password"]);
+    if ($snmp_password != $data["snmp"]["password"])
+      $errors[] = ["snmp_pass" => "The SNMP password is illegal"];
+    else if ($snmp_password != str_replace("/\s+/", "", $snmp_password))
+      $errors[] = ["snmp_pass" => "The SNMP password can not contain white spaces"];
+    else if ($dsas->config->snmp->active == "true" && ! complexity_test($snmp_password))
+      $errors[] = ["snmp_pass" => "The SNMP password is insufficiently complex"];
+    else
+      $dsas->config->snmp->password = $snmp_password;
+    $snmp_encrypt = htmlspecialchars($data["snmp"]["encrypt"]);
+    if ($snmp_encrypt !== "MD5" && $snmp_encrypt !== "SHA"
+        && $snmp_encrypt !== "SHA256" && $snmp_encrypt !== "SHA512")
+      $errors[] = ["error" => "The SNMP authentication encryption is illegal"];
+    else
+      $dsas->config->snmp->encrypt = $snmp_encrypt;
+
+    $snmp_passpriv = htmlspecialchars($data["snmp"]["passpriv"]);
+    if ($snmp_passpriv != $data["snmp"]["passpriv"])
+      $errors[] = ["snmp_passpriv" => "The SNMP password is illegal"];
+    else if ($snmp_passpriv != str_replace("/\s+/", "", $snmp_passpriv))
+      $errors[] = ["snmp_passpriv" => "The SNMP password can not contain white spaces"];
+    else if ($dsas->config->snmp->active == "true" && ! complexity_test($snmp_passpriv))
+      $errors[] = ["snmp_passpriv" => "The SNMP password is insufficently complex"];
+    else
+      $dsas->config->snmp->passpriv = $snmp_passpriv;
+    $snmp_privencrypt = htmlspecialchars($data["snmp"]["privencrypt"]);
+    if ($snmp_privencrypt !== "DES" && $snmp_privencrypt !== "AES"
+        // These additional non-standard options require that net-snmp is compiled with
+        // the --enable-blumenthal-aes
+        // && $snmp_privencrypt !== "AES192" && $snmp_privencrypt !== "AES192C"
+        // && $snmp_privencrypt !== "AES256" && $snmp_privencrypt !== "AES256C"
+        )
+      $errors[] = ["error" => "The SNMP privacy encryption is illegal"];
+    else
+      $dsas->config->snmp->privencrypt = $snmp_privencrypt;
+  } catch (Exception $e) {
+     $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
+  }
+  if ($dsas !== false && $errors == [])
+    $dsas->asXml(_DSAS_XML);
+
+  return $errors;
+}
+
+/**
+ * Function to delete a certificate form the DSAS  configuration
+ *
+ * usage:
+ *   dsas_delete_cert($finger)
+ *
+ * @param string $finger
+ *
+ * @return array<int,mixed>
+ *    An array of the errors found in the configuration
+ */
+function dsas_delete_cert($finger) {
+  $errors = array();
+  try {
+    $dsas = simplexml_load_file(_DSAS_XML);
+    if (! $dsas)
+      throw new RuntimeException("Error loading XML file");
+
+    $certok = false;
+    $i = 0;
+    foreach ($dsas->certificates->certificate as $certificate) {
+      if ($certificate->type == "x509") {
+        if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $finger) {
+          $certok = true;
+          break;
+        }
+      } else if ($certificate->type == "pubkey") {
+        $pem = htmlspecialchars(trim($certificate->pem));
+        $pemnowrap = (string)preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pem);
+        $pemnowrap = (string)preg_replace('/\\s+/', '', $pemnowrap);
+        if (hash("sha256", base64_decode($pemnowrap)) == $finger) {
+          $certok = "true";
+          break;
+        }
+      } else {
+        $cert = parse_gpg(trim($certificate->pem));
+        if ($cert["fingerprint"]  == $finger) {
+          $certok = true;
+          break;
+        }
+      }
+      $i++;
+    }
+    if (! $certok)
+      $errors[] = [ "delete" => "The certificate doesn't exist"];
+    else {
+      foreach ($dsas->tasks->task as $task) {
+        foreach ($task->cert as $cert) {
+          if ($cert->fingerprint == $finger) {
+            $certok = false;
+            $errors[] = [ "delete" => ["The certificate is used by the task '{0}'", (string)$task->name]];
+          }
+        }
+      }
+      if ($certok)
+        unset($dsas->certificates->certificate[$i]);
+    }
+  } catch (Exception $e) {
+     $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
+  }
+  if ($dsas !== false && $errors == [])
+    $dsas->asXml(_DSAS_XML);
+
+  return $errors;
+}
+
+/**
+ * Function to delete a certificate form the DSAS  configuration
+ *
+ * usage:
+ *   dsas_upload_cert($type, $file, $mime)
+ *
+ * @param string $type
+ * @param array{error: int, size: int, tmp_name: string} $file
+ * @param string $mime
+ *
+ * @return array<int,mixed>
+ *    An array of the errors found in the configuration
+ */
+function dsas_upload_cert($type, $file, $mime) {
+  $errors = array();
+  try {
+    $dsas = simplexml_load_file(_DSAS_XML);
+    if (! $dsas)
+      throw new RuntimeException("Error loading XML file");
+
+    // PEM files are detected as text/plain
+    check_files($file, $mime);
+
+    $cert = htmlspecialchars((string)file_get_contents($file["tmp_name"]));
+    $cert = str_replace("\r", "", $cert);   // dos2unix
+    switch ($type) {
+      case "x509":
+        $parse = openssl_x509_parse($cert);
+        $finger = openssl_x509_fingerprint(trim($cert), "sha256");
+        if (! $parse)
+          throw new RuntimeException("The X509 file must be in PEM format");
+        foreach ($dsas->certificates->certificate as $certificate) {
+          if ($certificate->type == $type) {
+            if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $finger)
+              throw new RuntimeException("The X509 certificate already exists");
+          }
+        }
+        break;
+
+      case "pubkey":
+        $pubkeynowrap = preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $cert);
+        if (($cert === $pubkeynowrap) || empty($pubkeynowrap))
+          throw new RuntimeException("The public key must be in PEM format");
+        $pubkeynowrap = (string)preg_replace('/\\s+/', '', $pubkeynowrap);
+        $finger = hash("sha256", base64_decode($pubkeynowrap));
+        foreach ($dsas->certificates->certificate as $certificate) {
+          if ($certificate->type == "pubkey") {
+            $pem = htmlspecialchars(trim($certificate->pem));
+            $pemnowrap = (string)preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pem);
+            $pemnowrap = (string)preg_replace('/\\s+/', '', $pemnowrap);
+            if (hash("sha256", base64_decode($pemnowrap)) == $finger)
+              throw new RuntimeException("The public key already exists");
+          }
+        }
+        break;
+
+      case "gpg":
+        $parse = parse_gpg($cert);
+        if (! $parse)
+          throw new RuntimeException("The GPG file must be in PEM format" );
+
+        foreach ($dsas->certificates->certificate as $certificate) {
+          if ($certificate->type == "gpg") {
+            $_cert =  parse_gpg(trim($certificate->pem));
+            if ($_cert["fingerprint"] == $parse["fingerprint"])
+              throw new RuntimeException("The GPG certificate already exists");
+          }
+        }
+        break;
+
+      default:
+        throw new RuntimeException("Invalid certificate type");
+    }
+
+    $newcert = $dsas->certificates->addChild("certificate");
+    $newcert->type = $type;
+    $newcert->pem = trim($cert);
+    if ($type == "x509")
+      $newcert->authority = (empty($parse["extensions"]["authorityKeyIdentifier"]) ||
+        (!empty($parse["extensions"]["subjectKeyIdentifier"]) && str_contains($parse["extensions"]["authorityKeyIdentifier"],
+        $parse["extensions"]["subjectKeyIdentifier"])) ? "true" : "false");
+    else
+      $newcert->authority = "true";
+
+    $dsas->asXml(_DSAS_XML);
+  } catch (RuntimeException $e) {
+    $errors[] = [$type . "_upload" => $e->getMessage()];
+  }
+
+  return $errors;
+}
+
+
+/**
+ * Function to change position of certificates in DSAS configuration
+ *
+ * usage:
+ *   dsas_drag_cert($from_finger, $to_finger)
+ *
+ * @param string $from_finger
+ *   The SHA256 fingerprint of the certificate to move
+ * @param string $to_finger
+ *   The SHA256 fingerprint of the certificate destination
+ *
+ * @return array<int,mixed>
+ *    An array of the errors found in the configuration
+ */
+function dsas_drag_cert($from_finger, $to_finger) {
+  $errors = array();
+  $type = "x509";
+  try {
+    $dsas = simplexml_load_file(_DSAS_XML);
+    if (! $dsas)
+      throw new RuntimeException("Error loading XML file");
+
+    $from = -1;
+    $to = -1;
+    $i = 0;
+    foreach ($dsas->certificates->certificate as $certificate) {
+      if ($certificate->type == "x509") {
+        if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $from_finger) {
+          $from = $i;
+          $type = "x509";
+        }
+        if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $to_finger) {
+          $to = $i;
+        }
+      } else if ($certificate->type == "pubkey") {
+        $pem = htmlspecialchars(trim($certificate->pem));
+        $pemnowrap = (string)preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pem);
+        $pemnowrap = (string)preg_replace('/\\s+/', '', $pemnowrap);
+        if (hash("sha256", base64_decode($pemnowrap)) == $from_finger) {
+          $from = $i;
+          $type = "pubkey";
+        }
+        if (hash("sha256", base64_decode($pemnowrap)) == $to_finger) {
+          $to = $i;
+        }
+      } else {
+        $cert = parse_gpg(trim($certificate->pem));
+        if ($cert["fingerprint"]  == $from_finger) {
+          $from = $i;
+          $type = "gpg";
+        }
+        if ($cert["fingerprint"]  == $to_finger) {
+          $to = $i;
+        }
+      }
+      if ($from !== -1 && $to !== -1) break;
+      $i++;
+    }
+
+    if ($from == -1) {
+      $errors[] = ["error" => "The certificate drag from value is invalid"];
+    } else if ($to == -1) {
+      $errors[] = ["error" => "The certificate drag to value is invalid"];
+    } else {
+      $nt =  $dsas->certificates[0]->count();
+      if ($from !== $to && $from !== $to + 1) {
+        $cert = new SimpleXMLElement($dsas->certificates[0]->certificate[$from]->asXML());
+        $cert_to = $dsas->certificates[0]->certificate[$to];
+        unset($dsas->certificates->certificate[$from]);
+        simplexml_insert_after($cert, $cert_to);
+      }
+      $dsas->asXml(_DSAS_XML);
+    }
+   } catch (RuntimeException $e) {
+    $errors[] = [$type . "_upload" => $e->getMessage()];
+  }
+
+  return $errors;
+}
+
+/**
+ * Function to list all certificates available to the DSAS
+ *
+ * usage:
+ *   dsas_get_cert()
+ *
+ * @return array{array{dsas: array{x509: array<int,mixed>, pubkey: array<int,mixed>, gpg: array<int,mixed>}, ca: array<int,mixed>}}
+ */
+function dsas_get_cert() {
+  $dsas = simplexml_load_file(_DSAS_XML);
+  if (! $dsas)
+    throw new RuntimeException("Error loading XML file");
+
+  $cafile = dsas_ca_file();
+  if ($cafile)
+    $ca = parse_x509($cafile);
+  else
+    $ca = array();
+  $dsas_x509 = array();
+  $dsas_gpg = array();
+  $dsas_pubkey = array();
+  foreach ($dsas->certificates->certificate as $certificate) {
+    if ($certificate->type == "x509") {
+      $p = openssl_x509_parse(trim($certificate->pem));
+      if ($p !== false) {
+        $cert =  utf8ize($p);
+        $cert["pem"] = trim($certificate->pem[0]);
+        $cert["fingerprint"] = openssl_x509_fingerprint(trim($certificate->pem[0]), "sha256");
+        $cert["authority"] = trim($certificate->authority);
+        $dsas_x509[] = $cert;
+      }
+    } else if ($certificate->type == "gpg") {
+      $cert = utf8ize(parse_gpg($certificate->pem));
+      $cert["pem"] = trim($certificate->pem[0]);
+      $cert["authority"] = trim($certificate->authority);
+      $dsas_gpg[] = $cert;
+    } else if ($certificate->type == "pubkey") {
+      $cert = array();
+      $cert["pem"] = trim($certificate->pem[0]);
+      $cert["name"] = trim($certificate->name);
+      $cert["authority"] = trim($certificate->authority);
+      $pemnowrap = (string)preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', (string)$certificate->pem[0]);
+      $pemnowrap = (string)preg_replace('/\\s+/', '', $pemnowrap);
+      $cert["fingerprint"] = hash("sha256", base64_decode($pemnowrap));
+      $dsas_pubkey[] = $cert;
+    }
+  }
+
+  return [["dsas" => ["x509" => $dsas_x509, "pubkey" => $dsas_pubkey, "gpg" => $dsas_gpg], "ca" => $ca]];
+}
+
+/**
+ * Function to add a task to DSAS settings
+ *
+ * usage:
+ *   dsas_add_task($data)
+ *
+ * @param array{name: string, id: string, type: string,
+ *              run: string, directory: string, uri: string,
+ *              ca: array{name: string, fingerprint: string},
+ *              archs: array{array{arch: string, active: string}},
+ *              certs: array{array{name: string, fingerprint: string}}} $data
+ *
+ * @return array<int,mixed>
+ *    An array of the errors found in the configuration
+ */
+function dsas_add_task($data) {
+  $errors = array();
+  try {
+    $dsas = simplexml_load_file(_DSAS_XML);
+    if (! $dsas)
+      throw new RuntimeException("Error loading XML file");
+
+    $name = htmlspecialchars($data["name"]);
+    if ($name != $data["name"])
+      $errors[] = ["error" => "Illegal task name"];
+    if (trim($name) == "")
+      $errors[] = ["error" => "The name can not be empty"];
+    $id = $data["id"];
+    $directory = htmlspecialchars($data["directory"]);
+    if ($directory != $data["directory"])
+      $errors[] = ["error" => "Illegal directory name"];
+    if (trim($directory) == "")
+      $errors[] = ["error" => "The directory name can not be empty"];
+    $uri =  htmlspecialchars($data["uri"]);
+    if ($uri != $data["uri"])
+      $errors[] = ["error" => "Illegal uri"];
+    $type = $data["type"];
+    if ($type !== "rpm" && $type !== "repomd" && $type !== "deb" && $type !== "authenticode" &&
+        $type !== "openssl" && $type !== "gpg" && $type !== "liveupdate" && $type !== "cyberwatch" &&
+        $type != "jar" && $type !== "trend")
+      $errors[] = ["error" => "The task type is illegal"];
+    $run = $data["run"];
+    if ($run !== "never" && $run !== "quarterhourly" && $run !== "hourly" && $run !== "daily" && $run !== "weekly" && $run !== "monthly")
+      $errors[] = ["error" => "The period between execution of the task is illegal"];
+    $ca = $data["ca"];
+    $ca_finger = strtolower(trim($ca["fingerprint"]));
+    $ca_name = htmlspecialchars(trim($ca["name"]));
+    if ($ca_finger !== "" && $ca_finger !== "self") {
+      $ca_ok = false;
+      foreach ($dsas->certificates->certificate as $certificate) {
+        if ($certificate->type == "x509") {
+          if ($certificate->authority == "true") {
+            if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $ca_finger) {
+              $ca_ok = true;
+              break;
+            }
+          }
+        }
+      }
+      if (! $ca_ok)
+        $errors[] = ["error" => "Certificate authority not found"];
+    }
+
+    if ($type === "deb") {
+      foreach ($data["archs"] as $arch) {
+        switch ($arch["arch"]){
+          case "source":
+          case "all":
+          case "amd64":
+          case "arm64":
+          case "armel":
+          case "armhf":
+          case "i386":
+          case "mips64el":
+          case "mipsel":
+          case "ppc64el":
+          case "s390x":
+            // Architecture ok
+            if ($arch["active"] !== "true" && $arch["active"] !== "false") {
+              $errors[] = ["error" => "Invalid debian architecture"];
+              break 2;
+            }
+            break;
+          default:
+            $errors[] = ["error" => "Invalid debian architecture"];
+            break 2;
+        }
+      }
+    }
+
+    $certs = array();
+    $have_ca = false;
+    $have_pubkey = false;
+    $have_x509 = false;
+    foreach ($data["certs"] as $cert) {
+      $certok = false;
+      $certname = "";
+      foreach ($dsas->certificates->certificate as $certificate) {
+        if ($certificate->type == "x509") {
+          if (openssl_x509_fingerprint(trim($certificate->pem), "sha256") == $cert["fingerprint"]) {
+            if ($certificate->authority == "true") {
+              if ($have_ca && $type !== "liveupdate" && $type !== "trend") {
+                $errors[] = ["error" => ["The task type '{0}' only supports one root certificate", $type]];
+                break 2;
+              }
+              $have_ca = true;
+            }
+            if ($type === "rpm" || $type === "repomd" || $type === "deb" || $type === "gpg") {
+              $errors[] = ["error" => ["The task type '{0}' does not support {1} certificates", $type, "X509"]];
+              break 2;
+            }
+
+            if ($have_pubkey && ($type === "cyberwatch" || $type === "openssl")) {
+              $errors[] = ["error" => ["The task type '{0}' can not include both public keys and X509 certificates", $type]];
+              break 2;
+            }
+
+            $certok = true;
+            $have_x509 = true;
+            $x509_cert = openssl_x509_parse(trim($certificate->pem));
+            if ($x509_cert === false)
+              $certname ="";
+            else if ($x509_cert["subject"]["CN"])
+              $certname = $x509_cert["subject"]["CN"];
+            else if ($x509_cert["subject"]["OU"])
+              $certname = $x509_cert["subject"]["OU"];
+            else if ($x509_cert["subject"]["O"])
+              $certname = $x509_cert["subject"]["O"];
+            else if ($x509_cert["extensions"]["subjectKeyIdentifier"])
+              $certname = $x509_cert["extensions"]["subjectKeyIdentifier"];
+            else
+              $certname = "";
+            break;
+          }
+        }
+        if ($certificate->type == "gpg") {
+          $gpg_cert =  parse_gpg(trim($certificate->pem));
+          if ($gpg_cert["fingerprint"] == $cert["fingerprint"]) {
+            if ($type === "authenticode" || $type === "openssl" || $type === "liveupdate" || $type === "jar" || $type === "trend") {
+              $errors[] = ["error" => ["The task type '{0}' does not support {1} certificates", $type, "GPG"]];
+              break 2;
+            }
+            if ($type == "gpg" && $have_ca) {
+              $errors[] = ["error" => ["The task type '{0}' only supports one GPG certificate", $type]];
+              break 2;
+            }
+            $certname = $gpg_cert["uid"];
+            $certok = true;
+            $have_ca = true;
+            break;
+          }
+        }
+
+        if ($certificate->type == "pubkey") {
+          $pem = trim($certificate->pem[0]);
+          $pemnowrap = (string)preg_replace('/^-----BEGIN (?:[A-Z]+ )?PUBLIC KEY-----([A-Za-z0-9\\/\\+\\s=]+)-----END (?:[A-Z]+ )?PUBLIC KEY-----$/ms', '\\1', $pem);
+          $pemnowrap = (string)preg_replace('/\\s+/', '', $pemnowrap);
+          if (hash("sha256", base64_decode($pemnowrap)) == $cert["fingerprint"]) {
+            if ($type === "rpm" || $type === "repomd" || $type === "deb" ||
+                $type === "authenticode" || $type === "gpg" || $type === "liveupdate" ||
+                $type === "jar" || $type === "trend") {
+              $errors[] = ["error" => ["The task type '{0}' does not support public keys", $type]];
+              break 2;
+            }
+            if ($have_x509) {
+              $errors[] = ["error" => ["The task type '{0}' can not include both public keys and X509 certificates", $type]];
+              break 2;
+            }
+            if ($have_pubkey) {
+              $errors[] = ["error" => ["The task type '{0}' can only support a single public key", $type]];
+              break 2;
+            }
+
+            $certname = $certificate->name;
+            $certok = true;
+            $have_pubkey = true;
+            break;
+          }
+        }
+      }
+
+      if (! $certok) {
+        $cafile = dsas_ca_file();
+        if ($cafile) {
+          // The format of an x509 can be quite arbitrary. So only
+          // declare the bits I need here
+          /** @var array{array{fingerprint: string, pem: string,
+            * subject: array{CN: string, OU: string, O: string},
+            * extensions: array{subjectKeyIdentifier: string}}} $ca */
+          $ca = parse_x509($cafile);
+          foreach ($ca as $x509_cert) {
+            if ($x509_cert["fingerprint"] == $cert["fingerprint"]) {
+              if ($type === "rpm" || $type === "repomd" || $type === "deb" || $type === "gpg") {
+                $errors[] = ["error" => ["The task type '{0}' does not support {1} certificates", $type, "X509"]];
+                break 2;
+              }
+              if ($have_ca) {
+                $errors[] = ["error" => ["The task type '{0}' only supports one root certificate", $type]];
+                break 2;
+              }
+              if ($have_pubkey) {
+                $errors[] = ["error" => ["The task type '{0}' can not include both public keys and X509 certificates", $type]];
+                break 2;
+              }
+              $have_ca = true;
+              $certok = true;
+
+              if ($x509_cert["subject"]["CN"])
+                $certname = $x509_cert["subject"]["CN"];
+              else if ($x509_cert["subject"]["OU"])
+                $certname = $x509_cert["subject"]["OU"];
+              else if ($x509_cert["subject"]["O"])
+                $certname = $x509_cert["subject"]["O"];
+              else if ($x509_cert["extensions"]["subjectKeyIdentifier"])
+                $certname = $x509_cert["extensions"]["subjectKeyIdentifier"];
+              else
+                $certname = "";
+              break;
+            }
+          }
+        }
+      }
+
+      if ($certok)
+        $certs[] = ["name" => $certname, "fingerprint" => $cert["fingerprint"]];
+      else
+        $errors[] = ["error" => "One of the certificates does not exist"];
+    }
+
+    if ($type === "rpm" || $type === "repomd" || $type === "gpg") {
+if (count($certs) != 1)
+        $errors[] = ["error" => ["The task type '{0}' requires a GPG certificate", $type]];
+    }
+
+    if ($type === "openssl" || $type === "cyberwatch" || $type == "deb") {
+if (count($certs) < 1)
+        $errors[] = ["error" => ["The task type '{0}' at least one certificate or public key", $type]];
+    }
+
+    if ($errors == []) {
+      $nt = 0;
+      foreach ($dsas->tasks->task as $task) {
+        if ($task->id == $id) {
+          if ($directory != $task->directory) {
+            dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "haut", "mv", "-n", _DSAS_HAUT . "/" . $task->directory, _DSAS_HAUT . "/" . $directory]);
+            dsas_exec(["sudo", "sudo", "-u", "haut", "ssh", "tc@" . interco_haut(), "sudo", "sudo", "-u", "verif", "mv", "-n", _DSAS_BAS . "/" . $task->directory, _DSAS_BAS . "/" . $directory]);
+            dsas_exec(["sudo", "sudo", "-u", "haut", "mv", "-n", _DSAS_HAUT . "/" . $task->directory, _DSAS_HAUT . "/" . $directory]);
+            dsas_exec(["sudo", "sudo", "-u", "verif", "mv", "-n", _DSAS_BAS . "/" . $task->directory, _DSAS_BAS . "/" . $directory]);
+          }
+          while ($dsas->tasks[0]->task[$nt]->cert[0])
+            unset($dsas->tasks[0]->task[$nt]->cert[0]);
+          unset($dsas->tasks[0]->task[$nt]->archs[0]);
+          break;
+        }
+        $nt++;
+      }
+      if ($nt === $dsas->tasks->task->count()) {
+        $task = $dsas->tasks[0]->addChild("task");
+        $task->id[0] = dsasid();
+        $task->name[0] = $name;
+      }
+      $dsas->tasks[0]->task[$nt]->directory[0] = $directory;
+      $dsas->tasks[0]->task[$nt]->uri[0] =  $uri;
+      $dsas->tasks[0]->task[$nt]->type[0] = $type;
+      $dsas->tasks[0]->task[$nt]->run[0] = $run;
+      $dsas->tasks[0]->task[$nt]->ca[0]->fingerprint[0] = $ca_finger;
+      $dsas->tasks[0]->task[$nt]->ca[0]->name[0] = $ca_name;
+      foreach ($certs as $cert) {
+        $newcert = $dsas->tasks[0]->task[$nt]->addChild("cert");
+        $newcert->name[0] = $cert["name"];
+        $newcert->fingerprint[0] = $cert["fingerprint"];
+      }
+      if ($type === "deb") {
+        $newarch = $dsas->tasks[0]->task[$nt]->addChild("archs");
+        foreach ($data["archs"] as $arch) {
+          switch ($arch["arch"]){
+            case "source":
+            case "all":
+            case "amd64":
+            case "arm64":
+            case "armel":
+            case "armhf":
+            case "i386":
+            case "mips64el":
+            case "mipsel":
+            case "ppc64el":
+            case "s390x":
+            // Architecture ok
+              if ($arch["active"] == "true")
+                $newarch->addChild("arch", $arch["arch"]);
+            break;
+          }
+        }
+      }
+    }
+  } catch (Exception $e) {
+     $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
+  }
+  if ($dsas !== false && $errors == [])
+    $dsas->asXml(_DSAS_XML);
+
+  return $errors;
 }
 
 ?>

@@ -27,17 +27,15 @@ let dragto = NaN;
 function dsasRealUserPasswd(user) {
     const passwd = document.getElementById("UserPassword").value;
     const formData = new FormData();
-    formData.append("op", "passwd");
-    formData.append("data", JSON.stringify({ username: user, passwd }));
-    fetch("api/dsas-users.php", { method: "POST", body: formData }).then((response) => {
-        if (response.ok) { return response.text(); }
+    formData.append("passwd", passwd);
+    fetch("api/v2/users/passwd/" + user, { method: "POST", body: formData }).then((response) => {
+        if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
-    }).then((text) => {
-        try {
-            const errors = JSON.parse(text);
-            modalErrors(errors);
-        } catch (e) {
-        // Its text => here always just "Ok". Do nothing
+    }).then((json) => {
+        if (Object.prototype.hasOwnProperty.call(json, "retval")) {
+            // Do nothing;
+        } else {
+            modalErrors(json);
         }
     }).catch((error) => {
         if (!failLoggedin(error)) { modalMessage(_("Error during password change : {0}", (error.message ? error.message : error))); }
@@ -66,19 +64,14 @@ function dsasUserPasswd(user) {
 }
 
 function dsasRealUserDelete(user) {
-    const formData = new FormData();
-    formData.append("op", "delete");
-    formData.append("data", JSON.stringify({ username: user }));
-    fetch("api/dsas-users.php", { method: "POST", body: formData }).then((response) => {
-        if (response.ok) { return response.text(); }
+    fetch("api/v2/users/" + user, { method: "DELETE" }).then((response) => {
+        if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
-    }).then((text) => {
-        try {
-            const errors = JSON.parse(text);
-            modalErrors(errors);
-        } catch (e) {
-        // Its text => here always just "Ok".
+    }).then((json) => {
+        if (Object.prototype.hasOwnProperty.call(json, "retval")) {
             window.location.reload();
+        } else {
+            modalErrors(json);
         }
     }).catch((error) => {
         if (!failLoggedin(error)) { modalMessage(_("Error during user deletion : {0}", (error.message ? error.message : error))); }
@@ -91,19 +84,14 @@ function dsasUserDelete(user) {
 
 function dsasRealUserNew() {
     const username = document.getElementById("NewUser").value;
-    const formData = new FormData();
-    formData.append("op", "add");
-    formData.append("data", JSON.stringify({ username }));
-    fetch("api/dsas-users.php", { method: "POST", body: formData }).then((response) => {
-        if (response.ok) { return response.text(); }
+    fetch("api/v2/users/add/" + username, { method: "POST" }).then((response) => {
+        if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
-    }).then((text) => {
-        try {
-            const errors = JSON.parse(text);
-            modalErrors(errors);
-        } catch (e) {
-        // Its text => here always just "Ok".
+    }).then((json) => {
+        if (Object.prototype.hasOwnProperty.call(json, "retval")) {
             window.location.reload();
+        } else {
+            modalErrors(json);
         }
     }).catch((error) => {
         if (!failLoggedin(error)) { modalMessage(_("Error during user creation : {0}", (error.message ? error.message : error))); }
@@ -132,7 +120,7 @@ function dsasUserNew() {
 }
 
 function dsasChangeUsers() {
-    fetch("api/dsas-users.php").then((response) => {
+    fetch("api/v2/users").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((obj) => {
@@ -154,18 +142,15 @@ function dsasChangeUsers() {
         });
 
         const formData = new FormData();
-        formData.append("op", "modify");
         formData.append("data", JSON.stringify(data));
-        fetch("api/dsas-users.php", { method: "POST", body: formData }).then((response) => {
-            if (response.ok) { return response.text(); }
+        fetch("api/v2/users/modify", { method: "POST", body: formData }).then((response) => {
+            if (response.ok) { return response.json(); }
             return Promise.reject(new Error(response.statusText));
-        }).then((text) => {
-            try {
-                const errors = JSON.parse(text);
-                modalErrors(errors);
-            } catch (e) {
-            // Its text => here always just "Ok".
+        }).then((json) => {
+            if (Object.prototype.hasOwnProperty.call(json, "retval")) {
                 modalMessage(_("Changes successfully saved"));
+            } else {
+                modalErrors(json);
             }
         }).catch((error) => {
             if (!failLoggedin(error)) { modalMessage(_("Error during user creation : {0}", (error.message ? error.message : error))); }
@@ -178,19 +163,18 @@ function dsasChangeUsers() {
 function dsasUserDrop(from, to) {
     if (from !== to && from !== to + 1) {
         const formData = new FormData();
-        formData.append("op", "drag");
-        formData.append("data", JSON.stringify({ from, to }));
-        fetch("api/dsas-users.php", { method: "POST", body: formData }).then((response) => {
-            if (response.ok) { return response.text(); }
+        formData.append("from", from);
+        formData.append("to", to);
+        fetch("api/v2/users/drag", { method: "POST", body: formData }).then((response) => {
+            if (response.ok) { return response.json(); }
             return Promise.reject(new Error(response.statusText));
-        }).then((text) => {
-            try {
-                const errors = JSON.parse(text);
-                modalErrors(errors);
-            } catch (e) {
+        }).then((json) => {
+            if (Object.prototype.hasOwnProperty.call(json, "retval")) {
                 // Disable ESLINT here as circular refering behind the functions
                 /* eslint-disable-next-line no-use-before-define */
                 dsasDisplayUsers();
+            } else {
+                modalErrors(json);
             }
         }).catch((error) => {
             if (!failLoggedin(error)) {
@@ -201,7 +185,7 @@ function dsasUserDrop(from, to) {
 }
 
 export default function dsasDisplayUsers() {
-    fetch("api/dsas-users.php").then((response) => {
+    fetch("api/v2/users").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((obj) => {

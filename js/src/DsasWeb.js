@@ -21,12 +21,11 @@ import { modalMessage, modalErrors, modalAction } from "./DsasModal";
 import { failLoggedin, clearFeedback } from "./DsasUtil";
 
 function dsasRenewCertReal() {
-    fetch("api/dsas-web.php").then((response) => {
+    fetch("api/v2/web").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then(() => {
         const formData = new FormData();
-        formData.append("op", "renew");
         ["countryName", "stateOrProvinceName", "localityName", "organizationName",
             "organizationalUnitName", "commonName", "emailAddress"].forEach((fld) => {
             formData.append(fld, document.getElementById(fld).value);
@@ -40,21 +39,19 @@ function dsasRenewCertReal() {
         }
         formData.append("validity", valid);
 
-        fetch("api/dsas-web.php", { method: "POST", body: formData }).then((response) => {
-            if (response.ok) { return response.text(); }
+        fetch("api/v2/web/renew", { method: "POST", body: formData }).then((response) => {
+            if (response.ok) { return response.json(); }
             return Promise.reject(new Error(response.statusText));
-        }).then((text) => {
-            try {
-                const errors = JSON.parse(text);
-                modalErrors(errors);
-                // Circular referencing between these function is deliberate
-                // eslint-disable-next-line no-use-before-define
-                dsasDisplayWeb("cert");
-            } catch (e) {
-            // Its text => here always just "Ok"
+        }).then((json) => {
+            if (Object.prototype.hasOwnProperty.call(json, "retval")) {
                 clearFeedback();
                 // eslint-disable-next-line no-use-before-define
                 modalMessage(_("Certificate successfully renewed"), () => { dsasDisplayWeb("cert"); }, true);
+            } else {
+                modalErrors(json);
+                // Circular referencing between these function is deliberate
+                // eslint-disable-next-line no-use-before-define
+                dsasDisplayWeb("cert");
             }
         });
     }).catch((error) => {
@@ -69,10 +66,9 @@ function dsasRenewCert() {
 function dsasUploadCrt() {
     const crt = document.getElementById("crtupload");
     const formData = new FormData();
-    formData.append("op", "upload");
     formData.append("file", crt[0].files[0]);
 
-    fetch("api/dsas-web.php", {
+    fetch("api/v2/web/upload", {
         method: "POST",
         body: formData,
     }).then((response) => {
@@ -94,7 +90,7 @@ function dsasUploadCrt() {
 }
 
 export default function dsasDisplayWeb(what = "all") {
-    fetch("api/dsas-web.php").then((response) => {
+    fetch("api/v2/web").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((web) => {

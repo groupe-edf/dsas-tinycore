@@ -33,7 +33,7 @@ function dsasChangeNet(what = "all", i = 0) {
         document.getElementById("iface_dns_domain" + i).disabled = chk;
         document.getElementById("iface_nameserver" + i).disabled = chk;
     } else {
-        fetch("api/dsas-net.php").then((response) => {
+        fetch("api/v2/net").then((response) => {
             if (response.ok) { return response.json(); }
             return Promise.reject(new Error(response.statusText));
         }).then((net) => {
@@ -54,20 +54,17 @@ function dsasChangeNet(what = "all", i = 0) {
             });
 
             const formData = new FormData();
-            formData.append("op", "all");
             formData.append("data", JSON.stringify(net));
-            fetch("api/dsas-net.php", { method: "POST", body: formData }).then((response) => {
-                if (response.ok) { return response.text(); }
+            fetch("api/v2/net", { method: "POST", body: formData }).then((response) => {
+                if (response.ok) { return response.json(); }
                 return Promise.reject(new Error(response.statusText));
-            }).then((text) => {
-                try {
-                    const errors = JSON.parse(text);
-                    modalErrors(errors, true);
-                } catch (e) {
-                    // Its text => here always just "Ok"
+            }).then((json) => {
+                if (Object.prototype.hasOwnProperty.call(json, "retval")) {
                     clearFeedback();
                     /* eslint-disable-next-line no-use-before-define */
                     modalMessage(_("Changes successfully saved"), () => { dsasDisplayNet("ifaces"); }, true);
+                } else {
+                    modalErrors(json, true);
                 }
             }).catch((error) => {
                 modalMessage(_("Error while loading the page : {0}", (error.message ? error.message : error)));
@@ -79,7 +76,7 @@ function dsasChangeNet(what = "all", i = 0) {
 }
 
 export default function dsasDisplayNet(what = "all") {
-    fetch("api/dsas-net.php").then((response) => {
+    fetch("api/v2/net").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((net) => {

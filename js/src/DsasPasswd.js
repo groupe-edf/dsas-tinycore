@@ -25,17 +25,15 @@ function dsasChangePasswd() {
     const passwd = document.getElementById("inp_pass").value;
     const formData = new FormData();
     formData.append("data", JSON.stringify({ username: user, passwd }));
-    fetch("api/dsas-passwd.php", { method: "POST", body: formData }).then((response) => {
-        if (response.ok) { return response.text(); }
+    fetch("api/v2/passwd", { method: "POST", body: formData }).then((response) => {
+        if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
-    }).then((text) => {
-        try {
-            const errors = JSON.parse(text);
-            modalErrors(errors);
-        } catch (e) {
-        // Its text => here always just "Ok".
+    }).then((json) => {
+        if (Object.prototype.hasOwnProperty.call(json, "retval")) {
             clearFeedback();
             modalMessage(_("Password successfully changed"));
+        } else {
+            modalErrors(json);
         }
     }).catch((error) => {
         if (!failLoggedin(error)) { modalMessage(_("Error during password change : {0}", (error.message ? error.message : error))); }
@@ -44,13 +42,13 @@ function dsasChangePasswd() {
 
 function dsasLogout() {
     // No error checking because, only possible error is that already logged out
-    fetch("api/logout.php").then(() => {
+    fetch("api/v2/logout").then(() => {
         window.location.href = "login.html";
     }).catch(() => { window.location.href = "login.html"; });
 }
 
 export default function dsasDisplayPasswd() {
-    fetch("api/dsas-passwd.php").then((response) => {
+    fetch("api/v2/passwd").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((obj) => {

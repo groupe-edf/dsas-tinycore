@@ -83,7 +83,7 @@ function machineStatus(name, obj) {
 
 function dsasRefreshLogs(all = false) {
     // Only get the lines that have changed in the most recent log"
-    const uri = new URL("api/dsas-verif-logs.php", dsasOrigin());
+    const uri = new URL("api/v2/logs", dsasOrigin());
     uri.search = new URLSearchParams({ REFRESH_LEN: statusLogs.logs[0].length });
 
     fetch(uri).then((response) => {
@@ -105,7 +105,7 @@ function dsasRefreshLogs(all = false) {
 }
 
 function dsasStatus() {
-    fetch("api/dsas-status.php").then((response) => {
+    fetch("api/v2/status").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((obj) => {
@@ -167,7 +167,7 @@ function dsasToggleLogs() {
 }
 
 function dsasDisplayLogs() {
-    fetch("api/dsas-verif-logs.php").then((response) => {
+    fetch("api/v2/logs").then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((logs) => {

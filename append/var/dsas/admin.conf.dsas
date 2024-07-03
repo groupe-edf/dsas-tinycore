@@ -1,10 +1,11 @@
 server.document-root="/usr/local/share/www/"
 server.errorlog="/home/dsas/log/web_error.log"
 accesslog.filename = "/home/dsas/log/web_access.log"
-server.modules += ( "mod_openssl", "mod_fastcgi", "mod_accesslog" )
+server.modules += ( "mod_openssl", "mod_fastcgi", "mod_accesslog", "mod_rewrite" )
 server.port=5000
 ssl.engine="enable"
 ssl.pemfile="/var/dsas/dsas.pem"
+url.rewrite-once = ( "/api/v2/(.*)$" => "/api/v2.php/$1" )
 index-file.names=("index.html")
 mimetype.assign = (".html" => "text/html",
                    ".js" => "application/javascript",
