@@ -545,23 +545,24 @@ EOF
          fi
        done
 
-       # Find Packages and Sources files to use
+       # Find Packages and Sources files to use. Explicit path to dirname so as
+       # busybox version not used
        packages=""
        while IFS= read -r -d '' _d; do
          # Only download files if desired architecture 
          [[ "$archs" =~ ${_d##*-} ]] || continue       
          [ -z "$packages" ] || packages="$packages "
-         [ -f "$_d/Packages" ] && packages="${packages}$_d/Packages" && continue
-         [ -f "$_d/Packages.gz" ] && packages="${packages}$_d/Packages.gz" && continue
-         [ -f "$_d/Packages.xz" ] && packages="${packages}$_d/Packages.xz"
-       done < <(find "$DSAS_HAUT/$dir" -name "Packages*" -print0 | xargs -0 dirname -z  | uniq -z)
+         $as_haut [ -f "$_d/Packages" ] && packages="${packages}$_d/Packages" && continue
+         $as_haut [ -f "$_d/Packages.gz" ] && packages="${packages}$_d/Packages.gz" && continue
+         $as_haut [ -f "$_d/Packages.xz" ] && packages="${packages}$_d/Packages.xz"
+       done < <($as_haut find "$DSAS_HAUT/$dir" -name "Packages*" -print0 | xargs -0 /usr/local/bin/dirname -z  | uniq -z)
        if [[ "$archs" =~ "source" ]]; then
          while IFS= read -r -d '' _d; do  
            [ -z "$packages" ] || packages="$packages "
-           [ -f "$_d/Sources" ] && packages="${packages}$_d/Sources" && continue
-           [ -f "$_d/Sources.gz" ] && packages="${packages}$_d/Sources.gz" && continue
-           [ -f "$_d/Sources.xz" ] && packages="${packages}$_d/Sources.xz"
-         done < <(find "$DSAS_HAUT/$dir" -name "Sources*" -print0 | xargs -0 dirname -z  | uniq -z)
+           $as_haut [ -f "$_d/Sources" ] && packages="${packages}$_d/Sources" && continue
+           $as_haut [ -f "$_d/Sources.gz" ] && packages="${packages}$_d/Sources.gz" && continue
+           $as_haut [ -f "$_d/Sources.xz" ] && packages="${packages}$_d/Sources.xz"
+         done < <($as_haut find "$DSAS_HAUT/$dir" -name "Sources*" -print0 | xargs -0 /usr/local/bin/dirname -z  | uniq -z)
        fi
 
        # For each file Package, and maybe Source, download the listed files 
@@ -571,7 +572,10 @@ EOF
          _file=""
          _hash_md5=""
          _hash_sha256=""
-         $as_haut zcat "$package" | while read -r line; do
+         _cmd="cat"
+         [[ "$package" = *.gz ]] && _cmd="zcat"
+         [[ "$package" = *.xz ]] && _cmd="xzcat"
+         $as_haut $_cmd "$package" | while read -r line; do
            # Use sed to strip leading and trailing space, as can't used xargs due to possible
            # illegal characters like single quotes in strings. 
            [[ "$line" =~ "Filename:" ]] && _file="$(echo "$line" | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue

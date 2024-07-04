@@ -131,8 +131,8 @@ if [ "$clamav" = "1" ]; then
   _start=$(date +%s)
   1>&2 myecho "$0 : #### Tasks started - $(date --utc) ####"
   1>&2 myecho "$0: #### Tasks on machine HAUT ####"
-  sudo sudo -u haut ssh "tc@$INTERCO_HAUT" "$(dirname "$0")/getfiles" $opts
-  [ $? -eq 0 ] && sudo sudo -u haut ssh "tc@$INTERCO_HAUT" sudo sudo -u verif "$(dirname "$0")/checkfiles" $opts
+  sudo sudo -u haut ssh "tc@$INTERCO_HAUT" PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin "$(dirname "$0")/getfiles" $opts
+  [ $? -eq 0 ] && sudo sudo -u haut ssh "tc@$INTERCO_HAUT" sudo sudo -u verif PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin "$(dirname "$0")/checkfiles" $opts
   [ $? -eq 0 ] && 1>&2 myecho "$0: #### Tasks on machine BAS ####"
   [ $? -eq 0 ] && "$(dirname "$0")/getfiles" $opts
   [ $? -eq 0 ] && sudo sudo -u verif "$(dirname "$0")/checkfiles" $opts -o $logfile

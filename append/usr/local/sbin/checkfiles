@@ -1099,6 +1099,29 @@ EOF
     fi
   done < "$DSAS_HAUT/$dir/Release"
 
+  # Find Packages and Sources files to use
+  packages=""
+  while IFS= read -r -d '' _d; do
+    # Only download files if desired architecture
+    [[ "$archs" =~ ${_d##*-} ]] || continue
+    [ -z "$packages" ] || packages="$packages "
+    [ -f "$_d/Packages" ] && packages="${packages}$_d/Packages" && continue
+    [ -f "$_d/Packages.gz" ] && packages="${packages}$_d/Packages.gz" && continue
+    [ -f "$_d/Packages.xz" ] && packages="${packages}$_d/Packages.xz"
+  done < <(find "$DSAS_BAS/$dir" -name "Packages*" -print0 | xargs -0 /usr/local/bin/dirname -z  | uniq -z)
+  if [[ "$archs" =~ "source" ]]; then
+    while IFS= read -r -d '' _d; do
+      [ -z "$packages" ] || packages="$packages "
+      [ -f "$_d/Sources" ] && packages="${packages}$_d/Sources" && continue
+      [ -f "$_d/Sources.gz" ] && packages="${packages}$_d/Sources.gz" && continue
+      [ -f "$_d/Sources.xz" ] && packages="${packages}$_d/Sources.xz"
+    done < <(find "$DSAS_BAS/$dir" -name "Sources*" -print0 | xargs -0 /usr/local/bin/dirname -z  | uniq -z)
+  fi
+
+  # For each file Package, and maybe Source, download the listed files
+  # into the pool directory
+
+
   # For each file Packages.gz, and maybe Sources.gz, download the listed files 
   # into the pool directory
   packages=$(find "$DSAS_BAS/$dir" -name "Packages.gz")
@@ -1107,7 +1130,10 @@ EOF
     _file=""
     _hash_md5=""
     _hash_sha256=""
-    zcat "$package" | while read -r line; do
+    _cmd="cat"
+    [[ "$package" = *.gz ]] && _cmd="zcat"
+    [[ "$package" = *.xz ]] && _cmd="xzcat"
+    $_cmd "$package" | while read -r line; do
       # Use sed rather than xargs to strip leading/trailing whitespace as strings might
       # contain quotes and other special characters
       [[ "$line" =~ "Filename:" ]] && _file="$(echo "$line" | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
