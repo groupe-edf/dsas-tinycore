@@ -1,10 +1,9 @@
 _pkg=freeradius
-_version=3.2.3
-_uri=https://github.com/FreeRADIUS/freeradius-server/archive/release_3_2_3.tar.gz
-_src=freeradius_3_2_3.tar.gz
+_version=3.2.5
+_uri=https://github.com/FreeRADIUS/freeradius-server/releases/download/release_3_2_5/freeradius-server-3.2.5.tar.gz
+_pkg_path=freeradius-server-3.2.5
 _dep="libtalloc openssl gcc_libs"
 _build_dep="compiletc coreutils libtalloc openssl-dev"
-_pkg_path=freeradius-server-release_3_2_3
 _conf_cmd="setarch linux$arch ./configure"
 _make_cmd="make"
 _install_cmd="make install R=" 
