@@ -1,9 +1,9 @@
 _pkg=openssl
-_version=3.2.2
-_uri=https://www.openssl.org/source/openssl-3.2.2.tar.gz
+_version=3.3.2
+_uri=https://www.openssl.org/source/openssl-3.3.2.tar.gz
 _dep=""
 _build_dep="compiletc perl5"
-_pkg_path=openssl-3.2.2
+_pkg_path=openssl-3.3.2
 _conf_cmd="setarch linux$arch ./config --libdir=/usr/local/lib --openssldir=/usr/local/etc/ssl"
 _make_cmd="make"
 _install_cmd="make install DESTDIR="
