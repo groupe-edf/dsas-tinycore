@@ -1,0 +1,10 @@
+_pkg=libpsl
+_version=0.21.5
+_uri=https://github.com/rockdaboot/libpsl/releases/download/0.21.5/libpsl-0.21.5.tar.gz
+_build_dep="compiletc libidn2-dev python3.9"
+_dep="libidn2"
+_pkg_path=libpsl-0.21.5
+_conf_cmd="setarch linux$arch ./configure"
+_make_cmd="make"
+_install_cmd="make install DESTDIR=" 
+_pkgs='main{/usr/local/bin,/usr/local/lib/*.so*};dev{/usr/local/lib/*.a,/usr/local/lib/*.la,/usr/local/lib/pkgconfig,/usr/local/include};doc{/usr/local/share}'
