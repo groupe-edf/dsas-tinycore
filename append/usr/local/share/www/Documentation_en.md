@@ -1506,8 +1506,8 @@ Software impacted by this risk
 
 | software      | version    | comment                                                                        |
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [3.2.1](https://www.openssl.org/source/openssl-3.2.1.tar.gz) | Only the functionality used by ssh impacted |
-| openssh | [9.7p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.7p1.tar.gz) | ssh and sftp used |
+| openssl | [3.3.2](https://www.openssl.org/source/openssl-3.3.2.tar.gz) | Only the functionality used by ssh impacted |
+| openssh | [9.9p1](https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.9p1.tar.gz) | ssh and sftp used |
 
 ### Risk: Attack on signature verification
 
@@ -1520,12 +1520,12 @@ Software impacted by this risk
 
 | software | version | comment |
 | -------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [3.2.1](https://www.openssl.org/source/openssl-3.2.1.tar.gz) | Used for authenticode, LiveUpdate and OpenSSL verification |
+| openssl | [3.3.2](https://www.openssl.org/source/openssl-3.3.2.tar.gz) | Used for authenticode, LiveUpdate and OpenSSL verification |
 | gnupg | [2.4.5](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.4.5.tar.bz2) | Used for RPM, DEB and GPG verification |
 | libgcrypt | [1.10.3](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.3.tar.bz2) | Used for RPM, DEB and GPG verification |
 | rpm | [4.18.1](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.18.x/rpm-4.18.1.tar.bz2) | Used for RPM checking |
-| osslsigncode | [2.8.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.8/osslsigncode-2.8.tar.gz) | Used for authenticode verification |
-| clamav | [1.3.1](https://www.clamav.net/downloads/production/clamav-1.3.1.tar.gz) | Used for antivirus tests |
+| osslsigncode | [2.9.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.9/osslsigncode-2.9.tar.gz) | Used for authenticode verification |
+| clamav | [1.4.1](https://www.clamav.net/downloads/production/clamav-1.4.1.tar.gz) | Used for antivirus tests |
 
 ### Risque : Elevation of privileges
 
@@ -1552,7 +1552,7 @@ Software impacted by this risk
 
 | software | version | comment |
 | ------------- | ---------- | ------------------------------------------------------------------------------ |
-| openssl | [3.2.1](https://www.openssl.org/source/openssl-3.2.1.tar.gz) | only the functionality used by ssh impacted |
+| openssl | [3.3.2](https://www.openssl.org/source/openssl-3.3.2.tar.gz) | only the functionality used by ssh impacted |
 | lftp    | [4.9.2](https://lftp.yar.ru/ftp/lftp-4.9.2.tar.bz2) | Used for http, https, ftp, ftps, sftp |
 
 ### Risk: Attack against DSAS administrator authentication
