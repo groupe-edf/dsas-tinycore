@@ -1,7 +1,7 @@
 Log of the principal changes to the DSAS
 
 Version 3.1.1 (13 Jan 2025)
-- ??
+- Update busybox (1.36.1 -> 1.37.0)
 
 Version 3.1.0 (02 Oct 2024)
 - Update libpam-radius-auth to version 3.0.0 (CVE-2024-3596)
