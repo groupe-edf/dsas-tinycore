@@ -1,9 +1,9 @@
 _pkg=npth
-_version=1.7
-_uri=https://www.gnupg.org/ftp/gcrypt/npth/npth-1.7.tar.bz2
+_version=1.8
+_uri=https://www.gnupg.org/ftp/gcrypt/npth/npth-1.8.tar.bz2
 _build_dep="compiletc coreutils"
 _dep=""
-_pkg_path=npth-1.7
+_pkg_path=npth-1.8
 _conf_cmd="setarch linux$arch ./configure"
 _make_cmd="make"
 _install_cmd="make install DESTDIR=" 
