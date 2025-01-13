@@ -1521,8 +1521,8 @@ Software impacted by this risk
 | software | version | comment |
 | -------------- | ---------- | ------------------------------------------------------------------------------ |
 | openssl | [3.3.2](https://www.openssl.org/source/openssl-3.3.2.tar.gz) | Used for authenticode, LiveUpdate and OpenSSL verification |
-| gnupg | [2.4.5](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.4.5.tar.bz2) | Used for RPM, DEB and GPG verification |
-| libgcrypt | [1.10.3](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.3.tar.bz2) | Used for RPM, DEB and GPG verification |
+| gnupg | [2.4.7](https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.4.7.tar.bz2) | Used for RPM, DEB and GPG verification |
+| libgcrypt | [1.11.0](https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2) | Used for RPM, DEB and GPG verification |
 | rpm | [4.18.1](https://ftp.osuosl.org/pub/rpm/releases/rpm-4.18.x/rpm-4.18.1.tar.bz2) | Used for RPM checking |
 | osslsigncode | [2.9.0](https://github.com/mtrojnar/osslsigncode/releases/download/2.9/osslsigncode-2.9.tar.gz) | Used for authenticode verification |
 | clamav | [1.4.1](https://www.clamav.net/downloads/production/clamav-1.4.1.tar.gz) | Used for antivirus tests |

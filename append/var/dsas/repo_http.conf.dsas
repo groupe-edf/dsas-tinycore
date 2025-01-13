@@ -1,0 +1,8 @@
+server.document-root="/home/dsas/bas/"
+server.modules += ( "mod_setenv" )
+server.port=80
+server.username="bas"
+server.groupname="bas"
+dir-listing.activate="enable"
+setenv.add-response-header += ("Cache-Control" => "must-revalidate")
+mimetype.assign = ("" => "application/octet-stream")

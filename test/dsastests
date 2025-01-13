@@ -1030,20 +1030,42 @@ try {
           $GLOBALS["driver"]->findElement(WebDriverBy::id("repo"))->click();
         save();
         apply();
-        // Check if repo is running 
-        exec("sudo pgrep -f 'repo.conf'", $data, $retval); 
+        // Check if repo is running
+        exec("netstat -nat 2> /dev/null | grep -q ':443'", $data, $retval);
         return ($retval == 0);
       }, true);
 
-    // Deactivate repository and check no host on port 443 exists
+    // Deactivate HTTP repository and check no host on port 443 exists
     test("Deactivation of HTTPS repository", function () {
         if ($GLOBALS["driver"]->findElement(WebDriverBy::id("repo"))->isSelected())
           $GLOBALS["driver"]->findElement(WebDriverBy::id("repo"))->click();
         save();
         apply();
-        // Check if repo is running 
-        exec("sudo pgrep -f 'repo.conf'", $data, $retval); 
-        return ($retval != 0);
+        // Check if repo is running
+        exec("netstat -nat 2> /dev/null | grep -qv ':443'", $data, $retval);
+        return ($retval == 0);
+      }, true);
+
+    // Activate repository and check no host on port 80 exists
+    test("Activation of HTTP repository", function () {
+        if (! $GLOBALS["driver"]->findElement(WebDriverBy::id("repo_http"))->isSelected())
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("repo_http"))->click();
+        save();
+        apply();
+        // Check if repo is running
+        exec("netstat -nat 2> /dev/null | grep -q ':80'", $data, $retval);
+        return ($retval == 0);
+      }, true);
+
+    // Deactivate repository and check no host on port 80 exists
+    test("Deactivation of HTTP repository", function () {
+        if ($GLOBALS["driver"]->findElement(WebDriverBy::id("repo_http"))->isSelected())
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("repo_http"))->click();
+        save();
+        apply();
+        // Check if repo is running
+        exec("netstat -nat 2> /dev/null | grep -qv ':80'", $data, $retval);
+        return ($retval == 0);
       }, true);
 
     // Retore service configuration

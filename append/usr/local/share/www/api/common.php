@@ -1050,7 +1050,7 @@ function dsas_net($data) {
  *                      syslog: array{active: string, server: string},
  *                      ntp: array{active: string, server: array{string}},
  *                      antivirus: array{active: string, uri: string},
- *                      web: array{repo: string},
+ *                      web: array{repo: string, repo_http: string},
  *                      snmp: array{active: string, username: string, password: string,
  *                                  encrypt: string, passpriv: string,
  *                                  privencrypt: string}} $data
@@ -1171,6 +1171,7 @@ function dsas_service($data) {
       $errors[] = ["antivirus_uri" => $antivirus_err];
 
     $dsas->config->web->repo = ($data["web"]["repo"] === "true" ? "true" : "false");
+    $dsas->config->web->repo_http = ($data["web"]["repo_http"] === "true" ? "true" : "false");
 
     $dsas->config->snmp->active = ($data["snmp"]["active"] === "true" ? "true" : "false");
     $snmp_username = htmlspecialchars(trim($data["snmp"]["username"]));

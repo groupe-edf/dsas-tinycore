@@ -194,7 +194,7 @@ try {
           *            syslog: array{active: string, server: string},
           *            ntp: array{active: string, server: array{string}},
           *            antivirus: array{active: string, uri: string},
-          *            web: array{repo: string},
+          *            web: array{repo: string, repo_http: string},
           *            snmp: array{active: string, username: string, password: string,
                                    encrypt: string, passpriv: string,
                                    privencrypt: string}} $data */
@@ -749,6 +749,8 @@ try {
           // Ensure that the JSON includes the radius domain even if the xml doesn't
           if (! isset($dsas->config->radius->domain))
             $dsas->config->radius->domain = "";
+          if (! isset($dsas->config->web->repo_http))
+            $dsas->config->web->repo_http = false;
           echo json_encode($dsas->config);
         }
         break;

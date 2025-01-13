@@ -797,8 +797,14 @@ stop_sshd(){
 
 start_repo(){
   repo="$(xmllint --xpath 'string(dsas/config/web/repo)' "$VAR/dsas_conf.xml")"
-  if [ "$repo" != "true" ]; then return 0; fi
-  cp "$VAR/repo.conf.dsas" "$VAR/repo.conf"
+  repo_http="$(xmllint --xpath 'string(dsas/config/web/repo_http)' "$VAR/dsas_conf.xml")"
+  if [ "$repo" != "true" ] && [ "$repo_http" != "true" ]; then return 0; fi
+  if [ "$repo" = "true" ]; then
+      [ "$repo_http" == "true" ] && cp "$VAR/repo_both.conf.dsas" "$VAR/repo.conf"
+      [ "$repo_http" == "true" ] || cp "$VAR/repo.conf.dsas" "$VAR/repo.conf"
+  else
+      cp "$VAR/repo_http.conf.dsas" "$VAR/repo.conf"
+  fi
   chown root:repo $VAR/repo.conf $VAR/repo.conf.dsas
   chmod 640 $VAR/repo.conf $VAR/repo.conf.dsas
   NETDEVICES=$(getnetdevices)
@@ -806,6 +812,7 @@ start_repo(){
   ip=$(ifconfig "$ETH0" | sed -rn "2s/[^:]*:([.[:digit:]]*).*/\1/p")
   echo "Binding repo to ${GREEN}$ETH0${NORMAL} and address ${GREEN}$ip${NORMAL}."
   echo "server.bind = \"$ip"\" >> $VAR/repo.conf
+  [ "$repo" = "true" ] && [ "$repo_http" = "true" ] && sed -i -e "s/<REPLACEME>/$ip/" $VAR/repo.conf
   echo "Starting repository web server"
   # Start as root to allow use of port 443. But after change to user bas.repo
   # via options in repo.conf

@@ -75,6 +75,7 @@ function dsasChangeService(what) {
             serv.syslog.server = document.getElementById("syslog_server").value;
             serv.ntp.active = (document.getElementById("ntp").checked ? "true" : "false");
             serv.web.repo = (document.getElementById("repo").checked ? "true" : "false");
+            serv.web.repo_http = (document.getElementById("repo_http").checked ? "true" : "false");
 
             serv.snmp.active = (document.getElementById("snmp").checked ? "true" : "false");
             serv.snmp.username = document.getElementById("snmp_user").value;
@@ -193,6 +194,7 @@ export default function dsasDisplayService(what = "all") {
         }
         if (what === "repo" || what === "all") {
             document.getElementById("repo").checked = (serv.web.repo === "true");
+            document.getElementById("repo_http").checked = (serv.web.repo_http === "true");
         }
         if (what === "snmp" || what === "all") {
             document.getElementById("snmp").checked = (serv.snmp.active === "true");
@@ -214,6 +216,7 @@ export default function dsasDisplayService(what = "all") {
             document.getElementById("ntp").addEventListener("change", () => { dsasChangeService("ntp"); });
             document.getElementById("antivirus").addEventListener("change", () => { dsasChangeService("antivirus"); });
             document.getElementById("repo").addEventListener("change", () => { dsasChangeService("repo"); });
+            document.getElementById("repo_http").addEventListener("change", () => { dsasChangeService("repo"); });
             // This has a test as the radius code is deactivate in the html. Simply uncommenting
             // the html code shoudld activate this code if needed
             if (document.getElementById("radius")) {
