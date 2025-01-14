@@ -937,6 +937,29 @@ realclean)
   rm -fr "${work:?}/?*"
   exit 0
   ;;
+check_upgrade)
+  # Undocumented command to check if upgrade is really needed before doing it
+  [ -e $work ] || error work directory does not exist. run \'./make.sh work ...\'
+  msg Fetching md5.db.gz
+  $curl_cmd -o "$tcz_dir/md5.db.gz" "$tcz_url/md5.db.gz" || error failed to download md5.db.gz
+  gzip -f -d $tcz_dir/md5.db.gz
+  while IFS= read -r -d '' file; do  
+    _file=${file#"$tcz_dir"/}
+    pkg_file=$pkg_dir/${_file%.tcz}
+    pkg_file=${pkg_file%-dev}
+    pkg_file=${pkg_file%-doc}.pkg
+    [ -f "$pkg_file" ] && continue   # Locally built package
+    [ "$_file" = "dsastestfiles.tcz" ] && continue  # Locally built file
+    [ "$_file" = "dsasphpstan.tcz" ] && continue  # Locally built file
+    [ "$_file" = "dsas_js.tcz" ] && continue
+    [ "$_file" = "dsaswebdriver.tcz" ] && continue
+    [ "$_file" = "firefox.tcz" ] && continue
+    read -r hash < "$file.md5.txt"
+    if ! grep -q "^$hash  $_file" $tcz_dir/md5.db; then
+      msg Upgrade needed for file $_file
+    fi
+  done < <(find $tcz_dir -name "*.tcz" -print0)  
+  ;;
 upgrade)
   [ -e $work ] || error work directory does not exist. run \'./make.sh work ...\'
   msg Fetching md5.db.gz
