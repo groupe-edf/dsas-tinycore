@@ -1,5 +1,8 @@
 Log of the principal changes to the DSAS
 
+Version 3.1.2 (XX XXX XXX)
+ - ??
+
 Version 3.1.1 (14 Jan 2025)
 - Add possibility of HTTP repo server. Needed to avoid issues with self-signed certificates and use of repos
 - Update busybox (1.36.1 -> 1.37.0)
