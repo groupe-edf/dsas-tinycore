@@ -576,7 +576,8 @@ start_web_admin(){
   echo "Binding webserver to ${GREEN}$ETH0${NORMAL} and address ${GREEN}$ip${NORMAL}."
   echo "server.bind = \"$ip\"" >> $VAR/admin.conf
   echo "Starting administration web server"
-  $as_tc lighttpd -Df "$VAR/admin.conf" > /dev/null 2>&1 &
+  # Don't use $as_tc so that $HOME is correctly defined
+  sudo -u tc lighttpd -Df "$VAR/admin.conf" > /dev/null 2>&1 &
 }
 
 stop_web_admin(){
@@ -800,8 +801,8 @@ start_repo(){
   repo_http="$(xmllint --xpath 'string(dsas/config/web/repo_http)' "$VAR/dsas_conf.xml")"
   if [ "$repo" != "true" ] && [ "$repo_http" != "true" ]; then return 0; fi
   if [ "$repo" = "true" ]; then
-      [ "$repo_http" == "true" ] && cp "$VAR/repo_both.conf.dsas" "$VAR/repo.conf"
-      [ "$repo_http" == "true" ] || cp "$VAR/repo.conf.dsas" "$VAR/repo.conf"
+      [ "$repo_http" = "true" ] && cp "$VAR/repo_both.conf.dsas" "$VAR/repo.conf"
+      [ "$repo_http" = "true" ] || cp "$VAR/repo.conf.dsas" "$VAR/repo.conf"
   else
       cp "$VAR/repo_http.conf.dsas" "$VAR/repo.conf"
   fi
@@ -885,10 +886,16 @@ start_radius(){
     # The lines below are added backwards to simplify the calculation of where to add the lines
     # The triple remove of the domain name is needed to remove domain in username if (un)successful
     # radius login. DON'T REMOVE IT..
+
+    # Shutup shellcheck up about escaping single quotes, the number of slashes is exactly right
+    # shellcheck disable=SC1003
     sed -i -e "5s:^:auth           required                                 pam_regex.so extended transform=s|^$domain"'\\\\'"||\n:" /usr/local/etc/pam.d/common-auth
+    # shellcheck disable=SC1003
     sed -i -e "3s:^:auth           required                                 pam_regex.so extended transform=s|^$domain"'\\\\'"||\n:" /usr/local/etc/pam.d/common-auth
+    # shellcheck disable=SC1003
     sed -i -e "2s:^:auth           required                                 pam_regex.so extended transform=s|^$domain"'\\\\'"||\n:" /usr/local/etc/pam.d/common-auth
     sed -i -e '2s:^:auth           [success=5 ignore=ignore default=2]      pam_radius_auth.so localifdown conf=/etc/raddb/server\n:' /usr/local/etc/pam.d/common-auth
+    # shellcheck disable=SC1003
     sed -i -e "2s:^:auth           required                                 pam_regex.so extended transform=s|^|$domain"'\\\\'"|\n:" /usr/local/etc/pam.d/common-auth
     sed -i -e "s/success=2\(.*pam_unix.so\)/success=3\1/" /usr/local/etc/pam.d/common-auth
   fi
