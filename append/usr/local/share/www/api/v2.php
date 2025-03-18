@@ -82,8 +82,11 @@ try {
             break;
 
           case "x509":
-          case "pubkey":
             $errors = dsas_upload_cert($uri[4], $_FILES["file"], "text/plain");
+            break;
+
+          case "pubkey":
+            $errors = dsas_upload_cert($uri[4], $_FILES["file"], "text/plain", $_POST["name"]);
             break;
 
           case "gpg":

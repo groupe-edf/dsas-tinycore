@@ -1301,11 +1301,12 @@ function dsas_delete_cert($finger) {
  * @param string $type
  * @param array{error: int, size: int, tmp_name: string} $file
  * @param string $mime
+ * @param string $name
  *
  * @return array<int,mixed>
  *    An array of the errors found in the configuration
  */
-function dsas_upload_cert($type, $file, $mime) {
+function dsas_upload_cert($type, $file, $mime, $name = "") {
   $errors = array();
   try {
     $dsas = simplexml_load_file(_DSAS_XML);
@@ -1373,7 +1374,10 @@ function dsas_upload_cert($type, $file, $mime) {
       $newcert->authority = (empty($parse["extensions"]["authorityKeyIdentifier"]) ||
         (!empty($parse["extensions"]["subjectKeyIdentifier"]) && str_contains($parse["extensions"]["authorityKeyIdentifier"],
         $parse["extensions"]["subjectKeyIdentifier"])) ? "true" : "false");
-    else
+    else if ($type == "pubkey") {
+      $newcert->name = htmlspecialchars(trim($name));
+      $newcert->authority = "true";
+    } else
       $newcert->authority = "true";
 
     $dsas->asXml(_DSAS_XML);
