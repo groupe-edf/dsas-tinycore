@@ -1,7 +1,11 @@
 Log of the principal changes to the DSAS
 
-Version 3.1.2 (XX XXX XXX)
- - ??
+Version 3.1.2 (20 Mar 2025)
+- Fix bug introduced in version 3.1.0 where the pubkey name is ignored
+- Update clamav (1.4.1 -> 1.4.2)
+- Update curl (8.11.1 -> 8.12.1)
+- Update openssl (3.3.2 -> 3.3.3)
+- Update openssh (9.9p1 -> 9.9p2)
 
 Version 3.1.1 (14 Jan 2025)
 - Add possibility of HTTP repo server. Needed to avoid issues with self-signed certificates and use of repos
