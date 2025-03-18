@@ -1,5 +1,8 @@
 Log of the principal changes to the DSAS
 
+Version 3.1.3 (XX XXX XXXX)
+- ???
+
 Version 3.1.2 (20 Mar 2025)
 - Fix bug introduced in version 3.1.0 where the pubkey name is ignored
 - Update clamav (1.4.1 -> 1.4.2)
