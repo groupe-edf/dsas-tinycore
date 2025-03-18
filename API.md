@@ -65,6 +65,7 @@
 - Method : POST
 - Param :
   * FILES file : SSL public key in pem format
+  * POST name : Name of the certificate
 - Response :
   * 200 Success
 - Return :
