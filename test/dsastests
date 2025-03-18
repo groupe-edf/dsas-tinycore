@@ -1720,8 +1720,8 @@ try {
             continue;
           }
           if (str_contains($card->getDomProperty("innerHTML"), $finger)) {
-            $GLOBALS["card"] = "#pubkey" . substr($card->getAttribute("id"), 8); 
-            if (str_contains($card->getDomProperty("innerHTML"), "Openssl Test Certificate")) 
+            $GLOBALS["card"] = "#pubkey" . substr($card->getAttribute("id"), 8);
+            if (str_contains($card->getDomProperty("innerHTML"), "Openssl Test Certificate"))
               $found = true;
             break;
           }
