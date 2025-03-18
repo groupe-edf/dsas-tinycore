@@ -956,7 +956,7 @@ check_upgrade)
     [ "$_file" = "firefox.tcz" ] && continue
     read -r hash < "$file.md5.txt"
     if ! grep -q "^$hash  $_file" $tcz_dir/md5.db; then
-      msg Upgrade needed for file $_file
+      msg "Upgrade needed for file $_file"
     fi
   done < <(find $tcz_dir -name "*.tcz" -print0)  
   ;;
