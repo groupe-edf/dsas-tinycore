@@ -1714,14 +1714,15 @@ try {
         // Search for added fingerprint
         $found = false;
         $first = true;
-        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'pubkey')]")) as $card) {
+        foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'pub_drag')]")) as $card) {
           if ($first) {
             $first = false;
             continue;
           }
           if (str_contains($card->getDomProperty("innerHTML"), $finger)) {
-            $GLOBALS["card"] = "#" . $card->getAttribute("id"); 
-            $found = true;
+            $GLOBALS["card"] = "#pubkey" . substr($card->getAttribute("id"), 8); 
+            if (str_contains($card->getDomProperty("innerHTML"), "Openssl Test Certificate")) 
+              $found = true;
             break;
           }
         }
