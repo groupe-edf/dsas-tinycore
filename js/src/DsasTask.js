@@ -88,7 +88,7 @@ function dsasTaskDelete(id, name) {
 }
 
 function dsasTaskRealKill(id) {
-    fetch("api/v2/tasks/" + id, { method: "POST" }).then((response) => {
+    fetch("api/v2/tasks/kill/" + id, { method: "POST" }).then((response) => {
         if (response.ok) { return response.json(); }
         return Promise.reject(new Error(response.statusText));
     }).then((json) => {
