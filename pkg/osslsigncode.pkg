@@ -1,10 +1,10 @@
 _pkg=osslsigncode
-_version=2.9.0
-_uri=https://github.com/mtrojnar/osslsigncode/archive/refs/tags/2.9.tar.gz
-_src=osslsigncode-2.9.tar.gz
+_version=2.10.0
+_uri=https://github.com/mtrojnar/osslsigncode/archive/refs/tags/2.10.tar.gz
+_src=osslsigncode-2.10.tar.gz
 _dep="curl openssl libssh2"
 _build_dep="compiletc coreutils cmake openssl openssl-dev curl-dev libssh2-dev python3.9"
-_pkg_path=osslsigncode-2.9
+_pkg_path=osslsigncode-2.10
 _pre_config="sudo -u tc mkdir -p $builddir/$_pkg_path/build"
 _conf_cmd="cd build; setarch linux$arch cmake -S .."
 _make_cmd="cd build; cmake --build ."
