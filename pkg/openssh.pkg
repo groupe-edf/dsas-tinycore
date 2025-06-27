@@ -3,7 +3,7 @@ _version=10.0p2
 _uri="https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-10.0p2.tar.gz"
 _dep="openssl Linux-PAM"
 _build_dep="compiletc openssl openssl-dev Linux-PAM-dev"
-_pkg_path="openssh-10.0p2"
+_pkg_path="openssh-10.0p1"
 _conf_cmd="setarch linux$arch ./configure --with-pam --sysconfdir=/usr/local/etc/ssh --libexecdir=/usr/local/lib/openssh --with-privsep-path=/var/lib/sshd"
 _make_cmd="make"
 _install_cmd="make install DESTDIR="
