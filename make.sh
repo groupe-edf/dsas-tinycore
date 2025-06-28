@@ -229,7 +229,7 @@ get_tcz() {
       grep -q 404 "$dep" && cp /dev/null "$dep"
       # Want word splitting on arg to get_tcz
       # shellcheck disable=SC2046
-      get_tcz $(sed -e s/.tcz$// "$dep")
+      get_tcz $(sed -e s/.tcz\s*$// "$dep")
     fi
   done
 }
@@ -257,7 +257,7 @@ install_tcz() {
             if test -s "$dep"; then
               # Want word splitting on arg to get_tcz
               # shellcheck disable=SC2046
-              install_tcz $(sed -e s/.tcz$// "$dep")
+              install_tcz $(sed -e s/.tcz\s*$// "$dep")
             fi
         fi  
     done
@@ -1017,10 +1017,7 @@ static)
   install_tcz node
 
   [ "$arch" != 64 ] && install_tcz pcre2
-  [ "$arch" = 64 ] && install_tcz pcre21032
-  
-  # FIXME Force installation of a PCRE that works with PHP composer
-  install_tcz pcre21042
+  [ "$arch" = 64 ] && install_tcz pcre21042
 
   # Copy DSAS code to test tree  
   mkdir -p $extract/home/tc/dsas
@@ -1218,7 +1215,7 @@ docker)
   # FIXME Tinycore 32bit doesn't include the right pcre dependance and 64bit uses a
   # a difference dependance. 
   [ "$arch" != 64 ] && install_tcz pcre2
-  [ "$arch" = 64 ] && install_tcz pcre21032
+  [ "$arch" = 64 ] && install_tcz pcre21042
 
   # Install VMWARE open-vm-tools to allow for VM migration
   [ "$vmtools" = "1" ] && install_tcz open-vm-tools
@@ -1250,7 +1247,7 @@ docker)
     install_firefox
     install_tcz harfbuzz fribidi # FIXME missing firefox dependency !!
     install_tcz Xorg-fonts
-    install_tcz unifont 
+    install_tcz unifont
 
     # Install PHP
     install_tcz php-8.2-cli
