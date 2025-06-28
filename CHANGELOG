@@ -11,6 +11,7 @@ Version 3.1.3 (XX XXX XXXX)
 - Update openssh (9.9p2 -> 10.0p2)
 - Update osslsigncode (2.9 -> 2.10)
 - Treat problem in openssh package path in build script 
+- Force ESLintWebpackPlubin to use eslintc config. Migrate to flat config later
 
 Version 3.1.2 (20 Mar 2025)
 - Fix bug introduced in version 3.1.0 where the pubkey name is ignored

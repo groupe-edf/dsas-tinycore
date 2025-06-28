@@ -3,7 +3,7 @@ const ESLintPlugin = require("eslint-webpack-plugin");
 module.exports = {
   mode: "development",
   devtool: false,
-  plugins: [new ESLintPlugin(),],
+  plugins: [new ESLintPlugin({"configType": "eslintrc"}),],
   entry: {
     main: ["./src/DsasEntry.js", ],
   },
