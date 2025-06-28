@@ -64,12 +64,12 @@ mount_dsas(){
       chown root:staff /home/dsas
       chmod 755 /home/dsas
       # remount main disk as noexec. Strip trail "/dsas" from $DSAS to get the real partition
-      mount -o remount,noexec,nodev,nosuid "${DSAS:0:-5}"
-      mount --noexec --nobind "$DSAS" /home/dsas
+      /bin/mount -o remount,noexec,nodev,nosuid "${DSAS:0:-5}"
+      /bin/mount --noexec --nobind "$DSAS" /home/dsas
     fi
-    # For persistent /var/log taht are also accessible by the tc user. Do this before launching syslog
+    # For persistent /var/log that are also accessible by the tc user. Do this before launching syslog
     [ -d "${DSAS:0:-5}/log" ] && chmod g+s "${DSAS:0:-5}/log" && chgrp staff -R "${DSAS:0:-5}/log"
-    [ -d "${DSAS:0:-5}/log" ] && [ ! "$(mounted /var/log)" ] && mount "${DSAS:0:-5}/log" /var/log
+    [ -d "${DSAS:0:-5}/log" ] && [ ! "$(mounted /var/log)" ] && /bin/mount "${DSAS:0:-5}/log" /var/log
   else
     [ -L /home/dsas ] || ln -s "$DSAS" /home
     # If docker a persisent /var/log can be a symlink
@@ -106,7 +106,7 @@ init_disk(){
             FOUND=$DEVNAME
             MOUNTPOINT=$(echo "$PART" | sed -e "s:.*\($DEVNAME.*\):/mnt/\1:g")
             [ -d "$MOUNTPOINT" ] || mkdir "$MOUNTPOINT"
-            mount | grep -q "$PART" || mount "$PART" "$MOUNTPOINT"
+            /bin/mount | grep -q "$PART" || /bin/mount "$PART" "$MOUNTPOINT"
             break
             ;;
         esac
@@ -151,7 +151,7 @@ EOF
     MNT="$(echo "$DEV" | sed -e 's/dev/mnt/')"
     mkdir -p "${MNT}1"
     echo "Mounting  ${GREEN}${DEV}1${NORMAL} on  ${GREEN}${MNT}1${NORMAL}"
-    mount "${DEV}1" "${MNT}1"
+    /bin/mount "${DEV}1" "${MNT}1"
     mkdir -p "${MNT}1/tce"
     chmod 770 "${MNT}1/tce"
     chown root:staff "${MNT}1/tce"
@@ -964,7 +964,7 @@ start_chroot(){
      chown root:haut /opt/lftp/home/dsas/haut
      chmod 755 /opt/lftp/home/dsas
      chmod 750 /opt/lftp/home/dsas/haut
-     mount --noexec --nobind /home/dsas/haut /opt/lftp/home/dsas/haut
+     /bin/mount --noexec --nobind /home/dsas/haut /opt/lftp/home/dsas/haut
    fi
    # At this point the ssh hosts and keys are setup. Link them to the chroot jail,
    # in a manner that they can't be abused to create an executable.
@@ -988,15 +988,15 @@ start_chroot(){
    if [ ! "$(mounted /opt/lftp/dev/pts)" ]; then
      # Create pty for chroot jail
      (umask 00022; mkdir -p  /opt/lftp/dev/pts)
-     mount -t devpts devpts /opt/lftp/dev/pts -o ptmxmode=0666,newinstance
+     /bin/mount -t devpts devpts /opt/lftp/dev/pts -o ptmxmode=0666,newinstance
      [ -e "/opt/lftp/dev/ptmx" ] || ln -r -s /opt/lftp/dev/pts/ptmx /opt/lftp/dev/ptmx
    fi
  fi
 }
 
 stop_chroot(){
-  mounted /opt/lftp/home/dsas/haut && umount /opt/lftp/home/dsas/haut
-  mounted /opt/lftp/dev && umount /opt/lftp/dev/pts
+  mounted /opt/lftp/home/dsas/haut && /bin/umount /opt/lftp/home/dsas/haut
+  mounted /opt/lftp/dev && /bin/umount /opt/lftp/dev/pts
 }
 
 reboot_required(){
