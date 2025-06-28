@@ -1,21 +1,15 @@
 _pkg=busybox
-_version=1.36.1
-_uri="https://busybox.net/downloads/busybox-1.36.1.tar.bz2"
-_extra_uri="$tcz_src/busybox/busybox-1.27.1-wget-make-default-timeout-configurable.patch \
-            $tcz_src/busybox/busybox-1.29.3_root_path.patch \
-            $tcz_src/busybox/busybox-1.33.0_modprobe.patch \
-            $tcz_src/busybox/busybox-1.33.0_tc_depmod.patch \
-            $tcz_src/busybox/busybox-1.36.1_config_suid \
-            $tcz_src/busybox/busybox-1.36.1_config_nosuid"
+_version=1.37.0
+_uri="https://busybox.net/downloads/busybox-1.37.0.tar.bz2"
 _dep="Linux-PAM"
-_build_dep="compiletc Linux-PAM-dev sstrip curl libssh2 linux-6.12_api_headers"
-_pkg_path="busybox-1.36.1"
+_build_dep="compiletc Linux-PAM-dev sstrip curl libssh2"
+_pkg_path="busybox-1.37.0"
 _pre_config=\
 "cd $builddir/$_pkg_path
-for file2 in $_extra_uri; do
-  [[ \"\$file2\" = \*.patch ]] || continue
-  file=\$(basename \$file2)
-  echo Applying the patch \$file
+for file in busybox-1.27.1-wget-make-default-timeout-configurable.patch \
+            busybox-1.29.3_root_path.patch \
+            busybox-1.33.0_tc_depmod.patch; do
+  curl -L -o \$file $tcz_src/busybox/\$file
   if \$(grep -q '+++ b/' \$file); then
     patch -Np1 -i \$file
   else
@@ -29,7 +23,7 @@ tar -cf - * | tar -xpC $builddir/$_pkg_path.nosuid -f -
 chown -R tc:staff $builddir/$_pkg_path.nosuid
  
 # Config for SUID version of busybox
-mv busybox-1.36.1_config_suid .config
+curl -L -o .config $tcz_src/busybox/busybox-1.36.1_config_suid
 
 # Allow TMOUT in ash
 sed -i -e 's/^# CONFIG_ASH_IDLE_TIMEOUT.*/CONFIG_ASH_IDLE_TIMEOUT=y/' .config
@@ -39,12 +33,15 @@ sed -i -e 's/^# CONFIG_PAM.*/CONFIG_PAM=y/' .config
 sed -i -e 's/CONFIG_FEATURE_MOUNT_NFS=y/CONFIG_FEATURE_MOUNT_NFS=n/' .config
 sed -i -e 's/CONFIG_FEATURE_MOUNT_CIFS=y/CONFIG_FEATURE_MOUNT_CIFS=n/' .config
 chown tc:staff .config
-# Remove support for su (not PAM support) and allow only sudo
-sed -i -e 's/CONFIG_SU=y/CONFIG_SU=n/' .config
+
+# Add features that are new between 1.36.1 and 1.37.0
+echo 'CONFIG_TIME64=y' >> .config
+echo '# CONFIG_GETFATTR is not set' >> .config
+echo '# CONFIG_FEATURE_IP_LINK_CAN is not set' >> .config
 
 # Config for NOSUID version of busybox
 cd $builddir/$_pkg_path.nosuid
-mv $builddir/$_pkg_path/busybox-1.36.1_config_nosuid .config
+curl -L -o .config $tcz_src/busybox/busybox-1.36.1_config_nosuid
 
 # Allow TMOUT in ash
 sed -i -e 's/^# CONFIG_ASH_IDLE_TIMEOUT.*/CONFIG_ASH_IDLE_TIMEOUT=y/' .config
@@ -54,9 +51,16 @@ sed -i -e 's/^# CONFIG_PAM.*/CONFIG_PAM=y/' .config
 sed -i -e 's/CONFIG_FEATURE_MOUNT_NFS=y/CONFIG_FEATURE_MOUNT_NFS=n/' .config
 sed -i -e 's/CONFIG_FEATURE_MOUNT_CIFS=y/CONFIG_FEATURE_MOUNT_CIFS=n/' .config
 
+# Add features that are new between 1.36.1 and 1.37.0
+echo 'CONFIG_TIME64=y' >> .config
+echo 'CONFIG_GETFATTR=y' >> .config
+echo 'CONFIG_FEATURE_IP_LINK_CAN=y' >> .config
+echo 'CONFIG_FEATURE_FIND_EXEC_OK=y' >> .config
+echo 'CONFIG_FEATURE_UDHCPD_BOOTP=y' >> .config
+
 chown tc:staff .config
 "
-_conf_cmd="setarch linux64 make oldconfig; cd $builddir/$_pkg_path.nosuid; setarch linux64 make oldconfig"
+_conf_cmd="setarch linux$arch make oldconfig; cd $builddir/$_pkg_path.nosuid; setarch linux$arch make oldconfig"
 _make_cmd=\
 "make CC='gcc -flto -Os -pipe' CXX='g++ -flto -Os -pipe -fno-exceptions -fno-rtti'
 cd $builddir/$_pkg_path.nosuid

@@ -186,6 +186,7 @@ pwgen() {
 get_tcz() {
   mkdir -pv $tcz_dir
   for package; do
+    [[ "$package" == *".tcz" ]] && package=${package%.tcz}
     package=$(echo "$package" | sed -e "s/-KERNEL/-$_kern/g")
     target=$tcz_dir/$package.tcz
     dep=$target.dep
@@ -240,6 +241,7 @@ install_tcz() {
     get_tcz $@
     exit_if_nonroot
     for package; do
+        [[ "$package" == *".tcz" ]] && package=${package%.tcz}
         package=$(echo "$package" | sed -e "s/-KERNEL/-$_kern/g")
         target=$tcz_dir/$package.tcz
         tce_marker=$extract/usr/local/tce.installed/$package
@@ -376,7 +378,7 @@ build_pkg() {
         msg "Building $pkg_file"
         # Unset build variables before sourcing package file
         unset _build_dep _conf_cmd _dep _install_cmd _make_cmd _pkg _pkg_path _pkgs \
-          _post_build _post_install _pre_config _uri _src _version _disk_needed
+          _post_build _post_install _pre_config _uri _src _version _disk_needed _extra_uri
         # Use Linux-PAM.pkg as a non trivial source file to test with
         # shellcheck source=pkg/Linux-PAM.pkg
         . "$pkg_file"
@@ -420,10 +422,31 @@ build_pkg() {
         mkdir -p "$src_dir"
         download "$_uri" "$src_dir" "$_src"
         mkdir -p "$extract/home/tc"
+     
 
         mkdir -p "$extract/$builddir"
         mkdir -p "$extract/$destdir"
-        unpack "$src_dir/$_src" "$extract/$builddir" || error "Can not unpack $_src"
+        case $(echo "$_src" | sed -e "s/.*\(\..*\)$/\1/g") in
+          .jar|.tgz|.tbz|.tar|.gz|.bz2|.xz)
+            unpack "$src_dir/$_src" "$extract/$builddir" || error "Can not unpack $_src"
+            ;;
+          *)
+            msg "Can not unpack $_src. Copying directly to build directory"
+            cp -pr "$src_dir/$_src" "$extract/$builddir"
+            ;;
+        esac
+        if [ -n "$_extra_uri" ]; then
+          msg "Downloading extra packages"
+	        for _uri2 in $_extra_uri; do
+	          _src2=$(basename $_uri2)
+	          if [ ! -f "$src_dir/$_src2" ]; then
+	            get "$_uri2" "$src_dir" "$_src2"
+        	  fi
+	          sudo cp "$src_dir/$_src2" "$extract$builddir/$_pkg_path"
+          done
+        fi        
+           
+        
         chroot "$extract" chown -R ${tc}:${staff} /home/tc
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
@@ -560,6 +583,7 @@ get_tcz_and_deps() {
   _dest=$1
   shift
   for _pkg; do
+    [[ "$_pkg" == *".tcz" ]] && _pkg=${_pkg%.tcz}
     [ -f "$_dest/$_pkg.tcz" ] && continue
     msg "Copy $_pkg.tcz to $_dest"
     cp "$tcz_dir/$_pkg.tcz"  "$tcz_dir/$_pkg.tcz.dep" "$_dest"
