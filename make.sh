@@ -1033,8 +1033,8 @@ static)
   install_tcz libssh2
   install_tcz libzip
   install_tcz bzip2-lib
-  install_tcz php-8.2-cgi
-  install_tcz php-8.2-ext
+  install_tcz php-8.3-cgi
+  install_tcz php-8.3-ext
   install_tcz php-pam
   install_tcz curl
   install_tcz rsync
@@ -1054,7 +1054,7 @@ static)
 
   if [ -z "$pkgs" ] || [ -z "${pkgs##*phpstan*}" ]; then
     # Install PHP cli and add iconv and phar extension
-    install_tcz php-8.2-cli
+    install_tcz php-8.3-cli
 
     cp $append/usr/local/etc/php/php.ini $extract/usr/local/etc/php/php.ini
     sed -i -e "s/;extension=phar/extension=phar/" $extract/usr/local/etc/php/php.ini
@@ -1146,6 +1146,9 @@ EOF
       msg "Running shellcheck on shell code"
       chroot --userspec=${tc} "$extract" /tmp/script || error error running shellcheck
     fi
+
+    # FIXME temporarily remove broken udev rule for test DSAS
+    rm ${extract}/etc/udev/rules.d/71-seat.rules
   fi
 
   if [ "$keep" = "0" ]; then
@@ -1221,8 +1224,8 @@ docker)
   install_tcz gnupg
   install_tcz lighttpd
   install_tcz clamav
-  install_tcz php-8.2-cgi
-  install_tcz php-8.2-ext
+  install_tcz php-8.3-cgi
+  install_tcz php-8.3-ext
   install_tcz php-pam
   install_tcz dialog
   install_tcz rpm
@@ -1274,7 +1277,7 @@ docker)
     install_tcz unifont
 
     # Install PHP
-    install_tcz php-8.2-cli
+    install_tcz php-8.3-cli
 
     # Download and install the gecko (firefox) webdriver
     download "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux${arch}.tar.gz" "$src_dir"
