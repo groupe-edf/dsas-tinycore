@@ -70,7 +70,7 @@ while [ "$#" -gt 0 ]; do
       echo "     docker          Build a docker distribution package"
       echo "     clean           Remove the distribution files"
       echo "     realclean       Remove all files, leaving a clean build tree"
-      echo "     check           Run test code to test correct function of checkfiles" 
+      echo "     check           Run test code to test correct function of checkfiles"
       echo "     iso             Build the DSAS ISO file. This the default command"
       echo "     static          Run static analysis on the DSAS source code"
       echo "     upgrade         Upgrade the TCZ packages to their latest version"
@@ -178,7 +178,7 @@ error() {
 exit_if_nonroot() {
     test "$(id -u)" = 0 || error this script needs to run as root
 }
- 
+
 pwgen() {
     pass=$(< /dev/random tr -dc _A-Z-a-z-0-9 | head -c "$1"; echo;)
 }
@@ -186,11 +186,12 @@ pwgen() {
 get_tcz() {
   mkdir -pv $tcz_dir
   for package; do
-    [[ "$package" == *".tcz" ]] && package=${package%.tcz}
+    # Don't use [[ as not POSIX
+    echo "$package" | grep -q ".tcz$" && package=${package%.tcz}
     package=$(echo "$package" | sed -e "s/-KERNEL/-$_kern/g")
     target=$tcz_dir/$package.tcz
     dep=$target.dep
-    # If the PKG file exists and is newer than the TCZ file, rebuild 
+    # If the PKG file exists and is newer than the TCZ file, rebuild
     if test -f "$target" && test -f "$pkg_dir/$package.pkg"; then
       [ "$(stat -c '%Y' "$pkg_dir/$package.pkg")" -gt "$(stat -c '%Y' "$target")" ] && rm -f "$target"
     fi
@@ -230,7 +231,7 @@ get_tcz() {
       grep -q 404 "$dep" && cp /dev/null "$dep"
       # Want word splitting on arg to get_tcz
       # shellcheck disable=SC2046
-      get_tcz $(sed -e s/.tcz\s*$// "$dep")
+      get_tcz $(sed -e "s/.tcz\s*$//" "$dep")
     fi
   done
 }
@@ -241,7 +242,7 @@ install_tcz() {
     get_tcz $@
     exit_if_nonroot
     for package; do
-        [[ "$package" == *".tcz" ]] && package=${package%.tcz}
+        echo "$package" | grep -q ".tcz$" && package=${package%.tcz}
         package=$(echo "$package" | sed -e "s/-KERNEL/-$_kern/g")
         target=$tcz_dir/$package.tcz
         tce_marker=$extract/usr/local/tce.installed/$package
@@ -259,9 +260,9 @@ install_tcz() {
             if test -s "$dep"; then
               # Want word splitting on arg to get_tcz
               # shellcheck disable=SC2046
-              install_tcz $(sed -e s/.tcz\s*$// "$dep")
+              install_tcz $(sed -e "s/.tcz\s*$//" "$dep")
             fi
-        fi  
+        fi
     done
 }
 
@@ -286,7 +287,7 @@ build_pkg_cache() {
      if [ "$arch" = "64" ]; then
        touch -r "$_file" "$_snmpdir/$_pkg${_version}_amd64"
      else
-       touch -r "$_file" "$_snmpdir/$_pkg${_version}_x86" 
+       touch -r "$_file" "$_snmpdir/$_pkg${_version}_x86"
      fi
   done < <(find "$extract/usr/local/tce.installed" -type "f" -print0)
 }
@@ -319,7 +320,7 @@ download() {
     fi
   else
     get "$@"
-  fi 
+  fi
 }
 
 unpack() {
@@ -335,7 +336,7 @@ unpack() {
         error "An archive can not be a gzip"
       fi
       ;;
-    .bz2) 
+    .bz2)
       if [ "${1: -8}" = ".tar.bz2" ]; then
         tar xjCf "$2" "$1" || return 1
       else
@@ -386,8 +387,8 @@ build_pkg() {
           error "insufficent disk for package '$pkg' (needed ${_disk_needed}GB)"
 	[ -z "$_src" ] && _src=$(basename "$_uri")
         for dep in $_build_dep; do
-          # () needed to create new environment 
-          (build_pkg "$dep") || error "Building package $dep" 
+          # () needed to create new environment
+          (build_pkg "$dep") || error "Building package $dep"
         done
         msg "Creating build image"
         if [ -d "$extract" ]; then
@@ -407,14 +408,14 @@ build_pkg() {
         # It appears that certain links are missings with the base intsall
         # and they need to be forced
         ( cd "$extract/usr/lib" || exit 1; [ -e "libpthread.so" ] || ln -s ../../lib/libpthread.so.0 libpthread.so; )
-        ( cd "$extract/usr/lib" || exit 1; [ -e "libdl.so" ] || ln -s ../../lib/libdl.so.2 libdl.so; )   
-        
+        ( cd "$extract/usr/lib" || exit 1; [ -e "libdl.so" ] || ln -s ../../lib/libdl.so.2 libdl.so; )
+
         # Force install of coreutils as always needed for install_tcz
         install_tcz coreutils
         # shellcheck disable=SC2086
         install_tcz $_build_dep
 
-        # Copy /etc/resolv.conf file 
+        # Copy /etc/resolv.conf file
         mkdir -p "$extract/etc"
         cp -p /etc/resolv.conf "$extract/etc/resolv.conf"
 
@@ -422,7 +423,7 @@ build_pkg() {
         mkdir -p "$src_dir"
         download "$_uri" "$src_dir" "$_src"
         mkdir -p "$extract/home/tc"
-     
+
 
         mkdir -p "$extract/$builddir"
         mkdir -p "$extract/$destdir"
@@ -438,15 +439,15 @@ build_pkg() {
         if [ -n "$_extra_uri" ]; then
           msg "Downloading extra packages"
 	        for _uri2 in $_extra_uri; do
-	          _src2=$(basename $_uri2)
+	          _src2=$(basename "$_uri2")
 	          if [ ! -f "$src_dir/$_src2" ]; then
 	            get "$_uri2" "$src_dir" "$_src2"
         	  fi
 	          sudo cp "$src_dir/$_src2" "$extract$builddir/$_pkg_path"
           done
-        fi        
-           
-        
+        fi
+
+
         chroot "$extract" chown -R ${tc}:${staff} /home/tc
         cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
@@ -512,14 +513,14 @@ EOF
         chmod a+x "$extract/tmp/script"
         [ -z "$_post_build" ] || { msg "Post build script"; chroot "$extract" /tmp/script; } || { umount "$extract/proc"; error "Unexpected error ($?) in post build"; }
         # Create post-install script if needed
-        if [ -n "$_post_install" ]; then 
+        if [ -n "$_post_install" ]; then
           msg "Creating post install script"
           mkdir -p "$extract$destdir/usr/local/tce.installed"
           echo "$_post_install" > "$extract$destdir/usr/local/tce.installed/$_pkg"
           chmod 755 "$extract$destdir/usr/local/tce.installed/$_pkg"
         fi
 
-        # Create the pkgname and shell escaped list of directories/files and then make TCZ 
+        # Create the pkgname and shell escaped list of directories/files and then make TCZ
         OIFS=$IFS
         IFS=";"
         [ -z "$_pkgs" ] && _pkgs="main{.}"
@@ -544,7 +545,7 @@ EOF
           tempdir=$(mktemp -d)
           chmod 755 "$tempdir"
           # shellcheck disable=SC2086
-          (cd "$extract$destdir" || exit 1; tar -cf - $dirs | tar -C "$tempdir" -x -f -) 
+          (cd "$extract$destdir" || exit 1; tar -cf - $dirs | tar -C "$tempdir" -x -f -)
           mksquashfs "$tempdir" "$tcz_dir/$tcz"
           rm -fr "$tempdir"
           md5sum "$tcz_dir/$tcz" | sed -e "s:  $tcz_dir/$tcz$::g" > "$tcz_dir/$tcz.md5.txt"
@@ -562,7 +563,7 @@ EOF
         umount "$extract/proc"
         if [ "$keep" = "0" ]; then
           msg "Removing build image"
-          if [ -d "$extract" ]; then 
+          if [ -d "$extract" ]; then
             rm -fr "$extract"
           fi
         fi
@@ -583,7 +584,7 @@ get_tcz_and_deps() {
   _dest=$1
   shift
   for _pkg; do
-    [[ "$_pkg" == *".tcz" ]] && _pkg=${_pkg%.tcz}
+    echo "$_pkg" | grep -q ".tcz$" && _pkg=${_pkg%.tcz}
     [ -f "$_dest/$_pkg.tcz" ] && continue
     msg "Copy $_pkg.tcz to $_dest"
     cp "$tcz_dir/$_pkg.tcz"  "$tcz_dir/$_pkg.tcz.dep" "$_dest"
@@ -637,7 +638,7 @@ install_firefox(){
       ( install_tcz "$latest" )
 
       # Find dependencies in "$latest" and install them to allow them to be
-      # cached and avoid too many downloads. sqfsTools is useds in the eval 
+      # cached and avoid too many downloads. sqfsTools is useds in the eval
       # shellcheck disable=SC2034
       sqfsTools="squashfs-tools"
       # disable wierd sheelcheck warning
@@ -651,7 +652,7 @@ install_firefox(){
       # shellcheck disable=SC2086
       ( install_tcz $deps1 libssh2 )
       # Yes I want word-splitting
-      # shellcheck disable=SC2086     
+      # shellcheck disable=SC2086
       ( get_tcz_and_deps  "$extract/tmp/tce/optional" $deps1 )
       chmod -R 644 "$extract/tmp/tce/optional"
       chmod 775 $extract/tmp/tce/optional
@@ -714,7 +715,7 @@ install_webdriver(){
       chmod a+rx "$extract/home/tc/php_composer"
       chroot "$extract" chown -R ${tc}:${staff} "/home/tc/"
       cp /etc/resolv.conf "$extract/etc/resolv.conf" && msg "copy resolv.conf"
-      # http_proxy is imported (or not) from the environment. Shellcheck 
+      # http_proxy is imported (or not) from the environment. Shellcheck
       # complains if we don't force a default value here
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
@@ -737,7 +738,7 @@ cd /home/tc
 env HOME=/home/tc php composer.phar require php-webdriver/webdriver
 EOF
       chmod a+x "$extract/tmp/script"
-      msg "Install PHP Web driver"  
+      msg "Install PHP Web driver"
       chroot --userspec=${tc} "$extract" /tmp/script
 
       # Remove temporary resolv.conf
@@ -751,7 +752,7 @@ EOF
       mkdir -p "$tempdir/usr/local/share/dsas"
       chmod -R 755 "$tempdir/usr"
       # shellcheck disable=SC2086
-      (cd "$extract/home/tc" || exit 1; tar -cf - vendor | tar -C "$tempdir/usr/local/share/dsas" -x -f -) 
+      (cd "$extract/home/tc" || exit 1; tar -cf - vendor | tar -C "$tempdir/usr/local/share/dsas" -x -f -)
       mksquashfs "$tempdir" "$target"
       rm -fr "$tempdir"
       md5sum "$target" | sed -e "s:  $target$::g" > "$target.md5.txt"
@@ -795,7 +796,7 @@ cd /home/tc
 env HOME=/home/tc php composer.phar require --dev phpstan/phpstan
 EOF
       chmod a+x "$extract/tmp/script"
-      msg "Install PHPStan"  
+      msg "Install PHPStan"
       chroot --userspec=${tc} "$extract" /tmp/script
 
       # Remove temporary resolv.conf
@@ -809,7 +810,7 @@ EOF
       mkdir -p "$tempdir/home/tc"
       chmod -R 755 "$tempdir/home"
       # shellcheck disable=SC2086
-      (cd "$extract/home/tc" || exit 1; tar -cf - composer.* vendor | tar -C "$tempdir/home/tc" -x -f -) 
+      (cd "$extract/home/tc" || exit 1; tar -cf - composer.* vendor | tar -C "$tempdir/home/tc" -x -f -)
       mksquashfs "$tempdir" "$target"
       rm -fr "$tempdir"
       md5sum "$target" | sed -e "s:  $target$::g" > "$target.md5.txt"
@@ -863,7 +864,7 @@ install_dsas_js() {
 
       # Copy DSAS files to build tree
       mkdir -p $extract/home/tc/dsas
-      tar cf - --exclude tmp --exclude=work --exclude=.git . | tar -C $extract/home/tc/dsas -xvf - 
+      tar cf - --exclude tmp --exclude=work --exclude=.git . | tar -C $extract/home/tc/dsas -xvf -
       chown -R ${tc}:${staff} $extract/home/tc
       if [ "$testcode" = "1" ]; then
          maketype="dev"
@@ -871,7 +872,7 @@ install_dsas_js() {
          maketype="prod"
       fi
       mkdir -p "$extract/tmp"
-      chmod 1777 "$extract/tmp" 
+      chmod 1777 "$extract/tmp"
       cat << EOF > "$extract/tmp/script"
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
 export http_proxy=${http_proxy:=}
@@ -935,7 +936,7 @@ work)
     [ -d "$work" ] && mv "$work" "$work.old"
     [ -L "$work" ] && rm "$work"
     ln -s "$pkgs" "$work"
-  fi 
+  fi
   ;;
 source)
   tar cvzf $source --exclude=tmp --exclude=work --exclude=.git* .
@@ -967,7 +968,7 @@ check_upgrade)
   msg Fetching md5.db.gz
   $curl_cmd -o "$tcz_dir/md5.db.gz" "$tcz_url/md5.db.gz" || error failed to download md5.db.gz
   gzip -f -d $tcz_dir/md5.db.gz
-  while IFS= read -r -d '' file; do  
+  while IFS= read -r -d '' file; do
     _file=${file#"$tcz_dir"/}
     pkg_file=$pkg_dir/${_file%.tcz}
     pkg_file=${pkg_file%-dev}
@@ -982,7 +983,7 @@ check_upgrade)
     if ! grep -q "^$hash  $_file" $tcz_dir/md5.db; then
       msg "Upgrade needed for file $_file"
     fi
-  done < <(find $tcz_dir -name "*.tcz" -print0)  
+  done < <(find $tcz_dir -name "*.tcz" -print0)
   ;;
 upgrade)
   [ -e $work ] || error work directory does not exist. run \'./make.sh work ...\'
@@ -1043,12 +1044,12 @@ static)
   [ "$arch" != 64 ] && install_tcz pcre2
   [ "$arch" = 64 ] && install_tcz pcre21042
 
-  # Copy DSAS code to test tree  
+  # Copy DSAS code to test tree
   mkdir -p $extract/home/tc/dsas
   tar cf - --exclude tmp --exclude=work --exclude=.git . | tar -C $extract/home/tc/dsas -xvf -
-  chown -R ${tc}:${staff} $extract/home/tc 
+  chown -R ${tc}:${staff} $extract/home/tc
 
-  # Copy /etc/resolv.conf file 
+  # Copy /etc/resolv.conf file
   mkdir -p "$extract/etc"
   cp -f /etc/resolv.conf "$extract/etc/resolv.conf"
 
@@ -1063,7 +1064,7 @@ static)
     sed -i -e "s/;extension=zip/extension=zip/" $extract/usr/local/etc/php/php.ini
     sed -i -e "s/;extension=tokenizer/extension=tokenizer/" $extract/usr/local/etc/php/php.ini
 
-    # Install PHP webdriver via composer             
+    # Install PHP webdriver via composer
     install_phpstan
 
     cat << EOF > $extract/home/tc/phpstan.neon
@@ -1146,9 +1147,6 @@ EOF
       msg "Running shellcheck on shell code"
       chroot --userspec=${tc} "$extract" /tmp/script || error error running shellcheck
     fi
-
-    # FIXME temporarily remove broken udev rule for test DSAS
-    rm ${extract}/etc/udev/rules.d/71-seat.rules
   fi
 
   if [ "$keep" = "0" ]; then
@@ -1173,7 +1171,7 @@ docker)
   # Force build of the ISO
   shift
   [ -f "$dsascd" ] || $0 "$@"
-  
+
   # Repack the disk image
   mkdir -p "$newiso"
   mount "$dsascd" "$newiso"
@@ -1188,7 +1186,7 @@ docker)
   patch -d "$extract" usr/bin/tce-load  "$(readlink -f docker/tce-load.patch)"
   patch -d "$extract" usr/bin/filetool.sh  "$(readlink -f docker/filetool.sh.patch)"
   echo -n tc > $extract/etc/sysconfig/tcuser
-  msg "Compressing DSAS files"  
+  msg "Compressing DSAS files"
   mkdir -p $docker
   tar -czC $extract -f $docker/rootfs64.tar.gz .
   msg "Creating docker install package in $dockimage"
@@ -1197,7 +1195,7 @@ docker)
   if [ "$keep" = "0" ]; then
     rm -fr $newiso $extract $docker
   fi
-  exit 0  
+  exit 0
   ;;
 ""|iso)
   extract=$image
@@ -1240,7 +1238,7 @@ docker)
   install_tcz sed           # Needed for 'sed -z'
 
   # FIXME Tinycore 32bit doesn't include the right pcre dependance and 64bit uses a
-  # a difference dependance. 
+  # a difference dependance.
   [ "$arch" != 64 ] && install_tcz pcre2
   [ "$arch" = 64 ] && install_tcz pcre21042
 
@@ -1281,22 +1279,25 @@ docker)
 
     # Download and install the gecko (firefox) webdriver
     download "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux${arch}.tar.gz" "$src_dir"
-    tar xCzf "$extract/usr/local/bin" "$src_dir/geckodriver-v0.31.0-linux${arch}.tar.gz"   
+    tar xCzf "$extract/usr/local/bin" "$src_dir/geckodriver-v0.31.0-linux${arch}.tar.gz"
+
+    # FIXME temporarily remove broken udev rule for test DSAS
+    rm -f "$extract/etc/udev/rules.d/71-seat.rules"
   fi
 
-  # Install/build dsas.js 
+  # Install/build dsas.js
   install_dsas_js
 
   # Copy the pre-extracted packages to work dir. This must be after packages
-  # are installed to allow for files to be overwritten. Run as root 
-  # and correct the ownership of files 
+  # are installed to allow for files to be overwritten. Run as root
+  # and correct the ownership of files
   msg Append DSAS files
   rsync -rlptv "$append/" "$extract/"
   mkdir -p "$extract/home/tc"
   chown root:root "$extract"
   chmod 755 "$extract/home"
 
-  # Now that php.ini is copied, if in test mode add iconv, phar, etc 
+  # Now that php.ini is copied, if in test mode add iconv, phar, etc
   if [ "$testcode" = "1" ]; then
     sed -i -e "s/;extension=phar/extension=phar/" $extract/usr/local/etc/php/php.ini
     sed -i -e "s/;extension=iconv/extension=iconv/" $extract/usr/local/etc/php/php.ini
@@ -1305,7 +1306,7 @@ docker)
 
     # FIXME Force installation of a PCRE that works with PHP composer
     install_tcz pcre21042
-    
+
     # Install PHP webdriver via composer. Needs php.ini configured
     install_webdriver
   fi
@@ -1383,7 +1384,7 @@ chown root:root /etc/sudoers
 chmod 700 /root
 chmod -R g-s /home
 chown -R tc:staff /home/tc
-chmod -R o-rwx /home/tc /home/haut /home/bas /home/verif 
+chmod -R o-rwx /home/tc /home/haut /home/bas /home/verif
 chown -R root:staff /var/dsas
 chmod 775 /var/dsas          # Write perm for verif
 chmod 640 /var/dsas/?*.dsas
@@ -1518,7 +1519,7 @@ EOF
 
   # Change ISO name if test version
   [ "$testcode" = "1" ] && dsascd=${dsascd%.iso}-test.iso
-  
+
   msg "creating $dsascd"
   ( cd "$extract" || exit 1; find . | cpio -o -H newc; ) | gzip -2 > "$squashfs"
   mkisofs=$(which mkisofs genisoimage | head -n 1)
