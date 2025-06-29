@@ -1,6 +1,6 @@
 Log of the principal changes to the DSAS
 
-Version 4.0.0 (XX XXX XXXX)
+Version 4.0.0 (29 Jun 2025)
 - Update Tinycore 15.0 -> 16.0
 - Downgrade busybox (1.37.0 -> 1.36.1). Really shouldn't be using unstable version
 
