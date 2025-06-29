@@ -22,8 +22,12 @@ require_once "common.php";
 
 // Processing form data when form is submitted
 if($_SERVER["REQUEST_METHOD"] == "POST"){
-    $username = trim($_POST["username"]);
-    $password = trim($_POST["password"]);
+    /** @var string $username */
+    $username = $_POST["username"];
+    $username = trim($username);
+    /** @var string $password */
+    $password = $_POST["password"];
+    $password = trim($password);
 
     $cnxstr = $_SERVER["REMOTE_ADDR"];
     if (!empty($_SERVER["HTTP_X_FORWARDED_FOR"]))

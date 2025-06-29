@@ -20,7 +20,9 @@
 
 require_once "common.php";
 
-$uri = (string)parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+/** @var string $uri */
+$uri = $_SERVER['REQUEST_URI'];
+$uri = (string)parse_url($uri, PHP_URL_PATH);
 $uri = explode( '/', $uri );
 
 // FIXME: Should this code be split up more into seperate functions ?
@@ -56,13 +58,17 @@ try {
           throw new RuntimeException("Not found");
         try {
           // This will throw an error in case of a problem which is caught below
-          check_files($_FILES["file"], "application/gzip");
+          /** @var array{error: int, size: int, tmp_name: string} $file */
+          $file = $_FILES["file"];
+          check_files($file, "application/gzip");
 
           // The contents of the tar files is controlled in dsasbackup
-          if (empty($_POST["passwd"]))
-            $ret = dsas_exec(["/usr/local/sbin/dsasbackup", "-r", $_FILES["file"]["tmp_name"]]);
+          /** @var string $passwd */
+          $passwd = $_POST["passwd"];
+          if (empty($passwd))
+            $ret = dsas_exec(["/usr/local/sbin/dsasbackup", "-r", $file["tmp_name"]]);
            else
-            $ret = dsas_exec(["/usr/local/sbin/dsasbackup", "-r", $_FILES["file"]["tmp_name"], "-p", $_POST["passwd"]]);
+            $ret = dsas_exec(["/usr/local/sbin/dsasbackup", "-r", $file["tmp_name"], "-p", $passwd]);
           if ($ret["retval"] != 0)
             throw new RuntimeException($ret["stderr"]);
           echo json_encode($ret);
@@ -78,19 +84,31 @@ try {
 
         switch ($uri[4]) {
           case "drag":
-            $errors = dsas_drag_cert($_POST["from"], $_POST["to"]);
+            /** @var string $from*/
+            $from = $_POST["from"];
+            /** @var string $to */
+            $to = $_POST["to"];
+            $errors = dsas_drag_cert($from, $to);
             break;
 
           case "x509":
-            $errors = dsas_upload_cert($uri[4], $_FILES["file"], "text/plain");
+            /** @var array{error: int, size: int, tmp_name: string} $file */
+            $file = $_FILES["file"];
+            $errors = dsas_upload_cert($uri[4], $file, "text/plain");
             break;
 
           case "pubkey":
-            $errors = dsas_upload_cert($uri[4], $_FILES["file"], "text/plain", $_POST["name"]);
+            /** @var array{error: int, size: int, tmp_name: string} $file */
+            $file = $_FILES["file"];
+            /** @var string $name */
+            $name = $_POST["name"];
+            $errors = dsas_upload_cert($uri[4], $file, "text/plain", $name);
             break;
 
           case "gpg":
-            $errors = dsas_upload_cert($uri[4], $_FILES["file"], "application/pgp-keys");
+            /** @var array{error: int, size: int, tmp_name: string} $file */
+            $file = $_FILES["file"];
+            $errors = dsas_upload_cert($uri[4], $file, "application/pgp-keys");
             break;
 
           default:
@@ -108,11 +126,13 @@ try {
         if (count($uri) != 4)
           throw new RuntimeException("Not found");
 
+        /** @var string $_data */
+        $_data = $_POST["data"];
         /** @var array{bas: array{dhcp: string, cidr: string, gateway: string,
           *                       dns: array{domain: string, nameserver: string[]}},
           *            haut: array{dhcp: string, cidr: string, gateway: string,
           *                       dns: array{domain: string, nameserver: string[]}}} $data */
-        $data = json_decode($_POST["data"], true);
+        $data = json_decode($_data, true);
         $errors = dsas_net($data);
         header("Content-Type: application/json");
         if ($errors == []) {
@@ -132,8 +152,10 @@ try {
           echo json_encode(["error" => "Error loading XML file"]);
           die();
         }
+        /** @var string $_data */
+        $_data = $_POST["data"];
         /** @var array{username: string, passwd: string} $data */
-        $data = json_decode($_POST["data"], true);
+        $data = json_decode($_data, true);
         $errors = array();
         if ($data["username"] != $_SESSION["username"])
           $errors[] = ["error" => ["Attempt to change password of a different user",  (string)$data["username"]]];
@@ -178,7 +200,7 @@ try {
           if (! $found)
             $errors[] = ["error" => ["The user '{0}' does not exist",  (string)$data["username"]]];
         }
-        if ($dsas !== false && $errors == []) {
+        if ($errors == []) {
           $dsas->asXml(_DSAS_XML);
           echo json_encode(["retval" => 0]);
         } else  {
@@ -191,17 +213,19 @@ try {
         if (count($uri) != 4)
           throw new RuntimeException("Not found");
 
-         /** @var array{ssh: array{active: string, user_tc: string,
-          *                       user_bas: string, user_haut: string},
-          *            radius: array{active: string, server: string, secret: string, domain: string},
-          *            syslog: array{active: string, server: string},
-          *            ntp: array{active: string, server: array{string}},
-          *            antivirus: array{active: string, uri: string},
-          *            web: array{repo: string, repo_http: string},
-          *            snmp: array{active: string, username: string, password: string,
-                                   encrypt: string, passpriv: string,
-                                   privencrypt: string}} $data */
-        $data = json_decode($_POST["data"], true);
+        /** @var string $_data */
+        $_data = $_POST["data"];
+        /** @var array{ssh: array{active: string, user_tc: string,
+         *                       user_bas: string, user_haut: string},
+         *            radius: array{active: string, server: string, secret: string, domain: string},
+         *            syslog: array{active: string, server: string},
+         *            ntp: array{active: string, server: array{string}},
+         *            antivirus: array{active: string, uri: string},
+         *            web: array{repo: string, repo_http: string},
+         *            snmp: array{active: string, username: string, password: string,
+                                  encrypt: string, passpriv: string,
+                                  privencrypt: string}} $data */
+        $data = json_decode($_data, true);
         $errors = dsas_service($data);
         if ($errors == []) {
           echo json_encode(["retval" => 0]);
@@ -229,12 +253,14 @@ try {
         else {
           switch ($uri[4]) {
             case "add":
+              /** @var string $_data */
+              $_data = $_POST["data"];
               /** @var array{name: string, id: string, type: string,
                 * run: string, directory: string, uri: string,
                 * ca: array{name: string, fingerprint: string},
                 * archs: array{array{arch: string, active: string}},
                 * certs: array{array{name: string, fingerprint: string}}} $data */
-              $data = json_decode($_POST["data"], true);
+              $data = json_decode($_data, true);
               $errors = dsas_add_task($data);
               break;
 
@@ -261,6 +287,7 @@ try {
               break;
 
             case "info":
+              /** @var int $len */
               $len = $_POST["len"];
               if (! ctype_xdigit($id)) {
                 $errors[] = ["error" => "The task ID is invalid"];
@@ -279,9 +306,9 @@ try {
                   if ( ! $infotask) {
                     $errors[] = ["error" => ["The task '{0}' is not active. Try applying before use",  $id]];
                   } else {
-                   if (empty($len))
-                     $len = 0;
-                   $info = dsas_get_log($len, _DSAS_LOG . "/tasks/" . $id . ".log");
+                    if (empty($len))
+                      $len = 0;
+                    $info = dsas_get_log($len, _DSAS_LOG . "/tasks/" . $id . ".log");
                   }
                 }
               }
@@ -315,8 +342,10 @@ try {
               break;
 
             case "name":
+              /** @var string $_data */
+              $_data = $_POST["data"];
               /** @var array{old: string, new: string} */
-              $data = json_decode($_POST["data"], true);
+              $data = json_decode($_data, true);
               $old = $data["old"];
               foreach ($dsas->tasks->task as $task) {
                 if ($task->name == $old && $task->id == $id) {
@@ -428,8 +457,12 @@ try {
             break;
 
           case "drag" :
-            $from = intval($_POST["from"]);
-            $to = intval($_POST["to"]);
+            /** @var string $_from*/
+            $_from = $_POST["from"];
+            /** @var string $_to */
+            $_to = $_POST["to"];
+            $from = intval($_from);
+            $to = intval($_to);
             $nt =  $dsas->config->users[0]->count();
             if ($from < 1 || $to < 0 || $from > $nt - 1 || $to > $nt - 1) {
               $errors[] = ["error" => "The user drag is invalid"];
@@ -442,8 +475,10 @@ try {
             break;
 
           case "modify":
+            /** @var string $_data */
+            $_data = $_POST["data"];
             /** @var array{username: string, passwd: string, description: string, type: string, active: string} $data */
-            $data = json_decode($_POST["data"], true);
+            $data = json_decode($_data, true);
             /** @var array{username: string, passwd: string, description: string, type: string, active: string} $duser */
             foreach ($data as $duser) {
               $found = false;
@@ -479,6 +514,7 @@ try {
             foreach ($dsas->config->users->user as $_user) {
               if ($_user->username == $user) {
                 $found = true;
+                /** @var string $passwd */
                 $passwd = $_POST["passwd"];
                 if ($passwd != str_replace("/\s+/", "", $passwd))
                   $errors[] = [$user => "The password can not contain white spaces"];
@@ -520,9 +556,11 @@ try {
         switch ($uri[4]) {
           case "upload":
             try {
-              check_files($_FILES["file"], "text/plain");
+              /** @var array{error: int, size: int, tmp_name: string} $file */
+              $file = $_FILES["file"];
+              check_files($file, "text/plain");
 
-              $crt = htmlspecialchars((string)file_get_contents($_FILES["file"]["tmp_name"]));
+              $crt = htmlspecialchars((string)file_get_contents($file["tmp_name"]));
               $crt = str_replace("\r", "", $crt);   // dos2unix
               if (!openssl_x509_parse($crt))
                 throw new RuntimeException("The CRT file must be in PEM format");
@@ -542,16 +580,32 @@ try {
             break;
 
           case "renew":
+            /** @var string countryName */
+            $countryName = $_POST["countryName"];
+            /** @var string stateOrProvinceName */
+            $stateOrProvinceName = $_POST["stateOrProvinceName"];
+            /** @var string localityName */
+            $localityName = $_POST["localityName"];
+            /** @var string organizationName */
+            $organizationName = $_POST["organizationName"];
+            /** @var string organizationalUnitName */
+            $organizationalUnitName = $_POST["organizationalUnitName"];
+            /** @var string commonName */
+            $commonName = $_POST["commonName"];
+            /** @var string emailAddress */
+            $emailAddress = $_POST["emailAddress"];
             $options = array(
-              "countryName" => htmlspecialchars(trim($_POST["countryName"])),
-              "stateOrProvinceName" => htmlspecialchars(trim($_POST["stateOrProvinceName"])),
-              "localityName" => htmlspecialchars(trim($_POST["localityName"])),
-              "organizationName" => htmlspecialchars(trim($_POST["organizationName"])),
-              "organizationalUnitName" => htmlspecialchars(trim($_POST["organizationalUnitName"])),
-              "commonName" => htmlspecialchars(trim($_POST["commonName"])),
-              "emailAddress" => htmlspecialchars(trim($_POST["emailAddress"])),
+              "countryName" => htmlspecialchars(trim($countryName)),
+              "stateOrProvinceName" => htmlspecialchars(trim($stateOrProvinceName)),
+              "localityName" => htmlspecialchars(trim($localityName)),
+              "organizationName" => htmlspecialchars(trim($organizationName)),
+              "organizationalUnitName" => htmlspecialchars(trim($organizationalUnitName)),
+              "commonName" => htmlspecialchars(trim($commonName)),
+              "emailAddress" => htmlspecialchars(trim($emailAddress)),
             );
-            $validity = intval($_POST["validity"]);
+            /** @var string $_validity */
+            $_validity = $_POST["validity"];
+            $validity = intval($_validity);
             $errors = renew_web_cert($options, $validity);
             break;
 
@@ -616,15 +670,21 @@ try {
           throw new RuntimeException("Not found");
 
         $BKP = "/tmp/dsasbackup.tgz";
-        if (empty($_GET["passwd"]))
+        /** @var string $passwd */
+        $passwd = $_GET["passwd"];
+        if (empty($passwd))
           $ret = dsas_exec(["/usr/local/sbin/dsasbackup", $BKP]);
         else
-          $ret = dsas_exec(["/usr/local/sbin/dsasbackup", $BKP, "-p", $_GET["passwd"]]);
+          $ret = dsas_exec(["/usr/local/sbin/dsasbackup", $BKP, "-p", $passwd]);
         if ($ret["retval"] != 0)
           header("HTTP/1.0 500 Internal Server Error: " . $ret["stderr"]);
         else {
           if ($fp = fopen($BKP, "rb")) {
-            $backup = fread($fp, (int)filesize($BKP));
+            $len = (int)filesize($BKP);
+            if ($len > 0)
+              $backup = fread($fp, $len);
+            else
+              $backup = "";
             fclose($fp);
             header("Content-Type: application/json");
             echo json_encode(["file" => base64_encode((string)$backup)]);

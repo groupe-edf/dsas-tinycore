@@ -133,7 +133,7 @@ function dsas_user_active(string $user) : bool {
  * machine. It should have arguments passed as an array to prevent the process
  * spawning a shell that might be attacked
  *
- * @param array<string>|string $args list of arguments to pass to proc_open
+ * @param list<string>|string $args list of arguments to pass to proc_open
  * @param string $cwd Current working directory
  * @param array<string> $stdin An array of strings representing line by line the input
  * @return array{retval: int, stdout: string, stderr: string}
@@ -367,8 +367,6 @@ function ip_interface(string $interface) : string{
   $output = dsas_exec(["/sbin/ifconfig", $interface]);
   if ($output["retval"] === 0) {
     $text = $output["stdout"];
-    if (! is_string($text))
-      $text = implode(" ", $text);
     preg_match($pattern1, $text, $matches);
     if (count($matches) < 2)
       return "";
@@ -583,7 +581,8 @@ function renew_web_cert(array $options, int $validity) : array {
   } else
     $pkeyout = "";
 
-  if (($csr = openssl_csr_new($options, $privkey, array("digest_alg" => "sha256")))
+  if (($csr = openssl_csr_new($options, $privkey, array("digest_alg" => "sha256"))) 
+    && ($csr !== true) 
     && ($x509 = openssl_csr_sign($csr, null, $privkey, $days, array("digest_alg" => "sha256")))) {
     openssl_csr_export($csr, $csrout);
     openssl_x509_export($x509, $certout);
@@ -979,9 +978,9 @@ function dsas_net($data) {
   $errors = array();
   try {
     $dsas = simplexml_load_file(_DSAS_XML);
-    if (! $dsas)
+    if (! $dsas) {
       throw new RuntimeException("Error loading XML file");
-
+    }
     $ifaces = get_ifaces();
     $j=0;
     foreach (["bas", "haut"] as $iface) {
@@ -1023,18 +1022,18 @@ function dsas_net($data) {
       if (empty($dns_err)) {
         unset($dsas->config->network->{$iface}->dns->nameserver);
         foreach ($net["dns"]["nameserver"] as $server)
-          $dsas->config->network->{$iface}->dns->nameserver[] = $server;
+          // The dns[0] is here just to avoid a level 9 PHPStan error        
+          $dsas->config->network->{$iface}->dns[0]->nameserver[] = $server;
       } else
         $errors[] = ["iface_nameserver" .$j => $dns_err];
 
       $j++;
-    }
+    }   
+    $dsas->asXml(_DSAS_XML);
   } catch (Exception $e) {
      $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
   }
-  if ($dsas !== false && $errors == [])
-    $dsas->asXml(_DSAS_XML);
-
+  
   return $errors;
 }
 
@@ -1217,17 +1216,17 @@ function dsas_service($data) {
       $errors[] = ["error" => "The SNMP privacy encryption is illegal"];
     else
       $dsas->config->snmp->privencrypt = $snmp_privencrypt;
+      
+    $dsas->asXml(_DSAS_XML);
   } catch (Exception $e) {
      $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
   }
-  if ($dsas !== false && $errors == [])
-    $dsas->asXml(_DSAS_XML);
 
   return $errors;
 }
 
 /**
- * Function to delete a certificate form the DSAS  configuration
+ * Function to delete a certificate from the DSAS configuration
  *
  * usage:
  *   dsas_delete_cert($finger)
@@ -1283,11 +1282,10 @@ function dsas_delete_cert($finger) {
       if ($certok)
         unset($dsas->certificates->certificate[$i]);
     }
+    $dsas->asXml(_DSAS_XML);
   } catch (Exception $e) {
      $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
   }
-  if ($dsas !== false && $errors == [])
-    $dsas->asXml(_DSAS_XML);
 
   return $errors;
 }
@@ -1815,11 +1813,10 @@ if (count($certs) < 1)
         }
       }
     }
+    $dsas->asXml(_DSAS_XML);
   } catch (Exception $e) {
      $errors[] = ["error" => ["Internal server error : {0}", $e->getMessage()]];
   }
-  if ($dsas !== false && $errors == [])
-    $dsas->asXml(_DSAS_XML);
 
   return $errors;
 }
