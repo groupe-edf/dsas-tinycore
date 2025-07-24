@@ -39,8 +39,6 @@ sed -i -e 's/^# CONFIG_PAM.*/CONFIG_PAM=y/' .config
 sed -i -e 's/CONFIG_FEATURE_MOUNT_NFS=y/CONFIG_FEATURE_MOUNT_NFS=n/' .config
 sed -i -e 's/CONFIG_FEATURE_MOUNT_CIFS=y/CONFIG_FEATURE_MOUNT_CIFS=n/' .config
 chown tc:staff .config
-# Remove support for su (not PAM support) and allow only sudo
-sed -i -e 's/CONFIG_SU=y/CONFIG_SU=n/' .config
 
 # Config for NOSUID version of busybox
 cd $builddir/$_pkg_path.nosuid
