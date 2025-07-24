@@ -705,6 +705,11 @@ function _utf8ize(mixed $d) : mixed {
  */
 function parse_gpg(string $cert) : array {
   $retval = [];
+
+  if (! is_dir($_SERVER['HOME'] . "/.gnupg")) {
+    mkdir($_SERVER['HOME'] . "/.gnupg", 0700);
+  }
+
   if ($tmp = tempnam("/tmp", "dsas_")) {
     file_put_contents($tmp, $cert);
     $data = [];
