@@ -1,5 +1,3 @@
-usr/local/etc/ssh/ssh_host_dsa_key
-usr/local/etc/ssh/ssh_host_dsa_key.pub
 usr/local/etc/ssh/ssh_host_ecdsa_key
 usr/local/etc/ssh/ssh_host_ecdsa_key.pub
 usr/local/etc/ssh/ssh_host_ed25519_key
