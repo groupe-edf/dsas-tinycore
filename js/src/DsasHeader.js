@@ -177,7 +177,7 @@ window.dsasRealRestore = dsasRealRestore;
 function dsasPasswdRestore() {
     const modalDSAS = document.getElementById("modalDSAS");
     const body = document.createDocumentFragment();
-    modalAction(_("Restoration of the DSAS configuration"), dsasRealRestore, true);
+    modalAction(_("Restoration of the DSAS configuration"), () => { dsasRealRestore(); }, true);
 
     const el = body.appendChild(document.createElement("div"));
     el.className = "col-9 d-flex justify-content-center";
