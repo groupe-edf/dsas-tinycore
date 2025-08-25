@@ -1,5 +1,10 @@
 Log of the principal changes to the DSAS
 
+Version 4.0.2 (XX XX XXX)
+- Remove backup of DSA clefs as openssh no longer generates them
+- Restore ssh keys in /opt/lftp as well
+- Restart sshd after restoration of the configuration so that updated host keys are used
+
 Version 4.0.1 (24 Jul 2025)
 - If /home/tc/.gnupg doesn't exist create it, fixing problems with gpg ids
 - Reenable the busybox applet "su"
