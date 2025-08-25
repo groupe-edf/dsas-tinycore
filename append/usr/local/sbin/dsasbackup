@@ -224,6 +224,21 @@ else
     fi
     id=$((id + 1))
   done
+  
+  # At this point the ssh hosts and keys are setup. Link them to the chroot jail,
+  # in a manner that they can't be abused to create an executable.
+  # Don't mount /home/haut as this will give the user the capacity to create an executable
+  [ -d "/opt/lftp/home/haut/.ssh" ] || mkdir -p /opt/lftp/home/haut/.ssh
+  chmod 0550 /opt/lftp/home/haut /opt/lftp/home/haut/.ssh
+  (umask 227; cp /home/haut/.ssh/ /opt/lftp/home/haut/.ssh)
+  (sudo sudo -u haut ssh "tc@$INTERCO_HAUT" sudo /bin/sh -c "(umask 117; cp /home/haut/.ssh/known_hosts /opt/lftp/home/haut/.ssh/known_hosts")
+  chown -R root:haut /opt/lftp/home/haut
+  chmod 0660 /opt/lftp/home/haut/.ssh/known_hosts
+  
+  # Restart the ssh server to force reading the host keys. Using SSH to restart
+  # SSH on the haut machine is not a problem as active sessions stay active
+  (sudo sudo -u haut ssh "tc@$INTERCO_HAUT" sudo /usr/local/etc/init.d/openssh restart)
+  pgrep sshd > /dev/null && sudo /usr/local/etc/init.d/openssh restart
 
   # Save the restored files to the active configuration.   
   /usr/bin/filetool.sh -b > /dev/null 2>&1 || { 1>&2 echo "Error running filetool"; exit 1; }
