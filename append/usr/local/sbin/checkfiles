@@ -128,7 +128,7 @@ task_id_to_idx(){
   while :; do
     _task_id=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" "$CONF")
     [ -z "$_task_id" ] && return 1;
-    [ "$1" = "$_task_id" ] && echo $i && return 
+    [ "$1" = "$_task_id" ] && echo $i && return
     i=$((i + 1))
   done
 }
@@ -158,7 +158,7 @@ ln() {
     /bin/mv -f "$1.tmp.$$" "$1"
     chmod 0640 "$1"
     chgrp "$grp" "$1"
-    /bin/ln -f "$1" "$2" 
+    /bin/ln -f "$1" "$2"
   else
     [ -d "$(dirname "$2")" ] || echo "[DryRun] mkdir -m 770 -p $(dirname "$2")"
     echo "[DryRun] ln $*"
@@ -180,7 +180,7 @@ mkdir() {
     done
     /bin/mkdir -p "$1"
     chgrp -R "$grp" "$_d"
-    chmod -R 770 "$_d"  
+    chmod -R 770 "$_d"
     shift
   done
 }
@@ -208,13 +208,13 @@ verifauthenticode(){
 
   if [ -f "$tempdir/cert.1" ]; then
     # Don't use the -require-leaf-hash of osslsigncode as it only checks the leaves and not the
-    # intermediate certificates since version 2.2. Extract all of the certificates from the file 
-    # and check them against the hash. If osslsigncode goes back to the behavior of version 2.1 
+    # intermediate certificates since version 2.2. Extract all of the certificates from the file
+    # and check them against the hash. If osslsigncode goes back to the behavior of version 2.1
     # this block can be replaced with one line with the -require-leaf-hash option
     sigdir=$(mktemp -d)
     osslsigncode extract-signature -pem -out "$sigdir/sig.pkcs7" -in "$file" > /dev/null 2>&1
 
-    # There can be multiple signatures in the PKCS7 file. openssl will only treat the 
+    # There can be multiple signatures in the PKCS7 file. openssl will only treat the
     # first one normally. Find the offsets in the file for each signature block, and treat
     # each seperately
     offsets="0 $(openssl asn1parse -inform pem -in "$sigdir/sig.pkcs7" 2> /dev/null | grep -B 1 pkcs7-signedData | \
@@ -254,7 +254,7 @@ verifgpg(){
     # gpg -sign
     gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file" > /dev/null 2>&1 || return 1
   elif [ "${file##*.}" = "asc" ]; then
-    # gpg --clearsign 
+    # gpg --clearsign
     gpg --no-default-keyring --keyring "$tempdir/cert.0.gpg" --verify "$file" > /dev/null 2>&1 || return 1
   elif [ -f "$file.asc" ]; then
     # gpg -a --detach-sig --sign
@@ -292,7 +292,7 @@ verifopenssl(){
 
     # Extract the public key
     openssl x509 -pubkey -inform pem -in "$Leaf" -outform pem -out "$tempdir/pubkey"
-    
+
     # Verify with the public key
     openssl dgst -verify "$tempdir/pubkey" -signature "$file.sig" -binary "$file"
   fi
@@ -331,7 +331,7 @@ verifcyberwatch(){
 }
 
 verifliveupdate(){
-  local id tempdir src file zipdir dest livetri 
+  local id tempdir src file zipdir dest livetri
   local sig grd g args s1 s256 f basedir s t last filedir
   id=$1
   tempdir="$2"
@@ -341,7 +341,7 @@ verifliveupdate(){
   dest="$6"
   livetri=$7
 
-  unzip -d "$zipdir" "$src/$file" > /dev/null 2>&1 || 7z -o"$zipdir" x "$src/$file" > /dev/null 2>&1 
+  unzip -d "$zipdir" "$src/$file" > /dev/null 2>&1 || 7z -o"$zipdir" x "$src/$file" > /dev/null 2>&1
   sig=$(find "$zipdir" -name "*.sig")
   [ -n "$sig" ] || { 1>&2 myecho "File *.sig not found in the archive $(basename "$file")"; return 1; }
 
@@ -352,16 +352,16 @@ verifliveupdate(){
 
   # Get base directory name
   basedir=$(dirname "$(find "$zipdir" -name "*.grd" | head -n1)")
-    
-  # Verify the signature of the  file *.grd...  
+
+  # Verify the signature of the  file *.grd...
   for s in $sig; do
     # Special case v1.sig that is an alternative signature for v.sig
     [ "$(basename "$s")" = "v1.sig" ] && continue
     t=$(echo "$s" | sed -e 's/.sig$/.grd/g')
     [ -f "$t" ] || { 1>&2 myecho "Checksum file $(basename "$t") not found in the archive $(basename "$file")"; return 1; }
-    # I want the variable $args to do word splitting, ignore 
+    # I want the variable $args to do word splitting, ignore
     # the shellcheck error associated with it
-    # shellcheck disable=SC2086    
+    # shellcheck disable=SC2086
     openssl cms -verify -inform DER -in "$s" -content "$t" $args > /dev/null 2>&1 || \
         { 1>&2 myecho "Verification failure of the file $(basename "$t") from the archive $(basename "$file") "; return 1; }
   done
@@ -390,7 +390,7 @@ verifliveupdate(){
         grep -qi "$f" "$g" && { grd="$g"; break; }
       done < <(find "$basedir" -type f -name "*.grd" -print0)
       if [ -z "$grd" ]; then
-        1>&2 myecho "Can not verify the file $(basename "$f") from the archive $(basename "$file")"; 
+        1>&2 myecho "Can not verify the file $(basename "$f") from the archive $(basename "$file")";
         return 1;
       fi
     fi
@@ -448,7 +448,7 @@ verifliveupdate(){
   done < <(find "$basedir" -type f -name "*.grd" -print0)
 
   # Repack the zip file before returning to avoid potentiel hidden files
-  if [[ "${file##*.}" = "7z" ]]; then 
+  if [[ "${file##*.}" = "7z" ]]; then
     if [ "$dryrun" = "0" ]; then
       (cd "$zipdir" || { 2>&1 echo "Failed to create temporary directory"; return 254; }; 7z a "$src/$file.$$" ./*)
       /bin/mv "$src/$file.$$" "$src/$file"
@@ -479,9 +479,9 @@ verifsmime() {
   args="-purpose any"
   [ -f "$tempdir/cert.0" ] && args="$args -CAfile $tempdir/cert.0"
   [ -f "$tempdir/cert.1" ] && args="$args -nointern -certfile $tempdir/cert.1"
-  # I want the variable $args to do word splitting, ignore 
+  # I want the variable $args to do word splitting, ignore
   # the shellcheck error associated with it
-  # shellcheck disable=SC2086    
+  # shellcheck disable=SC2086
   [ -f "$sig" ] && { openssl cms -verify -inform DER -in "$sig" -content "$file" $args > /dev/null 2>&1 || \
           { 1>&2 myecho "Verification failure of the file $file"; return 1; }; }
 
@@ -500,7 +500,7 @@ verifjar() {
   unzip -d "$zipdir" "$src/$file" > /dev/null 2>&1 || 7z -o"$zipdir" x "$src/$file" > /dev/null 2>&1 \
       || { 1>&2 myecho "Failed to unzip archive"; return 1; }
 
-  # Check that there is only one Manifest file and that each SF file corresponds to 
+  # Check that there is only one Manifest file and that each SF file corresponds to
   # a *.RSA, *.DSA ou SIG-* file and that all other files are listed in the manifest
   manifest="";
   while IFS= read -r -d '' _file; do
@@ -549,20 +549,20 @@ verifjar() {
       [ "$(sha256sum "$manifest" | cut -f1 -d' ')" = "$_hash" ] || return 1
     elif [ ${#_hash} -ge 40 ]; then
       [ "$(sha1sum "$manifest" | cut -f1 -d' ')" = "$_hash" ] || return 1
-    else 
+    else
       [ "$(md5sum "$manifest" | cut -f1 -d' ')" = "$_hash" ] || return 1
     fi
 
     # Treat *.RSA signatures
     _sig="${sf%.SF}.RSA"
-    # shellcheck disable=SC2086 
+    # shellcheck disable=SC2086
     [ -f "$_sig" ] && { openssl cms -verify -inform DER -in "$_sig" -content "$sf" $args > /dev/null 2>&1 || \
           { 1>&2 myecho "Verification failure of the file ${sf#"$zipdir"/} from the archive $(basename "$file") "; return 1; }; }
 
-    # Treat *.DSA signatures.  Not sure this is the right thing to do. 
+    # Treat *.DSA signatures.  Not sure this is the right thing to do.
     # Needs testing if I had a JAR with a DSA signature
     _sig="${sf%.SF}.DSA"
-    # shellcheck disable=SC2086 
+    # shellcheck disable=SC2086
     [ -f "$_sig" ] && { openssl cms -verify -inform DER -in "$_sig" -content "$sf" $args > /dev/null 2>&1 || \
           { 1>&2 myecho "Verification failure of the file ${sf#"$zipdir"/} from the archive $(basename "$file") "; return 1; }; }
 
@@ -578,10 +578,10 @@ verifjar() {
   s1=""
   md5=""
   while :; do
-    IFS= read -r line || last=true   
+    IFS= read -r line || last=true
 
     # shellcheck disable=SC2076
-    if [ -n "$last" ] || [[ "$line" =~ "^Name:" ]]; then  
+    if [ -n "$last" ] || [[ "$line" =~ "^Name:" ]]; then
       [ -z "$last" ] && [ -z "$_file" ] && { _file=$(echo "$line" | dos2unix | sed -e "s/^Name: \(.*\)\s*$/\1/g"); continue; }
       if [ -f "$zipdir/$_file" ]; then
         [ -z "$s256" ] || sha256sum "$zipdir/$_file" | grep -q "$s256" || \
@@ -626,7 +626,7 @@ verifjar() {
     fi
   done <  <(sed -z 's/\n //g ' "$manifest")
 
-  if [[ "${file##*.}" = "7z" ]]; then 
+  if [[ "${file##*.}" = "7z" ]]; then
     if [ "$dryrun" = "0" ]; then
       (cd "$zipdir" || { 2>&1 echo "Failed to create temporary directory"; return 254; }; 7z -r a "$src/$file.$$" ./*)
       /bin/mv "$src/$file.$$" "$src/$file"
@@ -651,7 +651,7 @@ verifdirectory() {
   dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
   dir=${dir%/}
   type=$(xmllint --xpath "string(dsas/tasks/task[$id]/type)" "$CONF")
-  
+
   # Validate check type
   case $type in
     authenticode|openssl|gpg|liveupdate|cyberwatch|jar|trend) : ;;
@@ -670,7 +670,7 @@ verifdirectory() {
       if [ "$type" = "liveupdate" ] || [ "$type" = "trend" ]; then
         cat /tmp/cert.$$ >> "$tempdir/cert.0"
       else
-        [ -f "$tempdir/cert.0" ] && 1>&2 myecho "Multiple authority certificates defined" 
+        [ -f "$tempdir/cert.0" ] && 1>&2 myecho "Multiple authority certificates defined"
         /bin/mv "/tmp/cert.$$" "$tempdir/cert.0"
       fi
     else
@@ -700,7 +700,7 @@ verifdirectory() {
 
   # Create directory if needed
   [ -d "$DSAS_BAS/$dir" ] || mkdir "$DSAS_BAS/$dir"
-  
+
   # Remove the files in our tree bas and not in haut.
   while IFS= read -r -d '' file; do
     if [ "$(stat --printf "%h\n"  "$file")" = "1" ]; then
@@ -710,10 +710,10 @@ verifdirectory() {
   done < <(find "$DSAS_BAS/$dir" -type f -print0)
 
   # If LiveUpdate, test files *livetri.zip first as they can sign other files
-  if [ "$type" = "liveupdate" ]; then        
+  if [ "$type" = "liveupdate" ]; then
     while IFS= read -r -d '' file; do
-      file=${file#"$DSAS_HAUT/"}    
-    
+      file=${file#"$DSAS_HAUT/"}
+
       # If file exists in bas skip. Hardlinked, so test is fast
       [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
 
@@ -737,8 +737,8 @@ verifdirectory() {
         -o -name "SymantecProductCatalog.zip" -o -name "*.jdb" \) -print0)
   elif [ "$type" = "trend" ] || [ "$type" = "jar" ]; then
    while IFS= read -r -d '' file; do
-      file=${file#"$DSAS_HAUT/"}    
-    
+      file=${file#"$DSAS_HAUT/"}
+
       # If file exists in bas skip. Hardlinked, so test is fast
       [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
 
@@ -763,7 +763,7 @@ verifdirectory() {
           status=$?
         fi
       else
-        # JAR file 
+        # JAR file
         zipdir=$(mktemp -d)
         verifjar "$id" "$tempdir" "$DSAS_HAUT" "$file" "$zipdir" "$DSAS_BAS"
         status=$?
@@ -779,19 +779,19 @@ verifdirectory() {
     done < <(find "$DSAS_HAUT/$dir" -type f \( -name "*.7z" -o -name "*.zip" -o -name "*.jar" \) -print0)
   else
     while IFS= read -r -d '' file; do
-      file=${file#"$DSAS_HAUT/"}    
-    
+      file=${file#"$DSAS_HAUT/"}
+
       # If file exists in bas skip. Hardlinked, so test is fast
       [ "$DSAS_HAUT/$file" -ef "$DSAS_BAS/$file" ] && continue
 
       case $type in
         authenticode) verifauthenticode "$id" "$tempdir" "$DSAS_HAUT/$file" ;;
         cyberwatch)
-          [ "${file##*.}" != "zip" ]  && msgline "$DSAS_HAUT/$file" 255 && continue 
+          [ "${file##*.}" != "zip" ]  && msgline "$DSAS_HAUT/$file" 255 && continue
           verifcyberwatch "$id" "$tempdir" "$DSAS_HAUT/$file"
           ;;
-        openssl) 
-          [ "${file##*.}" = "sig" ]  && continue 
+        openssl)
+          [ "${file##*.}" = "sig" ]  && continue
           verifopenssl "$id" "$tempdir" "$DSAS_HAUT/$file"
           ;;
         gpg)
@@ -858,7 +858,7 @@ verify_packages() {
       if  check_checksum "$DSAS_HAUT/$dir/$file" "$chksum" "$chktype"; then
         msgline "$DSAS_HAUT/$dir/$file" 2
       elif [ "$rpm_k" = "1" ] && ! checkrpm "$DSAS_HAUT/$dir/$file"; then
-        msgline "$DSAS_HAUT/$dir/$file" 5      
+        msgline "$DSAS_HAUT/$dir/$file" 5
       elif [ "$antivirus" = "true" ]; then
         if rpm2cpio "$DSAS_HAUT/$dir/$file" | clamdscan - > /dev/null 2>&1; then
           msgline "$DSAS_HAUT/$dir/$file" 0
@@ -898,12 +898,12 @@ verifrepo() {
   else
     # For rpm signature verification need to import GPG key
     rpm --import "$tempdir/cert.0" > /dev/null 2>&1
-  fi 
+  fi
 
   # Create the destination directory if needed
   [ -d "$DSAS_BAS/$dir" ] || mkdir "$DSAS_BAS/$dir"
 
-  # Test antivirus 
+  # Test antivirus
   if [ "$antivirus" = "true" ]; then
     clamdscan "$DSAS_HAUT/$dir/repodata/repomd.xml" > /dev/null 2>&1 || { msgline "$DSAS_HAUT/$dir/repodata/repomd.xml" 4; exit 1; }
   fi
@@ -939,7 +939,7 @@ verifrepo() {
       cleanup_and_exit 1 "$tempdir"
     fi
 
-    # Test antivirus 
+    # Test antivirus
     if [ "$antivirus" = "true" ]; then
       clamdscan "$DSAS_HAUT/$dir/$f" > /dev/null 2>&1 || { 1>&2 echo "The file $f fails the antivirus test"; cleanup_and_exit 4 "$tempdir"; }
     fi
@@ -976,21 +976,21 @@ verifrepo() {
   done < <(find "$DSAS_BAS/$dir" -path ./repodata -prune -type f -o -type f -print0)
 
   # Verify the packages
-  # I want the variable $filetable to do word splitting, ignore 
+  # I want the variable $filetable to do word splitting, ignore
   # the shellcheck error associated with it
-  # shellcheck disable=SC2086 
+  # shellcheck disable=SC2086
   [ "$type" = "rpm" ] && verify_packages "$dir" 1 $filetable
-  # shellcheck disable=SC2086 
+  # shellcheck disable=SC2086
   [ "$type" = "rpm" ] || verify_packages "$dir" 0 $filetable
-  
-  # Remove all RPM signature keys    
+
+  # Remove all RPM signature keys
   [ "$type" = "rpm" ] && rpm -e "$(rpm -qa)" 2> /dev/null
 
   /bin/rm -fr "$tempdir"
 }
 
 verifdeb(){
-  local chktyp inhash hashtyp _hash _hash_md5 _hash_sha256 _arch _file 
+  local chktyp inhash hashtyp _hash _hash_md5 _hash_sha256 _arch _file
   local j pool have_pool packages tempdir archs i _f package id dir type
   id=$1
   dir=$(xmllint --xpath "string(dsas/tasks/task[$id]/directory)" "$CONF")
@@ -1054,7 +1054,7 @@ verifdeb(){
     [ -z "$_arch" ] && break;
     archs="$archs $_arch"
     i=$((i + 1))
-  done 
+  done
 
   # Identify all files listed in Release and download them
   inhash=0
@@ -1072,7 +1072,7 @@ EOF
       # If file exists in bas skip. Hardlinked, so test is fast
       [ "$DSAS_HAUT/$dir/$_file" -ef "$DSAS_BAS/$dir/$_file" ] && continue
 
-      # Only check Package, Package.gz and Package.xz files if desired architecture 
+      # Only check Package, Package.gz and Package.xz files if desired architecture
       _f=$(basename "$_file")
       if [ "$_f" = "Packages" ] || [ "$_f" = "Packages.gz" ] || [ "$_f" = "Packages.xz" ]; then
         _f=$(dirname "$_file")
@@ -1080,7 +1080,7 @@ EOF
       fi
 
       if  check_checksum "$DSAS_HAUT/$dir/$_file" "$_hash" "$chktyp"; then
-        msgline "$DSAS_HAUT/$dir/$_file" 2  
+        msgline "$DSAS_HAUT/$dir/$_file" 2
       else
         [ -d "$(dirname "$DSAS_BAS/$dir/$_file")" ] || mkdir "$(dirname "$DSAS_BAS/$dir/$_file")"
         if [ "$antivirus" = "true" ]; then
@@ -1122,7 +1122,7 @@ EOF
   # into the pool directory
 
 
-  # For each file Packages.gz, and maybe Sources.gz, download the listed files 
+  # For each file Packages.gz, and maybe Sources.gz, download the listed files
   # into the pool directory
   packages=$(find "$DSAS_BAS/$dir" -name "Packages.gz")
   [[ "$archs" =~ "source" ]] && packages="$packages $(find "$DSAS_BAS/$dir" -name "Sources.gz")"
@@ -1173,7 +1173,7 @@ EOF
                 msgline "$DSAS_HAUT/$pool/$_file" 4
               fi
             else
-              msgline "$DSAS_HAUT/$pool/$_file" 0 
+              msgline "$DSAS_HAUT/$pool/$_file" 0
               ln "$DSAS_HAUT/$pool/$_file" "$DSAS_BAS/$pool/$_file"
             fi
           fi
@@ -1206,7 +1206,7 @@ passdirectory(){
 
   # Create directory if needed
   while IFS= read -r -d '' _d; do
-    _d=${_d#"$DSAS_HAUT/"}   
+    _d=${_d#"$DSAS_HAUT/"}
     [ -d "$DSAS_BAS/$_d" ] || mkdir "$DSAS_BAS/$_d"
   done < <(find "$DSAS_HAUT/$dir" -type d -print0)
 
@@ -1232,7 +1232,7 @@ passdirectory(){
   if [ "$2" = "deb" ]; then
     # Create directories if needed
     while IFS= read -r -d '' _d; do
-      _d=${_d#"$DSAS_HAUT/"}  
+      _d=${_d#"$DSAS_HAUT/"}
       [ -d "$DSAS_BAS/$_d" ] || mkdir "$DSAS_BAS/$_d"
     done < <(find "$DSAS_HAUT/$pool/pool" -type d -print0)
 
@@ -1270,7 +1270,7 @@ verifclamav(){
 
   # Create directory if needed
   [ -d "$DSAS_BAS/$dir" ] || mkdir "$DSAS_BAS/$dir"
-  
+
   if [ "$TYP" = "haut" ]; then
     for file in main.cvd daily.cvd bytecode.cvd; do
       # If file exists in bas skip. Hardlinked, so test is fast
@@ -1310,9 +1310,9 @@ while [ "$#" -gt 0 ]; do
     --out=*) logfile=${1#*=} ;;
     -h|--help) help; exit 0 ;;
     -*) 1>&2 echo "Unrecognized option : $1"; help; exit 1 ;;
-    *) 
+    *)
       [ -n "$ids" ] && { 1>&2 echo "Only a single task is allowed"; exit 1; }
-      ids="$ids $1" 
+      ids="$ids $1"
       ;;
   esac
   shift 1
@@ -1351,7 +1351,7 @@ for _id in $idx; do
     case $type in
       rpm|repomd) verifrepo "$_id"; ;;
       deb) verifdeb "$_id"; ;;
-      authenticode|openssl|gpg|liveupdate|cyberwatch|trend|jar) verifdirectory "$_id"; ;; 
+      authenticode|openssl|gpg|liveupdate|cyberwatch|trend|jar) verifdirectory "$_id"; ;;
       *) 1>&2 echo "Unknown task type : $type"; exit 1 ;;
     esac
   fi

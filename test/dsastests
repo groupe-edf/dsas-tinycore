@@ -64,7 +64,7 @@ function msg($msg = "Test") {
 }
 
 function pass() {
-  echo _green . "[PASS]" . _normal . PHP_EOL; 
+  echo _green . "[PASS]" . _normal . PHP_EOL;
 }
 
 function fail() {
@@ -85,7 +85,7 @@ function screenshot() {
 function modal_delay(int $n = 1) {
   // In Bootstrap using the "fade" option with modals, the objects
   // become visible before we can use them. We have to wait for the
-  // modal animation to finish. For now use a small sleep, but I'd 
+  // modal animation to finish. For now use a small sleep, but I'd
   // like to find a reliable method to detect the end of the animation
   usleep($n * 500000);
 }
@@ -101,7 +101,7 @@ function test(string $_msg, callable $_fn, bool $_fatal = false, $sshot = -1) {
       throw new RuntimeException("The previous error was fatal");
     else {
       fail();
-      if ($sshot) 
+      if ($sshot)
         screenshot();
     }
   } catch (Throwable $e) {
@@ -142,7 +142,7 @@ function hostip() {
           return $matches[1];
       }
   }
-  return ""; 
+  return "";
 }
 
 function readline($prompt = null) {
@@ -173,7 +173,7 @@ function feedfn($msg, $fld, $value) {
       $GLOBALS["driver"]->executeScript("for (feed of document.getElementsByClassName(\"form-control\")) feed.setAttribute(\"class\", \"form-control\");");
       $GLOBALS["driver"]->findElement(WebDriverBy::id($fld))->clear()->sendKeys($value);
       save(false);
-      try { 
+      try {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className("is-invalid")));
       } catch (TimeoutException $e) {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click(); // Click Ok to confirm
@@ -185,15 +185,15 @@ function feedfn($msg, $fld, $value) {
 
 // Apply and clear modals
 function apply() {
-  $GLOBALS["driver"]->findElement(WebDriverBy::id("applyDSAS"))->click(); 
+  $GLOBALS["driver"]->findElement(WebDriverBy::id("applyDSAS"))->click();
   $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("okDSAS")));
   $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click(); // Click Ok to confirm
 
   // Depending on timing issues in the animation, this first
-  // wait might catch the apply delay, or be bypassed. The 
+  // wait might catch the apply delay, or be bypassed. The
   // modal might also briefly disappear and so be stale.
   // So need to a long wait here and the next wait as well
-  // as one of them will catch the wait for the "Ok" button 
+  // as one of them will catch the wait for the "Ok" button
   // to be available
   $GLOBALS["driver"]->wait(4 * _delay, _retry)->until(function () {
     $el = $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"));
@@ -241,13 +241,13 @@ function modalfn($msg, $fld, $value, $modal = true) {
       $value = $GLOBALS["args"][1];
       $GLOBALS["driver"]->executeScript("for (feed of document.getElementsByClassName(\"form-control\")) feed.setAttribute(\"class\", \"form-control\");");
       $GLOBALS["driver"]->findElement(WebDriverBy::id($fld))->clear()->sendKeys($value);
-      try { 
+      try {
         save($GLOBALS["args"][2]);
       } catch (TimeoutException $e) {
         throw new RuntimeException("Error setting value");
       }
       return (str_contains($GLOBALS["driver"]->findElement(WebDriverBy::id($fld))->getAttribute("value"), $value));
-    }); 
+    });
 }
 
 // Read password from console
@@ -273,18 +273,18 @@ while (true) {
   echo "[D] Rsyslog server tests" . PHP_EOL;
   switch ($x = readline("Select a value : ")) {
     case "":
-    case "0": $what = "all"; break 2; 
-    case "1": $what = "verif"; break 2; 
-    case "2": $what = "secu"; break 2; 
-    case "3": $what = "login"; break 2; 
-    case "4": $what = "status"; break 2; 
-    case "5": $what = "web"; break 2; 
-    case "6": $what = "net"; break 2; 
-    case "7": $what = "serv"; break 2; 
-    case "8": $what = "user"; break 2; 
-    case "9": $what = "backup"; break 2; 
+    case "0": $what = "all"; break 2;
+    case "1": $what = "verif"; break 2;
+    case "2": $what = "secu"; break 2;
+    case "3": $what = "login"; break 2;
+    case "4": $what = "status"; break 2;
+    case "5": $what = "web"; break 2;
+    case "6": $what = "net"; break 2;
+    case "7": $what = "serv"; break 2;
+    case "8": $what = "user"; break 2;
+    case "9": $what = "backup"; break 2;
     case "a":
-    case "A": $what = "cert"; break 2; 
+    case "A": $what = "cert"; break 2;
     case "b":
     case "B": $what = "task"; break 2;
     case "c":
@@ -315,25 +315,25 @@ try {
         throw new RuntimeException("Error creating ClamAV directory");
       exec("sudo cp " . _share . "/eicar.ndb /home/dsas/bas/share/ClamAV", $data, $retval);
       if ($retval != 0)
-        throw new RuntimeException("Error copying to ClamAV directory"); 
+        throw new RuntimeException("Error copying to ClamAV directory");
       $retval = copy(_share . "/dsas_conf.xml", "/var/dsas/dsas_conf.xml");
       if (! $retval)
-        throw new RuntimeException("Error copying XML config on lower machine"); 
+        throw new RuntimeException("Error copying XML config on lower machine");
       exec("ssh tc@haut cp -f " . _share . "/dsas_conf.xml /var/dsas/", $data, $retval);
       if ($retval != 0)
-        throw new RuntimeException("Error copying XML config on upper machine"); 
+        throw new RuntimeException("Error copying XML config on upper machine");
       exec("sudo /etc/init.d/services/dsas apply", $data, $retval);
       if ($retval != 0)
-        throw new RuntimeException("Error applying on lower machine"); 
+        throw new RuntimeException("Error applying on lower machine");
       exec("ssh tc@haut sudo /etc/init.d/services/dsas apply", $data, $retval);
       if ($retval != 0)
-        throw new RuntimeException("Error applying on upper machine"); 
+        throw new RuntimeException("Error applying on upper machine");
       exec("ssh tc@haut sudo rm -fr /home/dsas/haut/share/tests /home/dsas/bas/share/tests", $data, $retval);
       if ($retval != 0)
         throw new RuntimeException("Error removing old test files on upper machine");
       exec("sudo rm -fr /home/dsas/haut/share/tests /home/dsas/bas/share/tests", $data, $retval);
       if ($retval != 0)
-        throw new RuntimeException("Error removing old test files on lower machine"); 
+        throw new RuntimeException("Error removing old test files on lower machine");
       exec("ssh tc@haut sudo tar -C /home/dsas/haut/share -xzf " . _share . "/tests.tgz", $data, $retval);
       if ($retval != 0)
         throw new RuntimeException("Error installing test files on upper machine");
@@ -361,8 +361,8 @@ try {
       exec("sudo chmod 660 /home/dsas/log/dsas_verif.log*", $data, $retval);
       if ($retval != 0)
         throw new RuntimeException("Error copying log files on lower machine");
-      return true; 
-    }, true); 
+      return true;
+    }, true);
 
   // Tests to check that the DSAS verifications function as wanted
   if ($what === "all" || $what === "verif") {
@@ -390,7 +390,7 @@ try {
               $pool = dirname($directory);
             }
             if (! $have_pool)
-              throw new RuntimeException("Pool directory not found for 'deb' task type");             
+              throw new RuntimeException("Pool directory not found for 'deb' task type");
           }
           $data = [];
           exec("sudo test -d \"/home/dsas/bas/share/" . $directory . "\"", $data, $retval);
@@ -408,7 +408,7 @@ try {
           exec("sudo find /home/dsas/bas/share/" . $directory . " -name 'good*'", $data);
           if (empty($data))
             throw new RuntimeException("No signed files detected in '" . $task->type . "' verification");
-          // FIXME Should we check that the right number of wanted files are passed ? 
+          // FIXME Should we check that the right number of wanted files are passed ?
           // How to do it generically ? Think about debian repos for example
           return true;
         }, false, false);
@@ -428,10 +428,10 @@ try {
            if ($regex[1] == "udp")
               throw new RuntimeException("Unexpected UDP port '" . $regex[3]  . "' open on upper machine");
            if ($regex[2] == $ip)
-              throw new RuntimeException("Open TCP port '" . $regex[3] . "' on principal interface of upper machine" . PHP_EOL . $regex[0]); 
+              throw new RuntimeException("Open TCP port '" . $regex[3] . "' on principal interface of upper machine" . PHP_EOL . $regex[0]);
            // Only port 22 on the interconnection network should be open
            if ($regex[3] != "22")
-              throw new RuntimeException("Unexpected TCP port '" .$regex[3] . "' open on upper machine" . PHP_EOL . $regex[0]); 
+              throw new RuntimeException("Unexpected TCP port '" .$regex[3] . "' open on upper machine" . PHP_EOL . $regex[0]);
            break;
          }
          return true;
@@ -452,7 +452,7 @@ try {
            // In the default configuration only the adiminstration port 5000
            // on the interconnection network should be open
            if ($regex[3] != "5000")
-              throw new RuntimeException("Unexpected TCP port '" .$regex[3] . "' open on lower machine" . PHP_EOL . $regex[0]); 
+              throw new RuntimeException("Unexpected TCP port '" .$regex[3] . "' open on lower machine" . PHP_EOL . $regex[0]);
            break;
          }
          return true;
@@ -536,7 +536,7 @@ try {
       $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys($GLOBALS["password"]);
       $GLOBALS["driver"]->findElement(WebDriverBy::className("btn"))->click();
       // Wait to be on main page
-      try { 
+      try {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Main"));
       } catch (TimeoutException $e) {
         throw new RuntimeException("Bad Password");
@@ -555,7 +555,7 @@ try {
         return  (! str_contains($GLOBALS["driver"]->findElement(WebDriverBy::id("StatusBar"))->getDomProperty("innerHTML"), "NaN"));
       });
 
-    // FIXME test status progress bars 
+    // FIXME test status progress bars
 
     // Test log search function. Need dummy logs
     test("Log search function", function () {
@@ -564,14 +564,14 @@ try {
         return  (str_contains($GLOBALS["driver"]->findElement(WebDriverBy::className("bg-info"))->getDomProperty("innerHTML"), "dummy-search"));
       });
 
-    // Test "only errors" button. Search for "Ok" at start of log line and 
+    // Test "only errors" button. Search for "Ok" at start of log line and
     // test if a line is highlighted. Need dummy logs that don't have "Ok" anywhere
     // log lines
     test("Limiting logs to only errors", function () {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("loghide"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("logpane")));
         $GLOBALS["driver"]->findElement(WebDriverBy::id("logsearch"))->clear()->sendKeys("Ok" . WebDriverKeys::ENTER);
-        try { 
+        try {
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className("bg-info")));
         } catch (Exception $e) {
           // The keyword "Ok" not found as we wanted
@@ -582,7 +582,7 @@ try {
   }
 
   if ($what === "all" || $what === "web") {
-    // Navigate to /web.html via navbar 
+    // Navigate to /web.html via navbar
     test("Navigating to /web.html via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[0]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='web.html']"))->click();
@@ -605,7 +605,7 @@ try {
         return (str_starts_with($GLOBALS["driver"]->findElement(WebDriverBy::id("pem_body"))->getDomProperty("innerHTML"), "-----BEGIN CERTIFICATE-----"));
       });
 
-    // Download the PEM and CSR. Would be better to click on id="getpem" 
+    // Download the PEM and CSR. Would be better to click on id="getpem"
     // but couldn't get it to work properly
     test("Try downloading CSR", function () {
         $_uri = $GLOBALS["driver"]->findElement(WebDriverBy::id("getcsr"))->getAttribute("href");
@@ -624,7 +624,7 @@ try {
   }
 
   if ($what === "all" || $what === "net") {
-    // Navigate to /net.html via navbar 
+    // Navigate to /net.html via navbar
     test("Navigating to /net.html via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[0]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='net.html']"))->click();
@@ -692,10 +692,10 @@ try {
     // Try applying and seeing if network changed on upper machine
     test("Applying network configuration", function () {
         apply();
-        
-        // Ok the configuration has been correctly applied. Now look 
+
+        // Ok the configuration has been correctly applied. Now look
         // at the real configuration of the network devices. Look for
-        // network interface that is alphabetically last 
+        // network interface that is alphabetically last
         $iface = "zzz";
         exec("ssh tc@haut ls /sys/class/net", $ifaces);
         foreach ($ifaces as $entry) {
@@ -732,7 +732,7 @@ try {
             "nameserver 1.1.1.1" != $data[2])
           throw new RuntimeException("Can not configure the DNS");
         return true;
-      }); 
+      });
 
     // Restore state of upper network and apply
     test("Restoring original network configuration", function () {
@@ -754,7 +754,7 @@ try {
   }
 
   if ($what === "all" || $what === "serv") {
-    // Navigate to /service.html via navbar 
+    // Navigate to /service.html via navbar
     test("Navigating to /service.html via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[0]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='service.html']"))->click();
@@ -778,14 +778,14 @@ try {
             $GLOBALS["serv"]["snmp_encrypt"] = $el->getAttribute("value");
             break;
           }
-        } 
+        }
         $privencrypt = new WebDriverSelect($GLOBALS["driver"]->findElement(WebDriverBy::id("snmp_privencrypt")));
         foreach ($privencrypt->getOptions() as $el) {
           if ($el->isSelected()) {
             $GLOBALS["serv"]["snmp_privencrypt"] = $el->getAttribute("value");
             break;
           }
-        } 
+        }
         $GLOBALS["serv"]["snmp_passpriv"] = $GLOBALS["driver"]->findElement(WebDriverBy::id("snmp_passpriv"))->getAttribute("value");
         $GLOBALS["serv"]["syslog"] = $GLOBALS["driver"]->findElement(WebDriverBy::id("syslog"))->isSelected();
         $GLOBALS["serv"]["syslog_server"] = $GLOBALS["driver"]->findElement(WebDriverBy::id("syslog_server"))->getAttribute("value");
@@ -839,10 +839,10 @@ try {
     exec("ifconfig " . $iface, $data);
     preg_match("/^inet addr:([0-9.]+).*Bcast:([0-9.]+).*Mask:([0-9.]+).*$/",
        trim($data[1]), $regex);
-    $cidr = 32 - log((ip2long($regex[3]) ^ ip2long("255.255.255.255")) + 1, 2);  
+    $cidr = 32 - log((ip2long($regex[3]) ^ ip2long("255.255.255.255")) + 1, 2);
     $ip = $regex[1];
 
-    // Try applying config and seeing if listening on right SSH addresses and users 
+    // Try applying config and seeing if listening on right SSH addresses and users
     test("Applying ssh configuration", function () {
         apply();
         exec("netstat -nat 2> /dev/null", $data);
@@ -932,7 +932,7 @@ try {
         apply();
         exec("pgrep snmpd", $data, $retval);
         return ($retval != 0);
-      }); 
+      });
 
     // Test activating and changing syslog with empty syslog server
     test("Activation of syslogd", function () {
@@ -943,9 +943,9 @@ try {
         save();
         apply();
         exec("sudo pgrep syslogd", $data, $retval);
-        return($retval == 0); 
+        return($retval == 0);
       });
-        
+
     // Ensure that deactivating ntp works correctly
     test("Deactivation of syslog", function () {
         if ($GLOBALS["driver"]->findElement(WebDriverBy::id("syslog"))->isSelected())
@@ -955,7 +955,7 @@ try {
         exec("sudo pgrep syslogd", $data, $retval);
         return ($retval != 0);
       });
-        
+
     // Test activating and changing ntp hosts (multiple IPs)
     test("Activation of NTP", function () {
         if (! $GLOBALS["driver"]->findElement(WebDriverBy::id("ntp"))->isSelected())
@@ -973,7 +973,7 @@ try {
           throw new RuntimeException("Can not start ntpd");
         return true;
       });
-        
+
     // Ensure that deactivating ntp works correctly
     test("Deactivation of NTP", function () {
         if ($GLOBALS["driver"]->findElement(WebDriverBy::id("ntp"))->isSelected())
@@ -1006,7 +1006,7 @@ try {
 	if ($retval != 0)
            throw new RuntimeException("ClamAv failed to detect absence of a virus");
         return true;
-      });    
+      });
 
     // Deactivate ClamAV via the web interface. Scan files and check for error running clamav
     test("Deactivating ClamAV", function () {
@@ -1019,7 +1019,7 @@ try {
            throw new RuntimeException("ClamAv not stopped via web interface");
         return true;
       });
-   
+
     // Remove temporary files
     unlink("/tmp/eicar");
     unlink("/tmp/novirus");
@@ -1110,7 +1110,7 @@ try {
   }
 
   if ($what === "all" || $what === "user") {
-    // Navigate to /users.html via navbar 
+    // Navigate to /users.html via navbar
     test("Navigating to /users.html via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='users.html']"))->click();
@@ -1136,9 +1136,9 @@ try {
           return true;
         }
         return false;
-      }); 
+      });
 
-    // Add a test user. Don't need to apply here 
+    // Add a test user. Don't need to apply here
     test("Try adding a username", function () {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("AddUser")));
         $GLOBALS["driver"]->findElement(WebDriverBy::id("AddUser"))->click();
@@ -1154,7 +1154,7 @@ try {
           return false;
         }
         return true;
-      }); 
+      });
 
     // Try adding the same user and see if an error results
     test("Try to add an existing username", function () {
@@ -1174,9 +1174,9 @@ try {
           return true;
         }
         return false;
-      }); 
+      });
 
-    // Change their information 
+    // Change their information
     test("Try changing the description of the existing user", function () {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("description_testuser")));
         $GLOBALS["driver"]->findElement(WebDriverBy::id("description_testuser"))->clear()->sendKeys("Dummy Description");
@@ -1186,7 +1186,7 @@ try {
         $GLOBALS["driver"]->navigate()->refresh();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("description_testuser")));
         return ($GLOBALS["driver"]->findElement(WebDriverBy::id("description_testuser"))->getAttribute("value") == "Dummy Description");
-      }); 
+      });
 
     // Test changing to a bad password
     test("Test bad password for added user", function () {
@@ -1225,7 +1225,7 @@ try {
           $parent->click();
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("UserPassword")));
           modal_delay();
-          $GLOBALS["driver"]->findElement(WebDriverBy::id("UserPassword"))->clear()->sendKeys("T3stPassw0rd!"); 
+          $GLOBALS["driver"]->findElement(WebDriverBy::id("UserPassword"))->clear()->sendKeys("T3stPassw0rd!");
           $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
           try {
             $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
@@ -1241,7 +1241,7 @@ try {
         throw  new RuntimeException("User 'testuser' not found");
       });
 
-    // Logout via navbar 
+    // Logout via navbar
     test("Logging out via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("headlogout"))->click();
@@ -1252,7 +1252,7 @@ try {
         return ($GLOBALS["driver"]->getTitle() === "DSAS Login");
       });
 
-    // Reconnect again as new user that at this point is inactive. 
+    // Reconnect again as new user that at this point is inactive.
     test("Testing login of inactive user", function() {
         $GLOBALS["driver"]->executeScript("for (feed of document.getElementsByClassName(\"form-control\")) feed.setAttribute(\"class\", \"form-control\");");
         $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_user"))->clear()->sendKeys("BadUser");
@@ -1262,13 +1262,13 @@ try {
         return (str_contains($GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->getAttribute("class"), "is-invalid"));
       });
 
-    // Reconnect again as principal user. 
+    // Reconnect again as principal user.
     test("Login as principal user", function() {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_user"))->clear()->sendKeys(_user);
         $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys($GLOBALS["password"]);
         $GLOBALS["driver"]->findElement(WebDriverBy::className("btn"))->click();
         // Wait to be on main page
-        try { 
+        try {
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Main"));
         } catch (TimeoutException $e) {
           throw new RuntimeException("Bad Password");
@@ -1290,9 +1290,9 @@ try {
         $GLOBALS["driver"]->navigate()->refresh();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("description_testuser")));
         return ($GLOBALS["driver"]->findElement(WebDriverBy::id("description_testuser"))->getAttribute("value") == "Dummy Description");
-      }); 
+      });
 
-    // Logout via navbar 
+    // Logout via navbar
     test("Logging out via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("headlogout"))->click();
@@ -1303,13 +1303,13 @@ try {
         return ($GLOBALS["driver"]->getTitle() === "DSAS Login");
       });
 
-    // Reconnect again as new user that at this point is active. 
+    // Reconnect again as new user that at this point is active.
     test("Testing login as added user", function() {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_user"))->clear()->sendKeys("testuser");
-        $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys("T3stPassw0rd!"); 
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys("T3stPassw0rd!");
         $GLOBALS["driver"]->findElement(WebDriverBy::className("btn"))->click();
         // Wait to be on main page
-        try { 
+        try {
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Main"));
         } catch (TimeoutException $e) {
           throw new RuntimeException("Bad Password");
@@ -1321,7 +1321,7 @@ try {
     // Wait for page to be fully displayed
     $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("logpane")));
 
-    // Logout via navbar 
+    // Logout via navbar
     test("Logging out via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("headlogout"))->click();
@@ -1331,14 +1331,14 @@ try {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("DSAS Login"));
         return ($GLOBALS["driver"]->getTitle() === "DSAS Login");
       });
-    
-    // Reconnect again as principal user. 
+
+    // Reconnect again as principal user.
     test("Login as principal user", function() {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_user"))->clear()->sendKeys(_user);
         $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys($GLOBALS["password"]);
         $GLOBALS["driver"]->findElement(WebDriverBy::className("btn"))->click();
         // Wait to be on main page
-        try { 
+        try {
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Main"));
         } catch (TimeoutException $e) {
           throw new RuntimeException("Bad Password");
@@ -1366,11 +1366,11 @@ try {
             return ($el->getAttribute("value") == "bas");
             break;
           }
-        } 
+        }
         return false;
-      }); 
+      });
 
-    // Logout via navbar 
+    // Logout via navbar
     test("Logging out via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("headlogout"))->click();
@@ -1380,14 +1380,14 @@ try {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("DSAS Login"));
         return ($GLOBALS["driver"]->getTitle() === "DSAS Login");
       });
-    
+
     // Login as added user and see if on passwd.hmtl rather than index.html
     test("Testing login as added user of type 'lower'", function() {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_user"))->clear()->sendKeys("testuser");
-        $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys("T3stPassw0rd!"); 
+        $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys("T3stPassw0rd!");
         $GLOBALS["driver"]->findElement(WebDriverBy::className("btn"))->click();
         // Wait to be on password page
-        try { 
+        try {
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Password"));
         } catch (TimeoutException $e) {
           throw new RuntimeException("Bad Password");
@@ -1395,7 +1395,7 @@ try {
         return (str_contains($GLOBALS["driver"]->getCurrentUrl(), "passwd.html"));
       });
 
-    // Logout again 
+    // Logout again
     test("Testing logout as added user of type 'lower'", function() {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("logout"))->click();
         return true;
@@ -1407,7 +1407,7 @@ try {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys($GLOBALS["password"]);
         $GLOBALS["driver"]->findElement(WebDriverBy::className("btn"))->click();
         // Wait to be on main page
-        try { 
+        try {
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Main"));
         } catch (TimeoutException $e) {
           throw new RuntimeException("Bad Password");
@@ -1448,7 +1448,7 @@ try {
   }
 
   if ($what === "all" || $what === "backup") {
-    // Navigate to /users.html via navbar 
+    // Navigate to /users.html via navbar
     test("Navigating to /users.html via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='users.html']"))->click();
@@ -1456,7 +1456,7 @@ try {
         return ($GLOBALS["driver"]->getTitle() === "Users");
       }, true);
 
-    // Add a test user. Don't need to apply here 
+    // Add a test user. Don't need to apply here
     test("Try adding a username", function () {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("AddUser")));
         $GLOBALS["driver"]->findElement(WebDriverBy::id("AddUser"))->click();
@@ -1472,7 +1472,7 @@ try {
           return false;
         }
         return true;
-      }, true); 
+      }, true);
 
     // Backup the configuration
     test("Backing up the configuration via navbar", function () {
@@ -1516,7 +1516,7 @@ try {
         }
         throw  new RuntimeException("User 'testuser' not found");
       });
-      
+
     // Add a dummy host to the SSH known_hosts files
     test("Add dummy SSH known host", function () {
         exec("head -1 \"/home/tc/.ssh/known_hosts\" | sed -e \"s;^[0-9\.]*;1.1.1.1;\" >> /home/tc/.ssh/known_hosts", $data, $retval);
@@ -1530,10 +1530,10 @@ try {
           throw new RuntimeException("Error adding dummy SSH known host to '/opt/lftp/home/haut/.ssh'");
         return true;
       });
-      
+
     // Restore the configuration. Can't do this via the navbar as no
     // easy way to select file to upload. So we cheat ;-)
-    // Call the dsasRealRestore function here !! 
+    // Call the dsasRealRestore function here !!
     // Test if added user is there and the SSH configuration is restored
     test("Restoring the configuration", function () {
         $fp = fopen("/home/tc/dsas_backup.tgz", "r");
@@ -1553,7 +1553,7 @@ try {
         $data = [];
         exec("grep 1.1.1.1 /home/tc/.ssh/known_hosts", $data, $retval);
         if  ($retval == 0)
-          throw new RuntimeException("Error restoring SSH known host '/home/tc/.ssh'");          
+          throw new RuntimeException("Error restoring SSH known host '/home/tc/.ssh'");
         $data = [];
         exec("sudo grep 1.1.1.1 /home/haut/.ssh/known_hosts", $data, $retval);
         if  ($retval == 0)
@@ -1599,7 +1599,7 @@ try {
   }
 
   if ($what === "all" || $what === "cert") {
-    // Navigate to /cert.html via navbar 
+    // Navigate to /cert.html via navbar
     test("Navigating to /cert.html via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[0]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='cert.html']"))->click();
@@ -1624,7 +1624,7 @@ try {
 
     // Upload X509 certifate. Can't do this via the navbar as no easy
     // way to select file to upload. So we cheat and use the javascript
-    // certifcate upload function directly 
+    // certifcate upload function directly
     test("Uploading X509 certificate", function () {
         $fp = fopen(_share . "/Certificates/X509.pem", "r");
         $contents = fread($fp, filesize(_share . "/Certificates/X509.pem"));
@@ -1650,7 +1650,7 @@ try {
         $found = false;
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'add')]")) as $card) {
           if (str_contains($card->getDomProperty("innerHTML"), $finger)) {
-            $GLOBALS["card"] = "#" . $card->getAttribute("id"); 
+            $GLOBALS["card"] = "#" . $card->getAttribute("id");
             $found = true;
             break;
           }
@@ -1716,7 +1716,7 @@ try {
         return true;
       });
 
-    // Toggle to invisible the X509 certificates 
+    // Toggle to invisible the X509 certificates
     $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#cert']"))->click();
 
     // Upload an Openssl certificate
@@ -1803,7 +1803,7 @@ try {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
 	// Need a delay so that the links to the certificates are redrawn
-        modal_delay(2); 
+        modal_delay(2);
         $found = false;
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::tagName("a")) as $link) {
           if ($link->getAttribute("href") == $GLOBALS["card"]) {
@@ -1816,7 +1816,7 @@ try {
         return true;
       });
 
-    // Toggle to invisible the Openssl keys 
+    // Toggle to invisible the Openssl keys
     $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#pubkey']"))->click();
 
     // Upload GPG certifate.
@@ -1831,7 +1831,7 @@ try {
           $GLOBALS["finger"] = $finger;
         } else
           throw new RuntimeException ("Can not read Gpg certificate");
-        
+
         $contents = base64_encode($contents);
         $GLOBALS["driver"]->executeScript("dsasUploadCert(\"gpg\", \"\", b64toBlob(arguments[0], \"application/pgp-keys\"));", [$contents]);
         // Applying, wait for okDSAS to become Clickable.
@@ -1852,7 +1852,7 @@ try {
             continue;
           }
           if (!str_contains($card->getDomProperty("id"), "drag") && str_contains($card->getDomProperty("innerHTML"), $finger)) {
-            $GLOBALS["card"] = "#" . $card->getAttribute("id"); 
+            $GLOBALS["card"] = "#" . $card->getAttribute("id");
             $found = true;
             break;
           }
@@ -1978,12 +1978,12 @@ try {
         return ($ncert == count($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//div[starts-with(@id, 'gpg')]"))));
       });
 
-    // Toggle to invisible the GPG certificates 
+    // Toggle to invisible the GPG certificates
     $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='#gpg']"))->click();
   }
 
   if ($what === "all" || $what === "task") {
-    // Navigate to /tasks.html via navbar 
+    // Navigate to /tasks.html via navbar
     test("Navigating to /task.html via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[0]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='tasks.html']"))->click();
@@ -1999,7 +1999,7 @@ try {
     $_str = $GLOBALS["driver"]->executeScript("async function asyncfetch(uri) { const reponse = await fetch (uri); return reponse.text();}; return asyncfetch(\"" . $_uri ."\");");
     $_json = json_decode($_str);
 
-    // Test add task rpm 
+    // Test add task rpm
     $GLOBALS["finger"] = $_json[0]->dsas->gpg[0]->fingerprint;
     test("Add RPM Task", function () {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("AddTask")));
@@ -2016,7 +2016,7 @@ try {
         $tmp->selectByValue($GLOBALS["finger"]);
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-	// Slight delay to allow tasks to be updated 
+	// Slight delay to allow tasks to be updated
         modal_delay(2);
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//span[starts-with(@id, 'taskname')]")) as $name) {
           if ($name->getDomProperty("innerHTML") == "Added RPM Task")
@@ -2025,12 +2025,12 @@ try {
         return false;
       });
 
-    // Clear timeout to avoid possibility of stale handles 
+    // Clear timeout to avoid possibility of stale handles
     $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
 
     // Add Debian task with selected architectures
     $GLOBALS["finger"] = $_json[0]->dsas->gpg[0]->fingerprint;
-    test("Add Deb Task", function () { 
+    test("Add Deb Task", function () {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("AddTask")));
         $GLOBALS["driver"]->findElement(WebDriverBy::id("AddTask"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("TaskName")));
@@ -2047,7 +2047,7 @@ try {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("TaskArchAmd64"))->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-	// Slight delay to allow tasks to be updated 
+	// Slight delay to allow tasks to be updated
 	modal_delay(2);
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//span[starts-with(@id, 'taskname')]")) as $name) {
           if ($name->getDomProperty("innerHTML") == "Added Deb Task")
@@ -2056,12 +2056,12 @@ try {
         return false;
       });
 
-    // Clear timeout to avoid possibility of stale handles 
+    // Clear timeout to avoid possibility of stale handles
     $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
 
     // Add Opsnssl task
     $GLOBALS["finger"] = $_json[0]->dsas->pubkey[0]->fingerprint;
-    test("Add Openssl Task", function () { 
+    test("Add Openssl Task", function () {
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id("AddTask")));
 	modal_delay();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("AddTask"))->click();
@@ -2077,7 +2077,7 @@ try {
         $tmp->selectByValue($GLOBALS["finger"]);
         $GLOBALS["driver"]->findElement(WebDriverBy::id("okDSAS"))->click();
         $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::className("modal-backdrop")));
-	// Slight delay to allow tasks to be updated 
+	// Slight delay to allow tasks to be updated
 	modal_delay(2);
         foreach ($GLOBALS["driver"]->findElements(WebDriverBy::xpath("//span[starts-with(@id, 'taskname')]")) as $name) {
           if ($name->getDomProperty("innerHTML") == "Added Openssl Task")
@@ -2086,7 +2086,7 @@ try {
         return false;
       });
 
-    // Clear timeout to avoid possibility of stale handles 
+    // Clear timeout to avoid possibility of stale handles
     $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
 
     // Add RPM task with wrong certificate type
@@ -2119,7 +2119,7 @@ try {
         return true;
       });
 
-    // Clear timeout to avoid possibility of stale handles 
+    // Clear timeout to avoid possibility of stale handles
     $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
 
     // Trying adding a task with an XSS in the task name
@@ -2152,7 +2152,7 @@ try {
         return true;
       });
 
-    // Clear timeout to avoid possibility of stale handles 
+    // Clear timeout to avoid possibility of stale handles
     $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
 
     // Run a task and test that its running
@@ -2183,7 +2183,7 @@ try {
         throw new RuntimeException("Task to run not found");
       });
 
-    // Clear timeout to avoid possibility of stale handles 
+    // Clear timeout to avoid possibility of stale handles
     $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
 
     // Examine log of existing task. Careful log needs to exist
@@ -2207,21 +2207,21 @@ try {
         throw new RuntimeException("Task not found");
       });
 
-    // Clear timeout to avoid possibility of stale handles 
+    // Clear timeout to avoid possibility of stale handles
     $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
 
     test("Modify RPM task directory", function() {
         // Create the task directory to be kept, as the task hasn't run
         exec("ssh tc@haut sudo mkdir -p /home/dsas/haut/share/tests/dummyRPM /home/dsas/bas/share/tests/dummyRPM", $data, $retval);
-        if ($retval == 0) 
+        if ($retval == 0)
           exec("ssh tc@haut sudo chown haut:haut /home/dsas/haut/share/tests/dummyRPM", $data, $retval);
-        if ($retval == 0) 
+        if ($retval == 0)
           exec("ssh tc@haut sudo chown verif:share /home/dsas/bas/share/tests/dummyRPM", $data, $retval);
         if ($retval == 0)
           exec("sudo mkdir -p /home/dsas/haut/share/tests/dummyRPM /home/dsas/bas/share/tests/dummyRPM", $data, $retval);
-        if ($retval == 0) 
+        if ($retval == 0)
           exec("sudo chown haut:haut /home/dsas/haut/share/tests/dummyRPM", $data, $retval);
-        if ($retval == 0) 
+        if ($retval == 0)
           exec("sudo chown verif:share /home/dsas/bas/share/tests/dummyRPM", $data, $retval);
         if ($retval != 0)
           throw new RuntimeException("Error creating test directories");
@@ -2251,12 +2251,12 @@ try {
         throw new RuntimeException("Task not found");
       });
 
-    // Clear timeout to avoid possibility of stale handles 
+    // Clear timeout to avoid possibility of stale handles
     $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
 
     // FIXME: Despite clearing the timeout above, we need a slight delay here to
     // avoid a stale handle.. Weird and I don't understand why
-    modal_delay(); 
+    modal_delay();
 
     // Delete an existing task without removing its files and see that the files remain
     test("Delete RPM task leaving files in place", function() {
@@ -2289,22 +2289,22 @@ try {
         throw new RuntimeException("Task not found");
       });
 
-    // Clear timeout to avoid possibility of stale handles 
+    // Clear timeout to avoid possibility of stale handles
     $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
 
     // Delete an existing task removing its files and test that everything is gone
     test("Delete Deb task removing files", function() {
         // Create the task directory to be kept, as the task hasn't run
         exec("ssh tc@haut sudo mkdir /home/dsas/haut/share/tests/dummyDeb /home/dsas/bas/share/tests/dummyDeb", $data, $retval);
-        if ($retval == 0) 
+        if ($retval == 0)
           exec("ssh tc@haut sudo chown haut:haut /home/dsas/haut/share/tests/dummyDeb", $data, $retval);
-        if ($retval == 0) 
+        if ($retval == 0)
           exec("ssh tc@haut sudo chown verif:share /home/dsas/bas/share/tests/dummyDeb", $data, $retval);
         if ($retval == 0)
           exec("sudo mkdir /home/dsas/haut/share/tests/dummyDeb /home/dsas/bas/share/tests/dummyDeb", $data, $retval);
-        if ($retval == 0) 
+        if ($retval == 0)
           exec("sudo chown haut:haut /home/dsas/haut/share/tests/dummyDeb", $data, $retval);
-        if ($retval == 0) 
+        if ($retval == 0)
           exec("sudo chown verif:share /home/dsas/bas/share/tests/dummyDeb", $data, $retval);
         if ($retval != 0)
           throw new RuntimeException("Error creating test directories");
@@ -2331,13 +2331,13 @@ try {
           return true;
         }
         throw new RuntimeException("Task not found");
-      });   
+      });
 
     // FIXME examine log  of running task. THIS MIGHT BE HARD TO DO with short running tasks.
 
     // FIXME Kill a running tasks. Also hard to do.
 
-    // Clear timeout to avoid possibility of stale handles 
+    // Clear timeout to avoid possibility of stale handles
     $GLOBALS["driver"]->executeScript("dsasClearTimeout(\"tasks\");");
 
     // Delete the Openssl task that should now be finished running
@@ -2365,11 +2365,11 @@ try {
           return true;
         }
         throw new RuntimeException("Task not found");
-      });   
+      });
   }
 
   if ($what === "all" || $what === "radius") {
-    // Navigate to /service.html via navbar 
+    // Navigate to /service.html via navbar
     test("Navigating to /service.html via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[0]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='service.html']"))->click();
@@ -2407,7 +2407,7 @@ try {
     // Setup user if /usr/local/etc/raddb/users. Don't yet start radiusd
     exec("sudo sh -c 'echo \"TEST\\". _user . " Cleartext-Password := " . $GLOBALS["password"] . "_radius" . PHP_EOL . "\" >> /usr/local/etc/raddb/mods-config/files/authorize'" . PHP_EOL, $output, $retval);
 
-    // Logout via navbar 
+    // Logout via navbar
     test("Logging out via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("headlogout"))->click();
@@ -2435,7 +2435,7 @@ try {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys($GLOBALS["password"]);
         $GLOBALS["driver"]->findElement(WebDriverBy::className("btn"))->click();
         // Wait to be on main page
-        try { 
+        try {
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Main"));
         } catch (TimeoutException $e) {
           throw new RuntimeException("Bad Password");
@@ -2455,7 +2455,7 @@ try {
         return true;
       }, true);
 
-    // Logout via navbar 
+    // Logout via navbar
     test("Logging out via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("headlogout"))->click();
@@ -2482,7 +2482,7 @@ try {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys($GLOBALS["password"] . "_radius");
         $GLOBALS["driver"]->findElement(WebDriverBy::className("btn"))->click();
         // Wait to be on main page
-        try { 
+        try {
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Main"));
         } catch (TimeoutException $e) {
           throw new RuntimeException("Bad Password");
@@ -2505,7 +2505,7 @@ try {
     // Remove users added to radiusd configuration
     exec("sudo sed -i -e 's/^[^#].*Cleartext-Password :=.*$//g' /usr/local/etc/raddb/mods-config/files/authorize", $output, $retval);
 
-    // Navigate to /service.html via navbar 
+    // Navigate to /service.html via navbar
     test("Navigating to /service.html via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[0]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='service.html']"))->click();
@@ -2529,7 +2529,7 @@ try {
   }
 
   if ($what === "all" || $what === "rsyslog") {
-    // Navigate to /service.html via navbar 
+    // Navigate to /service.html via navbar
     test("Navigating to /service.html via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[0]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='service.html']"))->click();
@@ -2600,7 +2600,7 @@ try {
         return true;
       });
 
-    // Logout via navbar 
+    // Logout via navbar
     test("Logging out via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[1]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::id("headlogout"))->click();
@@ -2632,7 +2632,7 @@ try {
         $GLOBALS["driver"]->findElement(WebDriverBy::id("inp_pass"))->clear()->sendKeys($GLOBALS["password"]);
         $GLOBALS["driver"]->findElement(WebDriverBy::className("btn"))->click();
         // Wait to be on main page
-        try { 
+        try {
           $GLOBALS["driver"]->wait(_delay, _retry)->until(WebDriverExpectedCondition::titleIs("Main"));
         } catch (TimeoutException $e) {
           throw new RuntimeException("Bad Password");
@@ -2643,7 +2643,7 @@ try {
         return true;
       });
 
-    // Navigate to /service.html via navbar 
+    // Navigate to /service.html via navbar
     test("Navigating to /service.html via navbar", function () {
         $GLOBALS["driver"]->findElements(WebDriverBy::className("nav-item"))[0]->click();
         $GLOBALS["driver"]->findElement(WebDriverBy::xpath("//a[@href='service.html']"))->click();
@@ -2690,7 +2690,7 @@ try {
 } finally {
   // Restore original XML configure file and apply it
   test("Restoring original configuration", function () {
-      copy("/var/dsas/dsas_conf.xml.test", "/var/dsas/dsas_conf.xml"); 
+      copy("/var/dsas/dsas_conf.xml.test", "/var/dsas/dsas_conf.xml");
       unlink("/var/dsas/dsas_conf.xml.test");
       exec("sudo /etc/init.d/services/dsas apply", $data, $retval);
       if ($retval == 0) {

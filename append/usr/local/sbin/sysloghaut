@@ -72,8 +72,8 @@ fi
 
 syslog=$(xmllint --xpath "string(dsas/config/syslog/active)" "$VAR/dsas_conf.xml")
 server=$(xmllint --xpath "string(dsas/config/syslog/server)" "$VAR/dsas_conf.xml")
-[ "$syslog" != "true" ] && exit 0 
-[ -z "$server" ] && exit 0 
+[ "$syslog" != "true" ] && exit 0
+[ -z "$server" ] && exit 0
 
 # Get /var/log/messages from the machine haut
 tempdir=$(mktemp -d)
@@ -124,12 +124,12 @@ parse_pri(){
 }
 
 # Is it different ?
-NHLOGH=$(sha256sum "$tempdir/$(basename "$HLOG")" | cut -d' ' -f1) 
+NHLOGH=$(sha256sum "$tempdir/$(basename "$HLOG")" | cut -d' ' -f1)
 if [ "$NHLOGH" != "$HLOGH" ]; then
   # Fetch $HLOG0 as well
   1>&2 echo "File $HLOG different ${NHLOGH:0:10}.. (${HLOGH:0:10}..)"
   if sudo -u haut scp "tc@$INTERCO_HAUT:$HLOG0" "$tempdir/$(basename "$HLOG0")"; then
-    NHLOGH0=$(sha256sum "$tempdir/$(basename "$HLOG0")" | cut -d' ' -f1) 
+    NHLOGH0=$(sha256sum "$tempdir/$(basename "$HLOG0")" | cut -d' ' -f1)
     if [ "$NHLOGH0" != "$HLOGH0" ]; then
       1>&2 echo "File $HLOG0 different ${NHLOGH0:0:10}.. (${HLOGH0:0:10}..)"
       # The machine haut has rotated its logs

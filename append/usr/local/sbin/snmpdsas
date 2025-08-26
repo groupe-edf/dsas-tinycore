@@ -29,7 +29,7 @@ REQ=$2
 
 # See http://www.iana.org/assignments/enterprise-numbers/enterprise-numbers
 # OID : iso.org.dod.internet.private.enterprise.edfgdf.unitep.dsas
-# FIXME the numbers for UNITEP and DSAS in the OID are arbitrary 
+# FIXME the numbers for UNITEP and DSAS in the OID are arbitrary
 OID=.1.3.6.1.4.1.16845.100.100
 
 # Setting values is forbiden
@@ -127,7 +127,7 @@ case "$RET" in
       2)
         echo "string"
         xmllint --xpath "string(dsas/tasks/task[$_task]/name)" "$CONF"
-        ;; 
+        ;;
       3)
         echo "string"
         xmllint --xpath "string(dsas/tasks/task[$_task]/id)" "$CONF"
@@ -135,7 +135,7 @@ case "$RET" in
       4)
         echo "integer"
         _id=$(xmllint --xpath "string(dsas/tasks/task[$_task]/id)" "$CONF")
-        _status="$(grep "$_id" "$LOG" | xargs | cut -f3 -d' ')" 
+        _status="$(grep "$_id" "$LOG" | xargs | cut -f3 -d' ')"
         [ -z "$_status" ] && echo "0"
         [ -n "$_status" ] && echo "$_status"
         ;;

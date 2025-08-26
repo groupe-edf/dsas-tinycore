@@ -104,7 +104,7 @@ task_id_to_idx(){
   while :; do
     _task_id=$(xmllint --xpath "string(dsas/tasks/task[$i]/id)" "$CONF")
     [ -z "$_task_id" ] && return 1;
-    [ "$1" = "$_task_id" ] && echo $i && return 
+    [ "$1" = "$_task_id" ] && echo $i && return
     i=$((i + 1))
   done
 }
@@ -126,7 +126,7 @@ check_checksum() {
 
 get_uri(){
   if [ "$TYP" = "haut" ]; then
-    xmllint --xpath "string(dsas/tasks/task[$1]/uri)" "$CONF" 
+    xmllint --xpath "string(dsas/tasks/task[$1]/uri)" "$CONF"
   else
     local _dir _uri
     _dir=$(xmllint --xpath "string(dsas/tasks/task[$1]/directory)" "$CONF")
@@ -144,7 +144,7 @@ lftp_ca_options() {
   opt="lcd $DSAS_HAUT;"
 
   if [ "$TYP" = "haut" ]; then
-    opt="$opt set sftp:auto-confirm true; set net:timeout 60; set net:max-retries 3;" 
+    opt="$opt set sftp:auto-confirm true; set net:timeout 60; set net:max-retries 3;"
     if [ "$clamav" = "1" ]; then
       # Set ClamAV User-Agent including our ClamAV client UUID to get around anti DDOS protections
       uuid=$(xmllint --xpath "string(dsas/config/antivirus/uuid)" "$CONF")
@@ -180,7 +180,7 @@ getclamav() {
   [ "$(xmllint --xpath "string(dsas/config/antivirus/active)" "$CONF")" = "true" ] || return
 
   if [ "$TYP" = "haut" ]; then
-    uri=$(xmllint --xpath "string(dsas/config/antivirus/uri)" "$CONF") 
+    uri=$(xmllint --xpath "string(dsas/config/antivirus/uri)" "$CONF")
   else
     local _uri="$DSAS_HOME/bas"
     _uri=${DSAS_BAS:${#_uri}}
@@ -195,7 +195,7 @@ getclamav() {
   # Create directory if needed
   [ -d "${DSAS_HAUT}/$dir" ] || mkdir "${DSAS_HAUT}/$dir"
 
-  # Download the CVD files. Can't mirror as can't do ls on directory database.clamav.net 
+  # Download the CVD files. Can't mirror as can't do ls on directory database.clamav.net
   for _file in main.cvd daily.cvd bytecode.cvd; do
     [ "$verbose" -eq 0 ] && $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'" > /dev/null 2>&1
     [ "$verbose" -eq 0 ] || $chroot_lftp -c "$opt get -e '$uri/$_file' -o '$DSAS_HAUT/$dir/$_file'"
@@ -228,7 +228,7 @@ getdirectory() {
   # Create directory if needed
   [ -d "${DSAS_HAUT}/$dir" ] || mkdir "${DSAS_HAUT}/$dir"
 
-  # Test whether we have a file or a directory, and fail if server not found 
+  # Test whether we have a file or a directory, and fail if server not found
   _stderr=$(2>&1 $chroot_lftp -c "$opt open '$uri'") && isdir="1"
   echo "$_stderr" | grep -q "Fatal" && { 1>&2 echo "Fatal: Server '$uri' not found"; exit 1; }
 
@@ -249,7 +249,7 @@ getdirectory() {
   [ -f "/tmp/cert.$$" ] && rm /tmp/cert.$$
   [ -f "$_ldir/tmp/cert.$$" ] &&  rm $_ldir/tmp/cert.$$
 
-  # There might be empty directories lying about. Remove them. 
+  # There might be empty directories lying about. Remove them.
   while IFS= read -r -d '' _dir; do
     [ -z "$($as_haut /bin/ls -A "$_dir")" ] && { myecho "Removing empty directory $_dir"; $as_haut /bin/rmdir "$_dir"; }
   done < <($as_haut find "$DSAS_HAUT/$dir" -mindepth 1 -type d -print0)
@@ -294,7 +294,7 @@ get_packages() {
     fi
     shift 3
     # Ocassionally print something to avoid ssh timeouts
-    [ "$(($# % 1500))" = "0" ] && myecho "Remaining files to check for download $(($# / 3)) of $n" 
+    [ "$(($# % 1500))" = "0" ] && myecho "Remaining files to check for download $(($# / 3)) of $n"
   done
 }
 
@@ -392,7 +392,7 @@ getrepo() {
 
        # Remove the files in our tree not listed in primary.xml
        # Using the "comm" function to detecting stale files is by far the fastest here
-       $as_haut zcat "$DSAS_HAUT/$dir/$filelist" | grep "<location " | sed -e 's:.*href="\(.*\)"/>$:\1:g'  | sort > /tmp/_files1.$$ 
+       $as_haut zcat "$DSAS_HAUT/$dir/$filelist" | grep "<location " | sed -e 's:.*href="\(.*\)"/>$:\1:g'  | sort > /tmp/_files1.$$
        $as_haut find "$DSAS_HAUT/$dir" -path "$DSAS_HAUT/$dir/repodata" -prune -type f -o -type f | sed -e "s:$DSAS_HAUT/$dir/::g" | sort > /tmp/_files2.$$
        while IFS= read -r -d '' _file; do
            myecho "Removing stale file $_file"
@@ -402,7 +402,7 @@ getrepo() {
 
        # Download the packages
        #
-       # I want the variable $filetable to do word splitting, ignore 
+       # I want the variable $filetable to do word splitting, ignore
        # the shellcheck error associated with it
        # shellcheck disable=SC2086
        get_packages "$DSAS_HAUT/$dir" "$uri" "$opt" $filetable
@@ -481,8 +481,8 @@ getdeb() {
          [ -z "$_arch" ] && break;
          archs="$archs $_arch"
          i=$((i + 1))
-       done 
-       
+       done
+
        # Identify all files listed in Release and download them
        inhash=0
        $as_haut cat "$DSAS_HAUT/$dir/Release" | while read -r line; do
@@ -492,11 +492,11 @@ getdeb() {
          [ "$inhash" = "1" ] && [[ "$line" =~ ":$" ]] && inhash="0" && continue
          [ "$inhash" = "0" ] && continue
 
-         # Ignore second value, use "_" variable 
+         # Ignore second value, use "_" variable
          IFS=' ' read -r _hash _ _file << EOF
 $line
 EOF
-         # Only download Package, Package.gz and Package.xz files if desired architecture 
+         # Only download Package, Package.gz and Package.xz files if desired architecture
          _f=$(basename "$_file")
          if [ "$_f" = "Release" ] || [ "$_f" = "Packages" ] || [ "$_f" = "Packages.gz" ] || [ "$_f" = "Packages.xz" ]; then
            _f=$(dirname "$_file")
@@ -549,15 +549,15 @@ EOF
        # busybox version not used
        packages=""
        while IFS= read -r -d '' _d; do
-         # Only download files if desired architecture 
-         [[ "$archs" =~ ${_d##*-} ]] || continue       
+         # Only download files if desired architecture
+         [[ "$archs" =~ ${_d##*-} ]] || continue
          [ -z "$packages" ] || packages="$packages "
          $as_haut [ -f "$_d/Packages" ] && packages="${packages}$_d/Packages" && continue
          $as_haut [ -f "$_d/Packages.gz" ] && packages="${packages}$_d/Packages.gz" && continue
          $as_haut [ -f "$_d/Packages.xz" ] && packages="${packages}$_d/Packages.xz"
        done < <($as_haut find "$DSAS_HAUT/$dir" -name "Packages*" -print0 | xargs -0 /usr/local/bin/dirname -z  | uniq -z)
        if [[ "$archs" =~ "source" ]]; then
-         while IFS= read -r -d '' _d; do  
+         while IFS= read -r -d '' _d; do
            [ -z "$packages" ] || packages="$packages "
            $as_haut [ -f "$_d/Sources" ] && packages="${packages}$_d/Sources" && continue
            $as_haut [ -f "$_d/Sources.gz" ] && packages="${packages}$_d/Sources.gz" && continue
@@ -565,7 +565,7 @@ EOF
          done < <($as_haut find "$DSAS_HAUT/$dir" -name "Sources*" -print0 | xargs -0 /usr/local/bin/dirname -z  | uniq -z)
        fi
 
-       # For each file Package, and maybe Source, download the listed files 
+       # For each file Package, and maybe Source, download the listed files
        # into the pool directory
        for package in $packages ; do
          myecho "Downloading files from $package"
@@ -577,7 +577,7 @@ EOF
          [[ "$package" = *.xz ]] && _cmd="xzcat"
          $as_haut $_cmd "$package" | while read -r line; do
            # Use sed to strip leading and trailing space, as can't used xargs due to possible
-           # illegal characters like single quotes in strings. 
+           # illegal characters like single quotes in strings.
            [[ "$line" =~ "Filename:" ]] && _file="$(echo "$line" | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
            [[ "$line" =~ "MD5sum:" ]] && _hash_md5="$(echo "$line" | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
            [[ "$line" =~ "SHA256:" ]] && _hash_sha256="$(echo "$line" | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')" && continue
@@ -585,10 +585,10 @@ EOF
              if $as_haut [ -f "$DSAS_HAUT/$pool_local/$_file" ]; then
                if [ -n "$_hash_sha256" ]; then
                  check_checksum "$DSAS_HAUT/$pool_local/$_file" "$_hash_sha256" "sha256"
-               else 
+               else
                  check_checksum "$DSAS_HAUT/$pool_local/$_file" "$_hash_md5" "md5"
                fi
-               
+
                # Can't check return status directly as suggested by shellcheck
                # without a large code duplication. Ignore related shellcheck error
                # shellcheck disable=SC2181
@@ -646,7 +646,7 @@ while [ "$#" -gt 0 ]; do
     -h|--help) help; exit 0 ;;
     -*) 1>&2 echo "Unrecognized option : $1"; help; exit 1 ;;
      *)
-       # Only allow a single task to be able to exit en error correctly 
+       # Only allow a single task to be able to exit en error correctly
        [ -n "$ids" ] && { 1>&2 echo "Only a single task is allowed"; exit 1; }
        ids="$ids $1" ;;
   esac
