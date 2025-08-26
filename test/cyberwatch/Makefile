@@ -63,7 +63,6 @@ good.zip: FakeCyberWatchPriv.pem
 	echo "Fake cyberwatch signature file" > cyberwatch.db
 	head -c -1 cyberwatch.db | sha256sum | cut -f1 -d' ' | tr -d '\n' > cyberwatch.db.sha256
 	openssl dgst -sign FakeCyberWatchPriv.pem -keyform PEM -sha256 -out cyberwatch.sig cyberwatch.db.sha256
-	echo "" >> cyberwatch.sig
 	zip good.zip cyberwatch.db cyberwatch.sig
 	rm -f cyberwatch.db cyberwatch.db.sha256 cyberwatch.sig
 
@@ -72,7 +71,6 @@ bad.zip: BadCyberWatchPriv.pem
 	echo "Fake cyberwatch signature file" > cyberwatch.db
 	head -c -1 cyberwatch.db | sha256sum | cut -f1 -d' ' | tr -d '\n' > cyberwatch.db.sha256
 	openssl dgst -sign BadCyberWatchPriv.pem -keyform PEM -sha256 -out cyberwatch.sig cyberwatch.db.sha256
-	echo "" >> cyberwatch.sig
 	zip bad.zip cyberwatch.db cyberwatch.sig
 	rm -f cyberwatch.db cyberwatch.db.sha256 cyberwatch.sig
 
@@ -81,7 +79,6 @@ virus.zip: FakeCyberWatchPriv.pem
 	cp ../eicar cyberwatch.db 
 	head -c -1 cyberwatch.db | sha256sum | cut -f1 -d' ' | tr -d '\n' > cyberwatch.db.sha256
 	openssl dgst -sign FakeCyberWatchPriv.pem -keyform PEM -sha256 -out cyberwatch.sig cyberwatch.db.sha256
-	echo "" >> cyberwatch.sig
 	zip virus.zip cyberwatch.db cyberwatch.sig
 	rm -f cyberwatch.db cyberwatch.db.sha256 cyberwatch.sig
 
