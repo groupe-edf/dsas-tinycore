@@ -169,9 +169,6 @@ else
           [ "${file:0:${#p}}" = "$p" ] && continue 2  # legal directory
         fi
       done
-      if [ "$bkp" = "/tmp/haut.tgz" ]; then
-
-      fi
       { 1>&2 echo "The backup contains illegal files"; exit 1; }
     done
   done
