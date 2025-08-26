@@ -46,7 +46,7 @@ usr/local/etc/ssh/ssh_host_ecdsa_key.pub
 usr/local/etc/ssh/ssh_host_ed25519_key
 usr/local/etc/ssh/ssh_host_ed25519_key.pub
 usr/local/etc/ssh/ssh_host_rsa_key
-usr/local/etc/ssh/ssh_host_rsa_key.pub     
+usr/local/etc/ssh/ssh_host_rsa_key.pub
 var/dsas/dsas.csr     
 var/dsas/dsas.pem
 var/dsas/dsas_conf.xml
@@ -56,6 +56,8 @@ var/dsas/dsas_typ
 home/tc/.ssh/
 home/haut/.ssh/
 home/bas/.ssh/"
+
+HAUT_EXTRA_FILES="opt/lftp/home/haut/.ssh/known_hosts"
 
 RESTORE=0
 APPLY=0
@@ -106,7 +108,7 @@ if [ "$RESTORE" -eq 0 ]; then
   # Create the backup on the machine haut
   # shellcheck disable=SC2024
   # shellcheck disable=SC2086
-  (umask 077; sudo sudo -u haut ssh "tc@$INTERCO_HAUT" sudo tar -C / -c -z -f - $FILES > /tmp/haut.tgz)
+  (umask 077; sudo sudo -u haut ssh "tc@$INTERCO_HAUT" sudo tar -C / -c -z -f - $FILES $HAUT_EXTRA_FILES > /tmp/haut.tgz)
   [ -n "$PASSWD" ] && (umask 077; cd /tmp || exit 1; aes_encrypt haut.tgz "$PASSWD")
   
   # Get the backup for the machine bas
@@ -159,13 +161,17 @@ else
   # Control the contents of the tar files and only allow files in the list $FILES
   for bkp in /tmp/bas.tgz /tmp/haut.tgz; do
     for file in $(tar tzf $bkp); do
-      for p in $FILES; do
+      [ "$bkp" = "/tmp/haut.tgz" ] && _files="$FILES $HAUT_EXTRA_FILES" || _files=$FILES
+      for p in $_files; do
         if [ "${p%/}" = "$p" ]; then
           [ "$file" = "$p" ] && continue 2  # legal file
         else
           [ "${file:0:${#p}}" = "$p" ] && continue 2  # legal directory
         fi
       done
+      if [ "$bkp" = "/tmp/haut.tgz" ]; then
+      
+      fi
       { 1>&2 echo "The backup contains illegal files"; exit 1; }
     done
   done
@@ -228,12 +234,9 @@ else
   # At this point the ssh hosts and keys are setup. Link them to the chroot jail,
   # in a manner that they can't be abused to create an executable.
   # Don't mount /home/haut as this will give the user the capacity to create an executable
-  [ -d "/opt/lftp/home/haut/.ssh" ] || mkdir -p /opt/lftp/home/haut/.ssh
-  chmod 0550 /opt/lftp/home/haut /opt/lftp/home/haut/.ssh
-  (umask 227; cp /home/haut/.ssh/ /opt/lftp/home/haut/.ssh)
-  (sudo sudo -u haut ssh "tc@$INTERCO_HAUT" sudo /bin/sh -c "(umask 117; cp /home/haut/.ssh/known_hosts /opt/lftp/home/haut/.ssh/known_hosts")
-  chown -R root:haut /opt/lftp/home/haut
-  chmod 0660 /opt/lftp/home/haut/.ssh/known_hosts
+  (sudo rm -fr /opt/lftp/home/haut/.ssh; sudo cp -r /home/haut/.ssh/ /opt/lftp/home/haut/.ssh; sudo chmod 550 /opt/lftp/home/haut/.ssh)
+  sudo chown -R root:haut /opt/lftp/home/haut
+  sudo chmod 0550 /opt/lftp/home/haut /opt/lftp/home/haut/.ssh  
   
   # Restart the ssh server to force reading the host keys. Using SSH to restart
   # SSH on the haut machine is not a problem as active sessions stay active

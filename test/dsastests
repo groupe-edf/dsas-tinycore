@@ -1521,13 +1521,14 @@ try {
     test("Add dummy SSH known host", function () {
         exec("head -1 \"/home/tc/.ssh/known_hosts\" | sed -e \"s;^[0-9\.]*;1.1.1.1;\" >> /home/tc/.ssh/known_hosts", $data, $retval);
         if  ($retval != 0)
-          throw new RuntimeException("Error adding dummy SSH known host '/home/tc/.ssh'"):
-        exec("head -1 \"/home/haut/.ssh/known_hosts\" | sed -e \"s;^[0-9\.]*;1.1.1.1;\" >> /home/haut/.ssh/known_hosts", $data, $retval);
+          throw new RuntimeException("Error adding dummy SSH known host '/home/tc/.ssh'");
+        exec("sudo /bin/sh -c 'grep \"[0-9\.]* \" \"/home/haut/.ssh/known_hosts\" | head -1 | sed -e \"s;^[0-9\.]*;1.1.1.1;\" >> /home/haut/.ssh/known_hosts'", $data, $retval);
         if  ($retval != 0)
-          throw new RuntimeException("Error adding dummy SSH known host to '/home/haut/.ssh'"):
-        exec("head -1 \"/opt/lftp/home/haut/.ssh/known_hosts\" | sed -e \"s;^[0-9\.]*;1.1.1.1;\" >> /opt/lftp/home/haut/.ssh/known_hosts", $data, $retval);
+          throw new RuntimeException("Error adding dummy SSH known host to '/home/haut/.ssh'");
+        exec("sudo /bin/sh -c 'grep \"[0-9\.]* \" \"/opt/lftp/home/haut/.ssh/known_hosts\" | head -1 | sed -e \"s;^[0-9\.]*;1.1.1.1;\" >> /opt/lftp/home/haut/.ssh/known_hosts'", $data, $retval);
         if  ($retval != 0)
-          throw new RuntimeException("Error adding dummy SSH known host to '/opt/lftp/home/haut/.ssh'"):
+          throw new RuntimeException("Error adding dummy SSH known host to '/opt/lftp/home/haut/.ssh'");
+        return true;
       });
       
     // Restore the configuration. Can't do this via the navbar as no
@@ -1548,15 +1549,20 @@ try {
         sleep(1);
         exec("grep testuser /etc/passwd", $data, $retval);
         if ($retval != 0)
-          return false;
+          throw new RuntimeException("Error restoring added user");
+        $data = [];
         exec("grep 1.1.1.1 /home/tc/.ssh/known_hosts", $data, $retval);
-        if ($retval == 0)
-          return false;        
-        exec("grep 1.1.1.1 /home/haut/.ssh/known_hosts", $data, $retval);
-        if ($retval == 0)
-          return false;
-        exec("grep 1.1.1.1 /opt/lftp/home/haut/.ssh/known_hosts", $data, $retval);
-        return ($retval != 0)
+        if  ($retval == 0)
+          throw new RuntimeException("Error restoring SSH known host '/home/tc/.ssh'");          
+        $data = [];
+        exec("sudo grep 1.1.1.1 /home/haut/.ssh/known_hosts", $data, $retval);
+        if  ($retval == 0)
+          throw new RuntimeException("Error restoring SSH known host '/home/haut/.ssh'");
+        $data = [];
+        exec("sudo grep 1.1.1.1 /opt/lftp/home/haut/.ssh/known_hosts", $data, $retval);
+        if  ($retval == 0)
+          throw new RuntimeException("Error restoring SSH known host '/opt/lftp/home/haut/.ssh'");
+        return true;
       });
 
     if (file_exists("/home/tc/dsas_backup.tgz"))

@@ -972,7 +972,7 @@ start_chroot(){
    chmod 0550 /opt/lftp/home/haut /opt/lftp/home/haut/.ssh
    if [ "$TYP" = "bas" ]; then
      if [ "$1" = "--force" ]; then
-       (umask 227; cp /home/haut/.ssh/ /opt/lftp/home/haut/.ssh)
+       (umask 227; cp -r /home/haut/.ssh/ /opt/lftp/home/haut/.ssh)
      else
        for _f in /home/haut/.ssh/*; do
          [ -f "/opt/lftp/$_f" ] || cp "$_f" "/opt/lftp/$_f"
