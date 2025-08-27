@@ -1,6 +1,6 @@
 Log of the principal changes to the DSAS
 
-Version 4.0.2 (XX XX XXX)
+Version 4.0.2 (27 Aug 2025)
 - Remove backup of DSA clefs as openssh no longer generates them
 - Restore ssh keys in /opt/lftp as well
 - Restart sshd after restoration of the configuration so that updated host keys are used
