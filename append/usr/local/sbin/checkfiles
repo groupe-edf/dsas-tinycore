@@ -307,7 +307,7 @@ verifcyberwatch(){
   zipdir=$(mktemp -d)
 
   # Unzip the file
-  unzip -q -d "$zipdir" "$file"
+  unzip -q -d "$zipdir" "$file" || 7z -o"$zipdir" x "$file" > /dev/null 2>&1
 
   # Check the signature
   status=0
