@@ -4,6 +4,8 @@ Version 4.0.4 (XX XXX XXXX)
 - Update clamav (1.4.3 -> 1.5.1)
 - Update curl (8.14.1 -> 8.16.0)
 - Update openssl (3.3.3 -> 3.5.4)
+- Update Linux-PAM (version 1.7.1) changing build from autotools to meson
+- Update openssh (version 10.2p1)
 
 Version 4.0.3 (03 Sep 2025)
 - Allow newer PKZip version for cyberwatch
