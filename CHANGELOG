@@ -1,6 +1,7 @@
 Log of the principal changes to the DSAS
 
 Version 4.0.4 (XX XXX XXXX)
+- Remove locally built rust package
 - Update clamav (1.4.3 -> 1.5.1)
 - Update curl (8.14.1 -> 8.16.0)
 - Update openssl (3.3.3 -> 3.5.4)
