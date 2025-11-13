@@ -1,6 +1,7 @@
 Log of the principal changes to the DSAS
 
 Version 4.0.4 (XX XXX XXXX)
+- Add workaround for EDF NPM security policy that requires EDF local registry to be used
 - Remove locally built rust package
 - Add json-c version 0.18 (needed for recent versions of ClamAV)
 - Update clamav (1.4.3 -> 1.5.1)
