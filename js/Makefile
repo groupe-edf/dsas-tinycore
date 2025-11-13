@@ -9,6 +9,11 @@ prod: package.json
 package.json:
 	which npm >& /dev/null || { echo "Install Node.js before continuing"; exit 1; }
 	npm init -y || { rm -fr node_modules package-lock.json package.json; exit 1; }
+	# FIXME Ugly specific workaround for EDF security policy
+ifneq (,	$(findstring edf.fr,$(http_proxy)))
+	npm config set registry https://si-devops-mirror.edf.fr/repository/registry.npmjs.org/
+	npm config set noproxy si-devops-mirror.edf.fr
+endif
 	npm install --save marked marked-gfm-heading-id || { rm -fr node_modules package-lock.json package.json; exit 1; }
 	npm install --save bootstrap @popperjs/core || { rm -fr node_modules package-lock.json package.json; exit 1; }
 	npm install --save-dev webpack webpack-cli || { rm -fr node_modules package-lock.json package.json; exit 1; }
