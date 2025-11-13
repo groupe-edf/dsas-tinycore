@@ -1,0 +1,11 @@
+_pkg=json-c
+_version=0.18
+_uri=https://github.com/json-c/json-c/archive/refs/tags/json-c-0.18-20240915.tar.gz
+_build_dep="compiletc cmake libssh2 coreutils"
+_dep=""
+_pkg_path=json-c-json-c-0.18-20240915
+_pre_config="sudo -u tc mkdir -p $builddir/$_pkg_path/build"
+_conf_cmd="cd build; setarch linux$arch cmake -S .."
+_make_cmd="cd build; cmake --build ."
+_install_cmd="cd build; make install DESTDIR=" 
+_pkgs='main{/usr/local/lib/*.so};dev{/usr/local/lib/pkgconfig,/usr/local/lib/*.la,/usr/local/lib/*.a,/usr/local/include}'
