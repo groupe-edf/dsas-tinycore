@@ -93,7 +93,7 @@ UsePAM yes
 #TCPKeepAlive yes
 #PermitUserEnvironment no
 #Compression delayed
-#ClientAliveInterval 0
+ClientAliveInterval 180
 #ClientAliveCountMax 3
 #UseDNS no
 #PidFile /var/run/sshd.pid

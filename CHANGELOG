@@ -4,6 +4,7 @@ Version 4.0.4 (XX XXX XXXX)
 - Add workaround for EDF NPM security policy that requires EDF local registry to be used
 - Remove locally built rust package
 - Add json-c version 0.18 (needed for recent versions of ClamAV)
+- Add ClientAliveInterval to sshd_config so that long ssh sessions are kept open
 - Update clamav (1.4.3 -> 1.5.1)
 - Update curl (8.14.1 -> 8.16.0)
 - Update openssl (3.3.3 -> 3.5.4)
