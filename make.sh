@@ -111,13 +111,13 @@ curl_cmd="curl --connect-timeout 300"
 
 # tiny core related
 if [ "$arch" != "64" ]; then
-  livecd_url=http://tinycorelinux.net/16.x/x86/release/Core-current.iso
-  tcz_url=http://tinycorelinux.net/16.x/x86/tcz
-  tcz_src=http://tinycorelinux.net/16.x/x86/release/src
+  livecd_url=http://tinycorelinux.net/17.x/x86/release/Core-current.iso
+  tcz_url=http://tinycorelinux.net/17.x/x86/tcz
+  tcz_src=http://tinycorelinux.net/17.x/x86/release/src
 else
-  livecd_url=http://tinycorelinux.net/16.x/x86_64/release/CorePure64-current.iso
-  tcz_url=http://tinycorelinux.net/16.x/x86_64/tcz
-  tcz_src=http://tinycorelinux.net/16.x/x86_64/release/src
+  livecd_url=http://tinycorelinux.net/17.x/x86_64/release/CorePure64-current.iso
+  tcz_url=http://tinycorelinux.net/17.x/x86_64/tcz
+  tcz_src=http://tinycorelinux.net/17.x/x86_64/release/src
 fi
 export tcz_src
 
@@ -699,6 +699,9 @@ EOF
     fi
   fi
   install_tcz $package
+  
+  # FIXME : Why doesn't this get installed with firefox ?
+  install_tcz libXdamage
 }
 
 install_webdriver(){
@@ -985,6 +988,8 @@ check_upgrade)
     fi
   done < <(find $tcz_dir -name "*.tcz" -print0)
   ;;
+  
+  
 upgrade)
   [ -e $work ] || error work directory does not exist. run \'./make.sh work ...\'
   msg Fetching md5.db.gz
@@ -1008,6 +1013,7 @@ upgrade)
       msg "Fetching package $_file ..."
       $curl_cmd -o "$file" "$tcz_url/$_file" || exit 1
       $curl_cmd -o "${file}.dep" "$tcz_url/${_file}.dep" || exit 1
+      grep -q "404 Not Found" "${file}.dep" && cp /dev/null "${file}.dep"
       [ -f "${file}.info" ] || $curl_cmd -o "${file}.info" "$tcz_url/${_file}.info" || exit 1
       md5sum "$file" | sed -e "s:  $file$::g" > "$file.md5.txt"
     fi

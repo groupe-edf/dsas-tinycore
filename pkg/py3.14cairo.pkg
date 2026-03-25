@@ -1,0 +1,11 @@
+_pkg=py3.14cairo
+_version=1.25.1
+_uri=https://github.com/pygobject/pycairo/releases/download/v${_version}/pycairo-${_version}.tar.gz
+_build_dep="compiletc python3.14-dev python3.14-setuptools cairo-dev"
+_dep="python3.14 cairo"
+_pkg_path=pycairo-${_version}
+_pre_config=""
+_conf_cmd=""
+_make_cmd="python3.14 setup.py build"
+_install_cmd="python3.14 setup.py install --root="
+_pkgs='main{/usr/local/lib/python3.14};dev{/usr/local/include,/usr/local/lib/pkgconfig}'

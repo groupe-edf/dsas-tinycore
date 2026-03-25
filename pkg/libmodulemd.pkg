@@ -1,16 +1,16 @@
 _pkg=libmodulemd
-_version=2.15.0
-_uri=https://github.com/fedora-modularity/libmodulemd/releases/download/2.15.0/modulemd-2.15.0.tar.xz
+_version=2.15.2
+_uri=https://github.com/fedora-modularity/libmodulemd/releases/download/${_version}/modulemd-${_version}.tar.xz
 if [ "$arch" != "64" ]; then
-  _build_dep="compiletc cmake expat2-dev coreutils meson ninja glib2-dev libssh2-dev libyaml-dev rpm popt-dev gtk-doc file-dev gobject-introspection-dev py3.9gobject-dev"
-  _dep="glib2 libyaml rpm gtk-doc gobject-introspection file py3.9gobject"
+  _build_dep="compiletc cmake expat2-dev coreutils meson ninja glib2-dev libssh2-dev libyaml-dev rpm popt-dev gtk-doc file-dev gobject-introspection-dev py3.14gobject-dev python3.14-setuptools"
+  _dep="glib2 libyaml rpm gtk-doc gobject-introspection file py3.14gobject"
 else
-  _build_dep="compiletc cmake expat2-dev coreutils meson ninja glib2-dev libssh2-dev yaml-dev rpm popt-dev gtk-doc file-dev gobject-introspection-dev py3.9gobject-dev"
-  _dep="glib2 yaml rpm gtk-doc gobject-introspection file py3.9gobject"
+  _build_dep="compiletc cmake expat2-dev coreutils meson ninja glib2-dev libssh2-dev yaml-dev rpm popt-dev gtk-doc file-dev gobject-introspection-dev py3.14gobject-dev python3.14-setuptools"
+  _dep="glib2 yaml rpm gtk-doc gobject-introspection file py3.14gobject"
 fi
-_pkg_path=modulemd-2.15.0
-_pre_config="ln -s /bin/busybox /bin/bash; cd /usr/local/bin; rm python3; ln -s python3.9 python3"
-_conf_cmd="setarch linux$arch meson build -D with_docs=false"
+_pkg_path=modulemd-${_version}
+_pre_config="ln -s /bin/busybox /bin/bash; cd $builddir/$_pkg_path; sed -i -e \"s/install_dir/install_tag: 'python', install_dir/\" bindings/python/meson.build; cd /usr/local/bin; rm python3; ln -s python3.14 python3"
+_conf_cmd="setarch linux$arch meson build -D with_docs=false -D verbose_tests=false"
 _make_cmd="cd build; ninja"
 _install_cmd="cd build; ninja install #"
 _pkgs='main{/usr/local/bin,/usr/local/share/gir-1.0,/usr/local/lib/*.so*,/usr/local/lib/python*,/usr/local/lib/girepository-1.0};dev{/usr/local/lib/pkgconfig,/usr/local/include};doc{/usr/local/share/man}'

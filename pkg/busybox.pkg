@@ -8,7 +8,7 @@ _extra_uri="$tcz_src/busybox/busybox-1.27.1-wget-make-default-timeout-configurab
             $tcz_src/busybox/busybox-1.36.1_config_suid \
             $tcz_src/busybox/busybox-1.36.1_config_nosuid"
 _dep="Linux-PAM"
-_build_dep="compiletc Linux-PAM-dev sstrip curl libssh2 linux-6.12_api_headers"
+_build_dep="compiletc Linux-PAM-dev sstrip curl libssh2 linux-6.18_api_headers"
 _pkg_path="busybox-1.36.1"
 _pre_config=\
 "cd $builddir/$_pkg_path

@@ -1,5 +1,23 @@
 Log of the principal changes to the DSAS
 
+Version 4.1.0 (25 mars 2026)
+- Update Tinycore 16.0 -> 17.0
+- Update curl (8.16.0 -> 8.19.0)
+- Update gnupg (2.4.8 -> 2.5.18)
+- Update libgpgerror (1.55 -> 1.59)
+- Update libgcrypt (1.11.1 -> 1.12.1)
+- Update libksba (1.6.7 -> 1.6.8)
+- Update libassuan (3.0.1 -> 3.0.2)
+- Update Linux-PAM (1.7.1 -> 1.7.2)
+- Update openssl (3.5.4 -> 3.5.5)
+- Update osslsigncode (2.10 -> 2.13)
+- Update createrepo_c (1.0.0 -> 1.2.3)
+- Update gobject-introspection (1.78 -> 1.86)
+- Update libmodulemd (2.15.0 -> 2.15.2)
+- Update libtalloc (2.4.2 -> 2.4.4)
+- Update meson (1.4.0 -> 1.10.2)
+- Upgrade build dependency from python 3.9 to 3.14
+
 Version 4.0.4 (24 Nov 2025)
 - Add workaround for EDF NPM security policy that requires EDF local registry to be used
 - Remove locally built rust package
@@ -19,7 +37,7 @@ Version 4.0.2 (27 Aug 2025)
 - Restore ssh keys in /opt/lftp as well
 - Restart sshd after restoration of the configuration so that updated host keys are used
 - Fix for selection of file to restore
-- Update checkfiles for new cyberwatch signatue format
+- Update checkfiles for new cyberwatch signature format
 
 Version 4.0.1 (24 Jul 2025)
 - If /home/tc/.gnupg doesn't exist create it, fixing problems with gpg ids

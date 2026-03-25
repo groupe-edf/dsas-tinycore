@@ -1,0 +1,12 @@
+_pkg=py3.14gobject
+_version=3.46.0
+_uri=https://github.com/GNOME/pygobject/archive/refs/tags/${_version}.tar.gz
+_src="pygobject-${_version}.tgz"
+_build_dep="compiletc meson ninja python3.14-dev python3.14-setuptools gobject-introspection-dev py3.14cairo-dev cairo-dev"
+_dep="py3.14cairo gobject-introspection cmake"
+_pkg_path=pygobject-${_version}
+_pre_config="ln -s /bin/busybox /bin/bash; cd /usr/local/bin; rm python3; ln -s python3.14 python3"
+_conf_cmd="setarch linux$arch meson build --prefix=/usr/local --localstatedir=/var --buildtype=release -D tests=false"
+_make_cmd="cd build; ninja"
+_install_cmd="cd build; ninja install #"
+_pkgs='main{/usr/local/lib/python3.14};dev{/usr/local/include,/usr/local/lib/pkgconfig}'
