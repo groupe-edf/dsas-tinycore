@@ -248,7 +248,7 @@ install_tcz() {
         tce_marker=$extract/usr/local/tce.installed/$package
         if ! test -f "$tce_marker"; then
             msg "installing package $package ..."
-            unsquashfs -f -d "$extract" "$target"
+            unsquashfs -f -d "$extract" "$target" > /dev/null 2>&1
             if test -s "$tce_marker"; then
                 msg "post-install script $package"
                 chroot "$extract" env LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib "/usr/local/tce.installed/$package"
