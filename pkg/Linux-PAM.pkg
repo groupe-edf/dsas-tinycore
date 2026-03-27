@@ -5,11 +5,13 @@ _dep="ncursesw"
 _build_dep="compiletc meson ninja isl-dev ncursesw-dev"
 _pkg_path="Linux-PAM-${_version}"
 _pre_config=""
-_conf_cmd="mkdir build && setarch linux$arch meson setup --prefix=/usr/local --includedir=/usr/local/include --sysconfdir=/usr/local/etc build"
+_conf_cmd="mkdir build && setarch linux$arch meson setup build --prefix=/usr/local --includedir=/usr/local/include --sysconfdir=/usr/local/etc"
 _make_cmd="setarch linux$arch meson compile -C build"
 _install_cmd="cd build; ninja install #"
 _post_build=\
-"mkdir -p usr/local/etc/pam.d
+"mkdir -p usr/local/etc/security
+cp -pr usr/share/pam/security/* usr/local/etc/security
+mkdir -p usr/local/etc/pam.d
 cat << EOF > usr/local/etc/pam.d/common-auth
 auth           required                                 pam_faillock.so preauth silent deny=3 unlock_time=600
 auth           [success=2 default=ignore]               pam_unix.so nullok_secure
@@ -67,7 +69,7 @@ password        required        pam_unix.so
 session         required        pam_unix.so
 EOF
 # Disable core dumps 
-sed -i -e 's:^#\(.*\)soft\(.*\)core.*$:\1 hard\2core            0:' usr/share/pam/security/limits.conf
+sed -i -e 's:^#\(.*\)soft\(.*\)core.*$:\1 hard\2core            0:' usr/local/etc/security/limits.conf
 "
 _pkgs="main{/usr/local/sbin,/usr/local/etc,/usr/local/lib/*.so*,/usr/local/lib/security/*.so*,/usr/local/lib/systemd,/usr/local/share/locale};dev{/usr/local/include,/usr/local/lib/*.a,/usr/local/lib/*.la,/usr/local/lib/security/*.a,/usr/local/lib/security/*.la,/usr/local/lib/pkgconfig};doc{/usr/local/share/doc,/usr/local/share/man}"
 _post_install=\

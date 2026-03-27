@@ -1,5 +1,8 @@
 Log of the principal changes to the DSAS
 
+Version 4.1.1 (27 mars 2026)
+- Fix for Linux-PAM version 1.7.x moving default configuration files
+
 Version 4.1.0 (25 mars 2026)
 - Update Tinycore 16.0 -> 17.0
 - Update curl (8.16.0 -> 8.19.0)
